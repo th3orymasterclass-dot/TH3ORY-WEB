@@ -311,13 +311,14 @@ function Step2({ form, setForm, onNext, onBack }) {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {plans.map(plan => {
           const isSelected = selected?.id === plan.id;
+          const isEnt = plan.isEnterprise;
           return (
             <button key={plan.id} type="button"
               onClick={() => select(plan)}
-              className={`relative text-left rounded-2xl border-2 p-5 transition-all hover:scale-[1.02] ${
+              className={`relative text-left rounded-2xl border-2 p-6 transition-all hover:scale-[1.01] ${
                 isSelected
                   ? 'border-amber-500 bg-amber-500/10 shadow-xl shadow-amber-500/20'
                   : plan.popular
@@ -326,7 +327,7 @@ function Step2({ form, setForm, onNext, onBack }) {
               }`}>
               {plan.popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-amber-500 rounded-full text-slate-950 text-[10px] font-black flex items-center gap-1">
-                  <Crown className="w-2.5 h-2.5"/> MOST POPULAR
+                  <Crown className="w-2.5 h-2.5"/> FLAGSHIP SINGLE PASS
                 </div>
               )}
               {isSelected && (
@@ -334,21 +335,25 @@ function Step2({ form, setForm, onNext, onBack }) {
                   <Check className="w-3 h-3 text-slate-950"/>
                 </div>
               )}
-              <p className="text-white font-black text-base mb-0.5">{plan.name}</p>
-              <p className="text-slate-500 text-xs mb-4">{plan.badge}</p>
+              <p className="text-white font-black text-lg mb-0.5">{plan.name}</p>
+              <p className="text-amber-400 text-xs font-bold mb-4">{plan.badge}</p>
               <div className="flex items-baseline gap-1 mb-4">
-                <span className="text-3xl font-black text-white">${price(plan)}</span>
-                {monthly && <span className="text-slate-500 text-xs">/mo × 3</span>}
+                {isEnt ? (
+                  <span className="text-2xl font-black text-amber-400">Custom Quote</span>
+                ) : (
+                  <>
+                    <span className="text-3xl sm:text-4xl font-black text-white">${price(plan)}</span>
+                    <span className="text-slate-400 text-xs"> (or ₹11,999 INR)</span>
+                    {monthly && <span className="text-slate-500 text-xs"> /mo × 3</span>}
+                  </>
+                )}
               </div>
-              <ul className="space-y-1.5">
-                {plan.features.slice(0, 4).map((f, i) => (
+              <ul className="space-y-2">
+                {plan.features.slice(0, 5).map((f, i) => (
                   <li key={i} className="flex items-start gap-2 text-xs text-slate-300">
-                    <Check className="w-3 h-3 text-green-400 mt-0.5 shrink-0"/> {f}
+                    <Check className="w-3.5 h-3.5 text-green-400 mt-0.5 shrink-0"/> {f}
                   </li>
                 ))}
-                {plan.features.length > 4 && (
-                  <li className="text-amber-400 text-xs font-medium">+ {plan.features.length - 4} more…</li>
-                )}
               </ul>
             </button>
           );

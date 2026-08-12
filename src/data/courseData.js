@@ -215,57 +215,42 @@ export const roadmapLevels = [
 
 export const pricingPlans = [
   {
-    id: "starter",
-    name: "TH3ORY Self-Paced",
-    badge: "For Independent Learners",
-    priceFull: 299,
-    priceMonthly: 109,
+    id: "masterclass",
+    name: "TH3ORY Masterclass",
+    badge: "👑 Complete Flagship Pass",
+    priceFull: 149,
+    priceMonthly: 55,
+    priceUSD: 149,
+    priceINR: 11999,
     features: [
-      "Complete 50-Module 30-Day Masterclass",
-      "Lifetime HD Video Access & Transcripts",
+      "Complete 50-Module 30-Day Masterclass Access",
+      "All 5 Levels of Behavioral & Influence Engineering",
+      "Lifetime HD Video & Streaming Platform Access",
       "5 Weekly Integration Capstone Workbooks",
-      "Worksheets & Actionable Templates Pack",
-      "100-Day Journal & Habit Routine Guide",
+      "Actionable Worksheets & Psychological Templates",
+      "100-Day Behavioral Routine & Habit Guide",
       "Verified Certificate of Completion"
     ],
-    notIncluded: [
-      "Weekly Live Group Q&A & Coaching Calls",
-      "1-on-1 Capstone Feedback",
-      "Private High-Achiever Network Access"
-    ],
-    popular: false
+    notIncluded: [],
+    popular: true,
+    isEnterprise: false
   },
   {
-    id: "pro",
-    name: "TH3ORY Live Cohort",
-    badge: "👑 Most Popular (Best Value)",
-    priceFull: 499,
-    priceMonthly: 179,
+    id: "enterprise",
+    name: "Enterprise & Team License",
+    badge: "🏢 For Colleges, Companies & Organizations",
+    priceFull: 0,
+    priceMonthly: 0,
+    priceUSD: null,
+    priceINR: null,
+    isEnterprise: true,
     features: [
-      "Everything in Self-Paced Plan PLUS:",
-      "30-Day Live Guided Cohort Experience",
-      "Weekly Live Q&A & Mastermind Calls with Dr. Alex",
-      "Personal Capstone Feedback on Days 6, 12, 18, 24, 30",
-      "Private High-Achievers Discord Network",
-      "Accountability Buddy Matching"
-    ],
-    notIncluded: [
-      "Weekly 1-on-1 Private Executive Coaching"
-    ],
-    popular: true
-  },
-  {
-    id: "vip",
-    name: "TH3ORY VIP Mentorship",
-    badge: "Strictly Limited (Only 3 Spots Left)",
-    priceFull: 999,
-    priceMonthly: 359,
-    features: [
-      "Everything in Live Cohort Plan PLUS:",
-      "4 Weekly 1-on-1 Private Executive Coaching Calls (45 Mins)",
-      "Bespoke Personal Influence Audit & Presence Blueprint",
-      "Direct Priority WhatsApp Access for 60 Days",
-      "Lifetime VIP Alumni Network Membership"
+      "Custom seat allocations for pupils (Students & Professionals)",
+      "Tailored Cohort Schedules & Dedicated Workshops",
+      "Dedicated Enterprise Account Manager & Progress Analytics",
+      "Custom Capstone Evaluation Aligned with Team Goals",
+      "Volume Licensing Discounts & Invoicing Support",
+      "Private Team Mastermind & Custom LMS Export Options"
     ],
     notIncluded: [],
     popular: false

@@ -22,7 +22,7 @@ export default function App() {
   const [showEnrollmentPage, setShowEnrollmentPage] = useState(false);
   
   // Checkout state
-  const [selectedPlan, setSelectedPlan] = useState(pricingPlans[1]); // Pro by default
+  const [selectedPlan, setSelectedPlan] = useState(pricingPlans[0]); // Masterclass by default
   const [isMonthly, setIsMonthly] = useState(false);
   const [couponCode, setCouponCode] = useState('');
   const [couponDiscount, setCouponDiscount] = useState(0);
@@ -31,7 +31,7 @@ export default function App() {
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [receipt, setReceipt] = useState(null);
 
-  const handleOpenCheckoutWithPlan = (plan = pricingPlans[1], monthly = false) => {
+  const handleOpenCheckoutWithPlan = (plan = pricingPlans[0], monthly = false) => {
     setSelectedPlan(plan);
     setIsMonthly(monthly);
     setShowEnrollmentPage(true);
