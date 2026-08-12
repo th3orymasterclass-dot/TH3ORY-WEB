@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { X, Lock, CreditCard, ShieldCheck, CheckCircle2, QrCode, Sparkles, Loader2, Download, ArrowRight, ArrowLeft } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { courseAddons } from '../data/courseData';
+import { saveEnrollmentToSupabase } from '../services/supabaseService';
+import { sendEnrollmentEmail } from '../services/emailService';
 
 export default function CheckoutModal({
   isOpen,
@@ -91,8 +93,9 @@ export default function CheckoutModal({
           origin: { y: 0.6 }
         });
 
+        const orderId = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
         const receipt = {
-          orderId: 'ORD-' + Math.floor(100000 + Math.random() * 900000),
+          orderId,
           date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
           studentName: formData.fullName,
           studentEmail: formData.email,
@@ -101,6 +104,33 @@ export default function CheckoutModal({
           totalAmount: grandTotal,
           isMonthly
         };
+
+        // Save enrollment to Supabase DB & Create Student Account
+        saveEnrollmentToSupabase({
+          orderId,
+          name: formData.fullName,
+          email: formData.email,
+          phone: formData.phone || '',
+          country: formData.country || 'United States',
+          planId: selectedPlan.id || 'pro',
+          planName: selectedPlan.name,
+          price: grandTotal,
+          currency: 'USD',
+          gateway: paymentMethod,
+          isMonthly,
+          code: 'TH3ORY2026'
+        }).catch(err => console.warn('[Supabase Enrollment] Error saving to DB:', err));
+
+        // Send confirmation email via Vercel Serverless Email API
+        sendEnrollmentEmail({
+          name: formData.fullName,
+          email: formData.email,
+          planName: selectedPlan.name,
+          orderId,
+          amountPaid: grandTotal,
+          code: 'TH3ORY2026'
+        }).catch(err => console.warn('[Email Service] Error sending receipt:', err));
+
         setReceiptData(receipt);
         onEnrollmentSuccess(receipt);
       }
