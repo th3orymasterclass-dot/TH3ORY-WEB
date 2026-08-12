@@ -13,13 +13,17 @@ const STUDENT_HASH = '/student';
 const ENROLL_HASH  = '/enroll';
 
 function Root() {
-  const hash = () => window.location.hash;
+  const getInitialView = () => {
+    const h = window.location.hash || '';
+    const p = window.location.pathname || '';
 
-  const [view, setView] = useState(() =>
-    hash().startsWith('#' + ADMIN_HASH)   ? 'admin'   :
-    hash().startsWith('#' + STUDENT_HASH) ? 'student' :
-    (hash().startsWith('#' + ENROLL_HASH) || hash() === '#enroll') ? 'enroll' : 'public'
-  );
+    if (h.startsWith('#' + ADMIN_HASH) || p.startsWith(ADMIN_HASH)) return 'admin';
+    if (h.startsWith('#' + STUDENT_HASH) || p.startsWith(STUDENT_HASH)) return 'student';
+    if (h.startsWith('#' + ENROLL_HASH) || h === '#enroll' || p.startsWith(ENROLL_HASH)) return 'enroll';
+    return 'public';
+  };
+
+  const [view, setView] = useState(getInitialView);
 
   const [adminAuthed,   setAdminAuthed]   = useState(() => sessionStorage.getItem('th3ory_admin_auth') === '1');
   const [studentProfile, setStudentProfile] = useState(() => {
@@ -28,15 +32,14 @@ function Root() {
 
   useEffect(() => {
     const handler = () => {
-      const h = hash();
-      setView(
-        h.startsWith('#' + ADMIN_HASH)   ? 'admin'   :
-        h.startsWith('#' + STUDENT_HASH) ? 'student' :
-        (h.startsWith('#' + ENROLL_HASH) || h === '#enroll') ? 'enroll' : 'public'
-      );
+      setView(getInitialView());
     };
     window.addEventListener('hashchange', handler);
-    return () => window.removeEventListener('hashchange', handler);
+    window.addEventListener('popstate', handler);
+    return () => {
+      window.removeEventListener('hashchange', handler);
+      window.removeEventListener('popstate', handler);
+    };
   }, []);
 
   // ── Admin ──────────────────────────────────────────────────────────────────

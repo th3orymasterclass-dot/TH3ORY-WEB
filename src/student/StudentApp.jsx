@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  LayoutDashboard, BookOpen, ShoppingBag, Star, MessageCircle,
+  LayoutDashboard, BookOpen, ShoppingBag, Star, MessageCircle, MessageSquare,
   LogOut, ChevronRight, Menu, X, GraduationCap, Award, ExternalLink, Bookmark
 } from 'lucide-react';
 import DashboardHome from './panels/DashboardHome';

@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Type, Flame, BookOpen, Tag,
   Star, HelpCircle, User, Gift, Target, Video,
   LogOut, ChevronRight, Menu, X, ExternalLink, Shield,
-  FolderOpen, Layers
+  FolderOpen, Layers, MessageSquare
 } from 'lucide-react';
 import useAdminData from './useAdminData';
 import OverviewPanel   from './panels/OverviewPanel';
