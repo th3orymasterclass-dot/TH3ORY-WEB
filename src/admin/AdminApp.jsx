@@ -18,6 +18,7 @@ import InstructorPanel from './panels/InstructorPanel';
 import BonusesPanel    from './panels/BonusesPanel';
 import OutcomesPanel   from './panels/OutcomesPanel';
 import MediaPanel      from './panels/MediaPanel';
+import CommunityChatPanel from '../components/CommunityChatPanel';
 
 const NAV_ITEMS = [
   { id: 'overview',    label: 'Overview',           icon: LayoutDashboard },
@@ -25,7 +26,8 @@ const NAV_ITEMS = [
   { id: 'hero',        label: 'Hero & Branding',     icon: Type },
   { id: 'urgency',     label: 'Urgency & Seats',     icon: Flame },
   { id: 'curriculum',  label: 'Curriculum',          icon: BookOpen },
-  { id: '__divider2', divider: true, label: 'COURSE FILES' },
+  { id: '__divider2', divider: true, label: 'COMMUNITY & FILES' },
+  { id: 'chat',        label: 'Community Chat',      icon: MessageSquare, badge: 'LIVE' },
   { id: 'content',     label: 'Content Library',     icon: FolderOpen, badge: 'NEW' },
   { id: '__divider3', divider: true, label: 'SALES & SOCIAL' },
   { id: 'pricing',     label: 'Pricing Plans',       icon: Tag },
@@ -51,6 +53,7 @@ export default function AdminApp({ onLogout }) {
       case 'hero':       return <HeroPanel       {...panelProps} />;
       case 'urgency':    return <UrgencyPanel    {...panelProps} />;
       case 'curriculum': return <CurriculumPanel {...panelProps} />;
+      case 'chat':       return <CommunityChatPanel currentUser={{ name: 'Mentalist Sravan Production' }} isAdmin={true} />;
       case 'content':    return <ContentPanel    {...panelProps} />;
       case 'pricing':    return <PricingPanel    {...panelProps} />;
       case 'reviews':    return <ReviewsPanel    {...panelProps} />;

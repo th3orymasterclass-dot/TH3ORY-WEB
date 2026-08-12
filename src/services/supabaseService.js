@@ -233,3 +233,48 @@ export async function deleteCourseContentFromSupabase(id) {
     return false;
   }
 }
+
+// ─── Community Chat Messages ──────────────────────────────────────────────────
+export async function fetchCommunityMessagesFromSupabase(channel = 'general') {
+  if (!isSupabaseConfigured || !supabase) return null;
+  try {
+    const { data, error } = await supabase
+      .from('community_messages')
+      .select('*')
+      .eq('channel', channel)
+      .order('created_at', { ascending: true });
+
+    if (error) return null;
+    return data.map(m => ({
+      id: m.id,
+      channel: m.channel,
+      senderName: m.sender_name,
+      senderEmail: m.sender_email,
+      senderRole: m.sender_role || 'student',
+      message: m.message,
+      createdAt: m.created_at
+    }));
+  } catch {
+    return null;
+  }
+}
+
+export async function saveCommunityMessageToSupabase(msgPayload) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  try {
+    const payload = {
+      channel: msgPayload.channel || 'general',
+      sender_name: msgPayload.senderName,
+      sender_email: msgPayload.senderEmail || '',
+      sender_role: msgPayload.senderRole || 'student',
+      message: msgPayload.message,
+      created_at: new Date().toISOString()
+    };
+
+    const { error } = await supabase.from('community_messages').insert([payload]);
+    return !error;
+  } catch (err) {
+    console.error('[Supabase] Error posting community message:', err);
+    return false;
+  }
+}
