@@ -90,7 +90,7 @@ export default function Navbar({ onOpenCheckout, onOpenDashboard, isEnrolled }) 
                 onClick={() => { setMobileMenuOpen(false); onOpenCheckout(); }}
                 className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-extrabold text-center shadow-lg flex items-center justify-center gap-2"
               >
-                <ShoppingBag className="w-4 h-4" /> {isEnrolled ? 'View Receipt' : 'Start Journey ($299)'}
+                <ShoppingBag className="w-4 h-4" /> {isEnrolled ? 'View Receipt' : 'Start Journey ($149 / ₹11,999)'}
               </button>
             </div>
           </div>

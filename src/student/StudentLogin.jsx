@@ -27,7 +27,7 @@ export default function StudentLogin({ onAuthenticated }) {
         name: sbStudent.name,
         email: sbStudent.email,
         enrolledAt: sbStudent.enrolledAt,
-        plan: sbStudent.plan || 'TH3ORY Live Cohort',
+        plan: sbStudent.plan || 'TH3ORY Masterclass',
       };
       sessionStorage.setItem('th3ory_student_auth', JSON.stringify(profile));
       setLoading(false);
@@ -46,7 +46,7 @@ export default function StudentLogin({ onAuthenticated }) {
     const profile = {
       name: name.trim(),
       enrolledAt: localStorage.getItem('th3ory_student_enrolledAt') || new Date().toISOString(),
-      plan: localStorage.getItem('th3ory_student_plan') || 'TH3ORY Live Cohort',
+      plan: localStorage.getItem('th3ory_student_plan') || 'TH3ORY Masterclass',
     };
     localStorage.setItem('th3ory_student_enrolledAt', profile.enrolledAt);
     localStorage.setItem('th3ory_student_plan', profile.plan);

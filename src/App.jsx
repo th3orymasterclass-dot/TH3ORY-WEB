@@ -69,11 +69,11 @@ export default function App() {
         </div>
 
         <button
-          onClick={() => handleOpenCheckoutWithPlan(pricingPlans[1], false)}
+          onClick={() => handleOpenCheckoutWithPlan(pricingPlans[0], false)}
           className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-amber-500/25 transition-all flex items-center gap-1.5 whitespace-nowrap"
         >
           <ShoppingBag className="w-3.5 h-3.5" />
-          <span>{isEnrolled ? 'View Receipt' : 'Enroll ($299)'}</span>
+          <span>{isEnrolled ? 'View Receipt' : 'Enroll ($149 / ₹11,999)'}</span>
         </button>
       </div>
 

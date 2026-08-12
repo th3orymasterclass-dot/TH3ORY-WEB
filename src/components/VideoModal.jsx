@@ -64,7 +64,7 @@ export default function VideoModal({ isOpen, onClose, onEnrollClick }) {
               }}
               className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white text-sm font-semibold shadow-lg shadow-indigo-500/25 transition-all w-full sm:w-auto text-center"
             >
-              Enroll Now ($299)
+              Enroll Now ($149 / ₹11,999)
             </button>
           </div>
         </div>

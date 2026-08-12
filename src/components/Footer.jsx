@@ -77,7 +77,7 @@ export default function Footer({ onOpenCheckout }) {
                 onClick={() => window.location.hash = '/enroll'}
                 className="w-full py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-extrabold text-xs uppercase tracking-wider transition-all"
               >
-                Enroll Now ($299)
+                Enroll Now ($149 / ₹11,999)
               </button>
             </div>
           </div>

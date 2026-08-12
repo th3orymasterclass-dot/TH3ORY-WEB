@@ -90,7 +90,7 @@ export default function HeroSection({ onOpenVideo, onOpenCheckout }) {
               onClick={onOpenCheckout}
               className="w-full sm:w-auto px-9 py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 font-extrabold text-base uppercase tracking-wider shadow-xl shadow-amber-500/30 hover:shadow-amber-500/50 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 group"
             >
-              <span>START YOUR JOURNEY TODAY ($299)</span>
+              <span>START YOUR JOURNEY TODAY ($149 / ₹11,999)</span>
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
 

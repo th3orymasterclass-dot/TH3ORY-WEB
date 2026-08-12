@@ -20,7 +20,7 @@ export async function saveEnrollmentToSupabase(enrollmentData) {
       profession: enrollmentData.profession || '',
       dob: enrollmentData.dob || null,
       plan_id: enrollmentData.planId || 'pro',
-      plan_name: enrollmentData.planName || 'TH3ORY Live Cohort',
+      plan_name: enrollmentData.planName || 'TH3ORY Masterclass',
       amount_paid: enrollmentData.price || 0,
       currency: enrollmentData.currency || 'USD',
       gateway: enrollmentData.gateway || 'stripe',
@@ -43,7 +43,7 @@ export async function saveEnrollmentToSupabase(enrollmentData) {
       name: enrollmentData.name,
       email: enrollmentData.email,
       enrollment_code: enrollmentData.code || 'TH3ORY2026',
-      plan_name: enrollmentData.planName || 'TH3ORY Live Cohort',
+      plan_name: enrollmentData.planName || 'TH3ORY Masterclass',
       last_login: new Date().toISOString(),
     };
 
