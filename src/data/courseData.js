@@ -115,18 +115,7 @@ export const roadmapLevels = [
       { id: "l1-4", title: "Day 04: Overcoming Social Anxiety & Internal Presence Blockers", duration: "19 mins", preview: false },
       { id: "l1-5", title: "Day 05: Room Entry & Spatial Ownership Tactics", duration: "21 mins", preview: false },
       { id: "l1-6", title: "Day 06 [CAPSTONE 1]: Real-World Presence Audit & Video Reflection", duration: "45 mins", preview: false }
-    ],
-    sampleQuiz: {
-      question: "According to Level 1 Presence psychology, what is the single most powerful vocal habit that commands immediate executive attention?",
-      options: [
-        "Speaking as quickly as possible to convey urgency",
-        "Using deliberate downward inflection at sentence ends accompanied by micro-pauses",
-        "Raising pitch at the end of every sentence like a question",
-        "Filling every silence with verbal filler words like 'um' or 'ah'"
-      ],
-      correctIndex: 1,
-      explanation: "Downward inflection signals certainty and high status, while comfortable micro-pauses demonstrate total emotional composure."
-    }
+    ]
   },
   {
     id: "l2",
@@ -144,18 +133,7 @@ export const roadmapLevels = [
       { id: "l2-4", title: "Day 10: Pitching Ideas with Unassailable Clarity & Conviction", duration: "20 mins", preview: false },
       { id: "l2-5", title: "Day 11: Boundaries, Saying 'No' & Protecting Your Authority", duration: "18 mins", preview: false },
       { id: "l2-6", title: "Day 12 [CAPSTONE 2]: The High-Stakes Pitch & Negotiation Simulation", duration: "50 mins", preview: false }
-    ],
-    sampleQuiz: {
-      question: "When faced with an aggressive interruption during a key presentation, what is the Level 2 Power protocol?",
-      options: [
-        "Immediately stop speaking and apologize",
-        "Yell over the person to assert loudness",
-        "Maintain eye contact, finish your thought steadily without altering pace, then address them",
-        "Leave the room immediately"
-      ],
-      correctIndex: 2,
-      explanation: "Maintaining steady cadence without rushing shows emotional regulation and high baseline power."
-    }
+    ]
   },
   {
     id: "l3",

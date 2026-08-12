@@ -4,17 +4,10 @@ import { courseDetails, roadmapLevels } from '../data/courseData';
 
 export default function CurriculumExplorer({ onOpenVideo }) {
   const [activeLevelId, setActiveLevelId] = useState(roadmapLevels[0].id);
-  const [quizAnswers, setQuizAnswers] = useState({});
-  const [showQuizResult, setShowQuizResult] = useState({});
   const [showSyllabusModal, setShowSyllabusModal] = useState(false);
 
   const toggleLevel = (id) => {
     setActiveLevelId(activeLevelId === id ? null : id);
-  };
-
-  const handleSelectQuizOption = (levelId, optionIdx) => {
-    setQuizAnswers(prev => ({ ...prev, [levelId]: optionIdx }));
-    setShowQuizResult(prev => ({ ...prev, [levelId]: true }));
   };
 
   return (
@@ -66,8 +59,6 @@ export default function CurriculumExplorer({ onOpenVideo }) {
         <div className="max-w-4xl mx-auto space-y-5">
           {roadmapLevels.map((lvl) => {
             const isOpen = activeLevelId === lvl.id;
-            const quizOption = quizAnswers[lvl.id];
-            const quizResultVisible = showQuizResult[lvl.id];
 
             return (
               <div
@@ -163,53 +154,6 @@ export default function CurriculumExplorer({ onOpenVideo }) {
                         ))}
                       </div>
                     </div>
-
-                    {/* Interactive Quiz Preview Box */}
-                    {lvl.sampleQuiz && (
-                      <div className="mt-6 p-5 rounded-2xl bg-amber-950/20 border border-amber-500/30 space-y-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider">
-                            <HelpCircle className="w-4 h-4" /> {lvl.name} Situational Judgment Practice
-                          </div>
-                          <span className="text-xs text-slate-400">Interactive Quiz</span>
-                        </div>
-
-                        <p className="text-sm font-semibold text-slate-200">{lvl.sampleQuiz.question}</p>
-
-                        <div className="space-y-2">
-                          {lvl.sampleQuiz.options.map((opt, idx) => {
-                            const isSelected = quizOption === idx;
-                            const isCorrect = idx === lvl.sampleQuiz.correctIndex;
-                            let btnStyle = "bg-slate-900/60 border-slate-800 text-slate-300 hover:border-amber-500/40";
-                            
-                            if (quizResultVisible) {
-                              if (isCorrect) btnStyle = "bg-emerald-950/50 border-emerald-500/60 text-emerald-200 font-bold";
-                              else if (isSelected && !isCorrect) btnStyle = "bg-rose-950/50 border-rose-500/60 text-rose-200";
-                            }
-
-                            return (
-                              <button
-                                key={idx}
-                                onClick={() => handleSelectQuizOption(lvl.id, idx)}
-                                className={`w-full p-3 text-left text-xs sm:text-sm rounded-xl border transition-all flex items-center justify-between ${btnStyle}`}
-                              >
-                                <span>{opt}</span>
-                                {quizResultVisible && isCorrect && <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />}
-                                {quizResultVisible && isSelected && !isCorrect && <XCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />}
-                              </button>
-                            );
-                          })}
-                        </div>
-
-                        {quizResultVisible && (
-                          <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-slate-300 animate-fade-in">
-                            <strong className="text-amber-400">TH3ORY Insight: </strong>
-                            {lvl.sampleQuiz.explanation}
-                          </div>
-                        )}
-                      </div>
-                    )}
-
                   </div>
                 )}
               </div>
