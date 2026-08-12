@@ -33,7 +33,6 @@ export default function Navbar({ onOpenCheckout, onOpenDashboard, isEnrolled }) 
             <a href="#structure" className="hover:text-amber-400 transition-colors">Structure</a>
             <a href="#outcomes" className="hover:text-amber-400 transition-colors">Outcomes & Bonuses</a>
             <a href="#pricing" className="hover:text-amber-400 transition-colors">Pricing</a>
-            <a href="#reviews" className="hover:text-amber-400 transition-colors">Reviews</a>
           </nav>
 
           {/* Action Buttons */}
@@ -77,7 +76,6 @@ export default function Navbar({ onOpenCheckout, onOpenDashboard, isEnrolled }) 
             <a href="#structure" onClick={() => setMobileMenuOpen(false)} className="hover:text-amber-400">Structure</a>
             <a href="#outcomes" onClick={() => setMobileMenuOpen(false)} className="hover:text-amber-400">Outcomes & Bonuses</a>
             <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="hover:text-amber-400">Pricing</a>
-            <a href="#reviews" onClick={() => setMobileMenuOpen(false)} className="hover:text-amber-400">Reviews</a>
             
             <div className="pt-2 border-t border-slate-800 flex flex-col gap-3">
               {isEnrolled && (

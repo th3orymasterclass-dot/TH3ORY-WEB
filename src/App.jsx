@@ -107,8 +107,6 @@ export default function App() {
           setCouponDiscount={setCouponDiscount}
         />
 
-        <Testimonials />
-
         <FAQSection />
       </main>
 
