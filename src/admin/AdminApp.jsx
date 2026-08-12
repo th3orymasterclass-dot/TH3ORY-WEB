@@ -6,6 +6,7 @@ import {
   FolderOpen, Layers, MessageSquare
 } from 'lucide-react';
 import useAdminData from './useAdminData';
+import { isAdminAuthenticated } from '../data/adminData';
 import OverviewPanel   from './panels/OverviewPanel';
 import HeroPanel       from './panels/HeroPanel';
 import UrgencyPanel    from './panels/UrgencyPanel';
@@ -44,6 +45,13 @@ export default function AdminApp({ onLogout }) {
   const [active, setActive] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { data, save, reset, defaults, lastSaved } = useAdminData();
+
+  // Enforce session access control
+  React.useEffect(() => {
+    if (!isAdminAuthenticated()) {
+      onLogout();
+    }
+  }, [onLogout]);
 
   const panelProps = { data, save, reset, defaults, lastSaved };
 

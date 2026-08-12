@@ -1,4 +1,5 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { isAdminAuthenticated } from '../data/adminData';
 
 // ─── Enrollments ──────────────────────────────────────────────────────────────
 export async function saveEnrollmentToSupabase(enrollmentData) {
@@ -190,6 +191,10 @@ export async function fetchCourseContentsFromSupabase() {
 
 export async function saveCourseContentToSupabase(item) {
   if (!isSupabaseConfigured || !supabase) return false;
+  if (!isAdminAuthenticated()) {
+    console.error('[Access Control Denied] Authorised Admin session required to update course content in database.');
+    return false;
+  }
   try {
     const payload = {
       title: item.title,
@@ -226,6 +231,10 @@ export async function saveCourseContentToSupabase(item) {
 
 export async function deleteCourseContentFromSupabase(id) {
   if (!isSupabaseConfigured || !supabase) return false;
+  if (!isAdminAuthenticated()) {
+    console.error('[Access Control Denied] Authorised Admin session required to delete course content from database.');
+    return false;
+  }
   try {
     const { error } = await supabase.from('course_contents').delete().eq('id', id);
     return !error;

@@ -14,6 +14,17 @@ import {
 
 const LS_PREFIX = 'th3ory_admin_';
 
+/**
+ * Access Control Helper: Check if session has active Admin Authorization
+ */
+export function isAdminAuthenticated() {
+  try {
+    return typeof sessionStorage !== 'undefined' && sessionStorage.getItem('th3ory_admin_auth') === '1';
+  } catch {
+    return false;
+  }
+}
+
 function lsGet(key, fallback) {
   try {
     const raw = localStorage.getItem(LS_PREFIX + key);
@@ -24,17 +35,29 @@ function lsGet(key, fallback) {
 }
 
 export function lsSet(key, value) {
+  if (!isAdminAuthenticated()) {
+    console.error('[Access Control Denied] Authorised Admin session required to update website data.');
+    throw new Error('Access Control Denied: Admin authentication required.');
+  }
   localStorage.setItem(LS_PREFIX + key, JSON.stringify(value));
   // Notify same-tab listeners
   window.dispatchEvent(new CustomEvent('th3ory_data_change', { detail: { key } }));
 }
 
 export function lsReset(key) {
+  if (!isAdminAuthenticated()) {
+    console.error('[Access Control Denied] Authorised Admin session required to reset website data.');
+    throw new Error('Access Control Denied: Admin authentication required.');
+  }
   localStorage.removeItem(LS_PREFIX + key);
   window.dispatchEvent(new CustomEvent('th3ory_data_change', { detail: { key } }));
 }
 
 export function resetAllData() {
+  if (!isAdminAuthenticated()) {
+    console.error('[Access Control Denied] Authorised Admin session required to reset website data.');
+    throw new Error('Access Control Denied: Admin authentication required.');
+  }
   const keys = ['courseDetails','video','levels','plans','addons','reviews','faqs','content'];
   keys.forEach(k => localStorage.removeItem(LS_PREFIX + k));
   window.dispatchEvent(new CustomEvent('th3ory_data_change', { detail: { key: 'all' } }));

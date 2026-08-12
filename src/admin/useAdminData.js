@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-  lsSet, lsReset, resetAllData, defaults,
+  lsSet, lsReset, resetAllData, defaults, isAdminAuthenticated,
   getCourseDetails, getVideo, getLevels,
   getPlans, getAddons, getReviews, getFaqs, getContent,
 } from '../data/adminData';
@@ -39,7 +39,12 @@ export default function useAdminData() {
     // Initial hydration from Supabase database
     fetchCourseContentsFromSupabase().then(sbContent => {
       if (sbContent && sbContent.length > 0) {
-        lsSet('content', sbContent);
+        try {
+          localStorage.setItem('th3ory_admin_content', JSON.stringify(sbContent));
+          window.dispatchEvent(new CustomEvent('th3ory_data_change', { detail: { key: 'content' } }));
+        } catch (e) {
+          console.warn('[Supabase Hydration] Could not store content locally:', e);
+        }
       }
     });
 
@@ -47,18 +52,38 @@ export default function useAdminData() {
   }, []);
 
   const save = useCallback((key, value) => {
-    lsSet(key, value);
-    setLastSaved(new Date());
+    if (!isAdminAuthenticated()) {
+      alert('Access Control Denied: You must be logged in as Admin to save updates.');
+      return false;
+    }
+    try {
+      lsSet(key, value);
+      setLastSaved(new Date());
+      return true;
+    } catch (err) {
+      alert(err.message);
+      return false;
+    }
   }, []);
 
   const reset = useCallback((key) => {
-    if (key === 'all') {
-      resetAllData();
-    } else {
-      lsReset(key);
+    if (!isAdminAuthenticated()) {
+      alert('Access Control Denied: You must be logged in as Admin to reset data.');
+      return false;
     }
-    setLastSaved(new Date());
+    try {
+      if (key === 'all') {
+        resetAllData();
+      } else {
+        lsReset(key);
+      }
+      setLastSaved(new Date());
+      return true;
+    } catch (err) {
+      alert(err.message);
+      return false;
+    }
   }, []);
 
-  return { data, save, reset, defaults, lastSaved };
+  return { data, save, reset, defaults, lastSaved, isAdmin: isAdminAuthenticated() };
 }
