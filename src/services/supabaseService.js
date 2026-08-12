@@ -99,6 +99,59 @@ export async function verifyStudentCodeWithSupabase(emailOrName, code) {
   }
 }
 
+// ─── Site Settings (Real-time Site Configuration Sync) ──────────────────────
+export async function saveSiteSettingsToSupabase(key, value) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  if (!isAdminAuthenticated()) return false;
+  try {
+    const { error } = await supabase.from('site_settings').upsert([
+      { setting_key: key, setting_value: value, updated_at: new Date().toISOString() }
+    ], { onConflict: 'setting_key' });
+    return !error;
+  } catch (err) {
+    console.error('[Supabase] Error saving site setting:', err);
+    return false;
+  }
+}
+
+export async function fetchSiteSettingsFromSupabase() {
+  if (!isSupabaseConfigured || !supabase) return null;
+  try {
+    const { data, error } = await supabase.from('site_settings').select('*');
+    if (error || !data) return null;
+    const settings = {};
+    data.forEach(item => {
+      settings[item.setting_key] = item.setting_value;
+    });
+    return settings;
+  } catch {
+    return null;
+  }
+}
+
+export function subscribeToSiteSettings(onSettingChange) {
+  if (!isSupabaseConfigured || !supabase) return () => {};
+  try {
+    const sub = supabase
+      .channel(`site_settings_${Date.now()}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'site_settings' },
+        (payload) => {
+          if (payload.new && payload.new.setting_key) {
+            onSettingChange(payload.new.setting_key, payload.new.setting_value);
+          }
+        }
+      )
+      .subscribe();
+    return () => {
+      try { supabase.removeChannel(sub); } catch {}
+    };
+  } catch {
+    return () => {};
+  }
+}
+
 // ─── Queries ──────────────────────────────────────────────────────────────────
 export async function saveQueryToSupabase(queryData) {
   if (!isSupabaseConfigured || !supabase) return false;
@@ -140,6 +193,21 @@ export async function fetchQueriesFromSupabase() {
   }
 }
 
+export function subscribeToQueries(onQueryChange) {
+  if (!isSupabaseConfigured || !supabase) return () => {};
+  try {
+    const sub = supabase
+      .channel(`queries_${Date.now()}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'queries' }, () => {
+        fetchQueriesFromSupabase().then(res => { if (res) onQueryChange(res); });
+      })
+      .subscribe();
+    return () => { try { supabase.removeChannel(sub); } catch {} };
+  } catch {
+    return () => {};
+  }
+}
+
 // ─── Reviews ──────────────────────────────────────────────────────────────────
 export async function saveReviewToSupabase(reviewData) {
   if (!isSupabaseConfigured || !supabase) return false;
@@ -154,6 +222,55 @@ export async function saveReviewToSupabase(reviewData) {
     return !error;
   } catch {
     return false;
+  }
+}
+
+export async function fetchReviewsFromSupabase() {
+  if (!isSupabaseConfigured || !supabase) return null;
+  try {
+    const { data, error } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
+    if (error || !data) return null;
+    return data.map(r => ({
+      id: r.id,
+      name: r.name,
+      role: r.role,
+      category: r.category,
+      rating: r.rating,
+      comment: r.comment,
+      avatar: r.avatar || `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80`
+    }));
+  } catch {
+    return null;
+  }
+}
+
+export function subscribeToReviews(onReviewChange) {
+  if (!isSupabaseConfigured || !supabase) return () => {};
+  try {
+    const sub = supabase
+      .channel(`reviews_${Date.now()}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'reviews' }, () => {
+        fetchReviewsFromSupabase().then(res => { if (res) onReviewChange(res); });
+      })
+      .subscribe();
+    return () => { try { supabase.removeChannel(sub); } catch {} };
+  } catch {
+    return () => {};
+  }
+}
+
+export function subscribeToCourseContents(onContentChange) {
+  if (!isSupabaseConfigured || !supabase) return () => {};
+  try {
+    const sub = supabase
+      .channel(`course_contents_${Date.now()}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'course_contents' }, () => {
+        fetchCourseContentsFromSupabase().then(res => { if (res) onContentChange(res); });
+      })
+      .subscribe();
+    return () => { try { supabase.removeChannel(sub); } catch {} };
+  } catch {
+    return () => {};
   }
 }
 

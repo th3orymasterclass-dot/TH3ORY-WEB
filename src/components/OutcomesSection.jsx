@@ -1,8 +1,9 @@
 import React from 'react';
 import { Crown, Zap, Heart, Share2, TrendingUp, Award, FileText, BookMarked, Users, CheckCircle2, Sparkles } from 'lucide-react';
-import { courseDetails } from '../data/courseData';
+import { useTh3oryLive } from '../data/adminData';
 
 export default function OutcomesSection() {
+  const { courseDetails } = useTh3oryLive();
   const iconMap = {
     Crown: Crown,
     Zap: Zap,

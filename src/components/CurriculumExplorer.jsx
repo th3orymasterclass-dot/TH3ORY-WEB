@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { BookOpen, ChevronDown, PlayCircle, Lock, HelpCircle, CheckCircle2, XCircle, FileText, Calendar, Mountain, Clock, Award, Crown, Sparkles } from 'lucide-react';
-import { courseDetails, roadmapLevels } from '../data/courseData';
+import { useTh3oryLive } from '../data/adminData';
 
 export default function CurriculumExplorer({ onOpenVideo }) {
-  const [activeLevelId, setActiveLevelId] = useState(roadmapLevels[0].id);
+  const { courseDetails, levels } = useTh3oryLive();
+  const [activeLevelId, setActiveLevelId] = useState((levels && levels[0]) ? levels[0].id : 'level-1');
   const [showSyllabusModal, setShowSyllabusModal] = useState(false);
 
   const toggleLevel = (id) => {
@@ -57,7 +58,7 @@ export default function CurriculumExplorer({ onOpenVideo }) {
 
         {/* 5 LEVELS ROADMAP ACCORDION */}
         <div className="max-w-4xl mx-auto space-y-5">
-          {roadmapLevels.map((lvl) => {
+          {(levels || []).map((lvl) => {
             const isOpen = activeLevelId === lvl.id;
 
             return (

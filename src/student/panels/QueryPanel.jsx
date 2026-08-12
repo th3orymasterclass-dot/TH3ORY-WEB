@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Send, MessageCircle, Clock, CheckCircle2, AlertCircle, Plus, X, ChevronDown, ChevronUp, Paperclip } from 'lucide-react';
 import { getQueries, addQuery, updateQuery } from '../studentData';
 import { getCourseDetails } from '../../data/adminData';
-import { saveQueryToSupabase } from '../../services/supabaseService';
+import { saveQueryToSupabase, fetchQueriesFromSupabase, subscribeToQueries } from '../../services/supabaseService';
 
 const QUERY_TYPES = [
   'General Question',
@@ -100,7 +100,23 @@ export default function QueryPanel({ profile }) {
   useEffect(() => {
     const h = () => setQueries(getQueries());
     window.addEventListener('th3ory_student_change', h);
-    return () => window.removeEventListener('th3ory_student_change', h);
+
+    fetchQueriesFromSupabase().then(sbQueries => {
+      if (sbQueries && sbQueries.length > 0) {
+        setQueries(sbQueries);
+      }
+    });
+
+    const unsub = subscribeToQueries((updatedQueries) => {
+      if (updatedQueries && updatedQueries.length > 0) {
+        setQueries(updatedQueries);
+      }
+    });
+
+    return () => {
+      window.removeEventListener('th3ory_student_change', h);
+      unsub();
+    };
   }, []);
 
   const up = (k, v) => setForm(f => ({...f, [k]: v}));

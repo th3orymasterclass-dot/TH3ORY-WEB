@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Tag, Check, Crown, ShieldCheck, ArrowRight, Building2, Globe2, Users, Sparkles, Send, X } from 'lucide-react';
-import { pricingPlans } from '../data/courseData';
+import { useTh3oryLive } from '../data/adminData';
 import { saveQueryToSupabase } from '../services/supabaseService';
 import { sendEnrollmentEmail } from '../services/emailService';
 
 export default function PricingSection({ onSelectPlan, couponCode, setCouponCode, couponDiscount, setCouponDiscount }) {
+  const { plans } = useTh3oryLive();
   const [currency, setCurrency] = useState('USD'); // 'USD' | 'INR'
   const [isMonthly, setIsMonthly] = useState(false);
   const [couponInput, setCouponInput] = useState(couponCode || '');
@@ -147,7 +148,7 @@ export default function PricingSection({ onSelectPlan, couponCode, setCouponCode
 
         {/* Pricing Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch max-w-5xl mx-auto">
-          {pricingPlans.map((plan) => {
+          {(plans || []).map((plan) => {
             const isEnt = plan.isEnterprise;
             
             // Currency calculation

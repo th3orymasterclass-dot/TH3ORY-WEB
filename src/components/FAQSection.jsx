@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { HelpCircle, ChevronDown, Search } from 'lucide-react';
-import { faqList } from '../data/courseData';
+import { useTh3oryLive } from '../data/adminData';
 
 export default function FAQSection() {
+  const { faqs } = useTh3oryLive();
   const [openIdx, setOpenIdx] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -10,7 +11,7 @@ export default function FAQSection() {
     setOpenIdx(openIdx === idx ? null : idx);
   };
 
-  const filteredFaqs = faqList.filter(faq =>
+  const filteredFaqs = faqs.filter(faq =>
     faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
     faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
   );

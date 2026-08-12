@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Flame, ArrowRight, CheckCircle2, Crown } from 'lucide-react';
-import { courseDetails } from '../data/courseData';
+import { useTh3oryLive } from '../data/adminData';
 
 export default function HeroSection({ onOpenVideo, onOpenCheckout }) {
+  const { courseDetails } = useTh3oryLive();
   const [timeLeft, setTimeLeft] = useState({ hours: 14, minutes: 32, seconds: 45 });
 
   useEffect(() => {

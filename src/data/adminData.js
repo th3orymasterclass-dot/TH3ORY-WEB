@@ -63,6 +63,8 @@ export function resetAllData() {
   window.dispatchEvent(new CustomEvent('th3ory_data_change', { detail: { key: 'all' } }));
 }
 
+import { useState, useEffect } from 'react';
+
 // ─── Live getters used by public components ────────────────────────────────────
 export const getCourseDetails = () => lsGet('courseDetails', defaultCourseDetails);
 export const getVideo         = () => lsGet('video', defaultVideo);
@@ -72,6 +74,42 @@ export const getAddons        = () => lsGet('addons', defaultAddons);
 export const getReviews       = () => lsGet('reviews', defaultReviews);
 export const getFaqs          = () => lsGet('faqs', defaultFaqs);
 export const getContent       = () => lsGet('content', []);
+
+/**
+ * Custom React Hook for Realtime Component Reactivity
+ */
+export function useTh3oryLive() {
+  const [data, setData] = useState(() => ({
+    courseDetails: getCourseDetails(),
+    video: getVideo(),
+    levels: getLevels(),
+    plans: getPlans(),
+    addons: getAddons(),
+    reviews: getReviews(),
+    faqs: getFaqs(),
+    content: getContent(),
+  }));
+
+  useEffect(() => {
+    const handler = () => {
+      setData({
+        courseDetails: getCourseDetails(),
+        video: getVideo(),
+        levels: getLevels(),
+        plans: getPlans(),
+        addons: getAddons(),
+        reviews: getReviews(),
+        faqs: getFaqs(),
+        content: getContent(),
+      });
+    };
+
+    window.addEventListener('th3ory_data_change', handler);
+    return () => window.removeEventListener('th3ory_data_change', handler);
+  }, []);
+
+  return data;
+}
 
 // ─── Defaults (used by admin to reset) ────────────────────────────────────────
 export const defaults = {

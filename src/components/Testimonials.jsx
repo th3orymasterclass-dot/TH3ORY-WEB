@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { Star, MessageSquare, Quote, Sparkles } from 'lucide-react';
-import { studentReviews } from '../data/courseData';
+import { useTh3oryLive } from '../data/adminData';
 
 export default function Testimonials() {
+  const { reviews } = useTh3oryLive();
   const [filterCategory, setFilterCategory] = useState('All');
-  const categories = ['All', 'Career Switcher', 'Advanced Developer'];
+  const categories = ['All', 'Career Switcher', 'Advanced Developer', 'Learner'];
 
   const filteredReviews = filterCategory === 'All'
-    ? studentReviews
-    : studentReviews.filter(r => r.category === filterCategory);
+    ? reviews
+    : reviews.filter(r => r.category === filterCategory);
 
   return (
     <section id="reviews" className="py-24 relative bg-slate-950 border-t border-slate-900">
