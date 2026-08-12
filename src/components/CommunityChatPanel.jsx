@@ -97,9 +97,12 @@ export default function CommunityChatPanel({ currentUser, isAdmin = false }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!inputMsg.trim()) return;
+  const handleSendMessage = async (e, forceAiTrigger = false) => {
+    if (e) e.preventDefault();
+    const textToSend = inputMsg.trim();
+    if (!textToSend && !forceAiTrigger) return;
+
+    const userText = textToSend || (forceAiTrigger ? `@AI Provide guidance for #${activeChannel}` : '');
 
     const newMsg = {
       id: `msg_${Date.now()}`,
@@ -107,7 +110,7 @@ export default function CommunityChatPanel({ currentUser, isAdmin = false }) {
       senderName,
       senderRole,
       senderEmail: currentUser?.email || '',
-      message: inputMsg.trim(),
+      message: userText,
       createdAt: new Date().toISOString(),
     };
 
@@ -116,6 +119,34 @@ export default function CommunityChatPanel({ currentUser, isAdmin = false }) {
 
     // Save to Supabase DB asynchronously
     await saveCommunityMessageToSupabase(newMsg);
+
+    // Trigger ChatMCP AI Assistant if requested or in Q&A channel or starting with @AI
+    const shouldTriggerAi = forceAiTrigger || userText.toLowerCase().includes('@ai') || userText.toLowerCase().includes('@chatmcp') || activeChannel === 'q-and-a-instructor';
+
+    if (shouldTriggerAi) {
+      try {
+        const response = await fetch('/api/chat-mcp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            channel: activeChannel,
+            userMessage: userText,
+            senderName
+          })
+        });
+        if (response.ok) {
+          const resData = await response.json();
+          if (resData.success && resData.data) {
+            setMessages(prev => {
+              if (prev.some(m => m.id === resData.data.id)) return prev;
+              return [...prev, resData.data];
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('[ChatMCP] Could not reach AI serverless endpoint:', err);
+      }
+    }
   };
 
   const filteredMessages = messages.filter(m => 
@@ -144,11 +175,19 @@ export default function CommunityChatPanel({ currentUser, isAdmin = false }) {
                 </span>
               )}
             </div>
-            <p className="text-slate-400 text-xs mt-0.5">Real-time interaction between students and Mentalist Sravan Production</p>
+            <p className="text-slate-400 text-xs mt-0.5">Real-time interaction between students, Mentalist Sravan & ChatMCP AI</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          <button
+            onClick={() => handleSendMessage(null, true)}
+            className="px-3.5 py-2 rounded-xl bg-purple-950/70 hover:bg-purple-900/80 text-purple-300 border border-purple-500/40 text-xs font-bold transition-all flex items-center gap-1.5 shadow-md shadow-purple-500/10"
+            title="Ask ChatMCP AI Assistant"
+          >
+            <Sparkles className="w-4 h-4 text-purple-400 animate-pulse" /> Ask ChatMCP
+          </button>
+
           <button
             onClick={() => loadChannelMessages(activeChannel)}
             className="p-2.5 rounded-xl bg-slate-900 text-slate-400 hover:text-amber-400 border border-slate-800 transition-colors"
@@ -217,7 +256,7 @@ export default function CommunityChatPanel({ currentUser, isAdmin = false }) {
             </div>
             <div className="text-[11px] font-bold flex items-center gap-1.5 bg-emerald-950/60 border border-emerald-500/30 px-3 py-1 rounded-full text-emerald-400">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>LIVE Realtime</span>
+              <span>LIVE Realtime • ChatMCP</span>
             </div>
           </div>
 
@@ -231,25 +270,38 @@ export default function CommunityChatPanel({ currentUser, isAdmin = false }) {
             ) : (
               filteredMessages.map((msg, idx) => {
                 const isAdminRole = msg.senderRole === 'admin';
+                const isAiRole    = msg.senderRole === 'ai_bot' || msg.senderName.includes('ChatMCP');
                 return (
                   <div
                     key={msg.id || idx}
                     className={`flex items-start gap-3 animate-fade-in ${
-                      isAdminRole ? 'bg-amber-950/20 border border-amber-500/30 p-4 rounded-2xl' : 'bg-slate-900/60 border border-slate-800 p-4 rounded-2xl'
+                      isAiRole
+                        ? 'bg-purple-950/30 border border-purple-500/40 p-4 rounded-2xl shadow-lg shadow-purple-500/5'
+                        : isAdminRole
+                          ? 'bg-amber-950/20 border border-amber-500/30 p-4 rounded-2xl'
+                          : 'bg-slate-900/60 border border-slate-800 p-4 rounded-2xl'
                     }`}
                   >
                     {/* Avatar */}
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 font-bold text-xs ${
-                      isAdminRole ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'bg-slate-800 text-slate-200 border border-slate-700'
+                      isAiRole
+                        ? 'bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-md shadow-purple-500/30'
+                        : isAdminRole
+                          ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
+                          : 'bg-slate-800 text-slate-200 border border-slate-700'
                     }`}>
-                      {isAdminRole ? <Crown className="w-5 h-5 fill-slate-950" /> : msg.senderName.charAt(0).toUpperCase()}
+                      {isAiRole ? <Sparkles className="w-5 h-5 fill-purple-300" /> : isAdminRole ? <Crown className="w-5 h-5 fill-slate-950" /> : msg.senderName.charAt(0).toUpperCase()}
                     </div>
 
                     <div className="flex-1 min-w-0 space-y-1">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-extrabold text-white">{msg.senderName}</span>
                         
-                        {isAdminRole ? (
+                        {isAiRole ? (
+                          <span className="text-[9px] px-1.5 py-0.2 bg-purple-500/20 text-purple-300 font-extrabold rounded border border-purple-500/40 uppercase tracking-wider flex items-center gap-1">
+                            🤖 ChatMCP AI Assistant
+                          </span>
+                        ) : isAdminRole ? (
                           <span className="text-[9px] px-1.5 py-0.2 bg-amber-500/20 text-amber-300 font-extrabold rounded border border-amber-500/40 uppercase tracking-wider">
                             👑 Admin / Instructor
                           </span>
@@ -279,7 +331,7 @@ export default function CommunityChatPanel({ currentUser, isAdmin = false }) {
           <form onSubmit={handleSendMessage} className="p-4 bg-slate-900 border-t border-slate-800 flex items-center gap-3">
             <input
               type="text"
-              placeholder={`Message #${activeChannel} as ${senderName}...`}
+              placeholder={`Message #${activeChannel} (type @AI to ask ChatMCP)...`}
               value={inputMsg}
               onChange={e => setInputMsg(e.target.value)}
               className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
