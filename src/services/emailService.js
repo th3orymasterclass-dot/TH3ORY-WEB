@@ -1,10 +1,26 @@
-const defaultKey = ['re_', 'ijc5msHR_', 'NMqav31DKKqYhyMMVg2yumqk'].join('');
-const apiKey = import.meta.env.VITE_RESEND_API_KEY || defaultKey;
+/**
+ * Safely retrieve Resend API key at runtime
+ */
+const getApiKey = () => {
+  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_RESEND_API_KEY) {
+    return import.meta.env.VITE_RESEND_API_KEY;
+  }
+  if (typeof window !== 'undefined' && window.VITE_RESEND_API_KEY) {
+    return window.VITE_RESEND_API_KEY;
+  }
+  return '';
+};
 
 /**
  * Send Automated Enrollment Confirmation Email via Resend REST API
  */
 export async function sendEnrollmentEmail(receipt) {
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    console.log('[Resend API] VITE_RESEND_API_KEY missing in environment variables. Email notification skipped.');
+    return { success: false, message: 'Resend API Key missing' };
+  }
+
   try {
     const portalUrl = typeof window !== 'undefined' ? `${window.location.origin}/#/student` : 'https://th3ory.online/#/student';
 
