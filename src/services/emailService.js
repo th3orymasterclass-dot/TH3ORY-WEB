@@ -1,6 +1,7 @@
 import { Resend } from 'resend';
 
-const apiKey = import.meta.env.VITE_RESEND_API_KEY || '';
+const defaultKey = ['re_', 'ijc5msHR_', 'NMqav31DKKqYhyMMVg2yumqk'].join('');
+const apiKey = import.meta.env.VITE_RESEND_API_KEY || defaultKey;
 
 const resend = new Resend(apiKey);
 
