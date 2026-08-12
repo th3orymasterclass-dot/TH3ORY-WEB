@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageSquare, Send, Crown, GraduationCap, Hash, Users, Sparkles, RefreshCw, Smile, Heart, ThumbsUp, Search, ShieldCheck } from 'lucide-react';
-import { fetchCommunityMessagesFromSupabase, saveCommunityMessageToSupabase } from '../services/supabaseService';
+import { MessageSquare, Send, Crown, GraduationCap, Hash, Users, Sparkles, RefreshCw, Smile, Heart, ThumbsUp, Search, ShieldCheck, Radio } from 'lucide-react';
+import { fetchCommunityMessagesFromSupabase, saveCommunityMessageToSupabase, subscribeToCommunityMessages } from '../services/supabaseService';
 
 const CHANNELS = [
   { id: 'general-lounge', name: 'general-lounge', desc: 'High-Achievers Mastermind Lounge & Casual Chat', icon: '💬' },
@@ -43,6 +43,7 @@ export default function CommunityChatPanel({ currentUser, isAdmin = false }) {
   const [messages, setMessages] = useState(INITIAL_MESSAGES[CHANNELS[0].id] || []);
   const [inputMsg, setInputMsg] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isLiveConnected, setIsLiveConnected] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const messagesEndRef = useRef(null);
 
@@ -51,19 +52,45 @@ export default function CommunityChatPanel({ currentUser, isAdmin = false }) {
   const senderRole = isAdmin ? 'admin' : 'student';
 
   // Load messages from Supabase or Fallback
-  const loadChannelMessages = async (channelId) => {
-    setLoading(true);
+  const loadChannelMessages = async (channelId, isSilent = false) => {
+    if (!isSilent) setLoading(true);
     const remote = await fetchCommunityMessagesFromSupabase(channelId);
     if (remote && remote.length > 0) {
-      setMessages(remote);
-    } else {
-      setMessages(INITIAL_MESSAGES[channelId] || []);
+      setMessages(prev => {
+        // Merge without duplicates
+        const existingIds = new Set(prev.map(m => m.id));
+        const newRemote = remote.filter(m => !existingIds.has(m.id));
+        if (newRemote.length === 0) return prev;
+        return [...prev, ...newRemote].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      });
     }
-    setLoading(false);
+    if (!isSilent) setLoading(false);
   };
 
+  // Real-time subscription & auto-polling heartbeat
   useEffect(() => {
     loadChannelMessages(activeChannel);
+
+    // 1. Subscribe to Supabase Realtime WebSockets
+    const unsubscribe = subscribeToCommunityMessages(activeChannel, (incomingMsg) => {
+      setMessages(prev => {
+        if (prev.some(m => m.id === incomingMsg.id || (m.message === incomingMsg.message && m.senderName === incomingMsg.senderName && Math.abs(new Date(m.createdAt) - new Date(incomingMsg.createdAt)) < 5000))) {
+          return prev;
+        }
+        return [...prev, incomingMsg];
+      });
+      setIsLiveConnected(true);
+    });
+
+    // 2. Real-time background polling heartbeat every 3.5s
+    const pollInterval = setInterval(() => {
+      loadChannelMessages(activeChannel, true);
+    }, 3500);
+
+    return () => {
+      unsubscribe();
+      clearInterval(pollInterval);
+    };
   }, [activeChannel]);
 
   useEffect(() => {
@@ -188,8 +215,9 @@ export default function CommunityChatPanel({ currentUser, isAdmin = false }) {
               </span>
               <span className="text-xs text-slate-400 hidden sm:inline">— {CHANNELS.find(c => c.id === activeChannel)?.desc}</span>
             </div>
-            <div className="text-[11px] text-amber-400/80 font-bold flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5 text-amber-400" /> Persistent Supabase Sync
+            <div className="text-[11px] font-bold flex items-center gap-1.5 bg-emerald-950/60 border border-emerald-500/30 px-3 py-1 rounded-full text-emerald-400">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>LIVE Realtime</span>
             </div>
           </div>
 

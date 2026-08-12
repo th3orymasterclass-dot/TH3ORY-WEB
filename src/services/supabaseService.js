@@ -287,3 +287,46 @@ export async function saveCommunityMessageToSupabase(msgPayload) {
     return false;
   }
 }
+
+/**
+ * Real-time Supabase subscription for community chat messages
+ */
+export function subscribeToCommunityMessages(channelName, onNewMessage) {
+  if (!isSupabaseConfigured || !supabase) return () => {};
+
+  try {
+    const subChannel = `chat_${channelName}_${Date.now()}`;
+    const channelSub = supabase
+      .channel(subChannel)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'community_messages', filter: `channel=eq.${channelName}` },
+        (payload) => {
+          if (payload.new) {
+            const formattedMsg = {
+              id: payload.new.id,
+              channel: payload.new.channel,
+              senderName: payload.new.sender_name,
+              senderEmail: payload.new.sender_email,
+              senderRole: payload.new.sender_role || 'student',
+              message: payload.new.message,
+              createdAt: payload.new.created_at,
+            };
+            onNewMessage(formattedMsg);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      try {
+        supabase.removeChannel(channelSub);
+      } catch (e) {
+        console.warn('[Supabase Realtime] Error removing channel:', e);
+      }
+    };
+  } catch (err) {
+    console.error('[Supabase Realtime] Exception establishing subscription:', err);
+    return () => {};
+  }
+}
