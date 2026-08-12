@@ -1,10 +1,17 @@
 export const courseDetails = {
   brandName: "TH3ORY",
+  productionHouse: "Mentalist Sravan Production",
   title: "MASTERCLASS OF INFLUENCING",
-  subtitle: "A 30-day online journey to master the psychology of influence, build magnetic presence, create meaningful connections, and leave a lasting legacy.",
+  subtitle: "An integrated production house for cognitive experiments, behavioral engineering, non-verbal communication, and high-impact psychological influence.",
   bannerQuote: "EVERY INTERACTION IS AN OPPORTUNITY. MAKE YOURS COUNT.",
   footerQuote: "Your influence is your currency. Invest in it daily. TH3ORY is your blueprint.",
   tagline: "LEARN. PRACTICE. INFLUENCE. TRANSFORM.",
+  instructor: {
+    name: "Mentalist Sravan Production",
+    title: "Integrated Production House for Cognitive Experiments",
+    bio: "Pioneering interactive behavioral studies, high-stakes psychological influence frameworks, and real-world cognitive engineering.",
+    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
+  },
   rating: 4.98,
   totalStudents: 18450,
   lastUpdated: "August 2026",

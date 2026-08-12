@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, Lock, CreditCard, Heart, GraduationCap, ArrowRight, UserCheck, ExternalLink } from 'lucide-react';
+import { ShieldCheck, Lock, CreditCard, Heart, GraduationCap, ArrowRight, Sparkles, Brain, Clapperboard } from 'lucide-react';
 import Logo from './Logo';
 import { getCourseDetails } from '../data/adminData';
 
@@ -18,12 +18,15 @@ export default function Footer({ onOpenCheckout }) {
             <a href="#" className="inline-block">
               <Logo className="h-8 sm:h-9" />
             </a>
-            <p className="text-amber-400/90 text-xs font-bold uppercase tracking-widest">
-              {details.tagline || 'LEARN. PRACTICE. INFLUENCE. TRANSFORM.'}
+
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[11px] font-extrabold uppercase tracking-widest">
+              <Clapperboard className="w-3.5 h-3.5" /> Mentalist Sravan Production
+            </div>
+
+            <p className="text-slate-300 max-w-md leading-relaxed text-xs sm:text-sm font-medium">
+              An integrated production house for cognitive experiments, behavioral engineering, non-verbal communication, and high-impact psychological influence.
             </p>
-            <p className="text-slate-400 max-w-sm leading-relaxed text-xs sm:text-sm">
-              {details.subtitle}
-            </p>
+
             <p className="text-slate-500 italic text-xs border-l-2 border-amber-500/40 pl-3">
               "{details.footerQuote || 'Your influence is your currency. Invest in it daily. TH3ORY is your blueprint.'}"
             </p>
@@ -61,15 +64,15 @@ export default function Footer({ onOpenCheckout }) {
             </ul>
           </div>
 
-          {/* Payment Gateways & Portals */}
+          {/* Payment Gateways & Production Badge */}
           <div className="space-y-3">
-            <h4 className="text-xs font-extrabold text-white uppercase tracking-widest">Payment & Portals</h4>
+            <h4 className="text-xs font-extrabold text-white uppercase tracking-widest">Production & Checkout</h4>
             <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2.5">
               <div className="flex items-center gap-2 text-slate-300 font-bold text-xs">
                 <CreditCard className="w-4 h-4 text-amber-400" /> Stripe, Razorpay, PayPal, UPI
               </div>
               <p className="text-[11px] text-slate-500 leading-normal">
-                Instant enrollment processing with automated email receipt and student access code generation.
+                Direct cognitive experiment enrollment powered by Mentalist Sravan Production with automated access generation.
               </p>
               <button
                 onClick={() => window.location.hash = '/enroll'}
@@ -85,7 +88,7 @@ export default function Footer({ onOpenCheckout }) {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <div>
-            &copy; 2026 TH3ORY Inc. All rights reserved. {details.instructor?.name || 'TH3ORY Founders Council'}.
+            &copy; 2026 Mentalist Sravan Production. All rights reserved. TH3ORY Masterclass of Influencing.
           </div>
           <div className="flex items-center gap-3">
             <a href="/#/student" className="hover:text-amber-400 transition-colors">Student Login</a>
