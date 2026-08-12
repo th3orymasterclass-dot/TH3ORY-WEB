@@ -49,6 +49,7 @@ export default function Footer({ onOpenCheckout }) {
               <li><a href="#roadmap" className="hover:text-amber-400 transition-colors">30-Day Level Roadmap</a></li>
               <li><a href="#outcomes" className="hover:text-amber-400 transition-colors">Outcomes & Bonuses</a></li>
               <li><a href="#pricing" className="hover:text-amber-400 transition-colors">Pricing & Plans</a></li>
+              <li><a href="#contact" className="hover:text-amber-400 transition-colors">Contact Us & Newsletter</a></li>
               <li><a href="#faq" className="hover:text-amber-400 transition-colors">FAQ & Support</a></li>
               <li className="pt-2 border-t border-slate-900">
                 <a href="/#/student" className="text-amber-400 font-bold hover:underline flex items-center gap-1">

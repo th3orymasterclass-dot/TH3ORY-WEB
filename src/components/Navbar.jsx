@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, ShoppingBag, Menu, X, ArrowRight } from 'lucide-react';
+import { ShieldCheck, ShoppingBag, Menu, X, ArrowRight, LogIn, Mail } from 'lucide-react';
 import Logo from './Logo';
 
 export default function Navbar({ onOpenCheckout, onOpenDashboard, isEnrolled }) {
@@ -27,16 +27,28 @@ export default function Navbar({ onOpenCheckout, onOpenDashboard, isEnrolled }) 
           </a>
 
           {/* Desktop Nav Links */}
-          <nav className="hidden md:flex items-center gap-7 text-xs font-bold uppercase tracking-wider text-slate-300">
+          <nav className="hidden md:flex items-center gap-6 text-xs font-bold uppercase tracking-wider text-slate-300">
             <a href="#pillars" className="hover:text-amber-400 transition-colors">5 Pillars</a>
             <a href="#roadmap" className="hover:text-amber-400 transition-colors">30-Day Roadmap</a>
             <a href="#structure" className="hover:text-amber-400 transition-colors">Structure</a>
             <a href="#outcomes" className="hover:text-amber-400 transition-colors">Outcomes & Bonuses</a>
             <a href="#pricing" className="hover:text-amber-400 transition-colors">Pricing</a>
+            <a href="#contact" className="hover:text-amber-400 transition-colors flex items-center gap-1">
+              <Mail className="w-3 h-3 text-amber-400" /> Contact
+            </a>
           </nav>
 
           {/* Action Buttons */}
-          <div className="hidden sm:flex items-center gap-4">
+          <div className="hidden sm:flex items-center gap-3">
+            {/* Sign In Button */}
+            <a
+              href="/#/student"
+              className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40 text-xs font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-md"
+            >
+              <LogIn className="w-3.5 h-3.5 text-amber-400" />
+              <span>Sign In</span>
+            </a>
+
             {isEnrolled ? (
               <button
                 onClick={onOpenDashboard}
@@ -59,6 +71,12 @@ export default function Navbar({ onOpenCheckout, onOpenDashboard, isEnrolled }) 
 
           {/* Mobile Hamburger */}
           <div className="flex md:hidden items-center gap-2">
+            <a
+              href="/#/student"
+              className="px-3 py-1.5 rounded-lg bg-slate-900 text-amber-400 border border-amber-500/30 text-xs font-bold uppercase tracking-wider flex items-center gap-1"
+            >
+              <LogIn className="w-3.5 h-3.5" /> Sign In
+            </a>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 rounded-lg bg-slate-900 text-amber-400 border border-amber-500/30"
@@ -70,14 +88,23 @@ export default function Navbar({ onOpenCheckout, onOpenDashboard, isEnrolled }) 
 
         {/* Mobile Dropdown Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden mt-4 pt-4 border-t border-slate-800 glass-card rounded-2xl p-5 flex flex-col gap-4 text-slate-200 text-sm font-bold uppercase tracking-wider">
+          <div className="md:hidden mt-4 pt-4 border-t border-slate-800 glass-card rounded-2xl p-5 flex flex-col gap-4 text-slate-200 text-sm font-bold uppercase tracking-wider animate-fade-in">
             <a href="#pillars" onClick={() => setMobileMenuOpen(false)} className="hover:text-amber-400">5 Pillars</a>
             <a href="#roadmap" onClick={() => setMobileMenuOpen(false)} className="hover:text-amber-400">30-Day Roadmap</a>
             <a href="#structure" onClick={() => setMobileMenuOpen(false)} className="hover:text-amber-400">Structure</a>
             <a href="#outcomes" onClick={() => setMobileMenuOpen(false)} className="hover:text-amber-400">Outcomes & Bonuses</a>
             <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="hover:text-amber-400">Pricing</a>
+            <a href="#contact" onClick={() => setMobileMenuOpen(false)} className="hover:text-amber-400">Contact Us</a>
             
             <div className="pt-2 border-t border-slate-800 flex flex-col gap-3">
+              <a
+                href="/#/student"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full py-3 rounded-xl bg-slate-900 text-amber-300 border border-amber-500/40 text-center font-extrabold flex items-center justify-center gap-2"
+              >
+                <LogIn className="w-4 h-4 text-amber-400" /> Student Sign In / Portal
+              </a>
+
               {isEnrolled && (
                 <button
                   onClick={() => { setMobileMenuOpen(false); onOpenDashboard(); }}

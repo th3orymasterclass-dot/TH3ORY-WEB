@@ -6,6 +6,7 @@ import VideoModal from './components/VideoModal';
 import CurriculumExplorer from './components/CurriculumExplorer';
 import OutcomesSection from './components/OutcomesSection';
 import PricingSection from './components/PricingSection';
+import ContactSection from './components/ContactSection';
 import CheckoutModal from './components/CheckoutModal';
 import StudentDashboardModal from './components/StudentDashboardModal';
 import EnrollmentPage from './components/EnrollmentPage';
@@ -106,6 +107,8 @@ export default function App() {
           couponDiscount={couponDiscount}
           setCouponDiscount={setCouponDiscount}
         />
+
+        <ContactSection />
 
         <FAQSection />
       </main>
