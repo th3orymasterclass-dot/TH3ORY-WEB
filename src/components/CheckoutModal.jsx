@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { X, Lock, CreditCard, ShieldCheck, CheckCircle2, QrCode, Sparkles, Loader2, Download, ArrowRight, ArrowLeft } from 'lucide-react';
+import { X, Lock, CreditCard, ShieldCheck, CheckCircle2, QrCode, Sparkles, Loader2, Download, ArrowRight, ArrowLeft, Mail } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { courseAddons } from '../data/courseData';
-import { saveEnrollmentToSupabase } from '../services/supabaseService';
+import { saveEnrollmentToSupabase, generateUniqueStudentCredentials } from '../services/supabaseService';
 import { sendEnrollmentEmail } from '../services/emailService';
 
 export default function CheckoutModal({
@@ -147,6 +147,8 @@ export default function CheckoutModal({
               }
 
               const orderId = response.razorpay_order_id || ('ORD-' + Math.floor(100000 + Math.random() * 900000));
+              const uniqueCreds = generateUniqueStudentCredentials();
+
               const receipt = {
                 orderId,
                 paymentId: response.razorpay_payment_id,
@@ -155,12 +157,14 @@ export default function CheckoutModal({
                 studentEmail: formData.email,
                 planName: selectedPlan.name,
                 paymentMethod: 'RAZORPAY',
-                totalAmount: grandTotal,
-                isMonthly
+                totalAmount: grandTotalINR,
+                isMonthly,
+                code: uniqueCreds.enrollmentCode,
+                studentId: uniqueCreds.studentId
               };
 
-              // Save enrollment to Supabase DB & Create Student Account
-              saveEnrollmentToSupabase({
+              // Save enrollment to Supabase DB & Create Student Account with Unique Credentials
+              const sbRes = await saveEnrollmentToSupabase({
                 orderId,
                 paymentId: response.razorpay_payment_id,
                 name: formData.fullName,
@@ -169,27 +173,32 @@ export default function CheckoutModal({
                 country: formData.country || 'India',
                 planId: selectedPlan.id || 'pro',
                 planName: selectedPlan.name,
-                price: grandTotal,
+                price: grandTotalINR,
                 currency: 'INR',
                 gateway: 'Razorpay',
                 isMonthly,
-                code: 'TH3ORY2026'
+                code: uniqueCreds.enrollmentCode,
+                studentId: uniqueCreds.studentId
               }).catch(err => console.warn('[Supabase Enrollment] Error saving to DB:', err));
 
-              // Send confirmation email via Vercel Serverless Email API
+              const finalCode = (sbRes && sbRes.code) || uniqueCreds.enrollmentCode;
+
+              // Send confirmation email via Vercel Serverless Email API with unique credentials
               sendEnrollmentEmail({
                 name: formData.fullName,
                 email: formData.email,
                 planName: selectedPlan.name,
                 orderId,
-                amountPaid: grandTotal,
-                code: 'TH3ORY2026'
+                amountPaid: grandTotalINR,
+                currency: 'INR',
+                code: finalCode,
+                studentId: uniqueCreds.studentId
               }).catch(err => console.warn('[Email Service] Error sending receipt:', err));
 
               setIsProcessing(false);
               setOrderCompleted(true);
-              setReceiptData(receipt);
-              onEnrollmentSuccess(receipt);
+              setReceiptData({ ...receipt, code: finalCode });
+              onEnrollmentSuccess({ ...receipt, code: finalCode });
 
               // Trigger celebratory confetti
               confetti({
@@ -224,7 +233,7 @@ export default function CheckoutModal({
     ];
 
     let currentStepIdx = 0;
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
       currentStepIdx++;
       if (currentStepIdx < steps.length) {
         setProcessingMsg(steps[currentStepIdx]);
@@ -240,6 +249,8 @@ export default function CheckoutModal({
         });
 
         const orderId = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
+        const uniqueCreds = generateUniqueStudentCredentials();
+
         const receipt = {
           orderId,
           date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
@@ -247,11 +258,14 @@ export default function CheckoutModal({
           studentEmail: formData.email,
           planName: selectedPlan.name,
           paymentMethod: paymentMethod.toUpperCase(),
-          totalAmount: grandTotal,
-          isMonthly
+          totalAmount: grandTotalUSD,
+          currency: 'USD',
+          isMonthly,
+          code: uniqueCreds.enrollmentCode,
+          studentId: uniqueCreds.studentId
         };
 
-        saveEnrollmentToSupabase({
+        const sbRes = await saveEnrollmentToSupabase({
           orderId,
           name: formData.fullName,
           email: formData.email,
@@ -259,24 +273,29 @@ export default function CheckoutModal({
           country: formData.country || 'United States',
           planId: selectedPlan.id || 'pro',
           planName: selectedPlan.name,
-          price: grandTotal,
+          price: grandTotalUSD,
           currency: 'USD',
           gateway: paymentMethod,
           isMonthly,
-          code: 'TH3ORY2026'
+          code: uniqueCreds.enrollmentCode,
+          studentId: uniqueCreds.studentId
         }).catch(err => console.warn('[Supabase Enrollment] Error saving to DB:', err));
+
+        const finalCode = (sbRes && sbRes.code) || uniqueCreds.enrollmentCode;
 
         sendEnrollmentEmail({
           name: formData.fullName,
           email: formData.email,
           planName: selectedPlan.name,
           orderId,
-          amountPaid: grandTotal,
-          code: 'TH3ORY2026'
+          amountPaid: grandTotalUSD,
+          currency: 'USD',
+          code: finalCode,
+          studentId: uniqueCreds.studentId
         }).catch(err => console.warn('[Email Service] Error sending receipt:', err));
 
-        setReceiptData(receipt);
-        onEnrollmentSuccess(receipt);
+        setReceiptData({ ...receipt, code: finalCode });
+        onEnrollmentSuccess({ ...receipt, code: finalCode });
       }
     }, 1200);
   };
@@ -634,10 +653,21 @@ export default function CheckoutModal({
                       </div>
                       <div className="flex justify-between pt-2 border-t border-slate-800 text-sm font-bold text-emerald-400">
                         <span>Total Paid:</span>
-                        <span>${receiptData.totalAmount} ({receiptData.paymentMethod})</span>
+                        <span>{receiptData.currency === 'INR' ? '₹' : '$'}{receiptData.totalAmount?.toLocaleString ? receiptData.totalAmount.toLocaleString('en-IN') : receiptData.totalAmount} ({receiptData.paymentMethod})</span>
                       </div>
                     </div>
                   )}
+
+                  {/* Resend Email Notice */}
+                  <div className="p-4 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 text-left flex items-start gap-3">
+                    <Mail className="w-5 h-5 text-amber-400 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-xs font-bold text-white mb-0.5">Login Credentials Dispatched via Email 📩</p>
+                      <p className="text-[11px] text-slate-300 leading-normal">
+                        Your unique Student Login ID and private Enrollment Access Code have been sent to <strong className="text-amber-400">{receiptData?.studentEmail || formData.email}</strong> via Resend. Please check your email to access your student portal.
+                      </p>
+                    </div>
+                  </div>
 
                   <div className="flex flex-col sm:flex-row gap-3 pt-2">
                     <button
@@ -651,9 +681,9 @@ export default function CheckoutModal({
 
                     <button
                       onClick={onClose}
-                      className="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-xs sm:text-sm font-bold shadow-lg flex items-center justify-center gap-2"
+                      className="flex-1 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 text-xs sm:text-sm font-bold shadow-lg flex items-center justify-center gap-2"
                     >
-                      <ShieldCheck className="w-4 h-4" /> Open Student Portal
+                      <span>Done / Close</span>
                     </button>
                   </div>
                 </div>

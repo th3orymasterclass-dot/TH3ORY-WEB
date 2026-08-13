@@ -1,16 +1,28 @@
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import { isAdminAuthenticated } from '../data/adminData';
+// ─── Unique Credentials Generator ────────────────────────────────────────────────
+export function generateUniqueStudentCredentials() {
+  const randomHex = Math.random().toString(36).substring(2, 6).toUpperCase();
+  const randomNum = Math.floor(1000 + Math.random() * 9000);
+  return {
+    studentId: `STU-${Math.floor(100000 + Math.random() * 900000)}`,
+    enrollmentCode: `TH3-${randomHex}-${randomNum}`
+  };
+}
 
 // ─── Enrollments ──────────────────────────────────────────────────────────────
 export async function saveEnrollmentToSupabase(enrollmentData) {
+  const uniqueCreds = generateUniqueStudentCredentials();
+  const finalCode = (enrollmentData.code && enrollmentData.code !== 'TH3ORY2026')
+    ? enrollmentData.code
+    : uniqueCreds.enrollmentCode;
+
   if (!isSupabaseConfigured || !supabase) {
     console.log('[Supabase] Not configured, saving locally only.');
     try {
       const local = JSON.parse(localStorage.getItem('th3ory_local_enrollments') || '[]');
-      local.unshift(enrollmentData);
+      local.unshift({ ...enrollmentData, code: finalCode, studentId: uniqueCreds.studentId });
       localStorage.setItem('th3ory_local_enrollments', JSON.stringify(local));
     } catch {}
-    return { success: false, isLocal: true };
+    return { success: false, isLocal: true, code: finalCode, studentId: uniqueCreds.studentId };
   }
 
   try {
@@ -35,7 +47,7 @@ export async function saveEnrollmentToSupabase(enrollmentData) {
       currency: enrollmentData.currency || 'INR',
       gateway: enrollmentData.gateway || 'Razorpay',
       is_monthly: Boolean(enrollmentData.isMonthly),
-      enrollment_code: enrollmentData.code || 'TH3ORY2026',
+      enrollment_code: finalCode,
     };
 
     // Insert into enrollments table
@@ -73,10 +85,10 @@ export async function saveEnrollmentToSupabase(enrollmentData) {
       localStorage.setItem('th3ory_local_enrollments', JSON.stringify(local));
     } catch {}
 
-    return { success: !e1, data: enrollment, error: e1 || e2 };
+    return { success: !e1, data: enrollment, code: finalCode, studentId: uniqueCreds.studentId, error: e1 || e2 };
   } catch (err) {
     console.error('[Supabase] Exception in saveEnrollmentToSupabase:', err);
-    return { success: false, error: err };
+    return { success: false, code: finalCode, studentId: uniqueCreds.studentId, error: err };
   }
 }
 

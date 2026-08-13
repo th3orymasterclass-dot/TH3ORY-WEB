@@ -88,15 +88,23 @@ export async function sendEnrollmentEmail(receipt) {
                 </table>
               </div>
               <div style="background-color: #0f172a; border: 1px solid #334155; border-radius: 14px; padding: 20px; margin-bottom: 25px;">
-                <h3 style="color: #f59e0b; font-size: 15px; font-weight: 800; margin-top: 0; margin-bottom: 10px;">🔑 How to Access Your Student Portal</h3>
-                <p style="color: #cbd5e1; font-size: 13px; margin-bottom: 12px;">Log in to access all 50 video lessons, workbooks, capstone assignments, and resources.</p>
-                <div style="margin-bottom: 10px;">
-                  <span style="color: #64748b; font-size: 12px;">Portal URL:</span><br/>
-                  <a href="${portalUrl}" style="color: #f59e0b; font-weight: 700; font-size: 14px; text-decoration: none;">${portalUrl}</a>
+                <h3 style="color: #f59e0b; font-size: 16px; font-weight: 800; margin-top: 0; margin-bottom: 12px;">🔑 Your Private Student Login Credentials</h3>
+                <p style="color: #cbd5e1; font-size: 13px; margin-bottom: 16px;">Keep this email safe. Use these unique credentials to access all 50 video modules, workbooks, and resources in your Student Portal.</p>
+                
+                <div style="background: #1e293b; border-radius: 10px; padding: 14px; margin-bottom: 12px;">
+                  <div style="color: #64748b; font-size: 11px; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Student Login ID</div>
+                  <div style="color: #ffffff; font-weight: 700; font-size: 15px;">${receipt.email || receipt.studentEmail}</div>
                 </div>
-                <div>
-                  <span style="color: #64748b; font-size: 12px;">Enrollment Access Code:</span><br/>
-                  <span style="font-family: monospace; background: #1e293b; color: #f59e0b; padding: 6px 12px; border-radius: 6px; font-weight: 800; font-size: 15px; display: inline-block; margin-top: 4px;">${receipt.code || 'TH3ORY2026'}</span>
+
+                <div style="background: #1e293b; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+                  <div style="color: #64748b; font-size: 11px; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Unique Enrollment Access Code</div>
+                  <div style="font-family: monospace; color: #f59e0b; font-weight: 800; font-size: 18px; letter-spacing: 1px;">${receipt.code || receipt.enrollmentCode || 'TH3ORY2026'}</div>
+                </div>
+
+                <div style="text-align: center; margin-top: 20px;">
+                  <a href="${portalUrl}" style="background: linear-gradient(to right, #f59e0b, #d97706); color: #05080f; font-weight: 800; font-size: 14px; text-decoration: none; padding: 12px 28px; border-radius: 10px; display: inline-block; text-transform: uppercase; letter-spacing: 1px;">
+                    Log In To Student Portal &rarr;
+                  </a>
                 </div>
               </div>
               <div style="text-align: center; border-top: 1px solid #1e293b; padding-top: 20px;">

@@ -6,7 +6,7 @@ import {
   CheckCircle2, Receipt, Download, ExternalLink, Zap
 } from 'lucide-react';
 import { getCourseDetails, getPlans } from '../data/adminData';
-import { saveEnrollmentToSupabase } from '../services/supabaseService';
+import { saveEnrollmentToSupabase, generateUniqueStudentCredentials } from '../services/supabaseService';
 import { sendEnrollmentEmail } from '../services/emailService';
 
 // ─── Country codes ─────────────────────────────────────────────────────────────
@@ -475,6 +475,7 @@ function Step3({ form, setForm, onNext, onBack }) {
                 console.warn('[Razorpay Verification]:', e);
               }
 
+              const uniqueCreds = generateUniqueStudentCredentials();
               const receipt = {
                 orderId: response.razorpay_order_id || `TH3-${Date.now().toString(36).toUpperCase()}`,
                 paymentId: response.razorpay_payment_id,
@@ -494,14 +495,16 @@ function Step3({ form, setForm, onNext, onBack }) {
                 currency: 'INR',
                 isMonthly: form.isMonthly,
                 enrolledAt: new Date().toISOString(),
-                code: 'TH3ORY2026',
+                code: uniqueCreds.enrollmentCode,
+                studentId: uniqueCreds.studentId,
               };
 
-              await saveEnrollmentToSupabase(receipt);
-              sendEnrollmentEmail(receipt).catch(err => console.error(err));
+              const sbRes = await saveEnrollmentToSupabase(receipt);
+              const finalReceipt = { ...receipt, code: sbRes.code || receipt.code, studentId: sbRes.studentId || receipt.studentId };
+              sendEnrollmentEmail(finalReceipt).catch(err => console.error(err));
 
               setLoading(false);
-              setForm(f => ({ ...f, gateway: 'Razorpay', receipt }));
+              setForm(f => ({ ...f, gateway: 'Razorpay', receipt: finalReceipt }));
               onNext();
             },
             modal: {
@@ -523,6 +526,7 @@ function Step3({ form, setForm, onNext, onBack }) {
     // Fallback mode if network issue or demo card
     await new Promise(r => setTimeout(r, 1800));
 
+    const uniqueCreds = generateUniqueStudentCredentials();
     const receipt = {
       orderId: `TH3-${Date.now().toString(36).toUpperCase()}`,
       name: form.name,
@@ -541,14 +545,16 @@ function Step3({ form, setForm, onNext, onBack }) {
       currency: 'USD',
       isMonthly: form.isMonthly,
       enrolledAt: new Date().toISOString(),
-      code: 'TH3ORY2026',
+      code: uniqueCreds.enrollmentCode,
+      studentId: uniqueCreds.studentId,
     };
 
-    await saveEnrollmentToSupabase(receipt);
-    sendEnrollmentEmail(receipt).catch(err => console.error(err));
+    const sbRes = await saveEnrollmentToSupabase(receipt);
+    const finalReceipt = { ...receipt, code: sbRes.code || receipt.code, studentId: sbRes.studentId || receipt.studentId };
+    sendEnrollmentEmail(finalReceipt).catch(err => console.error(err));
 
     setLoading(false);
-    setForm(f => ({ ...f, gateway, receipt }));
+    setForm(f => ({ ...f, gateway, receipt: finalReceipt }));
     onNext();
   };
 
@@ -761,34 +767,15 @@ function Step4({ form }) {
         ))}
       </div>
 
-      {/* Student portal access */}
-      <div className="bg-gradient-to-r from-amber-500/15 to-yellow-500/5 border border-amber-500/30 rounded-2xl p-6 text-left">
-        <div className="flex items-start gap-3 mb-4">
-          <Sparkles className="w-5 h-5 text-amber-400 mt-0.5 shrink-0"/>
-          <div>
-            <p className="text-white font-black text-base mb-1">Access Your Student Dashboard</p>
-            <p className="text-slate-400 text-sm">Your student portal is ready. Use the code below to log in.</p>
-          </div>
+      {/* Email Dispatch Notice */}
+      <div className="flex items-start gap-3 text-left bg-indigo-950/40 border border-indigo-500/40 rounded-2xl p-5 shadow-lg shadow-indigo-500/10">
+        <Mail className="w-5 h-5 text-amber-400 mt-0.5 shrink-0"/>
+        <div>
+          <p className="text-white font-bold text-sm mb-1">Login Credentials Dispatched via Email 📩</p>
+          <p className="text-slate-300 text-xs leading-relaxed">
+            Your unique Student Login ID (<strong className="text-amber-400">{form.email}</strong>) and your private <strong>Enrollment Access Code</strong> have been sent to <strong className="text-white">{form.email}</strong> via Resend. Please check your inbox (and spam folder) to sign in to your Student Portal.
+          </p>
         </div>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between bg-slate-950 rounded-xl px-4 py-3 border border-slate-800">
-            <span className="text-slate-500 text-sm">Portal URL</span>
-            <a href="/#/student" target="_blank" rel="noreferrer"
-              className="text-amber-400 text-sm font-mono flex items-center gap-1 hover:text-amber-300">
-              /#/student <ExternalLink className="w-3 h-3"/>
-            </a>
-          </div>
-          <div className="flex items-center justify-between bg-slate-950 rounded-xl px-4 py-3 border border-slate-800">
-            <span className="text-slate-500 text-sm">Enrollment Code</span>
-            <span className="text-amber-400 font-mono font-black text-sm tracking-widest">{receipt?.code}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Email notice */}
-      <div className="flex items-start gap-2.5 text-left bg-blue-950/20 border border-blue-500/20 rounded-xl px-5 py-4">
-        <Mail className="w-4 h-4 text-blue-400 mt-0.5 shrink-0"/>
-        <p className="text-slate-400 text-sm">A confirmation email with your receipt and portal access details has been sent to <strong className="text-white">{form.email}</strong>.</p>
       </div>
 
       <div className="flex gap-3 justify-center">
@@ -796,10 +783,10 @@ function Step4({ form }) {
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-700 text-slate-400 hover:text-white text-sm font-medium transition-all">
           <Download className="w-4 h-4"/> Download Receipt
         </button>
-        <a href="/#/student"
+        <button onClick={() => window.location.href = '/'}
           className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-extrabold text-sm uppercase tracking-wider transition-all">
-          <Zap className="w-4 h-4 fill-slate-950"/> Enter Dashboard
-        </a>
+          <span>Return to Homepage</span>
+        </button>
       </div>
     </div>
   );
