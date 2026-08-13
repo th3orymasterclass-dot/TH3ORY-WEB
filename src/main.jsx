@@ -14,12 +14,12 @@ const ENROLL_HASH  = '/enroll';
 
 function Root() {
   const getInitialView = () => {
-    const h = window.location.hash || '';
-    const p = window.location.pathname || '';
+    const h = (window.location.hash || '').toLowerCase();
+    const p = (window.location.pathname || '').toLowerCase();
 
-    if (h.startsWith('#' + ADMIN_HASH) || p.startsWith(ADMIN_HASH)) return 'admin';
-    if (h.startsWith('#' + STUDENT_HASH) || p.startsWith(STUDENT_HASH)) return 'student';
-    if (h.startsWith('#' + ENROLL_HASH) || h === '#enroll' || p.startsWith(ENROLL_HASH)) return 'enroll';
+    if (h.includes('admin') || p.includes('admin')) return 'admin';
+    if (h.includes('student') || p.includes('student')) return 'student';
+    if (h.includes('enroll') || p.includes('enroll')) return 'enroll';
     return 'public';
   };
 
