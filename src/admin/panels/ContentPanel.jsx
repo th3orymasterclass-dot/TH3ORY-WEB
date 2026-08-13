@@ -478,6 +478,159 @@ function AssignmentView({ content, levels }) {
   );
 }
 
+// ─── Dedicated Google Drive Course Storage Folder Manager ─────────────────────
+function GoogleDriveFolderManager({ data, save }) {
+  const currentFolderUrl = data.gdriveFolderUrl || 'https://drive.google.com/drive/folders/1TH3ORY_Masterclass_Course_Content_Master_Folder';
+  const [folderUrlInput, setFolderUrlInput] = useState(currentFolderUrl);
+  const [isEditing, setIsEditing] = useState(false);
+  const [showFolderModal, setShowFolderModal] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const parsed = parseGoogleDriveUrl(folderUrlInput);
+
+  const handleSaveFolder = () => {
+    save('gdriveFolderUrl', folderUrlInput.trim());
+    setIsEditing(false);
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(folderUrlInput);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const subfolders = [
+    { title: '01 - Video Teasers & Trailers', path: '📁 /Videos/Trailers', icon: Video, color: 'text-blue-400 bg-blue-500/10 border-blue-500/30' },
+    { title: '02 - Core Curriculum Video Lessons', path: '📁 /Videos/Lessons', icon: Play, color: 'text-amber-400 bg-amber-500/10 border-amber-500/30' },
+    { title: '03 - Workbooks, PDFs & Cheatsheets', path: '📁 /Documents/Workbooks', icon: FileText, color: 'text-red-400 bg-red-500/10 border-red-500/30' },
+    { title: '04 - Audio Stems & Practice Files', path: '📁 /Audio/Soundpacks', icon: Music, color: 'text-pink-400 bg-pink-500/10 border-pink-500/30' },
+  ];
+
+  return (
+    <div className="bg-slate-900 border border-blue-500/30 rounded-2xl p-5 space-y-4 relative overflow-hidden shadow-lg shadow-blue-950/20">
+      {/* Top Banner */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-blue-400 shrink-0">
+            <HardDrive className="w-5 h-5"/>
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-white font-bold text-base">Dedicated Master Google Drive Course Folder</h3>
+              <span className="text-[10px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <FolderOpen className="w-3 h-3" /> Live Storage Folder
+              </span>
+            </div>
+            <p className="text-slate-400 text-xs mt-0.5">Central repository for all course videos, lesson assets, workbooks, and digital streams</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowFolderModal(true)}
+            className="px-3 py-1.5 rounded-xl bg-blue-500/20 border border-blue-500/40 text-blue-400 hover:bg-blue-500/30 text-xs font-bold transition-all flex items-center gap-1.5"
+          >
+            <Eye className="w-3.5 h-3.5"/> Browse Folder Live
+          </button>
+          <a
+            href={parsed.viewUrl || folderUrlInput}
+            target="_blank"
+            rel="noreferrer"
+            className="px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 hover:text-white text-xs font-medium transition-all flex items-center gap-1.5"
+          >
+            <ExternalLink className="w-3.5 h-3.5"/> Open in Drive
+          </a>
+          <button
+            onClick={() => setIsEditing(v => !v)}
+            className="p-1.5 rounded-xl border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800 transition-all"
+            title="Configure Master Folder Link"
+          >
+            <Edit3 className="w-4 h-4"/>
+          </button>
+        </div>
+      </div>
+
+      {/* Editor Drawer */}
+      {isEditing && (
+        <div className="p-4 bg-slate-950 rounded-xl border border-blue-500/30 space-y-3">
+          <label className="block text-xs font-bold text-blue-400 uppercase tracking-wider">Configure Master Google Drive Folder URL or Folder ID</label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={folderUrlInput}
+              onChange={e => setFolderUrlInput(e.target.value)}
+              placeholder="e.g. https://drive.google.com/drive/folders/1TH3ORY_Masterclass_Course_Content_Master_Folder"
+              className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-xs focus:outline-none focus:border-blue-500"
+            />
+            <button
+              onClick={handleSaveFolder}
+              className="px-4 py-2 bg-blue-500 hover:bg-blue-400 text-slate-950 font-bold text-xs rounded-xl transition-all flex items-center gap-1"
+            >
+              <Save className="w-3.5 h-3.5"/> Save Folder Link
+            </button>
+          </div>
+          {parsed.fileId && (
+            <p className="text-[11px] text-emerald-400 flex items-center gap-1">
+              <CheckCircle2 className="w-3 h-3"/> Active Folder ID Detected: <code className="bg-slate-900 px-1.5 py-0.5 rounded font-mono text-white">{parsed.fileId}</code>
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Dedicated Course Subdirectories */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+        {subfolders.map((sf, idx) => (
+          <div key={idx} className="p-3 bg-slate-950/70 border border-slate-800 hover:border-slate-700 rounded-xl flex items-center gap-2.5 transition-all">
+            <div className={`p-2 rounded-lg border ${sf.color}`}>
+              <sf.icon className="w-4 h-4"/>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-white text-xs font-bold truncate">{sf.title}</p>
+              <p className="text-slate-500 text-[10px] font-mono truncate">{sf.path}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Embedded Live Google Drive Folder Viewer Modal */}
+      {showFolderModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowFolderModal(false)}>
+          <div className="w-full max-w-5xl bg-slate-900 border border-blue-500/40 rounded-2xl overflow-hidden shadow-2xl flex flex-col" style={{height:'82vh'}} onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-blue-500/20 text-blue-400">
+                  <HardDrive className="w-5 h-5"/>
+                </div>
+                <div>
+                  <h3 className="text-white font-bold text-sm">Dedicated Google Drive Master Folder Browser</h3>
+                  <p className="text-slate-500 text-xs font-mono">{folderUrlInput}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={handleCopyLink} className="px-3 py-1.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white text-xs font-medium flex items-center gap-1">
+                  {copied ? '✓ Copied!' : 'Copy Folder Link'}
+                </button>
+                <a href={parsed.viewUrl || folderUrlInput} target="_blank" rel="noreferrer" className="px-3 py-1.5 rounded-xl bg-blue-500/20 border border-blue-500/40 text-blue-400 text-xs font-bold flex items-center gap-1">
+                  <ExternalLink className="w-3.5 h-3.5"/> Open in Drive
+                </a>
+                <button onClick={() => setShowFolderModal(false)} className="text-slate-500 hover:text-white p-1 ml-2"><X className="w-5 h-5"/></button>
+              </div>
+            </div>
+            <div className="flex-1 bg-slate-950 p-2">
+              <iframe
+                src={parsed.embedUrl || `https://drive.google.com/embeddedfolderview?id=${parsed.fileId || '1TH3ORY_Masterclass_Course_Content_Master_Folder'}#grid`}
+                title="Google Drive Master Course Folder"
+                className="w-full h-full border-0 rounded-xl"
+                allow="autoplay; fullscreen"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Panel ────────────────────────────────────────────────────────────────
 export default function ContentPanel({ data, save, reset }) {
   const content = data.content ?? [];
@@ -563,6 +716,9 @@ export default function ContentPanel({ data, save, reset }) {
           </div>
         ))}
       </div>
+
+      {/* Dedicated Google Drive Master Storage Folder Section */}
+      <GoogleDriveFolderManager data={data} save={save} />
 
       {/* Toolbar */}
       <div className="flex items-center gap-3 flex-wrap">
