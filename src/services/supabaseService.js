@@ -152,7 +152,7 @@ export function subscribeToSiteSettings(onSettingChange) {
   }
 }
 
-// ─── Queries ──────────────────────────────────────────────────────────────────
+// ─── Student Queries (Dedicated Table: queries) ────────────────────────────────
 export async function saveQueryToSupabase(queryData) {
   if (!isSupabaseConfigured || !supabase) return false;
   try {
@@ -200,6 +200,129 @@ export function subscribeToQueries(onQueryChange) {
       .channel(`queries_${Date.now()}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'queries' }, () => {
         fetchQueriesFromSupabase().then(res => { if (res) onQueryChange(res); });
+      })
+      .subscribe();
+    return () => { try { supabase.removeChannel(sub); } catch {} };
+  } catch {
+    return () => {};
+  }
+}
+
+// ─── Enterprise Quotes (Dedicated Table: enterprise_quotes) ──────────────────
+export async function saveEnterpriseQuoteToSupabase(quoteData) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  try {
+    const payload = {
+      org_name: quoteData.orgName || '',
+      contact_name: quoteData.contactName || '',
+      email: quoteData.email || '',
+      phone: quoteData.phone || '',
+      audience_type: quoteData.audienceType || 'Students',
+      pupil_count: quoteData.pupilCount || '50-100',
+      notes: quoteData.notes || '',
+      status: 'pending',
+    };
+
+    // Try dedicated table enterprise_quotes first
+    const { error } = await supabase.from('enterprise_quotes').insert([payload]);
+    if (error) {
+      console.warn('[Supabase] enterprise_quotes table insert fallback to queries table:', error.message);
+      // Fallback to queries table if enterprise_quotes schema is not yet created
+      await supabase.from('queries').insert([{
+        student_name: quoteData.contactName || quoteData.orgName,
+        student_email: quoteData.email,
+        student_plan: 'Enterprise Quote',
+        subject: `Enterprise Quote Request: ${quoteData.orgName}`,
+        type: 'Enterprise Quote',
+        message: `Org: ${quoteData.orgName} | Audience: ${quoteData.audienceType} | Pupils: ${quoteData.pupilCount} | Phone: ${quoteData.phone} | Notes: ${quoteData.notes}`,
+        status: 'open'
+      }]);
+    }
+    return true;
+  } catch (err) {
+    console.error('[Supabase] Exception in saveEnterpriseQuoteToSupabase:', err);
+    return false;
+  }
+}
+
+export async function fetchEnterpriseQuotesFromSupabase() {
+  if (!isSupabaseConfigured || !supabase) return null;
+  try {
+    const { data, error } = await supabase.from('enterprise_quotes').select('*').order('created_at', { ascending: false });
+    if (error) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+export function subscribeToEnterpriseQuotes(onQuoteChange) {
+  if (!isSupabaseConfigured || !supabase) return () => {};
+  try {
+    const sub = supabase
+      .channel(`enterprise_quotes_${Date.now()}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'enterprise_quotes' }, () => {
+        fetchEnterpriseQuotesFromSupabase().then(res => { if (res) onQuoteChange(res); });
+      })
+      .subscribe();
+    return () => { try { supabase.removeChannel(sub); } catch {} };
+  } catch {
+    return () => {};
+  }
+}
+
+// ─── Contact Us Form Inquiries (Dedicated Table: contact_inquiries) ───────────
+export async function saveContactInquiryToSupabase(contactData) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  try {
+    const payload = {
+      name: contactData.name || '',
+      email: contactData.email || '',
+      subject: contactData.subject || 'General Inquiry',
+      message: contactData.message || '',
+      status: 'new',
+    };
+
+    // Try dedicated table contact_inquiries first
+    const { error } = await supabase.from('contact_inquiries').insert([payload]);
+    if (error) {
+      console.warn('[Supabase] contact_inquiries table insert fallback to queries table:', error.message);
+      // Fallback to queries table if contact_inquiries schema is not yet created
+      await supabase.from('queries').insert([{
+        student_name: contactData.name,
+        student_email: contactData.email,
+        student_plan: 'Public Visitor',
+        subject: `Contact Form: ${contactData.subject}`,
+        type: contactData.subject,
+        message: contactData.message,
+        status: 'open'
+      }]);
+    }
+    return true;
+  } catch (err) {
+    console.error('[Supabase] Exception in saveContactInquiryToSupabase:', err);
+    return false;
+  }
+}
+
+export async function fetchContactInquiriesFromSupabase() {
+  if (!isSupabaseConfigured || !supabase) return null;
+  try {
+    const { data, error } = await supabase.from('contact_inquiries').select('*').order('created_at', { ascending: false });
+    if (error) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+export function subscribeToContactInquiries(onInquiryChange) {
+  if (!isSupabaseConfigured || !supabase) return () => {};
+  try {
+    const sub = supabase
+      .channel(`contact_inquiries_${Date.now()}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'contact_inquiries' }, () => {
+        fetchContactInquiriesFromSupabase().then(res => { if (res) onInquiryChange(res); });
       })
       .subscribe();
     return () => { try { supabase.removeChannel(sub); } catch {} };

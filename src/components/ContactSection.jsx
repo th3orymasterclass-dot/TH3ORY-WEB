@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, Send, CheckCircle2, MessageSquare, Sparkles, Phone, MapPin, Globe, ShieldCheck } from 'lucide-react';
-import { saveQueryToSupabase } from '../services/supabaseService';
+import { saveContactInquiryToSupabase } from '../services/supabaseService';
 
 export default function ContactSection() {
   // Contact Form State
@@ -23,15 +23,7 @@ export default function ContactSection() {
     if (!contactForm.name || !contactForm.email || !contactForm.message) return;
 
     setContactLoading(true);
-    const queryPayload = {
-      subject: `Contact Us: ${contactForm.subject}`,
-      type: contactForm.subject,
-      studentName: contactForm.name,
-      studentEmail: contactForm.email,
-      message: contactForm.message
-    };
-
-    await saveQueryToSupabase(queryPayload);
+    await saveContactInquiryToSupabase(contactForm);
     setContactLoading(false);
     setContactSuccess(true);
     setContactForm({ name: '', email: '', subject: 'General Inquiry', message: '' });

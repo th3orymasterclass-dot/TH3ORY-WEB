@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Tag, Check, Crown, ShieldCheck, ArrowRight, Building2, Globe2, Users, Sparkles, Send, X } from 'lucide-react';
 import { useTh3oryLive } from '../data/adminData';
-import { saveQueryToSupabase } from '../services/supabaseService';
+import { saveEnterpriseQuoteToSupabase } from '../services/supabaseService';
 import { sendEnrollmentEmail } from '../services/emailService';
 
 export default function PricingSection({ onSelectPlan, couponCode, setCouponCode, couponDiscount, setCouponDiscount }) {
@@ -47,16 +47,7 @@ export default function PricingSection({ onSelectPlan, couponCode, setCouponCode
     if (!entForm.orgName || !entForm.email) return;
     setEntLoading(true);
 
-    const queryPayload = {
-      subject: `Enterprise Quote Request: ${entForm.orgName}`,
-      type: 'Enterprise Quote',
-      studentName: entForm.contactName || entForm.orgName,
-      studentEmail: entForm.email,
-      studentPlan: 'Enterprise Quote',
-      message: `Organization: ${entForm.orgName}\nContact: ${entForm.contactName}\nPhone: ${entForm.phone}\nAudience: ${entForm.audienceType}\nPupil Count: ${entForm.pupilCount}\nNotes: ${entForm.notes}`
-    };
-
-    await saveQueryToSupabase(queryPayload);
+    await saveEnterpriseQuoteToSupabase(entForm);
     setEntLoading(false);
     setEntSuccess(true);
     setTimeout(() => {
