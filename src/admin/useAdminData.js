@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   lsSet, lsReset, resetAllData, defaults, isAdminAuthenticated,
   getCourseDetails, getVideo, getLevels,
-  getPlans, getAddons, getReviews, getFaqs, getContent,
+  getPlans, getAddons, getReviews, getFaqs, getContent, getCoupons
 } from '../data/adminData';
 import {
   fetchCourseContentsFromSupabase,

@@ -25,7 +25,9 @@ function Root() {
 
   const [view, setView] = useState(getInitialView);
 
-  const [adminAuthed,   setAdminAuthed]   = useState(() => sessionStorage.getItem('th3ory_admin_auth') === '1');
+  const [adminAuthed,   setAdminAuthed]   = useState(() => (
+    sessionStorage.getItem('th3ory_admin_auth') === '1' || localStorage.getItem('th3ory_admin_auth') === '1'
+  ));
   const [studentProfile, setStudentProfile] = useState(() => {
     try { return JSON.parse(sessionStorage.getItem('th3ory_student_auth') || 'null'); } catch { return null; }
   });
@@ -47,6 +49,7 @@ function Root() {
     if (!adminAuthed) return <AdminLogin onAuthenticated={() => setAdminAuthed(true)}/>;
     return <AdminApp onLogout={() => {
       sessionStorage.removeItem('th3ory_admin_auth');
+      localStorage.removeItem('th3ory_admin_auth');
       setAdminAuthed(false);
       window.location.hash = '';
       setView('public');

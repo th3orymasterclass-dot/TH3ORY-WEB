@@ -19,7 +19,10 @@ const LS_PREFIX = 'th3ory_admin_';
  */
 export function isAdminAuthenticated() {
   try {
-    return typeof sessionStorage !== 'undefined' && sessionStorage.getItem('th3ory_admin_auth') === '1';
+    return (
+      (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('th3ory_admin_auth') === '1') ||
+      (typeof localStorage !== 'undefined' && localStorage.getItem('th3ory_admin_auth') === '1')
+    );
   } catch {
     return false;
   }

@@ -28,6 +28,7 @@ export default function AdminLogin({ onAuthenticated }) {
     const hash = await sha256(password);
     if (hash === EXPECTED_HASH) {
       sessionStorage.setItem('th3ory_admin_auth', '1');
+      localStorage.setItem('th3ory_admin_auth', '1');
       onAuthenticated();
     } else {
       setAttempts(a => a + 1);
