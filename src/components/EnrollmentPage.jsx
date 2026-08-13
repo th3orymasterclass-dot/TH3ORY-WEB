@@ -386,9 +386,26 @@ function Step3({ form, setForm, onNext, onBack }) {
 
   const plans     = getPlans();
   const plan      = form.plan;
-  const price     = plan ? (form.isMonthly ? plan.priceMonthly : plan.priceFull) : 0;
-  const discount  = form.coupon === 'TH3ORY20' ? Math.round(price * 0.2) : 0;
-  const total     = price - discount;
+  
+  // USD Base Pricing
+  const basePriceUSD = plan ? (form.isMonthly ? (plan.priceMonthly || 55) : (plan.priceFull || 149)) : 149;
+  // INR Base Pricing (₹11,999 full price, ₹4,399 monthly)
+  const basePriceINR = plan ? (form.isMonthly ? (plan.priceINR ? Math.round(plan.priceINR / 3) : 4399) : (plan.priceINR || 11999)) : 11999;
+
+  // Coupon handling including private test coupon TH3ORY0 (99.9% off)
+  let discountPct = 0;
+  const currentCoupon = (form.coupon || '').trim().toUpperCase();
+  if (currentCoupon === 'TH3ORY0') {
+    discountPct = 99.9; // Private 99.9% test coupon (reduces ₹11,999 to ₹12)
+  } else if (currentCoupon === 'TH3ORY20') {
+    discountPct = 20;
+  }
+
+  const discountUSD = Math.round(basePriceUSD * (discountPct / 100));
+  const totalUSD    = Math.max(1, Math.round(basePriceUSD - discountUSD));
+
+  const discountINR = Math.round(basePriceINR * (discountPct / 100));
+  const totalINR    = Math.max(12, Math.round(basePriceINR - discountINR)); // ₹12 INR for TH3ORY0
 
   const formatCard = (v) => v.replace(/\D/g,'').slice(0,16).replace(/(.{4})/g,'$1 ').trim();
 
@@ -413,13 +430,14 @@ function Step3({ form, setForm, onNext, onBack }) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            amount: total,
+            amount: totalINR, // Exact INR amount: 11999 INR (or 12 INR with TH3ORY0 coupon)
             currency: 'INR',
             receipt: `TH3-${Date.now().toString(36).toUpperCase()}`,
             notes: {
               studentName: form.name,
               studentEmail: form.email,
-              planName: plan?.name || 'TH3ORY Masterclass'
+              planName: plan?.name || 'TH3ORY Masterclass',
+              couponUsed: currentCoupon || 'NONE'
             }
           })
         });
@@ -471,7 +489,7 @@ function Step3({ form, setForm, onNext, onBack }) {
                 dob: form.dob,
                 planId: plan?.id || 'masterclass',
                 planName: plan?.name || 'TH3ORY Masterclass',
-                price: total,
+                price: totalINR,
                 gateway: 'Razorpay',
                 currency: 'INR',
                 isMonthly: form.isMonthly,
@@ -518,7 +536,7 @@ function Step3({ form, setForm, onNext, onBack }) {
       dob: form.dob,
       planId: plan?.id || 'masterclass',
       planName: plan?.name || 'TH3ORY Masterclass',
-      price: total,
+      price: totalUSD,
       gateway,
       currency: 'USD',
       isMonthly: form.isMonthly,
@@ -546,12 +564,12 @@ function Step3({ form, setForm, onNext, onBack }) {
         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Order Summary</p>
         <div className="flex justify-between text-sm">
           <span className="text-slate-300">{plan?.name}</span>
-          <span className="text-white font-bold">${price}</span>
+          <span className="text-white font-bold">${basePriceUSD} / ₹{basePriceINR.toLocaleString('en-IN')}</span>
         </div>
         {form.isMonthly && (
           <div className="flex justify-between text-xs text-slate-500">
-            <span>3 monthly instalments of ${price}</span>
-            <span>Total: ${price * 3}</span>
+            <span>3 monthly instalments of ${basePriceUSD} / ₹{basePriceINR.toLocaleString('en-IN')}</span>
+            <span>Total: ${basePriceUSD * 3}</span>
           </div>
         )}
 
@@ -561,21 +579,23 @@ function Step3({ form, setForm, onNext, onBack }) {
             <input
               value={form.coupon || ''}
               onChange={e => setForm(f => ({...f, coupon: e.target.value.toUpperCase()}))}
-              placeholder="Coupon code (e.g. TH3ORY20)"
+              placeholder="Promo / Coupon code"
               className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-amber-500/50 placeholder-slate-600 font-mono"/>
-            <button className="px-3 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 text-xs font-bold hover:bg-amber-500/30 transition-all">Apply</button>
+            <button type="button" className="px-3 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 text-xs font-bold hover:bg-amber-500/30 transition-all">Apply</button>
           </div>
-          {discount > 0 && (
-            <div className="flex justify-between text-sm text-green-400">
-              <span className="flex items-center gap-1"><Check className="w-3 h-3"/> Coupon TH3ORY20 applied</span>
-              <span>−${discount}</span>
+          {discountPct > 0 && (
+            <div className="flex justify-between text-sm text-green-400 font-medium">
+              <span className="flex items-center gap-1"><Check className="w-3 h-3"/> Coupon ({currentCoupon}) Applied!</span>
+              <span>−${discountUSD} / −₹{discountINR.toLocaleString('en-IN')}</span>
             </div>
           )}
         </div>
 
         <div className="flex justify-between border-t border-slate-800 pt-3">
           <span className="text-white font-bold">Total Due Today</span>
-          <span className="text-amber-400 font-black text-xl">${total}</span>
+          <div className="text-right">
+            <span className="text-amber-400 font-black text-xl">${totalUSD} / ₹{totalINR.toLocaleString('en-IN')}</span>
+          </div>
         </div>
       </div>
 

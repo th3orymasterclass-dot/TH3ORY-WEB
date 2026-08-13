@@ -32,20 +32,37 @@ export default function CheckoutModal({
 
   const [paymentMethod, setPaymentMethod] = useState('razorpay'); // 'razorpay' | 'card' | 'upi'
   const [selectedAddons, setSelectedAddons] = useState([]);
+  const [couponCodeInput, setCouponCodeInput] = useState(couponCode || '');
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingMsg, setProcessingMsg] = useState('Initializing secure Razorpay payment gateway...');
   const [orderCompleted, setOrderCompleted] = useState(false);
   const [receiptData, setReceiptData] = useState(null);
 
-  // Financial calculations
-  const basePrice = isMonthly ? selectedPlan.priceMonthly : selectedPlan.priceFull;
-  const discountAmount = couponDiscount > 0 ? Math.round(basePrice * (couponDiscount / 100)) : 0;
-  const planDiscountedPrice = basePrice - discountAmount;
-  const addonsTotal = selectedAddons.reduce((sum, addonId) => {
+  // Financial calculations (USD & INR)
+  const currentCoupon = (couponCodeInput || couponCode || '').trim().toUpperCase();
+  let effectiveDiscountPct = couponDiscount || 0;
+  if (currentCoupon === 'TH3ORY0') {
+    effectiveDiscountPct = 99.9; // Private 99.9% test coupon (reduces ₹11,999 to ₹12)
+  } else if (currentCoupon === 'TH3ORY20') {
+    effectiveDiscountPct = 20;
+  }
+
+  // USD Pricing
+  const basePriceUSD = isMonthly ? (selectedPlan.priceMonthly || 55) : (selectedPlan.priceFull || 149);
+  const discountAmountUSD = effectiveDiscountPct > 0 ? Math.round(basePriceUSD * (effectiveDiscountPct / 100)) : 0;
+  const planDiscountedPriceUSD = Math.max(1, basePriceUSD - discountAmountUSD);
+  const addonsTotalUSD = selectedAddons.reduce((sum, addonId) => {
     const addon = courseAddons.find(a => a.id === addonId);
     return sum + (addon ? addon.price : 0);
   }, 0);
-  const grandTotal = planDiscountedPrice + addonsTotal;
+  const grandTotalUSD = planDiscountedPriceUSD + addonsTotalUSD;
+
+  // INR Pricing (₹11,999 INR full price, ₹4,399 monthly)
+  const basePriceINR = isMonthly ? (selectedPlan.priceINR ? Math.round(selectedPlan.priceINR / 3) : 4399) : (selectedPlan.priceINR || 11999);
+  const discountAmountINR = effectiveDiscountPct > 0 ? Math.round(basePriceINR * (effectiveDiscountPct / 100)) : 0;
+  const planDiscountedPriceINR = Math.max(12, Math.round(basePriceINR - discountAmountINR)); // ₹12 INR for TH3ORY0
+  const addonsTotalINR = addonsTotalUSD * 80;
+  const grandTotalINR = planDiscountedPriceINR + addonsTotalINR;
 
   const toggleAddon = (addonId) => {
     if (selectedAddons.includes(addonId)) {
@@ -75,18 +92,19 @@ export default function CheckoutModal({
       try {
         setProcessingMsg('Creating secure Razorpay order...');
 
-        // 1. Call serverless order endpoint
+        // 1. Call serverless order endpoint with exact INR amount (11999 INR, or 12 INR with TH3ORY0)
         const res = await fetch('/api/create-razorpay-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            amount: grandTotal,
+            amount: grandTotalINR,
             currency: 'INR',
             receipt: 'ORD-' + Math.floor(100000 + Math.random() * 900000),
             notes: {
               studentName: formData.fullName,
               studentEmail: formData.email,
-              planName: selectedPlan.name
+              planName: selectedPlan.name,
+              couponUsed: currentCoupon || 'NONE'
             }
           })
         });
@@ -306,7 +324,7 @@ export default function CheckoutModal({
                   <div className="text-base font-bold text-white">{selectedPlan.name}</div>
                 </div>
                 <div className="text-right">
-                  <span className="text-xl font-extrabold font-heading text-gradient">${planDiscountedPrice}</span>
+                  <span className="text-xl font-extrabold font-heading text-gradient">${planDiscountedPriceUSD} / ₹{planDiscountedPriceINR.toLocaleString('en-IN')}</span>
                   <span className="text-xs text-slate-400 block">{isMonthly ? '/mo (3 mos)' : 'one-time'}</span>
                 </div>
               </div>
@@ -338,6 +356,32 @@ export default function CheckoutModal({
                     />
                   </div>
                 </div>
+              </div>
+
+              {/* Promo / Coupon Code Input */}
+              <div className="p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2">
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Promo / Coupon Code</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={couponCodeInput}
+                    onChange={(e) => setCouponCodeInput(e.target.value.toUpperCase())}
+                    placeholder="Enter coupon code"
+                    className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-white text-xs font-mono focus:outline-none focus:border-indigo-500"
+                  />
+                  <button
+                    type="button"
+                    className="px-3.5 py-2 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold hover:bg-amber-500/30 transition-all"
+                  >
+                    Apply
+                  </button>
+                </div>
+                {effectiveDiscountPct > 0 && (
+                  <div className="text-xs text-emerald-400 font-bold flex items-center justify-between pt-1">
+                    <span>✓ Coupon ({currentCoupon}) Applied! ({effectiveDiscountPct}% OFF)</span>
+                    <span>Save ${discountAmountUSD} / ₹{discountAmountINR.toLocaleString('en-IN')}</span>
+                  </div>
+                )}
               </div>
 
               {/* Optional Addons */}
@@ -376,7 +420,7 @@ export default function CheckoutModal({
                 type="submit"
                 className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold text-sm shadow-xl flex items-center justify-center gap-2"
               >
-                <span>Continue to Payment Method (${grandTotal})</span>
+                <span>Continue to Payment Method (${grandTotalUSD} / ₹{grandTotalINR.toLocaleString('en-IN')})</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
@@ -393,7 +437,7 @@ export default function CheckoutModal({
                 >
                   <ArrowLeft className="w-3.5 h-3.5" /> Back to details
                 </button>
-                <span className="text-xs text-slate-400">Total Due: <strong className="text-white text-sm">${grandTotal}</strong></span>
+                <span className="text-xs text-slate-400">Total Due: <strong className="text-amber-400 text-sm font-bold">${grandTotalUSD} / ₹{grandTotalINR.toLocaleString('en-IN')}</strong></span>
               </div>
 
               {/* Payment Method Selector Tabs */}
