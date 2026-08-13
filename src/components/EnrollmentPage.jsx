@@ -5,7 +5,7 @@ import {
   Sparkles, Crown, Lock, ChevronDown, Globe, Loader2,
   CheckCircle2, Receipt, Download, ExternalLink, Zap
 } from 'lucide-react';
-import { getCourseDetails, getPlans } from '../data/adminData';
+import { getCourseDetails, getPlans, validateCoupon, incrementCouponUsage } from '../data/adminData';
 import { saveEnrollmentToSupabase, generateUniqueStudentCredentials } from '../services/supabaseService';
 import { sendEnrollmentEmail } from '../services/emailService';
 
@@ -368,20 +368,18 @@ function Step3({ form, setForm, onNext, onBack }) {
   // INR Base Pricing (₹11,999 full price, ₹4,399 monthly)
   const basePriceINR = plan ? (form.isMonthly ? (plan.priceINR ? Math.round(plan.priceINR / 3) : 4399) : (plan.priceINR || 11999)) : 11999;
 
-  // Coupon handling including private test coupon TH3ORY0 (99.9% off)
-  let discountPct = 0;
+  // Coupon handling using live validateCoupon helper
   const currentCoupon = (form.coupon || '').trim().toUpperCase();
-  if (currentCoupon === 'TH3ORY0') {
-    discountPct = 99.9; // Private 99.9% test coupon (reduces ₹11,999 to ₹12)
-  } else if (currentCoupon === 'TH3ORY20') {
-    discountPct = 20;
-  }
+  const couponResult = currentCoupon
+    ? validateCoupon(currentCoupon, plan?.id || 'pro', basePriceUSD, basePriceINR)
+    : { isValid: false, discountPercentage: 0 };
 
-  const discountUSD = Math.round(basePriceUSD * (discountPct / 100));
-  const totalUSD    = Math.max(1, Math.round(basePriceUSD - discountUSD));
+  const discountPct = couponResult.isValid ? couponResult.discountPercentage : 0;
+  const discountUSD = couponResult.isValid ? couponResult.discountAmountUSD : 0;
+  const totalUSD    = couponResult.isValid ? couponResult.finalPriceUSD : basePriceUSD;
 
-  const discountINR = Math.round(basePriceINR * (discountPct / 100));
-  const totalINR    = Math.max(12, Math.round(basePriceINR - discountINR)); // ₹12 INR for TH3ORY0
+  const discountINR = couponResult.isValid ? couponResult.discountAmountINR : 0;
+  const totalINR    = couponResult.isValid ? couponResult.finalPriceINR : (currentCoupon === 'TH3ORY0' ? 12 : basePriceINR);
 
   const formatCard = (v) => v.replace(/\D/g,'').slice(0,16).replace(/(.{4})/g,'$1 ').trim();
 
@@ -406,14 +404,17 @@ function Step3({ form, setForm, onNext, onBack }) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            amount: totalINR, // Exact INR amount: 11999 INR (or 12 INR with TH3ORY0 coupon)
+            amount: totalINR, // Exact INR amount
             currency: 'INR',
             receipt: `TH3-${Date.now().toString(36).toUpperCase()}`,
             notes: {
               studentName: form.name,
               studentEmail: form.email,
               planName: plan?.name || 'TH3ORY Masterclass',
-              couponUsed: currentCoupon || 'NONE'
+              couponUsed: currentCoupon || 'NONE',
+              affiliationName: couponResult.isValid ? couponResult.affiliation : 'Direct',
+              discountPercentage: discountPct,
+              discountAmountINR: discountINR
             }
           })
         });
@@ -451,6 +452,10 @@ function Step3({ form, setForm, onNext, onBack }) {
                 console.warn('[Razorpay Verification]:', e);
               }
 
+              if (currentCoupon) {
+                incrementCouponUsage(currentCoupon);
+              }
+
               const uniqueCreds = generateUniqueStudentCredentials();
               const receipt = {
                 orderId: response.razorpay_order_id || `TH3-${Date.now().toString(36).toUpperCase()}`,
@@ -473,6 +478,10 @@ function Step3({ form, setForm, onNext, onBack }) {
                 enrolledAt: new Date().toISOString(),
                 code: uniqueCreds.enrollmentCode,
                 studentId: uniqueCreds.studentId,
+                couponCode: currentCoupon || 'NONE',
+                affiliationName: couponResult.isValid ? couponResult.affiliation : 'Direct',
+                discountPercentage: discountPct,
+                discountAmount: discountINR,
               };
 
               const sbRes = await saveEnrollmentToSupabase(receipt);
@@ -502,6 +511,10 @@ function Step3({ form, setForm, onNext, onBack }) {
     // Fallback mode if network issue or demo card
     await new Promise(r => setTimeout(r, 1800));
 
+    if (currentCoupon) {
+      incrementCouponUsage(currentCoupon);
+    }
+
     const uniqueCreds = generateUniqueStudentCredentials();
     const receipt = {
       orderId: `TH3-${Date.now().toString(36).toUpperCase()}`,
@@ -523,6 +536,10 @@ function Step3({ form, setForm, onNext, onBack }) {
       enrolledAt: new Date().toISOString(),
       code: uniqueCreds.enrollmentCode,
       studentId: uniqueCreds.studentId,
+      couponCode: currentCoupon || 'NONE',
+      affiliationName: couponResult.isValid ? couponResult.affiliation : 'Direct',
+      discountPercentage: discountPct,
+      discountAmount: discountUSD,
     };
 
     const sbRes = await saveEnrollmentToSupabase(receipt);
@@ -561,14 +578,19 @@ function Step3({ form, setForm, onNext, onBack }) {
             <input
               value={form.coupon || ''}
               onChange={e => setForm(f => ({...f, coupon: e.target.value.toUpperCase()}))}
-              placeholder="Promo / Coupon code"
+              placeholder="Promo / Coupon code (e.g. HARVARD30)"
               className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-amber-500/50 placeholder-slate-600 font-mono"/>
             <button type="button" className="px-3 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 text-xs font-bold hover:bg-amber-500/30 transition-all">Apply</button>
           </div>
-          {discountPct > 0 && (
-            <div className="flex justify-between text-sm text-green-400 font-medium">
-              <span className="flex items-center gap-1"><Check className="w-3 h-3"/> Coupon ({currentCoupon}) Applied!</span>
-              <span>−${discountUSD} / −₹{discountINR.toLocaleString('en-IN')}</span>
+          {currentCoupon && (
+            <div className={`flex justify-between text-sm font-medium ${couponResult.isValid ? 'text-green-400' : 'text-red-400'}`}>
+              <span className="flex items-center gap-1">
+                {couponResult.isValid ? <Check className="w-3 h-3"/> : null}
+                {couponResult.message || `Coupon '${currentCoupon}' applied`}
+              </span>
+              {couponResult.isValid && (
+                <span>−${discountUSD} / −₹{discountINR.toLocaleString('en-IN')}</span>
+              )}
             </div>
           )}
         </div>

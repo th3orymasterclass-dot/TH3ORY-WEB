@@ -73,6 +73,69 @@ import {
   subscribeToCourseContents,
 } from '../services/supabaseService';
 
+export const defaultCoupons = [
+  {
+    id: 'c_th3ory20',
+    code: 'TH3ORY20',
+    affiliation: 'General Promotion',
+    discountType: 'percentage',
+    discountValue: 20,
+    partnerContact: 'support@th3ory.online',
+    description: 'Standard 20% discount across all TH3ORY Masterclass plans',
+    validUntil: '2027-12-31',
+    maxUses: 1000,
+    usedCount: 14,
+    isActive: true,
+    targetPlan: 'all',
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'c_th3ory0',
+    code: 'TH3ORY0',
+    affiliation: 'Internal QA & Live Test',
+    discountType: 'percentage',
+    discountValue: 99.9,
+    partnerContact: 'qa@th3ory.online',
+    description: 'Private 99.9% test coupon (reduces ₹11,999 to ₹12 INR for live gateway testing)',
+    validUntil: '2028-12-31',
+    maxUses: 500,
+    usedCount: 5,
+    isActive: true,
+    targetPlan: 'all',
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'c_harvard30',
+    code: 'HARVARD30',
+    affiliation: 'Harvard Alumni Network',
+    discountType: 'percentage',
+    discountValue: 30,
+    partnerContact: 'alumni@harvard.edu',
+    description: 'Exclusive 30% discount for Harvard Alumni cohort',
+    validUntil: '2027-06-30',
+    maxUses: 200,
+    usedCount: 28,
+    isActive: true,
+    targetPlan: 'all',
+    createdAt: '2026-02-01T00:00:00.000Z'
+  },
+  {
+    id: 'c_techlead5000',
+    code: 'TECHLEAD5000',
+    affiliation: 'Tech Leadership Forum',
+    discountType: 'fixed',
+    discountValue: 5000,
+    partnerContact: 'events@techlead.org',
+    description: 'Special ₹5,000 discount for Tech Leadership Forum members',
+    validUntil: '2026-12-31',
+    maxUses: 50,
+    usedCount: 12,
+    isActive: true,
+    targetPlan: 'all',
+    createdAt: '2026-03-01T00:00:00.000Z'
+  }
+];
+
 // ─── Live getters used by public components ────────────────────────────────────
 export const getCourseDetails = () => lsGet('courseDetails', defaultCourseDetails);
 export const getVideo         = () => lsGet('video', defaultVideo);
@@ -82,6 +145,105 @@ export const getAddons        = () => lsGet('addons', defaultAddons);
 export const getReviews       = () => lsGet('reviews', defaultReviews);
 export const getFaqs          = () => lsGet('faqs', defaultFaqs);
 export const getContent       = () => lsGet('content', []);
+export const getCoupons        = () => lsGet('coupons', defaultCoupons);
+export const saveCoupons       = (coupons) => lsSet('coupons', coupons);
+
+/**
+ * Validate a custom offer coupon code live against current admin configuration.
+ * Returns percentage discount, exact currency savings, final prices, and affiliation details.
+ */
+export function validateCoupon(inputCode, planId = 'pro', basePriceUSD = 149, basePriceINR = 11999) {
+  const code = (inputCode || '').trim().toUpperCase();
+  if (!code) {
+    return { isValid: false, message: 'Please enter a coupon code.' };
+  }
+
+  const coupons = getCoupons();
+  const coupon = coupons.find(c => (c.code || '').trim().toUpperCase() === code);
+
+  if (!coupon) {
+    return { isValid: false, message: `Coupon code '${code}' is invalid.` };
+  }
+
+  if (!coupon.isActive) {
+    return { isValid: false, message: `Coupon code '${code}' is currently inactive.` };
+  }
+
+  if (coupon.validUntil) {
+    const expiry = new Date(coupon.validUntil);
+    if (!isNaN(expiry.getTime()) && expiry < new Date()) {
+      return { isValid: false, message: `Coupon code '${code}' expired on ${expiry.toLocaleDateString()}.` };
+    }
+  }
+
+  if (coupon.maxUses && Number(coupon.usedCount || 0) >= Number(coupon.maxUses)) {
+    return { isValid: false, message: `Coupon code '${code}' has reached its maximum usage limit.` };
+  }
+
+  if (coupon.targetPlan && coupon.targetPlan !== 'all' && planId && coupon.targetPlan !== planId) {
+    return { isValid: false, message: `Coupon code '${code}' is only valid for ${coupon.targetPlan.toUpperCase()} plan.` };
+  }
+
+  // Calculate discount and percentage
+  let discountPercentage = 0;
+  let discountAmountUSD = 0;
+  let discountAmountINR = 0;
+
+  if (coupon.discountType === 'percentage') {
+    discountPercentage = Number(coupon.discountValue || 0);
+    discountAmountUSD = Math.round(basePriceUSD * (discountPercentage / 100));
+    discountAmountINR = Math.round(basePriceINR * (discountPercentage / 100));
+  } else if (coupon.discountType === 'fixed') {
+    discountAmountINR = Number(coupon.discountValue || 0);
+    discountAmountUSD = Math.round(discountAmountINR / 80); // ~80 INR per USD
+    discountPercentage = Math.min(100, Math.round((discountAmountINR / basePriceINR) * 100));
+  }
+
+  // Minimum thresholds (₹12 for TH3ORY0, $1 USD min)
+  const finalPriceUSD = Math.max(1, basePriceUSD - discountAmountUSD);
+  const finalPriceINR = code === 'TH3ORY0' ? 12 : Math.max(12, basePriceINR - discountAmountINR);
+
+  return {
+    isValid: true,
+    code: coupon.code,
+    affiliation: coupon.affiliation || 'General',
+    discountType: coupon.discountType,
+    discountValue: coupon.discountValue,
+    discountPercentage,
+    discountAmountUSD,
+    discountAmountINR,
+    finalPriceUSD,
+    finalPriceINR,
+    coupon,
+    message: `✓ ${coupon.affiliation} discount applied! (${discountPercentage}% OFF)`
+  };
+}
+
+/**
+ * Increment usage count for an applied coupon code
+ */
+export function incrementCouponUsage(inputCode) {
+  const code = (inputCode || '').trim().toUpperCase();
+  if (!code) return;
+  try {
+    const coupons = getCoupons();
+    const updated = coupons.map(c => {
+      if ((c.code || '').trim().toUpperCase() === code) {
+        return { ...c, usedCount: (c.usedCount || 0) + 1 };
+      }
+      return c;
+    });
+    localStorage.setItem(LS_PREFIX + 'coupons', JSON.stringify(updated));
+    // Persist to Supabase site_settings if admin authenticated or via public sync
+    fetchSiteSettingsFromSupabase().then(currentSettings => {
+      const payload = { ...(currentSettings || {}), coupons: updated };
+      saveSiteSettingsToSupabase('coupons', updated).catch(() => {});
+    }).catch(() => {});
+    window.dispatchEvent(new CustomEvent('th3ory_data_change', { detail: { key: 'coupons' } }));
+  } catch (err) {
+    console.warn('[Coupons] Error incrementing usage count:', err);
+  }
+}
 
 /**
  * Custom React Hook for Realtime Component Reactivity across Admin and Public site
@@ -96,6 +258,7 @@ export function useTh3oryLive() {
     reviews: getReviews(),
     faqs: getFaqs(),
     content: getContent(),
+    coupons: getCoupons(),
   }));
 
   useEffect(() => {
@@ -109,6 +272,7 @@ export function useTh3oryLive() {
         reviews: getReviews(),
         faqs: getFaqs(),
         content: getContent(),
+        coupons: getCoupons(),
       });
     };
 
@@ -181,4 +345,6 @@ export const defaults = {
   reviews: defaultReviews,
   faqs: defaultFaqs,
   content: [],
+  coupons: defaultCoupons,
 };
+

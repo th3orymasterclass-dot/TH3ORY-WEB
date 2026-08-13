@@ -10,6 +10,7 @@ import { isAdminAuthenticated } from '../data/adminData';
 import OverviewPanel       from './panels/OverviewPanel';
 import EnrollmentsPanel    from './panels/EnrollmentsPanel';
 import QueriesQuotesPanel  from './panels/QueriesQuotesPanel';
+import CouponsPanel        from './panels/CouponsPanel';
 import HeroPanel           from './panels/HeroPanel';
 import UrgencyPanel        from './panels/UrgencyPanel';
 import CurriculumPanel     from './panels/CurriculumPanel';
@@ -28,6 +29,7 @@ const NAV_ITEMS = [
   { id: 'overview',    label: 'Overview',           icon: LayoutDashboard },
   { id: '__divider_db', divider: true, label: 'DATABASE & SALES' },
   { id: 'enrollments', label: 'Enrollments & Sales',icon: ShoppingBag, badge: 'LIVE' },
+  { id: 'coupons',     label: 'Coupons & Affiliations', icon: Tag, badge: 'OFFERS' },
   { id: 'requests',    label: 'Queries & Quotes',   icon: MessageSquare, badge: 'DB' },
   { id: 'integrations',label: 'Integrations & API', icon: Database, badge: 'DIAG' },
   { id: '__divider1',  divider: true, label: 'SITE CONTENT' },
@@ -66,6 +68,7 @@ export default function AdminApp({ onLogout }) {
     switch (active) {
       case 'overview':   return <OverviewPanel   {...panelProps} />;
       case 'enrollments':return <EnrollmentsPanel enrollments={enrollments} />;
+      case 'coupons':    return <CouponsPanel     save={save} enrollments={enrollments} />;
       case 'requests':   return <QueriesQuotesPanel queries={queries} enterpriseQuotes={enterpriseQuotes} contactInquiries={contactInquiries} updateQueryStatus={updateQueryStatus} updateQuoteStatus={updateQuoteStatus} updateInquiryStatus={updateInquiryStatus} />;
       case 'integrations':return <IntegrationsPanel />;
       case 'hero':       return <HeroPanel       {...panelProps} />;

@@ -51,12 +51,42 @@ export async function saveEnrollmentToSupabase(enrollmentData) {
       gateway: enrollmentData.gateway || 'Razorpay',
       is_monthly: Boolean(enrollmentData.isMonthly),
       enrollment_code: finalCode,
+      coupon_code: enrollmentData.couponCode || enrollmentData.coupon || 'NONE',
+      affiliation_name: enrollmentData.affiliationName || enrollmentData.affiliation || 'Direct',
+      discount_percentage: Number(enrollmentData.discountPercentage || enrollmentData.discountPct || 0),
+      discount_amount: Number(enrollmentData.discountAmount || 0),
     };
 
     // Insert into enrollments table
-    const { data: enrollment, error: e1 } = await supabase
+    let { data: enrollment, error: e1 } = await supabase
       .from('enrollments')
       .insert([payload]);
+
+    if (e1 && (e1.message?.includes('column') || e1.message?.includes('schema cache'))) {
+      console.warn('[Supabase] Retrying enrollment insertion with core payload fallback:', e1.message);
+      const basePayload = {
+        order_id: payload.order_id,
+        name: payload.name,
+        email: payload.email,
+        phone: payload.phone,
+        country_code: payload.country_code,
+        address: payload.address,
+        city: payload.city,
+        country: payload.country,
+        profession: payload.profession,
+        dob: payload.dob,
+        plan_id: payload.plan_id,
+        plan_name: payload.plan_name,
+        amount_paid: payload.amount_paid,
+        currency: payload.currency,
+        gateway: payload.gateway,
+        is_monthly: payload.is_monthly,
+        enrollment_code: payload.enrollment_code,
+      };
+      const res = await supabase.from('enrollments').insert([basePayload]);
+      enrollment = res.data;
+      e1 = res.error;
+    }
 
     if (e1) {
       console.error('[Supabase] Error saving enrollment:', e1);

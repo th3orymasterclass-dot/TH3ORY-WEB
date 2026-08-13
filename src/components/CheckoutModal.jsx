@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { X, Lock, CreditCard, ShieldCheck, CheckCircle2, QrCode, Sparkles, Loader2, Download, ArrowRight, ArrowLeft, Mail } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Lock, CreditCard, ShieldCheck, CheckCircle2, QrCode, Sparkles, Loader2, Download, ArrowRight, ArrowLeft, Mail, Tag, Percent } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { courseAddons } from '../data/courseData';
+import { validateCoupon, incrementCouponUsage } from '../data/adminData';
 import { saveEnrollmentToSupabase, generateUniqueStudentCredentials } from '../services/supabaseService';
 import { sendEnrollmentEmail } from '../services/emailService';
 
@@ -38,29 +39,49 @@ export default function CheckoutModal({
   const [orderCompleted, setOrderCompleted] = useState(false);
   const [receiptData, setReceiptData] = useState(null);
 
-  // Financial calculations (USD & INR)
-  const currentCoupon = (couponCodeInput || couponCode || '').trim().toUpperCase();
-  let effectiveDiscountPct = couponDiscount || 0;
-  if (currentCoupon === 'TH3ORY0') {
-    effectiveDiscountPct = 99.9; // Private 99.9% test coupon (reduces ₹11,999 to ₹12)
-  } else if (currentCoupon === 'TH3ORY20') {
-    effectiveDiscountPct = 20;
-  }
+  // Auto-detect coupon from URL parameter
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const urlCoupon = params.get('coupon') || params.get('aff') || params.get('code');
+      if (urlCoupon && !couponCodeInput) {
+        setCouponCodeInput(urlCoupon.toUpperCase());
+      }
+    }
+  }, []);
 
-  // USD Pricing
+  // Base Prices
   const basePriceUSD = isMonthly ? (selectedPlan.priceMonthly || 55) : (selectedPlan.priceFull || 149);
-  const discountAmountUSD = effectiveDiscountPct > 0 ? Math.round(basePriceUSD * (effectiveDiscountPct / 100)) : 0;
+  const basePriceINR = isMonthly ? (selectedPlan.priceINR ? Math.round(selectedPlan.priceINR / 3) : 4399) : (selectedPlan.priceINR || 11999);
+
+  // Dynamic Coupon Validation
+  const currentCoupon = (couponCodeInput || couponCode || '').trim().toUpperCase();
+  const couponResult = currentCoupon
+    ? validateCoupon(currentCoupon, selectedPlan.id, basePriceUSD, basePriceINR)
+    : { isValid: false, discountPercentage: couponDiscount || 0 };
+
+  const effectiveDiscountPct = couponResult.isValid ? couponResult.discountPercentage : (couponDiscount || 0);
+
+  // Financial calculations (USD & INR)
+  const discountAmountUSD = couponResult.isValid
+    ? couponResult.discountAmountUSD
+    : (effectiveDiscountPct > 0 ? Math.round(basePriceUSD * (effectiveDiscountPct / 100)) : 0);
   const planDiscountedPriceUSD = Math.max(1, basePriceUSD - discountAmountUSD);
+
   const addonsTotalUSD = selectedAddons.reduce((sum, addonId) => {
     const addon = courseAddons.find(a => a.id === addonId);
     return sum + (addon ? addon.price : 0);
   }, 0);
   const grandTotalUSD = planDiscountedPriceUSD + addonsTotalUSD;
 
-  // INR Pricing (₹11,999 INR full price, ₹4,399 monthly)
-  const basePriceINR = isMonthly ? (selectedPlan.priceINR ? Math.round(selectedPlan.priceINR / 3) : 4399) : (selectedPlan.priceINR || 11999);
-  const discountAmountINR = effectiveDiscountPct > 0 ? Math.round(basePriceINR * (effectiveDiscountPct / 100)) : 0;
-  const planDiscountedPriceINR = Math.max(12, Math.round(basePriceINR - discountAmountINR)); // ₹12 INR for TH3ORY0
+  const discountAmountINR = couponResult.isValid
+    ? couponResult.discountAmountINR
+    : (effectiveDiscountPct > 0 ? Math.round(basePriceINR * (effectiveDiscountPct / 100)) : 0);
+
+  const planDiscountedPriceINR = couponResult.isValid
+    ? couponResult.finalPriceINR
+    : (currentCoupon === 'TH3ORY0' ? 12 : Math.max(12, Math.round(basePriceINR - discountAmountINR)));
+
   const addonsTotalINR = addonsTotalUSD * 80;
   const grandTotalINR = planDiscountedPriceINR + addonsTotalINR;
 
@@ -92,7 +113,7 @@ export default function CheckoutModal({
       try {
         setProcessingMsg('Creating secure Razorpay order...');
 
-        // 1. Call serverless order endpoint with exact INR amount (11999 INR, or 12 INR with TH3ORY0)
+        // 1. Call serverless order endpoint with exact INR amount (11999 INR, or discounted price)
         const res = await fetch('/api/create-razorpay-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -104,7 +125,10 @@ export default function CheckoutModal({
               studentName: formData.fullName,
               studentEmail: formData.email,
               planName: selectedPlan.name,
-              couponUsed: currentCoupon || 'NONE'
+              couponUsed: currentCoupon || 'NONE',
+              affiliationName: couponResult.isValid ? couponResult.affiliation : 'Direct',
+              discountPercentage: effectiveDiscountPct,
+              discountAmountINR: discountAmountINR
             }
           })
         });
@@ -163,6 +187,11 @@ export default function CheckoutModal({
                 studentId: uniqueCreds.studentId
               };
 
+              // Increment coupon usage count
+              if (currentCoupon) {
+                incrementCouponUsage(currentCoupon);
+              }
+
               // Save enrollment to Supabase DB & Create Student Account with Unique Credentials
               const sbRes = await saveEnrollmentToSupabase({
                 orderId,
@@ -178,7 +207,11 @@ export default function CheckoutModal({
                 gateway: 'Razorpay',
                 isMonthly,
                 code: uniqueCreds.enrollmentCode,
-                studentId: uniqueCreds.studentId
+                studentId: uniqueCreds.studentId,
+                couponCode: currentCoupon || 'NONE',
+                affiliationName: couponResult.isValid ? couponResult.affiliation : 'Direct',
+                discountPercentage: effectiveDiscountPct,
+                discountAmount: discountAmountINR,
               }).catch(err => console.warn('[Supabase Enrollment] Error saving to DB:', err));
 
               const finalCode = (sbRes && sbRes.code) || uniqueCreds.enrollmentCode;
@@ -379,13 +412,20 @@ export default function CheckoutModal({
 
               {/* Promo / Coupon Code Input */}
               <div className="p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2">
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Promo / Coupon Code</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                  <span>Promo / Custom Offer Coupon</span>
+                  {couponResult.isValid && (
+                    <span className="text-[10px] text-amber-400 font-mono font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                      AFFILIATION: {couponResult.affiliation}
+                    </span>
+                  )}
+                </label>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={couponCodeInput}
                     onChange={(e) => setCouponCodeInput(e.target.value.toUpperCase())}
-                    placeholder="Enter coupon code"
+                    placeholder="Enter coupon code (e.g. HARVARD30)"
                     className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-white text-xs font-mono focus:outline-none focus:border-indigo-500"
                   />
                   <button
@@ -395,10 +435,12 @@ export default function CheckoutModal({
                     Apply
                   </button>
                 </div>
-                {effectiveDiscountPct > 0 && (
-                  <div className="text-xs text-emerald-400 font-bold flex items-center justify-between pt-1">
-                    <span>✓ Coupon ({currentCoupon}) Applied! ({effectiveDiscountPct}% OFF)</span>
-                    <span>Save ${discountAmountUSD} / ₹{discountAmountINR.toLocaleString('en-IN')}</span>
+                {currentCoupon && (
+                  <div className={`text-xs font-bold flex items-center justify-between pt-1 ${couponResult.isValid ? 'text-emerald-400' : 'text-red-400'}`}>
+                    <span>{couponResult.message || (couponResult.isValid ? `✓ Coupon ${currentCoupon} Applied!` : 'Invalid coupon code.')}</span>
+                    {couponResult.isValid && (
+                      <span>Save ${discountAmountUSD} / ₹{discountAmountINR.toLocaleString('en-IN')}</span>
+                    )}
                   </div>
                 )}
               </div>

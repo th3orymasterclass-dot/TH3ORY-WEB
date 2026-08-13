@@ -26,8 +26,18 @@ CREATE TABLE IF NOT EXISTS public.enrollments (
     gateway TEXT DEFAULT 'stripe',
     is_monthly BOOLEAN DEFAULT false,
     enrollment_code TEXT DEFAULT 'TH3ORY2026',
+    coupon_code TEXT DEFAULT 'NONE',
+    affiliation_name TEXT DEFAULT 'Direct',
+    discount_percentage NUMERIC(5, 2) DEFAULT 0.00,
+    discount_amount NUMERIC(10, 2) DEFAULT 0.00,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Alter table statements for existing database schema migrations
+ALTER TABLE public.enrollments ADD COLUMN IF NOT EXISTS coupon_code TEXT DEFAULT 'NONE';
+ALTER TABLE public.enrollments ADD COLUMN IF NOT EXISTS affiliation_name TEXT DEFAULT 'Direct';
+ALTER TABLE public.enrollments ADD COLUMN IF NOT EXISTS discount_percentage NUMERIC(5, 2) DEFAULT 0.00;
+ALTER TABLE public.enrollments ADD COLUMN IF NOT EXISTS discount_amount NUMERIC(10, 2) DEFAULT 0.00;
 
 -- 2. STUDENT ACCOUNTS TABLE (Registered Students & Portal Access)
 CREATE TABLE IF NOT EXISTS public.student_accounts (

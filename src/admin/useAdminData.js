@@ -35,6 +35,7 @@ export default function useAdminData() {
     reviews:       getReviews(),
     faqs:          getFaqs(),
     content:       getContent(),
+    coupons:       getCoupons(),
   }));
 
   const [enrollments, setEnrollments] = useState([]);
@@ -55,6 +56,7 @@ export default function useAdminData() {
         reviews:       getReviews(),
         faqs:          getFaqs(),
         content:       getContent(),
+        coupons:       getCoupons(),
       });
     };
     window.addEventListener('th3ory_data_change', handler);
