@@ -5,46 +5,56 @@ import { isAdminAuthenticated } from '../data/adminData';
 export async function saveEnrollmentToSupabase(enrollmentData) {
   if (!isSupabaseConfigured || !supabase) {
     console.log('[Supabase] Not configured, saving locally only.');
+    try {
+      const local = JSON.parse(localStorage.getItem('th3ory_local_enrollments') || '[]');
+      local.unshift(enrollmentData);
+      localStorage.setItem('th3ory_local_enrollments', JSON.stringify(local));
+    } catch {}
     return { success: false, isLocal: true };
   }
 
   try {
+    const sanitizedDob = (enrollmentData.dob && typeof enrollmentData.dob === 'string' && enrollmentData.dob.trim() !== '')
+      ? enrollmentData.dob.trim()
+      : null;
+
     const payload = {
-      order_id: enrollmentData.orderId,
-      name: enrollmentData.name,
-      email: enrollmentData.email,
+      order_id: enrollmentData.orderId || (`ORD-${Date.now()}`),
+      name: enrollmentData.name || enrollmentData.studentName || 'Student',
+      email: enrollmentData.email || enrollmentData.studentEmail || 'student@example.com',
       phone: enrollmentData.phone || '',
       country_code: enrollmentData.countryCode || '',
       address: enrollmentData.address || '',
       city: enrollmentData.city || '',
       country: enrollmentData.country || '',
       profession: enrollmentData.profession || '',
-      dob: enrollmentData.dob || null,
+      dob: sanitizedDob,
       plan_id: enrollmentData.planId || 'pro',
       plan_name: enrollmentData.planName || 'TH3ORY Masterclass',
-      amount_paid: enrollmentData.price || 0,
-      currency: enrollmentData.currency || 'USD',
-      gateway: enrollmentData.gateway || 'stripe',
+      amount_paid: enrollmentData.price || enrollmentData.totalAmount || enrollmentData.amountPaid || 0,
+      currency: enrollmentData.currency || 'INR',
+      gateway: enrollmentData.gateway || 'Razorpay',
       is_monthly: Boolean(enrollmentData.isMonthly),
       enrollment_code: enrollmentData.code || 'TH3ORY2026',
     };
 
+    // Insert into enrollments table
     const { data: enrollment, error: e1 } = await supabase
       .from('enrollments')
-      .insert([payload])
-      .select()
-      .single();
+      .insert([payload]);
 
     if (e1) {
       console.error('[Supabase] Error saving enrollment:', e1);
+    } else {
+      console.log('[Supabase] Enrollment saved successfully:', payload.order_id);
     }
 
-    // Also register student account
+    // Also register or update student account
     const accountPayload = {
-      name: enrollmentData.name,
-      email: enrollmentData.email,
-      enrollment_code: enrollmentData.code || 'TH3ORY2026',
-      plan_name: enrollmentData.planName || 'TH3ORY Masterclass',
+      name: payload.name,
+      email: payload.email,
+      enrollment_code: payload.enrollment_code,
+      plan_name: payload.plan_name,
       last_login: new Date().toISOString(),
     };
 
@@ -56,6 +66,13 @@ export async function saveEnrollmentToSupabase(enrollmentData) {
       console.error('[Supabase] Error saving student account:', e2);
     }
 
+    // Local storage backup copy
+    try {
+      const local = JSON.parse(localStorage.getItem('th3ory_local_enrollments') || '[]');
+      local.unshift(payload);
+      localStorage.setItem('th3ory_local_enrollments', JSON.stringify(local));
+    } catch {}
+
     return { success: !e1, data: enrollment, error: e1 || e2 };
   } catch (err) {
     console.error('[Supabase] Exception in saveEnrollmentToSupabase:', err);
@@ -66,33 +83,54 @@ export async function saveEnrollmentToSupabase(enrollmentData) {
 // ─── Student Verification ─────────────────────────────────────────────────────
 export async function verifyStudentCodeWithSupabase(emailOrName, code) {
   if (!isSupabaseConfigured || !supabase) {
-    return null; // fallback to code matching
+    return null;
   }
 
   try {
-    const { data, error } = await supabase
+    const cleanInput = (emailOrName || '').trim();
+    const cleanCode  = (code || '').trim().toUpperCase();
+
+    // 1. Try enrollments table
+    const { data: eData } = await supabase
       .from('enrollments')
       .select('*')
-      .or(`email.ilike.${emailOrName},name.ilike.${emailOrName}`)
-      .eq('enrollment_code', code)
+      .or(`email.ilike.%${cleanInput}%,name.ilike.%${cleanInput}%`)
+      .eq('enrollment_code', cleanCode)
       .limit(1);
 
-    if (error || !data || data.length === 0) {
-      return null;
+    if (eData && eData.length > 0) {
+      // Update last login
+      await supabase
+        .from('student_accounts')
+        .update({ last_login: new Date().toISOString() })
+        .eq('email', eData[0].email);
+
+      return {
+        name: eData[0].name,
+        email: eData[0].email,
+        plan: eData[0].plan_name,
+        enrolledAt: eData[0].created_at,
+      };
     }
 
-    // Update last login
-    await supabase
+    // 2. Try student_accounts table
+    const { data: aData } = await supabase
       .from('student_accounts')
-      .update({ last_login: new Date().toISOString() })
-      .eq('email', data[0].email);
+      .select('*')
+      .or(`email.ilike.%${cleanInput}%,name.ilike.%${cleanInput}%`)
+      .eq('enrollment_code', cleanCode)
+      .limit(1);
 
-    return {
-      name: data[0].name,
-      email: data[0].email,
-      plan: data[0].plan_name,
-      enrolledAt: data[0].created_at,
-    };
+    if (aData && aData.length > 0) {
+      return {
+        name: aData[0].name,
+        email: aData[0].email,
+        plan: aData[0].plan_name,
+        enrolledAt: aData[0].created_at,
+      };
+    }
+
+    return null;
   } catch (err) {
     console.error('[Supabase] Error verifying student:', err);
     return null;
