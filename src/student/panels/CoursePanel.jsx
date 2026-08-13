@@ -74,13 +74,23 @@ function VideoModal({ url, title, onClose }) {
 function ResourceCard({ item, onStreamResource }) {
   const typeColors = { video:'text-blue-400', pdf:'text-red-400', worksheet:'text-green-400', quiz:'text-purple-400', audio:'text-pink-400', resource:'text-amber-400', image:'text-cyan-400', archive:'text-slate-400' };
   const gdrive = parseGoogleDriveUrl(item.url);
+  const accessKey = item.access || item.accessLevel || 'enrolled';
+  const accessBadges = {
+    free: { label: 'Free Preview', color: 'bg-green-500/15 text-green-400 border-green-500/30' },
+    enrolled: { label: 'Enrolled Only', color: 'bg-amber-500/15 text-amber-400 border-amber-500/30' },
+    vip: { label: 'VIP Only', color: 'bg-purple-500/15 text-purple-400 border-purple-500/30' },
+  };
+  const badge = accessBadges[accessKey] || accessBadges.enrolled;
 
   return (
     <div className="flex items-center gap-3 px-4 py-3 bg-slate-950/60 rounded-xl hover:bg-slate-950 border border-slate-800 hover:border-slate-700 transition-all group select-none">
       <FileText className={`w-4 h-4 shrink-0 ${typeColors[item.type] || 'text-slate-400'}`}/>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <p className="text-white text-sm font-medium truncate">{item.title}</p>
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${badge.color} shrink-0`}>
+            {badge.label}
+          </span>
           {gdrive.isGDrive && (
             <span className="text-[10px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30 px-1.5 py-0.5 rounded flex items-center gap-1 shrink-0">
               <HardDrive className="w-2.5 h-2.5" /> GDrive Stream

@@ -201,8 +201,11 @@ function ContentModal({ item, levels, onSave, onClose }) {
   const handleSave = () => {
     if (!form.title.trim()) return alert('Please enter a title.');
     if (!form.url.trim()) return alert('Please add a Google Drive link, URL, or upload a file.');
+    const accessVal = form.access || form.accessLevel || 'enrolled';
     onSave({
       ...form,
+      access: accessVal,
+      accessLevel: accessVal,
       id: form.id || `c_${Date.now()}`,
       uploadedAt: form.uploadedAt || new Date().toISOString(),
     });
