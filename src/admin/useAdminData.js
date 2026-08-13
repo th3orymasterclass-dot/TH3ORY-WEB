@@ -12,6 +12,17 @@ import {
   subscribeToReviews,
   fetchReviewsFromSupabase,
   subscribeToCourseContents,
+  fetchEnrollmentsFromSupabase,
+  subscribeToEnrollments,
+  fetchQueriesFromSupabase,
+  subscribeToQueries,
+  fetchEnterpriseQuotesFromSupabase,
+  subscribeToEnterpriseQuotes,
+  fetchContactInquiriesFromSupabase,
+  subscribeToContactInquiries,
+  updateQueryStatusInSupabase,
+  updateEnterpriseQuoteStatusInSupabase,
+  updateContactInquiryStatusInSupabase,
 } from '../services/supabaseService';
 
 export default function useAdminData() {
@@ -26,6 +37,10 @@ export default function useAdminData() {
     content:       getContent(),
   }));
 
+  const [enrollments, setEnrollments] = useState([]);
+  const [queries, setQueries] = useState([]);
+  const [enterpriseQuotes, setEnterpriseQuotes] = useState([]);
+  const [contactInquiries, setContactInquiries] = useState([]);
   const [lastSaved, setLastSaved] = useState(null);
 
   // Re-read after any save & hydrate from Supabase Realtime
@@ -44,7 +59,7 @@ export default function useAdminData() {
     };
     window.addEventListener('th3ory_data_change', handler);
 
-    // Initial hydration from Supabase database
+    // 1. Initial hydration from Supabase database
     fetchSiteSettingsFromSupabase().then(settings => {
       if (settings) {
         Object.keys(settings).forEach(key => {
@@ -74,7 +89,13 @@ export default function useAdminData() {
       }
     });
 
-    // Supabase Realtime Subscriptions
+    // 2. Fetch Enrollments, Queries, Quotes & Inquiries
+    fetchEnrollmentsFromSupabase().then(res => setEnrollments(res));
+    fetchQueriesFromSupabase().then(res => { if (res) setQueries(res); });
+    fetchEnterpriseQuotesFromSupabase().then(res => { if (res) setEnterpriseQuotes(res); });
+    fetchContactInquiriesFromSupabase().then(res => { if (res) setContactInquiries(res); });
+
+    // 3. Supabase Realtime Subscriptions
     const unsubSettings = subscribeToSiteSettings((key, val) => {
       try {
         localStorage.setItem(`th3ory_admin_${key}`, JSON.stringify(val));
@@ -96,11 +117,31 @@ export default function useAdminData() {
       } catch {}
     });
 
+    const unsubEnrollments = subscribeToEnrollments((enrollmentsList) => {
+      setEnrollments(enrollmentsList);
+    });
+
+    const unsubQueries = subscribeToQueries((queriesList) => {
+      setQueries(queriesList);
+    });
+
+    const unsubQuotes = subscribeToEnterpriseQuotes((quotesList) => {
+      setEnterpriseQuotes(quotesList);
+    });
+
+    const unsubInquiries = subscribeToContactInquiries((inquiriesList) => {
+      setContactInquiries(inquiriesList);
+    });
+
     return () => {
       window.removeEventListener('th3ory_data_change', handler);
       unsubSettings();
       unsubReviews();
       unsubContents();
+      unsubEnrollments();
+      unsubQueries();
+      unsubQuotes();
+      unsubInquiries();
     };
   }, []);
 
@@ -139,5 +180,19 @@ export default function useAdminData() {
     }
   }, []);
 
-  return { data, save, reset, defaults, lastSaved, isAdmin: isAdminAuthenticated() };
+  return {
+    data,
+    save,
+    reset,
+    defaults,
+    lastSaved,
+    enrollments,
+    queries,
+    enterpriseQuotes,
+    contactInquiries,
+    updateQueryStatus: updateQueryStatusInSupabase,
+    updateQuoteStatus: updateEnterpriseQuoteStatusInSupabase,
+    updateInquiryStatus: updateContactInquiryStatusInSupabase,
+    isAdmin: isAdminAuthenticated()
+  };
 }

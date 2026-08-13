@@ -3,36 +3,41 @@ import {
   LayoutDashboard, Type, Flame, BookOpen, Tag,
   Star, HelpCircle, User, Gift, Target, Video,
   LogOut, ChevronRight, Menu, X, ExternalLink, Shield,
-  FolderOpen, Layers
+  FolderOpen, Layers, ShoppingBag, MessageSquare, Building2
 } from 'lucide-react';
 import useAdminData from './useAdminData';
 import { isAdminAuthenticated } from '../data/adminData';
-import OverviewPanel   from './panels/OverviewPanel';
-import HeroPanel       from './panels/HeroPanel';
-import UrgencyPanel    from './panels/UrgencyPanel';
-import CurriculumPanel from './panels/CurriculumPanel';
-import ContentPanel    from './panels/ContentPanel';
-import PricingPanel    from './panels/PricingPanel';
-import ReviewsPanel    from './panels/ReviewsPanel';
-import FAQPanel        from './panels/FAQPanel';
-import InstructorPanel from './panels/InstructorPanel';
-import BonusesPanel    from './panels/BonusesPanel';
-import OutcomesPanel   from './panels/OutcomesPanel';
-import MediaPanel      from './panels/MediaPanel';
+import OverviewPanel       from './panels/OverviewPanel';
+import EnrollmentsPanel    from './panels/EnrollmentsPanel';
+import QueriesQuotesPanel  from './panels/QueriesQuotesPanel';
+import HeroPanel           from './panels/HeroPanel';
+import UrgencyPanel        from './panels/UrgencyPanel';
+import CurriculumPanel     from './panels/CurriculumPanel';
+import ContentPanel        from './panels/ContentPanel';
+import PricingPanel        from './panels/PricingPanel';
+import ReviewsPanel        from './panels/ReviewsPanel';
+import FAQPanel            from './panels/FAQPanel';
+import InstructorPanel     from './panels/InstructorPanel';
+import BonusesPanel        from './panels/BonusesPanel';
+import OutcomesPanel       from './panels/OutcomesPanel';
+import MediaPanel          from './panels/MediaPanel';
 
 const NAV_ITEMS = [
   { id: 'overview',    label: 'Overview',           icon: LayoutDashboard },
-  { id: '__divider1', divider: true, label: 'SITE CONTENT' },
+  { id: '__divider_db', divider: true, label: 'DATABASE & SALES' },
+  { id: 'enrollments', label: 'Enrollments & Sales',icon: ShoppingBag, badge: 'LIVE' },
+  { id: 'requests',    label: 'Queries & Quotes',   icon: MessageSquare, badge: 'DB' },
+  { id: '__divider1',  divider: true, label: 'SITE CONTENT' },
   { id: 'hero',        label: 'Hero & Branding',     icon: Type },
   { id: 'urgency',     label: 'Urgency & Seats',     icon: Flame },
   { id: 'curriculum',  label: 'Curriculum',          icon: BookOpen },
-  { id: '__divider2', divider: true, label: 'FILES & MEDIA' },
+  { id: '__divider2',  divider: true, label: 'FILES & MEDIA' },
   { id: 'content',     label: 'Content Library',     icon: FolderOpen, badge: 'NEW' },
-  { id: '__divider3', divider: true, label: 'SALES & SOCIAL' },
+  { id: '__divider3',  divider: true, label: 'SALES & SOCIAL' },
   { id: 'pricing',     label: 'Pricing Plans',       icon: Tag },
   { id: 'reviews',     label: 'Reviews',             icon: Star },
   { id: 'faqs',        label: 'FAQs',                icon: HelpCircle },
-  { id: '__divider4', divider: true, label: 'DETAILS' },
+  { id: '__divider4',  divider: true, label: 'DETAILS' },
   { id: 'instructor',  label: 'Instructor',          icon: User },
   { id: 'bonuses',     label: 'Bonuses & Add-ons',   icon: Gift },
   { id: 'outcomes',    label: 'Outcomes & Pillars',  icon: Target },
@@ -42,7 +47,8 @@ const NAV_ITEMS = [
 export default function AdminApp({ onLogout }) {
   const [active, setActive] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const { data, save, reset, defaults, lastSaved } = useAdminData();
+  const adminState = useAdminData();
+  const { data, save, reset, defaults, lastSaved, enrollments, queries, enterpriseQuotes, contactInquiries, updateQueryStatus, updateQuoteStatus, updateInquiryStatus } = adminState;
 
   // Enforce session access control
   React.useEffect(() => {
@@ -51,11 +57,13 @@ export default function AdminApp({ onLogout }) {
     }
   }, [onLogout]);
 
-  const panelProps = { data, save, reset, defaults, lastSaved };
+  const panelProps = { data, save, reset, defaults, lastSaved, enrollments, queries, enterpriseQuotes, contactInquiries };
 
   const renderPanel = () => {
     switch (active) {
       case 'overview':   return <OverviewPanel   {...panelProps} />;
+      case 'enrollments':return <EnrollmentsPanel enrollments={enrollments} />;
+      case 'requests':   return <QueriesQuotesPanel queries={queries} enterpriseQuotes={enterpriseQuotes} contactInquiries={contactInquiries} updateQueryStatus={updateQueryStatus} updateQuoteStatus={updateQuoteStatus} updateInquiryStatus={updateInquiryStatus} />;
       case 'hero':       return <HeroPanel       {...panelProps} />;
       case 'urgency':    return <UrgencyPanel    {...panelProps} />;
       case 'curriculum': return <CurriculumPanel {...panelProps} />;

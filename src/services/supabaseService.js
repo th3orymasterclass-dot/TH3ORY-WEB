@@ -92,6 +92,36 @@ export async function saveEnrollmentToSupabase(enrollmentData) {
   }
 }
 
+export async function fetchEnrollmentsFromSupabase() {
+  if (!isSupabaseConfigured || !supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from('enrollments')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error || !data) return [];
+    return data;
+  } catch {
+    return [];
+  }
+}
+
+export function subscribeToEnrollments(onEnrollmentChange) {
+  if (!isSupabaseConfigured || !supabase) return () => {};
+  try {
+    const sub = supabase
+      .channel(`enrollments_${Date.now()}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'enrollments' }, () => {
+        fetchEnrollmentsFromSupabase().then(data => onEnrollmentChange(data));
+      })
+      .subscribe();
+    return () => { try { supabase.removeChannel(sub); } catch {} };
+  } catch {
+    return () => {};
+  }
+}
+
 // ─── Student Verification ─────────────────────────────────────────────────────
 export async function verifyStudentCodeWithSupabase(emailOrName, code) {
   if (!isSupabaseConfigured || !supabase) {
@@ -351,6 +381,41 @@ export async function saveContactInquiryToSupabase(contactData) {
     return true;
   } catch (err) {
     console.error('[Supabase] Exception in saveContactInquiryToSupabase:', err);
+    return false;
+  }
+}
+
+export async function updateQueryStatusInSupabase(queryId, status, replyText = '') {
+  if (!isSupabaseConfigured || !supabase) return false;
+  try {
+    const payload = { status, updated_at: new Date().toISOString() };
+    if (replyText) {
+      payload.reply = replyText;
+      payload.replied_at = new Date().toISOString();
+    }
+    const { error } = await supabase.from('queries').update(payload).eq('id', queryId);
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
+export async function updateEnterpriseQuoteStatusInSupabase(quoteId, status) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  try {
+    const { error } = await supabase.from('enterprise_quotes').update({ status, updated_at: new Date().toISOString() }).eq('id', quoteId);
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
+export async function updateContactInquiryStatusInSupabase(inquiryId, status) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  try {
+    const { error } = await supabase.from('contact_inquiries').update({ status, updated_at: new Date().toISOString() }).eq('id', inquiryId);
+    return !error;
+  } catch {
     return false;
   }
 }
