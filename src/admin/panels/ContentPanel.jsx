@@ -613,11 +613,21 @@ function GoogleDriveFolderManager({ data, save }) {
                 <button onClick={handleCopyLink} className="px-3 py-1.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white text-xs font-medium flex items-center gap-1">
                   {copied ? '✓ Copied!' : 'Copy Folder Link'}
                 </button>
-                <a href={parsed.viewUrl || folderUrlInput} target="_blank" rel="noreferrer" className="px-3 py-1.5 rounded-xl bg-blue-500/20 border border-blue-500/40 text-blue-400 text-xs font-bold flex items-center gap-1">
-                  <ExternalLink className="w-3.5 h-3.5"/> Open in Drive
+                <a href={parsed.viewUrl || folderUrlInput} target="_blank" rel="noreferrer" className="px-4 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-emerald-950/30">
+                  <ExternalLink className="w-4 h-4"/> Open Directly in Google Drive
                 </a>
                 <button onClick={() => setShowFolderModal(false)} className="text-slate-500 hover:text-white p-1 ml-2"><X className="w-5 h-5"/></button>
               </div>
+            </div>
+            {/* Permission Guide Helper Banner */}
+            <div className="px-6 py-2.5 bg-blue-950/40 border-b border-blue-500/20 flex items-center justify-between text-xs text-blue-300">
+              <span className="flex items-center gap-1.5">
+                <AlertCircle className="w-4 h-4 text-amber-400 shrink-0"/> 
+                <span>Ensure folder permission in <strong>th3orymasterclass@gmail.com</strong> is set to <strong>"Anyone with the link can view"</strong> for live embedded streaming.</span>
+              </span>
+              <a href={parsed.viewUrl || folderUrlInput} target="_blank" rel="noreferrer" className="text-amber-400 hover:underline font-bold shrink-0">
+                Fix Drive Sharing →
+              </a>
             </div>
             <div className="flex-1 bg-slate-950 p-2">
               <iframe
