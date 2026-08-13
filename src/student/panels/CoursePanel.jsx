@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import {
   Play, CheckCircle2, Lock, ChevronDown, ChevronUp,
   BookOpen, Clock, FileText, Bookmark, BookmarkCheck,
-  X, ExternalLink, Download, NotebookPen
+  X, ExternalLink, Download, NotebookPen, HardDrive
 } from 'lucide-react';
 import { getLevels, getContent } from '../../data/adminData';
 import { getProgress, markLesson, getNotes, saveNote, getBookmarks, toggleBookmark } from '../studentData';
+import { parseGoogleDriveUrl, getEmbeddableMediaUrl } from '../../utils/gdriveHelper';
 
 const LEVEL_ACCENT = [
   { border:'border-amber-500/40', bg:'bg-amber-500/10', text:'text-amber-400', ring:'ring-amber-500/30' },
@@ -16,16 +17,32 @@ const LEVEL_ACCENT = [
 ];
 
 function VideoModal({ url, title, onClose }) {
+  const embedUrl = getEmbeddableMediaUrl(url);
+  const gdrive = parseGoogleDriveUrl(url);
+
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
       <div className="w-full max-w-4xl" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-white font-bold text-sm truncate flex-1">{title}</h3>
+          <div className="flex items-center gap-2 min-w-0">
+            <h3 className="text-white font-bold text-sm truncate flex-1">{title}</h3>
+            {gdrive.isGDrive && (
+              <span className="text-[10px] bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded-full flex items-center gap-1 font-bold shrink-0">
+                <HardDrive className="w-3 h-3" /> GDrive Stream
+              </span>
+            )}
+          </div>
           <button onClick={onClose} className="text-slate-400 hover:text-white ml-3"><X className="w-5 h-5"/></button>
         </div>
-        <div className="aspect-video bg-slate-950 rounded-2xl overflow-hidden">
-          {url ? (
-            <iframe src={url} className="w-full h-full" allowFullScreen allow="autoplay; fullscreen"/>
+        <div className="aspect-video bg-slate-950 rounded-2xl overflow-hidden border border-slate-800">
+          {embedUrl ? (
+            <iframe
+              src={embedUrl}
+              title={title}
+              className="w-full h-full border-0"
+              allowFullScreen
+              allow="autoplay; fullscreen"
+            />
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 gap-3">
               <Play className="w-12 h-12 opacity-30"/>
@@ -34,6 +51,14 @@ function VideoModal({ url, title, onClose }) {
             </div>
           )}
         </div>
+        {gdrive.isGDrive && (
+          <div className="mt-2 flex items-center justify-between text-xs text-slate-400">
+            <span className="flex items-center gap-1"><HardDrive className="w-3.5 h-3.5 text-blue-400"/> Google Drive Stream Active</span>
+            <a href={gdrive.downloadUrl} target="_blank" rel="noreferrer" className="text-amber-400 hover:underline flex items-center gap-1">
+              <Download className="w-3.5 h-3.5"/> Direct Download Stream
+            </a>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -41,16 +66,33 @@ function VideoModal({ url, title, onClose }) {
 
 function ResourceCard({ item }) {
   const typeColors = { video:'text-blue-400', pdf:'text-red-400', worksheet:'text-green-400', quiz:'text-purple-400', audio:'text-pink-400', resource:'text-amber-400', image:'text-cyan-400', archive:'text-slate-400' };
+  const gdrive = parseGoogleDriveUrl(item.url);
+
   return (
-    <a href={item.url} target="_blank" rel="noreferrer"
-      className="flex items-center gap-3 px-4 py-3 bg-slate-950/60 rounded-xl hover:bg-slate-950 border border-slate-800 hover:border-slate-700 transition-all group">
+    <div className="flex items-center gap-3 px-4 py-3 bg-slate-950/60 rounded-xl hover:bg-slate-950 border border-slate-800 hover:border-slate-700 transition-all group">
       <FileText className={`w-4 h-4 shrink-0 ${typeColors[item.type] || 'text-slate-400'}`}/>
       <div className="flex-1 min-w-0">
-        <p className="text-white text-sm font-medium truncate">{item.title}</p>
+        <div className="flex items-center gap-2">
+          <p className="text-white text-sm font-medium truncate">{item.title}</p>
+          {gdrive.isGDrive && (
+            <span className="text-[10px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30 px-1.5 py-0.5 rounded flex items-center gap-1 shrink-0">
+              <HardDrive className="w-2.5 h-2.5" /> GDrive
+            </span>
+          )}
+        </div>
         {item.duration && <p className="text-slate-500 text-xs">{item.duration}</p>}
       </div>
-      <ExternalLink className="w-3.5 h-3.5 text-slate-600 group-hover:text-amber-400 shrink-0"/>
-    </a>
+      <div className="flex items-center gap-2">
+        {gdrive.isGDrive ? (
+          <a href={gdrive.downloadUrl} target="_blank" rel="noreferrer" className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 font-medium bg-blue-950/40 border border-blue-500/30 px-2.5 py-1 rounded-lg">
+            <Download className="w-3.5 h-3.5"/> Download
+          </a>
+        ) : null}
+        <a href={item.url} target="_blank" rel="noreferrer" className="p-1.5 text-slate-500 hover:text-white transition-colors">
+          <ExternalLink className="w-4 h-4"/>
+        </a>
+      </div>
+    </div>
   );
 }
 
@@ -73,7 +115,6 @@ export default function CoursePanel({ initialLevelId, initialLessonId }) {
     return () => window.removeEventListener('th3ory_student_change', h);
   }, []);
 
-  // Auto-open initial lesson
   useEffect(() => {
     if (initialLessonId) {
       for (const lvl of levels) {
@@ -83,7 +124,6 @@ export default function CoursePanel({ initialLevelId, initialLessonId }) {
     }
   }, [initialLessonId]);
 
-  // When active lesson changes, load note
   useEffect(() => {
     if (activeLesson) setNoteText(notes[activeLesson.lesson.id] || '');
   }, [activeLesson?.lesson?.id]);
@@ -103,7 +143,6 @@ export default function CoursePanel({ initialLevelId, initialLessonId }) {
     if (activeLesson) { saveNote(activeLesson.lesson.id, noteText); setNotes(getNotes()); }
   };
 
-  // Get content items assigned to this lesson
   const getLessonContent = (lessonId) => content.filter(c => c.lessonId === lessonId && c.published);
   const getVideoForLesson = (lessonId) => {
     const c = content.find(c => c.lessonId === lessonId && c.type === 'video' && c.published);
@@ -122,7 +161,6 @@ export default function CoursePanel({ initialLevelId, initialLessonId }) {
           <span className="text-slate-500 text-xs">{completedCount}/{totalLessons} done</span>
         </div>
 
-        {/* Progress bar */}
         <div className="h-1.5 bg-slate-800 rounded-full mb-5">
           <div className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full transition-all duration-700"
             style={{width:`${totalLessons ? (completedCount/totalLessons)*100 : 0}%`}}/>
@@ -149,7 +187,6 @@ export default function CoursePanel({ initialLevelId, initialLessonId }) {
                   {isOpen ? <ChevronUp className="w-4 h-4 text-slate-500"/> : <ChevronDown className="w-4 h-4 text-slate-500"/>}
                 </div>
               </button>
-              {/* Progress bar for level */}
               <div className="h-0.5 bg-slate-900">
                 <div className={`h-full ${lc.text.replace('text-','bg-').replace('-400','-500')} transition-all`} style={{width:`${pct}%`}}/>
               </div>
@@ -230,13 +267,13 @@ export default function CoursePanel({ initialLevelId, initialLessonId }) {
               {/* Video button */}
               <button
                 onClick={() => setVideoModal({ url: getVideoForLesson(activeLesson.lesson.id), title: activeLesson.lesson.title })}
-                className="w-full aspect-video max-h-56 bg-slate-950 rounded-xl flex flex-col items-center justify-center border border-slate-800 hover:border-amber-500/30 group transition-all"
+                className="w-full aspect-video max-h-56 bg-slate-950 rounded-xl flex flex-col items-center justify-center border border-slate-800 hover:border-amber-500/30 group transition-all relative overflow-hidden"
               >
-                <div className="w-16 h-16 rounded-full bg-amber-500/20 border-2 border-amber-500/40 flex items-center justify-center group-hover:bg-amber-500/30 transition-all mb-3">
+                <div className="w-16 h-16 rounded-full bg-amber-500/20 border-2 border-amber-500/40 flex items-center justify-center group-hover:bg-amber-500/30 transition-all mb-3 z-10">
                   <Play className="w-7 h-7 text-amber-400 fill-amber-400 ml-1"/>
                 </div>
-                <p className="text-white font-bold text-sm">Watch Lesson</p>
-                <p className="text-slate-500 text-xs mt-1">{activeLesson.lesson.duration}</p>
+                <p className="text-white font-bold text-sm z-10">Watch Lesson Video</p>
+                <p className="text-slate-500 text-xs mt-1 z-10">{activeLesson.lesson.duration}</p>
               </button>
             </div>
 
@@ -244,7 +281,7 @@ export default function CoursePanel({ initialLevelId, initialLessonId }) {
             {getLessonContent(activeLesson.lesson.id).length > 0 && (
               <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
                 <h4 className="text-white font-bold text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-amber-400"/> Lesson Resources
+                  <FileText className="w-4 h-4 text-amber-400"/> Lesson Resources &amp; Downloads
                 </h4>
                 <div className="space-y-2">
                   {getLessonContent(activeLesson.lesson.id).map(item => (
@@ -257,7 +294,7 @@ export default function CoursePanel({ initialLevelId, initialLessonId }) {
             {/* Notes */}
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
               <button onClick={() => setShowNote(v => !v)} className="w-full flex items-center justify-between text-sm font-bold text-white">
-                <span className="flex items-center gap-2"><NotebookPen className="w-4 h-4 text-amber-400"/> My Notes</span>
+                <span className="flex items-center gap-2"><NotebookPen className="w-4 h-4 text-amber-400"/> My Personal Notes</span>
                 {showNote ? <ChevronUp className="w-4 h-4 text-slate-500"/> : <ChevronDown className="w-4 h-4 text-slate-500"/>}
               </button>
               {showNote && (
@@ -280,7 +317,6 @@ export default function CoursePanel({ initialLevelId, initialLessonId }) {
         )}
       </div>
 
-      {/* Video Modal */}
       {videoModal && <VideoModal url={videoModal.url} title={videoModal.title} onClose={() => setVideoModal(null)}/>}
     </div>
   );

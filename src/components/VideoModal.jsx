@@ -1,9 +1,12 @@
 import React from 'react';
 import { X, Play, Shield, Award, Sparkles } from 'lucide-react';
 import { videoPreviewData } from '../data/courseData';
+import { getEmbeddableMediaUrl } from '../utils/gdriveHelper';
 
 export default function VideoModal({ isOpen, onClose, onEnrollClick }) {
   if (!isOpen) return null;
+
+  const embedUrl = getEmbeddableMediaUrl(videoPreviewData.videoUrl);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-slate-950/80 backdrop-blur-xl animate-fade-in">
@@ -17,7 +20,7 @@ export default function VideoModal({ isOpen, onClose, onEnrollClick }) {
             </div>
             <div>
               <h3 className="text-lg font-bold font-heading text-white">{videoPreviewData.title}</h3>
-              <p className="text-xs text-slate-400">Interactive Video Teaser & Platform Tour • {videoPreviewData.duration}</p>
+              <p className="text-xs text-slate-400">Interactive Video Teaser &amp; Platform Tour • {videoPreviewData.duration}</p>
             </div>
           </div>
           <button
@@ -31,7 +34,7 @@ export default function VideoModal({ isOpen, onClose, onEnrollClick }) {
         {/* Video Player Box */}
         <div className="relative aspect-video bg-black flex items-center justify-center">
           <iframe
-            src={videoPreviewData.videoUrl}
+            src={embedUrl}
             title={videoPreviewData.title}
             className="w-full h-full border-0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

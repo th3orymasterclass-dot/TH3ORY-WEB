@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Save, RotateCcw, Youtube } from 'lucide-react';
+import { Save, RotateCcw, Youtube, HardDrive, CheckCircle2, Link2, ExternalLink } from 'lucide-react';
+import { parseGoogleDriveUrl, getEmbeddableMediaUrl } from '../../utils/gdriveHelper';
 
 export default function MediaPanel({ data, save, reset }) {
   const [video, setVideo] = useState(data.video);
@@ -9,19 +10,39 @@ export default function MediaPanel({ data, save, reset }) {
   const handleSave = () => save('video', video);
   const handleReset = () => { if (window.confirm('Reset video settings?')) reset('video'); };
 
-  // Extract YouTube video ID for preview
+  // Parse video URL for YouTube vs Google Drive
+  const rawUrl = video?.videoUrl ?? '';
+  const gdrive = parseGoogleDriveUrl(rawUrl);
+
   const getYTId = (url) => {
     const m = (url ?? '').match(/embed\/([^?]+)/);
     return m ? m[1] : null;
   };
-  const ytId = getYTId(video?.videoUrl);
+  const ytId = getYTId(rawUrl);
+
+  const handleUrlChange = (newUrl) => {
+    const parsedDrive = parseGoogleDriveUrl(newUrl);
+    if (parsedDrive.isGDrive) {
+      setVideo(prev => ({
+        ...prev,
+        videoUrl: parsedDrive.embedUrl,
+        thumbnail: prev.thumbnail || parsedDrive.thumbnailUrl,
+        storageType: 'gdrive',
+        gdriveFileId: parsedDrive.fileId,
+      }));
+    } else {
+      setVideo(prev => ({ ...prev, videoUrl: newUrl }));
+    }
+  };
 
   return (
     <div className="space-y-8">
       <div className="flex items-start justify-between">
         <div>
-          <h2 className="text-2xl font-black text-white">Video &amp; Media</h2>
-          <p className="text-slate-500 text-sm mt-1">Manage the course trailer video and thumbnail</p>
+          <h2 className="text-2xl font-black text-white flex items-center gap-2">
+            Video &amp; Media <span className="text-xs font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded-full flex items-center gap-1"><HardDrive className="w-3 h-3"/> Google Drive Ready</span>
+          </h2>
+          <p className="text-slate-500 text-sm mt-1">Manage course trailer video and thumbnails using Google Drive or YouTube storage</p>
         </div>
         <div className="flex gap-2">
           <button onClick={handleReset} className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-700 text-slate-400 hover:text-red-400 hover:border-red-500/40 text-sm transition-all">
@@ -33,22 +54,30 @@ export default function MediaPanel({ data, save, reset }) {
         </div>
       </div>
 
-      {/* Thumbnail preview */}
-      {video?.thumbnail && (
-        <div className="relative rounded-2xl overflow-hidden border border-slate-800 aspect-video max-w-lg">
-          <img src={video.thumbnail} alt="" className="w-full h-full object-cover" onError={e => e.target.style.display='none'} />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-14 h-14 rounded-full bg-slate-950/80 flex items-center justify-center border border-slate-700">
-              <Youtube className="w-7 h-7 text-red-500" />
-            </div>
+      {/* Video Preview */}
+      <div className="relative rounded-2xl overflow-hidden border border-slate-800 aspect-video max-w-xl bg-black">
+        {video?.videoUrl ? (
+          <iframe
+            src={getEmbeddableMediaUrl(video.videoUrl)}
+            title={video.title || 'Course Preview'}
+            className="w-full h-full border-0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full text-slate-600">
+            <HardDrive className="w-12 h-12 mb-2 opacity-50" />
+            <p className="text-sm">No video URL configured</p>
           </div>
+        )}
+        {video?.duration && (
           <div className="absolute bottom-3 left-3 bg-slate-950/80 rounded-lg px-3 py-1 text-white text-xs font-bold">
             {video.duration}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      <div className="space-y-4">
+      <div className="space-y-5">
         {[
           { label: 'Video Title', key: 'title' },
           { label: 'Duration (e.g. 4:15)', key: 'duration' },
@@ -60,33 +89,62 @@ export default function MediaPanel({ data, save, reset }) {
           </div>
         ))}
 
+        {/* Video Storage Link Input */}
         <div>
-          <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">
-            YouTube Embed URL
-          </label>
-          <p className="text-slate-600 text-xs mb-2">Format: https://www.youtube.com/embed/VIDEO_ID?autoplay=1</p>
-          <input value={video?.videoUrl ?? ''} onChange={e => update('videoUrl', e.target.value)}
-            className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500/60 font-mono" />
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">
+              Video Source URL (Google Drive Shareable Link or YouTube Embed)
+            </label>
+            {gdrive.isGDrive && (
+              <span className="text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <HardDrive className="w-3 h-3"/> Google Drive ID: {gdrive.fileId}
+              </span>
+            )}
+          </div>
+          <input
+            value={video?.videoUrl ?? ''}
+            onChange={e => handleUrlChange(e.target.value)}
+            placeholder="Paste Google Drive shareable link (e.g. https://drive.google.com/file/d/.../view) or YouTube link"
+            className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500/60 font-mono"
+          />
         </div>
 
+        {/* Thumbnail Image URL */}
         <div>
           <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Thumbnail Image URL</label>
           <input value={video?.thumbnail ?? ''} onChange={e => update('thumbnail', e.target.value)}
+            placeholder="https://... (optional image preview)"
             className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500/60 font-mono" />
         </div>
 
-        {/* Helper */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 text-xs text-slate-500 space-y-1">
-          <p className="font-bold text-slate-400">How to get a YouTube embed URL:</p>
-          <p>1. Go to your YouTube video</p>
-          <p>2. Click Share → Embed → copy the src= URL</p>
-          <p>3. Add <span className="text-amber-400 font-mono">?autoplay=1</span> to the end</p>
-          {ytId && <p className="text-green-400 font-medium">✓ Current video ID detected: <span className="font-mono">{ytId}</span></p>}
+        {/* Google Drive Storage Helper Card */}
+        <div className="bg-slate-900 border border-blue-500/30 rounded-2xl p-5 space-y-3">
+          <div className="flex items-center gap-2 text-blue-400 font-bold text-sm">
+            <HardDrive className="w-4 h-4" /> Google Drive Digital Storage Integration Guide
+          </div>
+          <p className="text-slate-400 text-xs leading-relaxed">
+            You can host all course trailers, video lessons, PDFs, and digital workbooks directly on <strong>Google Drive</strong>:
+          </p>
+          <ol className="text-xs text-slate-400 space-y-1.5 list-decimal pl-4">
+            <li>Upload your video file or PDF to Google Drive.</li>
+            <li>Right-click the file → click <strong>Share</strong> → set permissions to <em>"Anyone with the link can view"</em>.</li>
+            <li>Copy the shareable link and paste it directly into the URL box above.</li>
+            <li>TH3ORY automatically converts your Google Drive link into an embeddable stream preview and direct download stream!</li>
+          </ol>
+          {gdrive.isGDrive && (
+            <div className="mt-3 p-3 bg-blue-950/40 border border-blue-500/20 rounded-xl text-xs space-y-1">
+              <div className="flex items-center gap-1.5 text-blue-400 font-bold">
+                <CheckCircle2 className="w-4 h-4" /> Active Google Drive Link Detected!
+              </div>
+              <p className="text-slate-300"><strong>Embed Stream URL:</strong> <code className="text-blue-300 font-mono">{gdrive.embedUrl}</code></p>
+              <p className="text-slate-300"><strong>Direct Stream / Download:</strong> <a href={gdrive.downloadUrl} target="_blank" rel="noreferrer" className="text-amber-400 underline font-mono">Test Direct Link</a></p>
+            </div>
+          )}
         </div>
       </div>
 
       <button onClick={handleSave} className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2">
-        <Save className="w-4 h-4" /> Save Video Settings
+        <Save className="w-4 h-4" /> Save Media & Video Settings
       </button>
     </div>
   );

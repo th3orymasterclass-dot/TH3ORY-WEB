@@ -4,9 +4,10 @@ import {
   Play, FileText, Image, Music, Archive, BookOpen, HelpCircle,
   CheckCircle2, Clock, Eye, EyeOff, Download, Filter,
   AlertCircle, Video, File, ChevronDown, Tag, Lock, Unlock,
-  FolderOpen, Grid, List, Layers, ExternalLink
+  FolderOpen, Grid, List, Layers, ExternalLink, HardDrive
 } from 'lucide-react';
 import { saveCourseContentToSupabase, deleteCourseContentFromSupabase } from '../../services/supabaseService';
+import { parseGoogleDriveUrl } from '../../utils/gdriveHelper';
 
 // ─── Content type config ───────────────────────────────────────────────────────
 const CONTENT_TYPES = [
@@ -30,14 +31,14 @@ const BLANK_ITEM = {
   id: '', title: '', type: 'video', description: '', url: '',
   fileName: '', fileSize: '', duration: '', access: 'enrolled',
   levelId: '', lessonId: '', tags: [], published: true,
-  uploadedAt: null, thumbnail: '',
+  uploadedAt: null, thumbnail: '', storageType: 'url',
+  gdriveFileId: '', gdriveEmbedUrl: '', gdriveDownloadUrl: ''
 };
 
 function getTypeConfig(typeId) {
   return CONTENT_TYPES.find(t => t.id === typeId) || CONTENT_TYPES[0];
 }
 
-// ─── File size formatter ───────────────────────────────────────────────────────
 function formatBytes(bytes) {
   if (!bytes || bytes === 0) return '';
   const k = 1024;
@@ -53,6 +54,9 @@ function ContentCard({ item, onEdit, onDelete, onTogglePublish, viewMode }) {
   const accessConf = ACCESS_TYPES.find(a => a.id === item.access) || ACCESS_TYPES[0];
   const AccessIcon = accessConf.icon;
 
+  const gdrive = parseGoogleDriveUrl(item.url);
+  const isDrive = gdrive.isGDrive || item.storageType === 'gdrive';
+
   if (viewMode === 'list') {
     return (
       <div className={`flex items-center gap-4 p-4 bg-slate-900 border border-slate-800 rounded-xl hover:border-slate-700 transition-all ${!item.published ? 'opacity-60' : ''}`}>
@@ -62,6 +66,11 @@ function ContentCard({ item, onEdit, onDelete, onTogglePublish, viewMode }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <p className="text-white font-semibold text-sm truncate">{item.title || 'Untitled'}</p>
+            {isDrive && (
+              <span className="text-[10px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <HardDrive className="w-3 h-3" /> GDrive
+              </span>
+            )}
             {!item.published && <span className="text-xs bg-slate-800 text-slate-500 px-2 py-0.5 rounded-full">Draft</span>}
           </div>
           <div className="flex items-center gap-3 mt-0.5">
@@ -75,6 +84,11 @@ function ContentCard({ item, onEdit, onDelete, onTogglePublish, viewMode }) {
           <span className={`text-xs ${accessConf.color} flex items-center gap-1`}>
             <AccessIcon className="w-3 h-3" />{accessConf.label}
           </span>
+          {isDrive && (
+            <a href={gdrive.downloadUrl || item.url} target="_blank" rel="noreferrer" title="Download from Google Drive" className="p-1.5 rounded-lg text-blue-400 hover:bg-blue-950/40 transition-colors">
+              <Download className="w-4 h-4" />
+            </a>
+          )}
           <button onClick={() => onTogglePublish(item.id)} className={`p-1.5 rounded-lg transition-colors ${item.published ? 'text-green-400 hover:bg-green-950/30' : 'text-slate-500 hover:bg-slate-800'}`}>
             {item.published ? <Eye className="w-4 h-4"/> : <EyeOff className="w-4 h-4"/>}
           </button>
@@ -89,19 +103,29 @@ function ContentCard({ item, onEdit, onDelete, onTogglePublish, viewMode }) {
     <div className={`bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden hover:border-slate-700 transition-all group ${!item.published ? 'opacity-60' : ''}`}>
       {/* Thumbnail / type indicator */}
       <div className={`h-36 ${tc.bg} relative flex items-center justify-center`}>
-        {item.thumbnail ? (
-          <img src={item.thumbnail} alt="" className="w-full h-full object-cover" onError={e => e.target.style.display='none'} />
+        {item.thumbnail || (isDrive && gdrive.thumbnailUrl) ? (
+          <img src={item.thumbnail || gdrive.thumbnailUrl} alt="" className="w-full h-full object-cover" onError={e => e.target.style.display='none'} />
         ) : (
           <Icon className={`w-12 h-12 ${tc.color} opacity-40`} />
         )}
         {/* Overlay actions */}
         <div className="absolute inset-0 bg-slate-950/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
           <button onClick={() => onEdit(item)} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors"><Edit3 className="w-4 h-4"/></button>
+          {isDrive && (
+            <a href={gdrive.viewUrl || item.url} target="_blank" rel="noreferrer" className="p-2 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 transition-colors" title="Open Google Drive">
+              <ExternalLink className="w-4 h-4"/>
+            </a>
+          )}
           <button onClick={() => onDelete(item.id)} className="p-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 transition-colors"><Trash2 className="w-4 h-4"/></button>
         </div>
         {/* Status badges */}
         <div className="absolute top-2 left-2 flex gap-1.5">
           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${tc.bg} ${tc.border} ${tc.color}`}>{tc.label}</span>
+          {isDrive && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center gap-1">
+              <HardDrive className="w-3 h-3" /> GDrive
+            </span>
+          )}
           {!item.published && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800/80 text-slate-400 border border-slate-700">Draft</span>}
         </div>
         <div className="absolute top-2 right-2">
@@ -132,10 +156,27 @@ function ContentCard({ item, onEdit, onDelete, onTogglePublish, viewMode }) {
 // ─── Content Edit Modal ────────────────────────────────────────────────────────
 function ContentModal({ item, levels, onSave, onClose }) {
   const [form, setForm] = useState({ ...BLANK_ITEM, ...item });
-  const [urlMode, setUrlMode] = useState(!item?.fileName); // url or file upload
+  const [sourceTab, setSourceTab] = useState('gdrive'); // 'gdrive' | 'url' | 'upload'
   const fileRef = useRef();
 
   const up = (key, val) => setForm(f => ({ ...f, [key]: val }));
+
+  const handleDriveUrlInput = (urlVal) => {
+    const parsed = parseGoogleDriveUrl(urlVal);
+    if (parsed.isGDrive) {
+      setForm(f => ({
+        ...f,
+        url: parsed.embedUrl,
+        storageType: 'gdrive',
+        gdriveFileId: parsed.fileId,
+        gdriveEmbedUrl: parsed.embedUrl,
+        gdriveDownloadUrl: parsed.downloadUrl,
+        thumbnail: f.thumbnail || parsed.thumbnailUrl,
+      }));
+    } else {
+      setForm(f => ({ ...f, url: urlVal, storageType: 'url' }));
+    }
+  };
 
   const handleFile = (e) => {
     const file = e.target.files[0];
@@ -144,10 +185,10 @@ function ContentModal({ item, levels, onSave, onClose }) {
     setForm(f => ({
       ...f,
       url,
+      storageType: 'local',
       fileName: file.name,
       fileSize: formatBytes(file.size),
       title: f.title || file.name.replace(/\.[^/.]+$/, ''),
-      // Auto-detect type
       type: file.type.startsWith('video/') ? 'video'
           : file.type === 'application/pdf' ? 'pdf'
           : file.type.startsWith('audio/') ? 'audio'
@@ -155,12 +196,11 @@ function ContentModal({ item, levels, onSave, onClose }) {
           : file.name.endsWith('.zip') ? 'archive'
           : f.type,
     }));
-    setUrlMode(false);
   };
 
   const handleSave = () => {
     if (!form.title.trim()) return alert('Please enter a title.');
-    if (!form.url.trim()) return alert('Please add a URL or upload a file.');
+    if (!form.url.trim()) return alert('Please add a Google Drive link, URL, or upload a file.');
     onSave({
       ...form,
       id: form.id || `c_${Date.now()}`,
@@ -169,9 +209,10 @@ function ContentModal({ item, levels, onSave, onClose }) {
   };
 
   const tc = getTypeConfig(form.type);
+  const parsedDrive = parseGoogleDriveUrl(form.url);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-12 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-10 bg-slate-950/85 backdrop-blur-sm overflow-y-auto">
       <div className="w-full max-w-2xl bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800">
@@ -220,25 +261,57 @@ function ContentModal({ item, levels, onSave, onClose }) {
               className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500/60 resize-none" />
           </div>
 
-          {/* URL / File upload toggle */}
+          {/* Storage Source Selector */}
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Source *</label>
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Digital Storage Source *</label>
               <div className="ml-auto flex gap-1 bg-slate-950 border border-slate-700 rounded-lg p-0.5">
-                <button onClick={() => setUrlMode(true)} className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${urlMode ? 'bg-amber-500 text-slate-950' : 'text-slate-500 hover:text-white'}`}>
-                  <span className="flex items-center gap-1.5"><Link2 className="w-3 h-3"/>URL / Link</span>
+                <button onClick={() => setSourceTab('gdrive')} className={`px-3 py-1 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 ${sourceTab === 'gdrive' ? 'bg-blue-500 text-white' : 'text-slate-500 hover:text-white'}`}>
+                  <HardDrive className="w-3.5 h-3.5"/> Google Drive
                 </button>
-                <button onClick={() => setUrlMode(false)} className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${!urlMode ? 'bg-amber-500 text-slate-950' : 'text-slate-500 hover:text-white'}`}>
-                  <span className="flex items-center gap-1.5"><Upload className="w-3 h-3"/>Upload File</span>
+                <button onClick={() => setSourceTab('url')} className={`px-3 py-1 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${sourceTab === 'url' ? 'bg-amber-500 text-slate-950' : 'text-slate-500 hover:text-white'}`}>
+                  <Link2 className="w-3.5 h-3.5"/> Web URL
+                </button>
+                <button onClick={() => setSourceTab('upload')} className={`px-3 py-1 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${sourceTab === 'upload' ? 'bg-amber-500 text-slate-950' : 'text-slate-500 hover:text-white'}`}>
+                  <Upload className="w-3.5 h-3.5"/> File
                 </button>
               </div>
             </div>
 
-            {urlMode ? (
+            {sourceTab === 'gdrive' && (
+              <div className="space-y-3">
+                <div className="relative">
+                  <HardDrive className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400" />
+                  <input
+                    value={form.url}
+                    onChange={e => handleDriveUrlInput(e.target.value)}
+                    placeholder="Paste Google Drive Shareable Link (e.g. https://drive.google.com/file/d/.../view)"
+                    className="w-full bg-slate-950 border border-blue-500/40 rounded-xl pl-9 pr-4 py-2.5 text-white text-sm focus:outline-none focus:border-blue-400 font-mono"
+                  />
+                </div>
+                {parsedDrive.isGDrive ? (
+                  <div className="p-3 bg-blue-950/40 border border-blue-500/30 rounded-xl text-xs space-y-1">
+                    <div className="flex items-center gap-1.5 text-blue-400 font-bold">
+                      <CheckCircle2 className="w-4 h-4 text-blue-400" /> Valid Google Drive Digital Storage File Detected!
+                    </div>
+                    <p className="text-slate-300"><strong>File ID:</strong> <code className="text-blue-300 font-mono">{parsedDrive.fileId}</code></p>
+                    <p className="text-slate-300"><strong>Embed Stream URL:</strong> <code className="text-slate-400 font-mono">{parsedDrive.embedUrl}</code></p>
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-500">
+                    💡 Tip: Paste any Google Drive link set to <em>"Anyone with the link can view"</em>. It will be auto-formatted for high-speed streaming and direct download.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {sourceTab === 'url' && (
               <input value={form.url} onChange={e => up('url', e.target.value)}
-                placeholder="https://youtube.com/embed/... or https://drive.google.com/..."
+                placeholder="https://youtube.com/embed/... or https://cdn.example.com/file.mp4"
                 className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500/60 font-mono" />
-            ) : (
+            )}
+
+            {sourceTab === 'upload' && (
               <div>
                 <input type="file" ref={fileRef} onChange={handleFile} className="hidden"
                   accept="video/*,audio/*,image/*,.pdf,.zip,.docx,.pptx,.xlsx" />
@@ -260,12 +333,6 @@ function ContentModal({ item, levels, onSave, onClose }) {
                     </div>
                   )}
                 </div>
-                {form.fileName && (
-                  <div className="mt-2 flex items-center gap-2 bg-amber-950/20 border border-amber-500/20 rounded-xl px-4 py-3 text-xs text-amber-400">
-                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                    <span>File URL is temporary (browser session only). For permanent hosting, use a URL link to Google Drive, Dropbox, or your CDN instead.</span>
-                  </div>
-                )}
               </div>
             )}
           </div>
@@ -274,7 +341,7 @@ function ContentModal({ item, levels, onSave, onClose }) {
           <div>
             <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Thumbnail Image URL</label>
             <input value={form.thumbnail} onChange={e => up('thumbnail', e.target.value)}
-              placeholder="https://... (optional preview image)"
+              placeholder="https://... (auto-generated if using Google Drive)"
               className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500/60 font-mono" />
           </div>
 
@@ -319,17 +386,6 @@ function ContentModal({ item, levels, onSave, onClose }) {
             </div>
           </div>
 
-          {/* Tags */}
-          <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Tags (comma separated)</label>
-            <input
-              value={(form.tags ?? []).join(', ')}
-              onChange={e => up('tags', e.target.value.split(',').map(t => t.trim()).filter(Boolean))}
-              placeholder="e.g. presence, body-language, capstone"
-              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500/60"
-            />
-          </div>
-
           {/* Published toggle */}
           <div className="flex items-center justify-between p-4 bg-slate-950 rounded-xl border border-slate-800">
             <div>
@@ -357,7 +413,7 @@ function ContentModal({ item, levels, onSave, onClose }) {
   );
 }
 
-// ─── Assignment View — content grouped by level ────────────────────────────────
+// ─── Assignment View ──────────────────────────────────────────────────────────
 function AssignmentView({ content, levels }) {
   const unassigned = content.filter(c => !c.levelId);
 
@@ -377,10 +433,16 @@ function AssignmentView({ content, levels }) {
               {levelContent.map(item => {
                 const tc = getTypeConfig(item.type);
                 const lesson = level.lessons?.find(l => l.id === item.lessonId);
+                const isDrive = parseGoogleDriveUrl(item.url).isGDrive;
                 return (
                   <div key={item.id} className="flex items-center gap-3 px-3 py-2.5 bg-slate-950/60 rounded-xl">
                     <tc.icon className={`w-4 h-4 ${tc.color} shrink-0`} />
                     <span className="text-white text-sm flex-1 truncate">{item.title}</span>
+                    {isDrive && (
+                      <span className="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full flex items-center gap-1 font-bold">
+                        <HardDrive className="w-3 h-3" /> GDrive
+                      </span>
+                    )}
                     {lesson && <span className="text-slate-600 text-xs truncate max-w-[200px]">{lesson.title}</span>}
                     <span className={`text-xs px-2 py-0.5 rounded-full border ${tc.bg} ${tc.border} ${tc.color} shrink-0`}>{tc.label}</span>
                     {!item.published && <span className="text-xs text-slate-500">Draft</span>}
@@ -423,9 +485,8 @@ export default function ContentPanel({ data, save, reset }) {
 
   const [search, setSearch]     = useState('');
   const [filterType, setFilter] = useState('all');
-  const [viewMode, setViewMode] = useState('grid'); // grid | list | assign
-  const [modal, setModal]       = useState(null);  // null | 'add' | item object
-  const [showFilter, setShowFilter] = useState(false);
+  const [viewMode, setViewMode] = useState('grid');
+  const [modal, setModal]       = useState(null);
   const [filterAccess, setFilterAccess] = useState('all');
 
   const saveContent = (updated) => save('content', updated);
@@ -454,20 +515,18 @@ export default function ContentPanel({ data, save, reset }) {
     await saveCourseContentToSupabase(updatedItem);
   };
 
-  // Filtered content
   const filtered = content.filter(c => {
     const matchSearch = !search || c.title.toLowerCase().includes(search.toLowerCase()) || (c.description || '').toLowerCase().includes(search.toLowerCase());
-    const matchType   = filterType === 'all' || c.type === filterType;
+    const matchType   = filterType === 'all' || c.type === filterType || (filterType === 'gdrive' && parseGoogleDriveUrl(c.url).isGDrive);
     const matchAccess = filterAccess === 'all' || c.access === filterAccess;
     return matchSearch && matchType && matchAccess;
   });
 
-  // Stats
   const stats = {
     total:     content.length,
     published: content.filter(c => c.published).length,
     videos:    content.filter(c => c.type === 'video').length,
-    pdfs:      content.filter(c => c.type === 'pdf' || c.type === 'worksheet').length,
+    gdrive:    content.filter(c => parseGoogleDriveUrl(c.url).isGDrive || c.storageType === 'gdrive').length,
     free:      content.filter(c => c.access === 'free').length,
   };
 
@@ -476,8 +535,10 @@ export default function ContentPanel({ data, save, reset }) {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black text-white">Course Content Library</h2>
-          <p className="text-slate-500 text-sm mt-1">Manage all course files, videos, PDFs, worksheets, and resources</p>
+          <h2 className="text-2xl font-black text-white flex items-center gap-2">
+            Course Content Library <span className="text-xs font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded-full flex items-center gap-1"><HardDrive className="w-3 h-3"/> GDrive Storage Ready</span>
+          </h2>
+          <p className="text-slate-500 text-sm mt-1">Manage course materials, videos, PDFs, and digital workbooks backed by Google Drive</p>
         </div>
         <button
           onClick={() => setModal({ ...BLANK_ITEM })}
@@ -490,11 +551,11 @@ export default function ContentPanel({ data, save, reset }) {
       {/* Stats bar */}
       <div className="grid grid-cols-5 gap-3">
         {[
-          { label: 'Total Items',  value: stats.total,     color: 'text-white' },
-          { label: 'Published',    value: stats.published,  color: 'text-green-400' },
-          { label: 'Videos',       value: stats.videos,     color: 'text-blue-400' },
-          { label: 'Docs & PDFs',  value: stats.pdfs,       color: 'text-red-400' },
-          { label: 'Free Preview', value: stats.free,       color: 'text-amber-400' },
+          { label: 'Total Items',   value: stats.total,     color: 'text-white' },
+          { label: 'Published',     value: stats.published,  color: 'text-green-400' },
+          { label: 'Videos',        value: stats.videos,     color: 'text-blue-400' },
+          { label: 'Google Drive',  value: stats.gdrive,     color: 'text-blue-400' },
+          { label: 'Free Preview',  value: stats.free,       color: 'text-amber-400' },
         ].map((s, i) => (
           <div key={i} className="bg-slate-900 border border-slate-800 rounded-xl p-3 text-center">
             <div className={`text-2xl font-black ${s.color}`}>{s.value}</div>
@@ -505,7 +566,6 @@ export default function ContentPanel({ data, save, reset }) {
 
       {/* Toolbar */}
       <div className="flex items-center gap-3 flex-wrap">
-        {/* Search */}
         <div className="flex-1 min-w-48 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
           <input
@@ -516,11 +576,14 @@ export default function ContentPanel({ data, save, reset }) {
           />
         </div>
 
-        {/* Type filter */}
         <div className="flex gap-1.5 flex-wrap">
           <button onClick={() => setFilter('all')}
             className={`px-3 py-2 rounded-xl text-xs font-medium transition-all border ${filterType === 'all' ? 'bg-amber-500/15 border-amber-500/40 text-amber-400' : 'border-slate-700 text-slate-500 hover:text-white'}`}>
             All
+          </button>
+          <button onClick={() => setFilter('gdrive')}
+            className={`px-3 py-2 rounded-xl text-xs font-medium transition-all border flex items-center gap-1.5 ${filterType === 'gdrive' ? 'bg-blue-500/20 border-blue-500/40 text-blue-400 font-bold' : 'border-slate-700 text-slate-500 hover:text-white'}`}>
+            <HardDrive className="w-3.5 h-3.5"/> GDrive Storage
           </button>
           {CONTENT_TYPES.map(t => (
             <button key={t.id} onClick={() => setFilter(t.id)}
@@ -530,7 +593,6 @@ export default function ContentPanel({ data, save, reset }) {
           ))}
         </div>
 
-        {/* View mode */}
         <div className="flex gap-1 bg-slate-900 border border-slate-800 rounded-xl p-1 ml-auto">
           {[
             { id: 'grid', icon: Grid },
@@ -550,7 +612,7 @@ export default function ContentPanel({ data, save, reset }) {
         <div className="py-24 text-center border-2 border-dashed border-slate-800 rounded-2xl">
           <FolderOpen className="w-16 h-16 text-slate-700 mx-auto mb-4" />
           <p className="text-white font-bold text-lg mb-2">No content yet</p>
-          <p className="text-slate-500 text-sm mb-6">Start by adding your first video, PDF, or resource</p>
+          <p className="text-slate-500 text-sm mb-6">Start by adding your first Google Drive video, PDF, or worksheet</p>
           <button onClick={() => setModal({ ...BLANK_ITEM })}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition-all">
             <Plus className="w-4 h-4" /> Add First Content Item
@@ -579,7 +641,6 @@ export default function ContentPanel({ data, save, reset }) {
               onTogglePublish={handleTogglePublish}
             />
           ))}
-          {/* Add card */}
           <button
             onClick={() => setModal({ ...BLANK_ITEM })}
             className="border-2 border-dashed border-slate-700 hover:border-amber-500/50 rounded-2xl flex flex-col items-center justify-center gap-3 text-slate-500 hover:text-amber-400 transition-all min-h-[200px]"
@@ -590,7 +651,6 @@ export default function ContentPanel({ data, save, reset }) {
         </div>
       )}
 
-      {/* Add/Edit Modal */}
       {modal !== null && (
         <ContentModal
           item={modal}
