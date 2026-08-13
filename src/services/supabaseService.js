@@ -1,3 +1,6 @@
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { isAdminAuthenticated } from '../data/adminData';
+
 // ─── Unique Credentials Generator ────────────────────────────────────────────────
 export function generateUniqueStudentCredentials() {
   const randomHex = Math.random().toString(36).substring(2, 6).toUpperCase();

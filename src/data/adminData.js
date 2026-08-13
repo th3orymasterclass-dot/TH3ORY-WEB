@@ -64,6 +64,14 @@ export function resetAllData() {
 }
 
 import { useState, useEffect } from 'react';
+import {
+  fetchSiteSettingsFromSupabase,
+  subscribeToSiteSettings,
+  fetchReviewsFromSupabase,
+  subscribeToReviews,
+  fetchCourseContentsFromSupabase,
+  subscribeToCourseContents,
+} from '../services/supabaseService';
 
 // ─── Live getters used by public components ────────────────────────────────────
 export const getCourseDetails = () => lsGet('courseDetails', defaultCourseDetails);
@@ -76,7 +84,7 @@ export const getFaqs          = () => lsGet('faqs', defaultFaqs);
 export const getContent       = () => lsGet('content', []);
 
 /**
- * Custom React Hook for Realtime Component Reactivity
+ * Custom React Hook for Realtime Component Reactivity across Admin and Public site
  */
 export function useTh3oryLive() {
   const [data, setData] = useState(() => ({
@@ -105,7 +113,59 @@ export function useTh3oryLive() {
     };
 
     window.addEventListener('th3ory_data_change', handler);
-    return () => window.removeEventListener('th3ory_data_change', handler);
+
+    // Initial Hydration from Supabase
+    fetchSiteSettingsFromSupabase().then(settings => {
+      if (settings) {
+        Object.keys(settings).forEach(key => {
+          try { localStorage.setItem(`th3ory_admin_${key}`, JSON.stringify(settings[key])); } catch {}
+        });
+        handler();
+      }
+    });
+
+    fetchReviewsFromSupabase().then(sbReviews => {
+      if (sbReviews && sbReviews.length > 0) {
+        try { localStorage.setItem('th3ory_admin_reviews', JSON.stringify(sbReviews)); } catch {}
+        handler();
+      }
+    });
+
+    fetchCourseContentsFromSupabase().then(sbContent => {
+      if (sbContent && sbContent.length > 0) {
+        try { localStorage.setItem('th3ory_admin_content', JSON.stringify(sbContent)); } catch {}
+        handler();
+      }
+    });
+
+    // Supabase Realtime Subscriptions for Public visitors & Admin
+    const unsubSettings = subscribeToSiteSettings((key, val) => {
+      try {
+        localStorage.setItem(`th3ory_admin_${key}`, JSON.stringify(val));
+        window.dispatchEvent(new CustomEvent('th3ory_data_change', { detail: { key } }));
+      } catch {}
+    });
+
+    const unsubReviews = subscribeToReviews((reviewsList) => {
+      try {
+        localStorage.setItem('th3ory_admin_reviews', JSON.stringify(reviewsList));
+        window.dispatchEvent(new CustomEvent('th3ory_data_change', { detail: { key: 'reviews' } }));
+      } catch {}
+    });
+
+    const unsubContents = subscribeToCourseContents((contentsList) => {
+      try {
+        localStorage.setItem('th3ory_admin_content', JSON.stringify(contentsList));
+        window.dispatchEvent(new CustomEvent('th3ory_data_change', { detail: { key: 'content' } }));
+      } catch {}
+    });
+
+    return () => {
+      window.removeEventListener('th3ory_data_change', handler);
+      unsubSettings();
+      unsubReviews();
+      unsubContents();
+    };
   }, []);
 
   return data;
