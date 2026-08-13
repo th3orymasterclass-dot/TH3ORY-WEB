@@ -520,8 +520,11 @@ function GoogleDriveFolderManager({ data, save }) {
               <span className="text-[10px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded-full flex items-center gap-1">
                 <FolderOpen className="w-3 h-3" /> Live Storage Folder
               </span>
+              <span className="text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" /> th3orymasterclass@gmail.com
+              </span>
             </div>
-            <p className="text-slate-400 text-xs mt-0.5">Central repository for all course videos, lesson assets, workbooks, and digital streams</p>
+            <p className="text-slate-400 text-xs mt-0.5">Central repository for all course videos, lesson assets, workbooks, and digital streams synced to <strong className="text-emerald-400">th3orymasterclass@gmail.com</strong></p>
           </div>
         </div>
 

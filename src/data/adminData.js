@@ -338,6 +338,18 @@ export function useTh3oryLive() {
   return data;
 }
 
+export const defaultGDriveConfig = {
+  account: 'th3orymasterclass@gmail.com',
+  folderUrl: 'https://drive.google.com/drive/folders/1TH3ORY_Masterclass_Course_Content_Master_Folder',
+  folderName: 'TH3ORY Masterclass Official Course Storage',
+  subfolders: [
+    { title: '01 - Video Teasers & Trailers', path: '/Videos/Trailers' },
+    { title: '02 - Core Curriculum Video Lessons', path: '/Videos/Lessons' },
+    { title: '03 - Workbooks, PDFs & Cheatsheets', path: '/Documents/Workbooks' },
+    { title: '04 - Audio Stems & Practice Files', path: '/Audio/Soundpacks' },
+  ]
+};
+
 // ─── Defaults (used by admin to reset) ────────────────────────────────────────
 export const defaults = {
   courseDetails: defaultCourseDetails,
@@ -349,5 +361,6 @@ export const defaults = {
   faqs: defaultFaqs,
   content: [],
   coupons: defaultCoupons,
+  gdriveConfig: defaultGDriveConfig,
 };
 
