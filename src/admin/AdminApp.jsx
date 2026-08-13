@@ -21,12 +21,15 @@ import InstructorPanel     from './panels/InstructorPanel';
 import BonusesPanel        from './panels/BonusesPanel';
 import OutcomesPanel       from './panels/OutcomesPanel';
 import MediaPanel          from './panels/MediaPanel';
+import IntegrationsPanel   from './panels/IntegrationsPanel';
+import { Database }        from 'lucide-react';
 
 const NAV_ITEMS = [
   { id: 'overview',    label: 'Overview',           icon: LayoutDashboard },
   { id: '__divider_db', divider: true, label: 'DATABASE & SALES' },
   { id: 'enrollments', label: 'Enrollments & Sales',icon: ShoppingBag, badge: 'LIVE' },
   { id: 'requests',    label: 'Queries & Quotes',   icon: MessageSquare, badge: 'DB' },
+  { id: 'integrations',label: 'Integrations & API', icon: Database, badge: 'DIAG' },
   { id: '__divider1',  divider: true, label: 'SITE CONTENT' },
   { id: 'hero',        label: 'Hero & Branding',     icon: Type },
   { id: 'urgency',     label: 'Urgency & Seats',     icon: Flame },
@@ -64,6 +67,7 @@ export default function AdminApp({ onLogout }) {
       case 'overview':   return <OverviewPanel   {...panelProps} />;
       case 'enrollments':return <EnrollmentsPanel enrollments={enrollments} />;
       case 'requests':   return <QueriesQuotesPanel queries={queries} enterpriseQuotes={enterpriseQuotes} contactInquiries={contactInquiries} updateQueryStatus={updateQueryStatus} updateQuoteStatus={updateQuoteStatus} updateInquiryStatus={updateInquiryStatus} />;
+      case 'integrations':return <IntegrationsPanel />;
       case 'hero':       return <HeroPanel       {...panelProps} />;
       case 'urgency':    return <UrgencyPanel    {...panelProps} />;
       case 'curriculum': return <CurriculumPanel {...panelProps} />;
