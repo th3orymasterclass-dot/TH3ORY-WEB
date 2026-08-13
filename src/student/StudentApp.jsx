@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  LayoutDashboard, BookOpen, ShoppingBag, Star, MessageCircle, MessageSquare,
+  LayoutDashboard, BookOpen, ShoppingBag, Star, MessageCircle,
   LogOut, ChevronRight, Menu, X, GraduationCap, Award, ExternalLink, Bookmark
 } from 'lucide-react';
 import DashboardHome from './panels/DashboardHome';
@@ -8,14 +8,12 @@ import CoursePanel   from './panels/CoursePanel';
 import ShopPanel     from './panels/ShopPanel';
 import ReviewPanel   from './panels/ReviewPanel';
 import QueryPanel    from './panels/QueryPanel';
-import CommunityChatPanel from '../components/CommunityChatPanel';
 import { getProgress, getBookmarks } from './studentData';
 import { getLevels } from '../data/adminData';
 
 const NAV = [
   { id: 'home',    label: 'Dashboard',   icon: LayoutDashboard },
   { id: 'course',  label: 'My Course',   icon: BookOpen },
-  { id: 'chat',    label: 'Community Chat', icon: MessageSquare },
   { id: 'shop',    label: 'Upgrade & Add-ons', icon: ShoppingBag },
   { id: 'review',  label: 'Leave a Review',    icon: Star },
   { id: 'queries', label: 'Query Sessions',    icon: MessageCircle },
@@ -43,7 +41,6 @@ export default function StudentApp({ profile, onLogout }) {
     switch (active) {
       case 'home':    return <DashboardHome profile={profile} onNavigate={navigate}/>;
       case 'course':  return <CoursePanel initialLevelId={navExtra.levelId} initialLessonId={navExtra.lessonId}/>;
-      case 'chat':    return <CommunityChatPanel currentUser={profile} isAdmin={false}/>;
       case 'shop':    return <ShopPanel profile={profile}/>;
       case 'review':  return <ReviewPanel profile={profile}/>;
       case 'queries': return <QueryPanel profile={profile}/>;

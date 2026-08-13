@@ -18,5 +18,5 @@ console.log('   👉 https://supabase.com/dashboard/project/qngzfcpnjpabaornddau
 console.log('2. Click "New Query" and paste the contents of `supabase_schema.sql`.\n');
 console.log('3. Click "RUN" (or press Ctrl+Enter / Cmd+Enter).\n');
 
-console.log('All 9 tables (queries, enterprise_quotes, contact_inquiries, enrollments, student_accounts, reviews, course_contents, community_messages, site_settings) will be created with full RLS permissions and Realtime WebSocket replication!');
+console.log('All 8 tables (queries, enterprise_quotes, contact_inquiries, enrollments, student_accounts, reviews, course_contents, site_settings) will be created with full RLS permissions and Realtime WebSocket replication!');
 console.log('===================================================================\n');

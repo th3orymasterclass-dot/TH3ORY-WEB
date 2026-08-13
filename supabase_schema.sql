@@ -104,18 +104,7 @@ CREATE TABLE IF NOT EXISTS public.course_contents (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 8. COMMUNITY MESSAGES TABLE (Live Realtime WebSocket Community Chat & ChatMCP)
-CREATE TABLE IF NOT EXISTS public.community_messages (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    channel TEXT NOT NULL DEFAULT 'general-lounge',
-    sender_name TEXT NOT NULL,
-    sender_email TEXT,
-    sender_role TEXT DEFAULT 'student',
-    message TEXT NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- 9. SITE SETTINGS TABLE (Live Dynamic Website Config & Price Overrides)
+-- 8. SITE SETTINGS TABLE (Live Dynamic Website Config & Price Overrides)
 CREATE TABLE IF NOT EXISTS public.site_settings (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     setting_key TEXT UNIQUE NOT NULL,
@@ -135,7 +124,6 @@ ALTER TABLE public.enterprise_quotes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.contact_inquiries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.course_contents ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.community_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
 
 -- Allow Public/Anon Read/Write policies for active client operations
@@ -146,7 +134,6 @@ CREATE POLICY "Allow public read/insert on enterprise_quotes" ON public.enterpri
 CREATE POLICY "Allow public read/insert on contact_inquiries" ON public.contact_inquiries FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public read/insert on reviews" ON public.reviews FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public read/insert on course_contents" ON public.course_contents FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow public read/insert on community_messages" ON public.community_messages FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public read/insert on site_settings" ON public.site_settings FOR ALL USING (true) WITH CHECK (true);
 
 -- ==============================================================================
@@ -163,7 +150,6 @@ BEGIN
       public.contact_inquiries,
       public.reviews,
       public.course_contents,
-      public.community_messages,
       public.site_settings;
   END IF;
 EXCEPTION WHEN OTHERS THEN
