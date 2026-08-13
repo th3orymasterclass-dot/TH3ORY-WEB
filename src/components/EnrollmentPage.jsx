@@ -709,7 +709,7 @@ function Step3({ form, setForm, onNext, onBack }) {
         </button>
         <button onClick={handlePay} disabled={loading}
           className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 disabled:opacity-70 text-slate-950 font-extrabold text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20">
-          {loading ? <><Loader2 className="w-4 h-4 animate-spin"/> Processing Payment…</> : <><Lock className="w-4 h-4"/> Pay ${total} Securely</>}
+          {loading ? <><Loader2 className="w-4 h-4 animate-spin"/> Processing Payment…</> : <><Lock className="w-4 h-4"/> Pay ${totalUSD} / ₹{totalINR.toLocaleString('en-IN')} Securely</>}
         </button>
       </div>
 
@@ -749,10 +749,10 @@ function Step4({ form }) {
           ['Order ID', receipt?.orderId],
           ['Name', form.name],
           ['Email', form.email],
-          ['Plan', receipt?.plan],
-          ['Amount Paid', `$${receipt?.price} USD`],
+          ['Plan', receipt?.planName || 'TH3ORY Masterclass'],
+          ['Amount Paid', `${receipt?.currency === 'INR' ? '₹' : '$'}${receipt?.price?.toLocaleString ? receipt.price.toLocaleString('en-IN') : receipt?.price} ${receipt?.currency || 'USD'}`],
           ['Payment via', receipt?.gateway?.toUpperCase()],
-          ['Enrollment Date', new Date(receipt?.enrolledAt).toLocaleString()],
+          ['Enrollment Date', receipt?.enrolledAt ? new Date(receipt.enrolledAt).toLocaleString() : new Date().toLocaleString()],
         ].map(([k, v]) => (
           <div key={k} className="flex items-center justify-between py-2 border-b border-slate-800 last:border-0">
             <span className="text-slate-500 text-sm">{k}</span>
