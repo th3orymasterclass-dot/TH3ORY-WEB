@@ -2,12 +2,18 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://qngzfcpnjpabaornddau.supabase.co';
 
+const DEFAULT_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuZ3pmY3BuanBhYmFvcm5kZGF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1Mzc2MDQsImV4cCI6MjEwMjExMzYwNH0.Uhdbtgi0uJRD2suYX67gIApvxT0o1OvNiy5RD6t6geY';
+
 export function getSupabaseAnonKey() {
   try {
     const lsKey = typeof localStorage !== 'undefined' ? localStorage.getItem('th3ory_supabase_anon_key') : null;
-    return (lsKey && lsKey.trim() !== '') ? lsKey.trim() : (import.meta.env.VITE_SUPABASE_ANON_KEY || '');
+    if (lsKey && lsKey.trim() !== '') return lsKey.trim();
+    if (import.meta.env.VITE_SUPABASE_ANON_KEY && import.meta.env.VITE_SUPABASE_ANON_KEY.trim() !== '') {
+      return import.meta.env.VITE_SUPABASE_ANON_KEY.trim();
+    }
+    return DEFAULT_ANON_KEY;
   } catch {
-    return import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+    return import.meta.env.VITE_SUPABASE_ANON_KEY || DEFAULT_ANON_KEY;
   }
 }
 
