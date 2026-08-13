@@ -1,12 +1,13 @@
 import React from 'react';
 import { X, Play, Shield, Award, Sparkles } from 'lucide-react';
-import { videoPreviewData } from '../data/courseData';
+import { useTh3oryLive } from '../data/adminData';
 import { getEmbeddableMediaUrl } from '../utils/gdriveHelper';
 
 export default function VideoModal({ isOpen, onClose, onEnrollClick }) {
+  const { video: videoPreviewData } = useTh3oryLive();
   if (!isOpen) return null;
 
-  const embedUrl = getEmbeddableMediaUrl(videoPreviewData.videoUrl);
+  const embedUrl = getEmbeddableMediaUrl(videoPreviewData?.videoUrl || '');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-slate-950/80 backdrop-blur-xl animate-fade-in">

@@ -13,17 +13,20 @@ import EnrollmentPage from './components/EnrollmentPage';
 import Testimonials from './components/Testimonials';
 import FAQSection from './components/FAQSection';
 import Footer from './components/Footer';
-import { pricingPlans } from './data/courseData';
+import { useTh3oryLive } from './data/adminData';
 import { Crown, ShoppingBag } from 'lucide-react';
 
 export default function App() {
+  const { plans: pricingPlans } = useTh3oryLive();
+  const mainPlan = pricingPlans[0] || {};
+
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const [showEnrollmentPage, setShowEnrollmentPage] = useState(false);
   
   // Checkout state
-  const [selectedPlan, setSelectedPlan] = useState(pricingPlans[0]); // Masterclass by default
+  const [selectedPlan, setSelectedPlan] = useState(null); // null = use live plans[0]
   const [isMonthly, setIsMonthly] = useState(false);
   const [couponCode, setCouponCode] = useState('');
   const [couponDiscount, setCouponDiscount] = useState(0);
@@ -32,7 +35,7 @@ export default function App() {
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [receipt, setReceipt] = useState(null);
 
-  const handleOpenCheckoutWithPlan = (plan = pricingPlans[0], monthly = false) => {
+  const handleOpenCheckoutWithPlan = (plan = mainPlan, monthly = false) => {
     setSelectedPlan(plan);
     setIsMonthly(monthly);
     setShowEnrollmentPage(true);
@@ -70,11 +73,11 @@ export default function App() {
         </div>
 
         <button
-          onClick={() => handleOpenCheckoutWithPlan(pricingPlans[0], false)}
+          onClick={() => handleOpenCheckoutWithPlan(mainPlan, false)}
           className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-amber-500/25 transition-all flex items-center gap-1.5 whitespace-nowrap"
         >
           <ShoppingBag className="w-3.5 h-3.5" />
-          <span>{isEnrolled ? 'View Receipt' : 'Enroll ($149 / ₹11,999)'}</span>
+          <span>{isEnrolled ? 'View Receipt' : `Enroll ($${mainPlan.priceFull || 149} / ₹${mainPlan.priceINR?.toLocaleString('en-IN') || '11,999'})`}</span>
         </button>
       </div>
 
@@ -89,7 +92,7 @@ export default function App() {
       <main>
         <HeroSection
           onOpenVideo={() => setIsVideoModalOpen(true)}
-          onOpenCheckout={() => handleOpenCheckoutWithPlan(pricingPlans[1], false)}
+          onOpenCheckout={() => handleOpenCheckoutWithPlan(mainPlan, false)}
         />
 
         <PillarsSection />
@@ -114,20 +117,20 @@ export default function App() {
       </main>
 
       <Footer
-        onOpenCheckout={() => handleOpenCheckoutWithPlan(pricingPlans[1], false)}
+        onOpenCheckout={() => handleOpenCheckoutWithPlan(mainPlan, false)}
       />
 
       {/* Interactive Modals */}
       <VideoModal
         isOpen={isVideoModalOpen}
         onClose={() => setIsVideoModalOpen(false)}
-        onEnrollClick={() => handleOpenCheckoutWithPlan(pricingPlans[1], false)}
+        onEnrollClick={() => handleOpenCheckoutWithPlan(mainPlan, false)}
       />
 
       <CheckoutModal
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
-        selectedPlan={selectedPlan}
+        selectedPlan={selectedPlan || mainPlan}
         isMonthly={isMonthly}
         couponDiscount={couponDiscount}
         couponCode={couponCode}

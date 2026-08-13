@@ -1,8 +1,9 @@
 import React from 'react';
 import { X, BookOpen, Award, MessageSquare, Github, Calendar, CheckCircle2, PlayCircle, Lock, Download, Shield, Sparkles, Crown } from 'lucide-react';
-import { roadmapLevels, courseDetails } from '../data/courseData';
+import { useTh3oryLive } from '../data/adminData';
 
 export default function StudentDashboardModal({ isOpen, onClose, receipt }) {
+  const { levels: roadmapLevels, courseDetails } = useTh3oryLive();
   if (!isOpen) return null;
 
   return (

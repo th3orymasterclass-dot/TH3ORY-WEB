@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Lock, CreditCard, ShieldCheck, CheckCircle2, QrCode, Sparkles, Loader2, Download, ArrowRight, ArrowLeft, Mail, Tag, Percent } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { courseAddons } from '../data/courseData';
-import { validateCoupon, incrementCouponUsage } from '../data/adminData';
+import { validateCoupon, incrementCouponUsage, getAddons } from '../data/adminData';
 import { saveEnrollmentToSupabase, generateUniqueStudentCredentials } from '../services/supabaseService';
 import { sendEnrollmentEmail } from '../services/emailService';
 
@@ -16,6 +15,9 @@ export default function CheckoutModal({
   onEnrollmentSuccess
 }) {
   if (!isOpen || !selectedPlan) return null;
+
+  // Live add-ons from admin (reactive to admin changes)
+  const courseAddons = getAddons();
 
   // Step state: 1 (Details & Addons), 2 (Payment Gateway), 3 (Processing/Success)
   const [step, setStep] = useState(1);

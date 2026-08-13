@@ -1,8 +1,9 @@
 import React from 'react';
 import { Eye, Zap, Heart, Users, Award, CheckCircle2, GraduationCap, Briefcase, TrendingUp, Star, ShieldCheck, Sparkles } from 'lucide-react';
-import { courseDetails } from '../data/courseData';
+import { useTh3oryLive } from '../data/adminData';
 
 export default function PillarsSection() {
+  const { courseDetails } = useTh3oryLive();
   const iconMap = {
     Eye: Eye,
     Zap: Zap,
