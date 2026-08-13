@@ -23,6 +23,7 @@ export default function CheckoutModal({
     fullName: '',
     email: '',
     phone: '',
+    dob: '',
     country: 'United States',
     cardNumber: '4242 •••• •••• 4242',
     cardExpiry: '12/28',
@@ -171,7 +172,7 @@ export default function CheckoutModal({
               }
 
               const orderId = response.razorpay_order_id || ('ORD-' + Math.floor(100000 + Math.random() * 900000));
-              const uniqueCreds = generateUniqueStudentCredentials();
+              const uniqueCreds = generateUniqueStudentCredentials(formData.fullName, formData.dob);
 
               const receipt = {
                 orderId,
@@ -199,6 +200,7 @@ export default function CheckoutModal({
                 name: formData.fullName,
                 email: formData.email,
                 phone: formData.phone || '',
+                dob: formData.dob || '',
                 country: formData.country || 'India',
                 planId: selectedPlan.id || 'pro',
                 planName: selectedPlan.name,
@@ -282,7 +284,7 @@ export default function CheckoutModal({
         });
 
         const orderId = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
-        const uniqueCreds = generateUniqueStudentCredentials();
+        const uniqueCreds = generateUniqueStudentCredentials(formData.fullName, formData.dob);
 
         const receipt = {
           orderId,
@@ -303,6 +305,7 @@ export default function CheckoutModal({
           name: formData.fullName,
           email: formData.email,
           phone: formData.phone || '',
+          dob: formData.dob || '',
           country: formData.country || 'United States',
           planId: selectedPlan.id || 'pro',
           planName: selectedPlan.name,
@@ -384,7 +387,7 @@ export default function CheckoutModal({
               {/* Personal Information Fields */}
               <div className="space-y-4">
                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">1. Student Details</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-slate-300 mb-1">Full Name *</label>
                     <input
@@ -404,6 +407,15 @@ export default function CheckoutModal({
                       placeholder="sarah@example.com"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Date of Birth</label>
+                    <input
+                      type="date"
+                      value={formData.dob}
+                      onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
                     />
                   </div>

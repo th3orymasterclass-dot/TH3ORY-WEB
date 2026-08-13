@@ -456,7 +456,7 @@ function Step3({ form, setForm, onNext, onBack }) {
                 incrementCouponUsage(currentCoupon);
               }
 
-              const uniqueCreds = generateUniqueStudentCredentials();
+              const uniqueCreds = generateUniqueStudentCredentials(form.name, form.dob);
               const receipt = {
                 orderId: response.razorpay_order_id || `TH3-${Date.now().toString(36).toUpperCase()}`,
                 paymentId: response.razorpay_payment_id,
@@ -515,7 +515,7 @@ function Step3({ form, setForm, onNext, onBack }) {
       incrementCouponUsage(currentCoupon);
     }
 
-    const uniqueCreds = generateUniqueStudentCredentials();
+    const uniqueCreds = generateUniqueStudentCredentials(form.name, form.dob);
     const receipt = {
       orderId: `TH3-${Date.now().toString(36).toUpperCase()}`,
       name: form.name,

@@ -1,19 +1,68 @@
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import { isAdminAuthenticated } from '../data/adminData';
+import { supabase, isSupabaseConfigured } from '../lib/supabase.js';
+import { isAdminAuthenticated } from '../data/adminData.js';
 
 // ─── Unique Credentials Generator ────────────────────────────────────────────────
-export function generateUniqueStudentCredentials() {
-  const randomHex = Math.random().toString(36).substring(2, 6).toUpperCase();
-  const randomNum = Math.floor(1000 + Math.random() * 9000);
+export function generateEnrollmentCode(name = '', dob = '') {
+  // 1. Extract name component (4 uppercase letters)
+  const lettersOnly = (name || '').replace(/[^A-Za-z]/g, '').toUpperCase();
+  let namePart = lettersOnly.slice(0, 4);
+  if (namePart.length < 4) {
+    namePart = namePart.padEnd(4, 'X');
+  }
+  if (!namePart || namePart === 'XXXX') {
+    namePart = 'TH3O';
+  }
+
+  // 2. Extract DOB component (4 digits: DDMM)
+  let dobPart = '';
+  const dobStr = String(dob || '').trim();
+
+  if (dobStr) {
+    // Check YYYY-MM-DD or YYYY/MM/DD
+    const matchISO = dobStr.match(/\b(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})\b/);
+    if (matchISO) {
+      const month = String(matchISO[2]).padStart(2, '0');
+      const day = String(matchISO[3]).padStart(2, '0');
+      dobPart = day + month;
+    } else {
+      // Check DD-MM-YYYY or DD/MM/YYYY
+      const matchDMY = dobStr.match(/\b(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})\b/);
+      if (matchDMY) {
+        const day = String(matchDMY[1]).padStart(2, '0');
+        const month = String(matchDMY[2]).padStart(2, '0');
+        dobPart = day + month;
+      } else {
+        // Try Date parsing
+        const parsedDate = new Date(dobStr);
+        if (!isNaN(parsedDate.getTime())) {
+          const day = String(parsedDate.getDate()).padStart(2, '0');
+          const month = String(parsedDate.getMonth() + 1).padStart(2, '0');
+          dobPart = day + month;
+        }
+      }
+    }
+  }
+
+  if (!dobPart || dobPart.length !== 4) {
+    dobPart = '2026';
+  }
+
+  return (namePart + dobPart).toUpperCase().slice(0, 8);
+}
+
+export function generateUniqueStudentCredentials(name = '', dob = '') {
+  const enrollmentCode = generateEnrollmentCode(name, dob);
   return {
     studentId: `STU-${Math.floor(100000 + Math.random() * 900000)}`,
-    enrollmentCode: `TH3-${randomHex}-${randomNum}`
+    enrollmentCode
   };
 }
 
 // ─── Enrollments ──────────────────────────────────────────────────────────────
 export async function saveEnrollmentToSupabase(enrollmentData) {
-  const uniqueCreds = generateUniqueStudentCredentials();
+  const studentName = enrollmentData.name || enrollmentData.studentName || 'Student';
+  const studentDob = enrollmentData.dob || '';
+  const uniqueCreds = generateUniqueStudentCredentials(studentName, studentDob);
   const finalCode = (enrollmentData.code && enrollmentData.code !== 'TH3ORY2026')
     ? enrollmentData.code
     : uniqueCreds.enrollmentCode;
@@ -35,7 +84,7 @@ export async function saveEnrollmentToSupabase(enrollmentData) {
 
     const payload = {
       order_id: enrollmentData.orderId || (`ORD-${Date.now()}`),
-      name: enrollmentData.name || enrollmentData.studentName || 'Student',
+      name: studentName,
       email: enrollmentData.email || enrollmentData.studentEmail || 'student@example.com',
       phone: enrollmentData.phone || '',
       country_code: enrollmentData.countryCode || '',
@@ -156,53 +205,70 @@ export function subscribeToEnrollments(onEnrollmentChange) {
 }
 
 // ─── Student Verification ─────────────────────────────────────────────────────
-export async function verifyStudentCodeWithSupabase(emailOrName, code) {
+export async function verifyStudentCodeWithSupabase(email, code) {
   if (!isSupabaseConfigured || !supabase) {
     return null;
   }
 
   try {
-    const cleanInput = (emailOrName || '').trim();
+    const cleanEmail = (email || '').trim().toLowerCase();
     const cleanCode  = (code || '').trim().toUpperCase();
 
     // 1. Try enrollments table
     const { data: eData } = await supabase
       .from('enrollments')
       .select('*')
-      .or(`email.ilike.%${cleanInput}%,name.ilike.%${cleanInput}%`)
-      .eq('enrollment_code', cleanCode)
-      .limit(1);
+      .ilike('email', cleanEmail)
+      .limit(10);
 
     if (eData && eData.length > 0) {
-      // Update last login
-      await supabase
-        .from('student_accounts')
-        .update({ last_login: new Date().toISOString() })
-        .eq('email', eData[0].email);
+      const matched = eData.find(e => {
+        const storedCode = (e.enrollment_code || e.code || '').trim().toUpperCase();
+        if (storedCode === cleanCode) return true;
+        const computedCode = generateEnrollmentCode(e.name, e.dob).toUpperCase();
+        return computedCode === cleanCode;
+      });
 
-      return {
-        name: eData[0].name,
-        email: eData[0].email,
-        plan: eData[0].plan_name,
-        enrolledAt: eData[0].created_at,
-      };
+      if (matched) {
+        await supabase
+          .from('student_accounts')
+          .update({ last_login: new Date().toISOString() })
+          .eq('email', matched.email);
+
+        return {
+          name: matched.name,
+          email: matched.email,
+          plan: matched.plan_name || 'TH3ORY Masterclass',
+          enrolledAt: matched.created_at,
+          dob: matched.dob,
+        };
+      }
     }
 
     // 2. Try student_accounts table
     const { data: aData } = await supabase
       .from('student_accounts')
       .select('*')
-      .or(`email.ilike.%${cleanInput}%,name.ilike.%${cleanInput}%`)
-      .eq('enrollment_code', cleanCode)
-      .limit(1);
+      .ilike('email', cleanEmail)
+      .limit(10);
 
     if (aData && aData.length > 0) {
-      return {
-        name: aData[0].name,
-        email: aData[0].email,
-        plan: aData[0].plan_name,
-        enrolledAt: aData[0].created_at,
-      };
+      const matched = aData.find(a => {
+        const storedCode = (a.enrollment_code || '').trim().toUpperCase();
+        if (storedCode === cleanCode) return true;
+        const computedCode = generateEnrollmentCode(a.name, a.dob).toUpperCase();
+        return computedCode === cleanCode;
+      });
+
+      if (matched) {
+        return {
+          name: matched.name,
+          email: matched.email,
+          plan: matched.plan_name || 'TH3ORY Masterclass',
+          enrolledAt: matched.created_at,
+          dob: matched.dob,
+        };
+      }
     }
 
     return null;

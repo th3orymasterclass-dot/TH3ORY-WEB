@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { GraduationCap, Eye, EyeOff, AlertCircle, LogIn, Sparkles } from 'lucide-react';
-import { verifyStudentCodeWithSupabase } from '../services/supabaseService';
+import { GraduationCap, Eye, EyeOff, AlertCircle, LogIn, Sparkles, Mail, Lock } from 'lucide-react';
+import { verifyStudentCodeWithSupabase, generateEnrollmentCode } from '../services/supabaseService';
 
-// Enrollment key fallback
-const ENROLLMENT_CODE = 'TH3ORY2026';
+// Default fallback codes for local testing
+const FALLBACK_CODES = ['TH3ORY26', 'TH3ORY2026'];
 
 export default function StudentLogin({ onAuthenticated }) {
-  const [name, setName]     = useState('');
+  const [email, setEmail]   = useState('');
   const [code, setCode]     = useState('');
   const [showCode, setShow] = useState(false);
   const [error, setError]   = useState('');
@@ -14,19 +14,27 @@ export default function StudentLogin({ onAuthenticated }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name.trim()) return setError('Please enter your full name or email.');
-    const inputCode = code.trim().toUpperCase();
+    const cleanEmail = email.trim().toLowerCase();
+    const inputCode  = code.trim().toUpperCase();
+
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      return setError('Please enter a valid email address.');
+    }
+    if (!inputCode) {
+      return setError('Please enter your 8-character enrollment code.');
+    }
     
     setLoading(true);
+    setError('');
 
-    // Try Supabase verification first
-    const sbStudent = await verifyStudentCodeWithSupabase(name.trim(), inputCode);
+    // 1. Try Supabase verification first
+    const sbStudent = await verifyStudentCodeWithSupabase(cleanEmail, inputCode);
 
     if (sbStudent) {
       const profile = {
-        name: sbStudent.name,
-        email: sbStudent.email,
-        enrolledAt: sbStudent.enrolledAt,
+        name: sbStudent.name || cleanEmail.split('@')[0],
+        email: sbStudent.email || cleanEmail,
+        enrolledAt: sbStudent.enrolledAt || new Date().toISOString(),
         plan: sbStudent.plan || 'TH3ORY Masterclass',
       };
       sessionStorage.setItem('th3ory_student_auth', JSON.stringify(profile));
@@ -35,24 +43,54 @@ export default function StudentLogin({ onAuthenticated }) {
       return;
     }
 
-    // Fallback code check
-    if (inputCode !== ENROLLMENT_CODE) {
+    // 2. Local Storage Fallback Verification
+    try {
+      const localEnrollments = JSON.parse(localStorage.getItem('th3ory_local_enrollments') || '[]');
+      const matchedLocal = localEnrollments.find(item => {
+        const itemEmail = (item.email || item.studentEmail || '').trim().toLowerCase();
+        if (itemEmail !== cleanEmail) return false;
+        const storedCode = (item.code || item.enrollment_code || '').trim().toUpperCase();
+        if (storedCode === inputCode) return true;
+        const computed = generateEnrollmentCode(item.name || item.studentName, item.dob).toUpperCase();
+        return computed === inputCode;
+      });
+
+      if (matchedLocal) {
+        const profile = {
+          name: matchedLocal.name || matchedLocal.studentName || cleanEmail.split('@')[0],
+          email: cleanEmail,
+          enrolledAt: matchedLocal.created_at || new Date().toISOString(),
+          plan: matchedLocal.plan_name || matchedLocal.planName || 'TH3ORY Masterclass',
+        };
+        sessionStorage.setItem('th3ory_student_auth', JSON.stringify(profile));
+        setLoading(false);
+        onAuthenticated(profile);
+        return;
+      }
+    } catch (err) {
+      console.warn('[StudentLogin] Error checking local storage:', err);
+    }
+
+    // 3. Fallback code check for demo / test accounts
+    if (FALLBACK_CODES.includes(inputCode)) {
+      const defaultName = cleanEmail.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      const profile = {
+        name: defaultName,
+        email: cleanEmail,
+        enrolledAt: localStorage.getItem('th3ory_student_enrolledAt') || new Date().toISOString(),
+        plan: localStorage.getItem('th3ory_student_plan') || 'TH3ORY Masterclass',
+      };
+      localStorage.setItem('th3ory_student_enrolledAt', profile.enrolledAt);
+      localStorage.setItem('th3ory_student_plan', profile.plan);
+      sessionStorage.setItem('th3ory_student_auth', JSON.stringify(profile));
       setLoading(false);
-      setError('Invalid enrollment code. Please check your order receipt or email.');
-      setCode('');
+      onAuthenticated(profile);
       return;
     }
 
-    const profile = {
-      name: name.trim(),
-      enrolledAt: localStorage.getItem('th3ory_student_enrolledAt') || new Date().toISOString(),
-      plan: localStorage.getItem('th3ory_student_plan') || 'TH3ORY Masterclass',
-    };
-    localStorage.setItem('th3ory_student_enrolledAt', profile.enrolledAt);
-    localStorage.setItem('th3ory_student_plan', profile.plan);
-    sessionStorage.setItem('th3ory_student_auth', JSON.stringify(profile));
     setLoading(false);
-    onAuthenticated(profile);
+    setError('Invalid enrollment code or email. Please check your order receipt or welcome email.');
+    setCode('');
   };
 
   return (
@@ -71,33 +109,41 @@ export default function StudentLogin({ onAuthenticated }) {
         <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-8 shadow-2xl backdrop-blur-sm">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Your Full Name</label>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5 text-amber-500"/> Student Email
+              </label>
               <input
-                type="text"
-                value={name}
-                onChange={e => setName(e.target.value)}
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
                 autoFocus
                 required
-                placeholder="e.g. Jonathan Sterling"
+                placeholder="e.g. student@example.com"
                 className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30 transition-all text-sm"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Enrollment Code</label>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-amber-500"/> Enrollment Access Code (8 Characters)
+              </label>
               <div className="relative">
                 <input
                   type={showCode ? 'text' : 'password'}
                   value={code}
-                  onChange={e => setCode(e.target.value)}
+                  onChange={e => setCode(e.target.value.toUpperCase())}
                   required
-                  placeholder="Check your welcome email"
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 pr-11 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30 transition-all text-sm"
+                  maxLength={12}
+                  placeholder="e.g. JONA1505"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 pr-11 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30 transition-all text-sm font-mono tracking-wider"
                 />
                 <button type="button" onClick={() => setShow(v => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-amber-400">
                   {showCode ? <EyeOff className="w-4 h-4"/> : <Eye className="w-4 h-4"/>}
                 </button>
               </div>
+              <p className="text-[11px] text-slate-500 mt-1.5">
+                Combined 8-character code (Name + Date of Birth, e.g. <span className="font-mono text-amber-400 font-bold">JONA1505</span>).
+              </p>
             </div>
 
             {error && (
@@ -106,18 +152,18 @@ export default function StudentLogin({ onAuthenticated }) {
               </div>
             )}
 
-            <button type="submit" disabled={loading || !name || !code}
+            <button type="submit" disabled={loading || !email || !code}
               className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 font-extrabold text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20">
               {loading
                 ? <span className="inline-block w-4 h-4 border-2 border-slate-950/40 border-t-slate-950 rounded-full animate-spin"/>
                 : <LogIn className="w-4 h-4"/>}
-              {loading ? 'Verifying…' : 'Enter My Dashboard'}
+              {loading ? 'Verifying Credentials…' : 'Enter My Dashboard'}
             </button>
           </form>
 
           <div className="mt-6 flex items-start gap-2 text-slate-600 text-xs">
             <Sparkles className="w-3.5 h-3.5 mt-0.5 text-amber-600/50 shrink-0"/>
-            <span>Your enrollment code was sent to your registered email after purchase. Contact support if you need help.</span>
+            <span>Your 8-character enrollment code was sent to your registered email after purchase.</span>
           </div>
         </div>
 
@@ -129,3 +175,4 @@ export default function StudentLogin({ onAuthenticated }) {
     </div>
   );
 }
+

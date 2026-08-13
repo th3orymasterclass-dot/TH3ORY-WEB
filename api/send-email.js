@@ -78,13 +78,13 @@ export default async function handler(req, res) {
               <p style="color: #cbd5e1; font-size: 13px; margin-bottom: 16px;">Keep this email safe. Use these unique credentials to access all 50 video modules, workbooks, and resources in your Student Portal.</p>
               
               <div style="background: #1e293b; border-radius: 10px; padding: 14px; margin-bottom: 12px;">
-                <div style="color: #64748b; font-size: 11px; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Student Login ID</div>
+                <div style="color: #64748b; font-size: 11px; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Student Login Email</div>
                 <div style="color: #ffffff; font-weight: 700; font-size: 15px;">${receipt.email || receipt.studentEmail}</div>
               </div>
 
               <div style="background: #1e293b; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
-                <div style="color: #64748b; font-size: 11px; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Unique Enrollment Access Code</div>
-                <div style="font-family: monospace; color: #f59e0b; font-weight: 800; font-size: 18px; letter-spacing: 1px;">${receipt.code || receipt.enrollmentCode || 'TH3ORY2026'}</div>
+                <div style="color: #64748b; font-size: 11px; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Unique 8-Character Enrollment Code (Name + DOB)</div>
+                <div style="font-family: monospace; color: #f59e0b; font-weight: 800; font-size: 18px; letter-spacing: 1px;">${receipt.code || receipt.enrollmentCode || 'TH3ORY26'}</div>
               </div>
 
               <div style="text-align: center; margin-top: 20px;">
