@@ -32,13 +32,21 @@ export default function VideoModal({ isOpen, onClose, onEnrollClick }) {
         </div>
 
         {/* Video Player Box */}
-        <div className="relative aspect-video bg-black flex items-center justify-center">
+        <div className="relative aspect-video bg-black flex items-center justify-center select-none" onContextMenu={e => e.preventDefault()}>
+          {/* Top-Right Shield Overlay: Prevents Google Drive pop-out & YouTube title pop-out clicks */}
+          <div
+            className="absolute top-0 right-0 w-28 h-16 z-30 bg-transparent cursor-default pointer-events-auto"
+            onClick={e => { e.preventDefault(); e.stopPropagation(); }}
+            onContextMenu={e => e.preventDefault()}
+            title="External tab exit disabled for security"
+          />
           <iframe
             src={embedUrl}
             title={videoPreviewData.title}
             className="w-full h-full border-0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
+            sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
           ></iframe>
         </div>
 

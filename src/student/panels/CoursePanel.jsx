@@ -34,7 +34,15 @@ function VideoModal({ url, title, onClose }) {
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-white ml-3"><X className="w-5 h-5"/></button>
         </div>
-        <div className="aspect-video bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 relative" onContextMenu={e => e.preventDefault()}>
+        <div className="aspect-video bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 relative selection:bg-none select-none" onContextMenu={e => e.preventDefault()}>
+          {/* Top-Right Shield Overlay: Prevents Google Drive pop-out & YouTube title pop-out clicks */}
+          <div
+            className="absolute top-0 right-0 w-28 h-16 z-30 bg-transparent cursor-default pointer-events-auto"
+            onClick={e => { e.preventDefault(); e.stopPropagation(); }}
+            onContextMenu={e => e.preventDefault()}
+            title="External tab exit disabled for security"
+          />
+
           {embedUrl ? (
             <iframe
               src={embedUrl}
@@ -42,6 +50,7 @@ function VideoModal({ url, title, onClose }) {
               className="w-full h-full border-0 pointer-events-auto"
               allowFullScreen
               allow="autoplay; fullscreen"
+              sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
             />
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 gap-3">
@@ -52,9 +61,9 @@ function VideoModal({ url, title, onClose }) {
           )}
         </div>
         <div className="mt-2 flex items-center justify-between text-xs text-slate-400">
-          <span className="flex items-center gap-1 text-slate-400"><HardDrive className="w-3.5 h-3.5 text-blue-400"/> Google Drive Stream Active</span>
+          <span className="flex items-center gap-1 text-slate-400"><HardDrive className="w-3.5 h-3.5 text-blue-400"/> Protected In-App Player</span>
           <span className="text-amber-400/90 font-medium flex items-center gap-1 bg-amber-950/40 border border-amber-500/20 px-2.5 py-0.5 rounded-full text-[11px]">
-            🔒 Stream Only • Direct Downloads Disabled
+            🔒 Stream Only • Pop-out &amp; External Tabs Disabled
           </span>
         </div>
       </div>
@@ -62,10 +71,9 @@ function VideoModal({ url, title, onClose }) {
   );
 }
 
-function ResourceCard({ item }) {
+function ResourceCard({ item, onStreamResource }) {
   const typeColors = { video:'text-blue-400', pdf:'text-red-400', worksheet:'text-green-400', quiz:'text-purple-400', audio:'text-pink-400', resource:'text-amber-400', image:'text-cyan-400', archive:'text-slate-400' };
   const gdrive = parseGoogleDriveUrl(item.url);
-  const streamUrl = getEmbeddableMediaUrl(item.url);
 
   return (
     <div className="flex items-center gap-3 px-4 py-3 bg-slate-950/60 rounded-xl hover:bg-slate-950 border border-slate-800 hover:border-slate-700 transition-all group select-none">
@@ -82,9 +90,13 @@ function ResourceCard({ item }) {
         {item.duration && <p className="text-slate-500 text-xs">{item.duration}</p>}
       </div>
       <div className="flex items-center gap-2">
-        <a href={streamUrl} target="_blank" rel="noreferrer" className="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1 font-medium bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded-lg">
-          <ExternalLink className="w-3.5 h-3.5"/> Stream Resource
-        </a>
+        <button
+          type="button"
+          onClick={() => onStreamResource(item)}
+          className="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1 font-medium bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded-lg transition-all"
+        >
+          <Play className="w-3.5 h-3.5"/> Stream In-App
+        </button>
       </div>
     </div>
   );
@@ -279,7 +291,7 @@ export default function CoursePanel({ initialLevelId, initialLessonId }) {
                 </h4>
                 <div className="space-y-2">
                   {getLessonContent(activeLesson.lesson.id).map(item => (
-                    <ResourceCard key={item.id} item={item}/>
+                    <ResourceCard key={item.id} item={item} onStreamResource={res => setVideoModal({ url: res.url, title: res.title })}/>
                   ))}
                 </div>
               </div>
