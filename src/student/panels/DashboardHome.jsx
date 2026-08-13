@@ -26,13 +26,21 @@ const LEVEL_COLORS = [
 
 export default function DashboardHome({ profile, onNavigate }) {
   const [progress, setProgress] = useState(getProgress());
-  const levels  = getLevels();
-  const details = getCourseDetails();
+  const [levels, setLevels]     = useState(getLevels());
+  const [details, setDetails]   = useState(getCourseDetails());
 
   useEffect(() => {
-    const h = () => setProgress(getProgress());
-    window.addEventListener('th3ory_student_change', h);
-    return () => window.removeEventListener('th3ory_student_change', h);
+    const hStudent = () => setProgress(getProgress());
+    const hData = () => {
+      setLevels(getLevels());
+      setDetails(getCourseDetails());
+    };
+    window.addEventListener('th3ory_student_change', hStudent);
+    window.addEventListener('th3ory_data_change', hData);
+    return () => {
+      window.removeEventListener('th3ory_student_change', hStudent);
+      window.removeEventListener('th3ory_data_change', hData);
+    };
   }, []);
 
   const totalLessons    = levels.reduce((a, l) => a + l.lessons.length, 0);

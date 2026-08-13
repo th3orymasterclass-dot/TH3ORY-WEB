@@ -4,9 +4,18 @@ import {
   BookOpen, Clock, FileText, Bookmark, BookmarkCheck,
   X, ExternalLink, Download, NotebookPen, HardDrive
 } from 'lucide-react';
-import { getLevels, getContent } from '../../data/adminData';
+import { getLevels, getContent, useTh3oryLive } from '../../data/adminData';
 import { getProgress, markLesson, getNotes, saveNote, getBookmarks, toggleBookmark } from '../studentData';
 import { parseGoogleDriveUrl, getEmbeddableMediaUrl } from '../../utils/gdriveHelper';
+
+// Plan access hierarchy: vip > enrolled > free
+const PLAN_RANK = { free: 0, enrolled: 1, vip: 2 };
+function getStudentPlanRank(planStr = '') {
+  const p = (planStr || '').toLowerCase();
+  if (p.includes('vip') || p.includes('enterprise')) return 2;
+  if (p.includes('free')) return 0;
+  return 1; // default: enrolled
+}
 
 const LEVEL_ACCENT = [
   { border:'border-amber-500/40', bg:'bg-amber-500/10', text:'text-amber-400', ring:'ring-amber-500/30' },
@@ -112,7 +121,11 @@ function ResourceCard({ item, onStreamResource }) {
   );
 }
 
-export default function CoursePanel({ initialLevelId, initialLessonId }) {
+export default function CoursePanel({ profile, initialLevelId, initialLessonId }) {
+  const liveData = useTh3oryLive();
+  const levels  = liveData.levels;
+  const content = liveData.content;
+
   const [progress, setProgress]       = useState(getProgress());
   const [bookmarks, setBookmarks]     = useState(getBookmarks());
   const [notes, setNotes]             = useState(getNotes());
@@ -122,8 +135,7 @@ export default function CoursePanel({ initialLevelId, initialLessonId }) {
   const [noteText, setNoteText]       = useState('');
   const [showNote, setShowNote]       = useState(false);
 
-  const levels  = getLevels();
-  const content = getContent();
+  const studentPlanRank = getStudentPlanRank(profile?.plan);
 
   useEffect(() => {
     const h = () => { setProgress(getProgress()); setBookmarks(getBookmarks()); };
@@ -159,9 +171,22 @@ export default function CoursePanel({ initialLevelId, initialLessonId }) {
     if (activeLesson) { saveNote(activeLesson.lesson.id, noteText); setNotes(getNotes()); }
   };
 
-  const getLessonContent = (lessonId) => content.filter(c => c.lessonId === lessonId && c.published);
+  const canAccessItem = (item) => {
+    const accessKey = item.access || item.accessLevel || 'enrolled';
+    const itemRank = PLAN_RANK[accessKey] ?? 1;
+    return studentPlanRank >= itemRank;
+  };
+
+  const getLessonContent = (lessonId) =>
+    content.filter(c => c.lessonId === lessonId && c.published && canAccessItem(c));
+
+  const getLockedContent = (lessonId) =>
+    content.filter(c => c.lessonId === lessonId && c.published && !canAccessItem(c));
+
   const getVideoForLesson = (lessonId) => {
     const c = content.find(c => c.lessonId === lessonId && c.type === 'video' && c.published);
+    if (!c) return null;
+    if (!canAccessItem(c)) return '__LOCKED__';
     return c?.url || null;
   };
 
@@ -281,16 +306,33 @@ export default function CoursePanel({ initialLevelId, initialLessonId }) {
               </div>
 
               {/* Video button */}
-              <button
-                onClick={() => setVideoModal({ url: getVideoForLesson(activeLesson.lesson.id), title: activeLesson.lesson.title })}
-                className="w-full aspect-video max-h-56 bg-slate-950 rounded-xl flex flex-col items-center justify-center border border-slate-800 hover:border-amber-500/30 group transition-all relative overflow-hidden"
-              >
-                <div className="w-16 h-16 rounded-full bg-amber-500/20 border-2 border-amber-500/40 flex items-center justify-center group-hover:bg-amber-500/30 transition-all mb-3 z-10">
-                  <Play className="w-7 h-7 text-amber-400 fill-amber-400 ml-1"/>
-                </div>
-                <p className="text-white font-bold text-sm z-10">Watch Lesson Video</p>
-                <p className="text-slate-500 text-xs mt-1 z-10">{activeLesson.lesson.duration}</p>
-              </button>
+              {(() => {
+                const videoUrl = getVideoForLesson(activeLesson.lesson.id);
+                if (videoUrl === '__LOCKED__') {
+                  return (
+                    <div className="w-full aspect-video max-h-56 bg-slate-950 rounded-xl flex flex-col items-center justify-center border border-purple-500/30 relative overflow-hidden select-none">
+                      <div className="w-16 h-16 rounded-full bg-purple-500/20 border-2 border-purple-500/40 flex items-center justify-center mb-3">
+                        <Lock className="w-7 h-7 text-purple-400"/>
+                      </div>
+                      <p className="text-white font-bold text-sm">VIP Only Video</p>
+                      <p className="text-slate-500 text-xs mt-1">Upgrade your plan to unlock this lesson</p>
+                      <span className="mt-3 text-[11px] bg-purple-500/20 text-purple-400 border border-purple-500/30 px-3 py-1 rounded-full font-bold">Upgrade Required</span>
+                    </div>
+                  );
+                }
+                return (
+                  <button
+                    onClick={() => setVideoModal({ url: videoUrl, title: activeLesson.lesson.title })}
+                    className="w-full aspect-video max-h-56 bg-slate-950 rounded-xl flex flex-col items-center justify-center border border-slate-800 hover:border-amber-500/30 group transition-all relative overflow-hidden"
+                  >
+                    <div className="w-16 h-16 rounded-full bg-amber-500/20 border-2 border-amber-500/40 flex items-center justify-center group-hover:bg-amber-500/30 transition-all mb-3 z-10">
+                      <Play className="w-7 h-7 text-amber-400 fill-amber-400 ml-1"/>
+                    </div>
+                    <p className="text-white font-bold text-sm z-10">Watch Lesson Video</p>
+                    <p className="text-slate-500 text-xs mt-1 z-10">{activeLesson.lesson.duration}</p>
+                  </button>
+                );
+              })()}
             </div>
 
             {/* Resources for this lesson */}
@@ -303,6 +345,30 @@ export default function CoursePanel({ initialLevelId, initialLessonId }) {
                   {getLessonContent(activeLesson.lesson.id).map(item => (
                     <ResourceCard key={item.id} item={item} onStreamResource={res => setVideoModal({ url: res.url, title: res.title })}/>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Locked resources (upgrade prompt) */}
+            {getLockedContent(activeLesson.lesson.id).length > 0 && (
+              <div className="bg-slate-900 border border-purple-500/30 rounded-2xl p-5">
+                <h4 className="text-purple-400 font-bold text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <Lock className="w-4 h-4"/> Locked Resources — Upgrade to Unlock
+                </h4>
+                <div className="space-y-2">
+                  {getLockedContent(activeLesson.lesson.id).map(item => {
+                    const accessKey = item.access || item.accessLevel || 'enrolled';
+                    return (
+                      <div key={item.id} className="flex items-center gap-3 px-4 py-3 bg-purple-950/20 rounded-xl border border-purple-500/20 select-none opacity-70">
+                        <Lock className="w-4 h-4 shrink-0 text-purple-400"/>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-slate-400 text-sm font-medium truncate">{item.title}</p>
+                          <p className="text-purple-400 text-xs font-bold mt-0.5 capitalize">{accessKey === 'vip' ? 'VIP Only' : 'Enrolled Only'}</p>
+                        </div>
+                        <span className="text-[10px] bg-purple-500/20 text-purple-400 border border-purple-500/30 px-2 py-0.5 rounded-full font-bold shrink-0">Locked</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

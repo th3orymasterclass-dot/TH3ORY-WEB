@@ -765,10 +765,10 @@ export async function saveCourseContentToSupabase(item) {
       title: item.title,
       type: item.type || 'video',
       url: item.url,
-      platform: item.platform || 'youtube',
+      platform: item.platform || (item.url?.includes('drive.google.com') ? 'gdrive' : 'url'),
       level_id: item.levelId || null,
       lesson_id: item.lessonId || null,
-      duration: item.duration || '20 mins',
+      duration: item.duration || '',
       access_level: item.access || item.accessLevel || 'enrolled',
       description: item.description || '',
       tags: item.tags || [],
@@ -776,18 +776,24 @@ export async function saveCourseContentToSupabase(item) {
       updated_at: new Date().toISOString(),
     };
 
+    // If it's a UUID (from Supabase), update by id
     if (item.id && !item.id.startsWith('c_')) {
       const { error } = await supabase
         .from('course_contents')
         .update(payload)
         .eq('id', item.id);
-      return !error;
-    } else {
-      const { error } = await supabase
-        .from('course_contents')
-        .insert([{ ...payload, content_key: `c_${Date.now()}` }]);
+      if (error) console.error('[Supabase] Error updating course content:', error);
       return !error;
     }
+
+    // For locally-generated ids (c_...) — use upsert on content_key
+    const contentKey = item.id || `c_${Date.now()}`;
+    const { error } = await supabase
+      .from('course_contents')
+      .upsert([{ ...payload, content_key: contentKey }], { onConflict: 'content_key' });
+
+    if (error) console.error('[Supabase] Error upserting course content:', error);
+    return !error;
   } catch (err) {
     console.error('[Supabase] Error saving course content:', err);
     return false;

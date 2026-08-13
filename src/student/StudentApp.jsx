@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   LayoutDashboard, BookOpen, ShoppingBag, Star, MessageCircle,
   LogOut, ChevronRight, Menu, X, GraduationCap, Award, ExternalLink, Bookmark
@@ -9,7 +9,7 @@ import ShopPanel     from './panels/ShopPanel';
 import ReviewPanel   from './panels/ReviewPanel';
 import QueryPanel    from './panels/QueryPanel';
 import { getProgress, getBookmarks } from './studentData';
-import { getLevels } from '../data/adminData';
+import { useTh3oryLive } from '../data/adminData';
 
 const NAV = [
   { id: 'home',    label: 'Dashboard',   icon: LayoutDashboard },
@@ -23,14 +23,24 @@ export default function StudentApp({ profile, onLogout }) {
   const [active, setActive]       = useState('home');
   const [navExtra, setNavExtra]   = useState({}); // e.g. { levelId, lessonId }
   const [sidebarOpen, setSidebar] = useState(true);
+  const [progress, setProgress]   = useState(getProgress());
+
+  // Live reactive admin data (levels, content, etc.)
+  const liveData = useTh3oryLive();
+  const levels = liveData.levels;
+
+  // Keep progress reactive when student marks lessons
+  useEffect(() => {
+    const h = () => setProgress(getProgress());
+    window.addEventListener('th3ory_student_change', h);
+    return () => window.removeEventListener('th3ory_student_change', h);
+  }, []);
 
   const navigate = (panel, extra = {}) => {
     setActive(panel);
     setNavExtra(extra);
   };
 
-  const levels = getLevels();
-  const progress = getProgress();
   const totalLessons = levels.reduce((a, l) => a + l.lessons.length, 0);
   const done = Object.keys(progress).length;
   const pct = totalLessons ? Math.round((done / totalLessons) * 100) : 0;
@@ -40,7 +50,7 @@ export default function StudentApp({ profile, onLogout }) {
   const renderPanel = () => {
     switch (active) {
       case 'home':    return <DashboardHome profile={profile} onNavigate={navigate}/>;
-      case 'course':  return <CoursePanel initialLevelId={navExtra.levelId} initialLessonId={navExtra.lessonId}/>;
+      case 'course':  return <CoursePanel profile={profile} initialLevelId={navExtra.levelId} initialLessonId={navExtra.lessonId} onNavigate={navigate}/>;
       case 'shop':    return <ShopPanel profile={profile}/>;
       case 'review':  return <ReviewPanel profile={profile}/>;
       case 'queries': return <QueryPanel profile={profile}/>;

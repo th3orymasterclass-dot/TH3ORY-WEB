@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ShoppingCart, Check, Tag, Sparkles, CreditCard, X, Star, Crown } from 'lucide-react';
-import { getAddons, getPlans, getCourseDetails } from '../../data/adminData';
+import { useTh3oryLive } from '../../data/adminData';
 
 function AddonCard({ addon, onBuy }) {
   const [hover, setHover] = useState(false);
@@ -150,8 +150,7 @@ function CheckoutModal({ addon, onClose }) {
 }
 
 export default function ShopPanel({ profile }) {
-  const addons = getAddons();
-  const plans  = getPlans();
+  const { addons, plans } = useTh3oryLive();
   const [tab, setTab]       = useState('addons');
   const [checkout, setCheckout] = useState(null);
 
