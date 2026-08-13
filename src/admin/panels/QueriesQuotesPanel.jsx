@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { HelpCircle, Building2, Mail, CheckCircle2, Clock, MessageSquare, Search, Send, User, ChevronRight } from 'lucide-react';
+import { HelpCircle, Building2, Mail, CheckCircle2, Clock, MessageSquare, Search, Send, User, ChevronRight, PlusCircle } from 'lucide-react';
+import { saveEnterpriseQuoteToSupabase } from '../../services/supabaseService';
 
 export default function QueriesQuotesPanel({
   queries = [],
@@ -12,6 +13,23 @@ export default function QueriesQuotesPanel({
   const [activeTab, setActiveTab] = useState('queries'); // 'queries' | 'quotes' | 'contact'
   const [search, setSearch] = useState('');
   const [replyText, setReplyText] = useState({});
+  const [isSubmittingSample, setIsSubmittingSample] = useState(false);
+
+  const handleAddSampleQuote = async () => {
+    setIsSubmittingSample(true);
+    const sampleQuote = {
+      orgName: `Aura Tech Global #${Math.floor(100 + Math.random() * 900)}`,
+      contactName: 'Sarah Jenkins',
+      email: 'sarah.jenkins@auratech.io',
+      phone: '+1 (555) 432-8901',
+      audienceType: 'Executive Leaders & Managers',
+      pupilCount: '100-250',
+      notes: 'Sample Enterprise License Quote generated for testing database connection.'
+    };
+    await saveEnterpriseQuoteToSupabase(sampleQuote);
+    setIsSubmittingSample(false);
+    alert('✅ Sample Enterprise Quote submitted & saved to database!');
+  };
 
   const handleToggleQueryStatus = async (qId, currentStatus) => {
     const nextStatus = currentStatus === 'resolved' ? 'open' : 'resolved';
@@ -35,14 +53,25 @@ export default function QueriesQuotesPanel({
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Header */}
-      <div>
-        <div className="flex items-center gap-2">
-          <h2 className="text-2xl font-black text-white">Database Forms, Queries & Quotes</h2>
-          <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-mono font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> REALTIME SYNC
-          </span>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl font-black text-white">Database Forms, Queries & Quotes</h2>
+            <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-mono font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> REALTIME SYNC
+            </span>
+          </div>
+          <p className="text-slate-500 text-sm mt-1">Manage incoming student queries, enterprise quotes, and contact inquiries from dedicated Supabase tables</p>
         </div>
-        <p className="text-slate-500 text-sm mt-1">Manage incoming student queries, enterprise quotes, and contact inquiries from dedicated Supabase tables</p>
+
+        <button
+          onClick={handleAddSampleQuote}
+          disabled={isSubmittingSample}
+          className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg transition-all flex items-center gap-2 self-start sm:self-auto"
+        >
+          <PlusCircle className="w-4 h-4" />
+          <span>{isSubmittingSample ? 'Submitting...' : 'Generate Test Quote'}</span>
+        </button>
       </div>
 
       {/* Tabs */}

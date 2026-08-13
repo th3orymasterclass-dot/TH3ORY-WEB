@@ -237,31 +237,67 @@ export function subscribeToSiteSettings(onSettingChange) {
 
 // ─── Student Queries (Dedicated Table: queries) ────────────────────────────────
 export async function saveQueryToSupabase(queryData) {
-  if (!isSupabaseConfigured || !supabase) return false;
+  const payload = {
+    id: `q_${Date.now()}`,
+    student_name: queryData.studentName,
+    student_email: queryData.studentEmail || '',
+    student_plan: queryData.studentPlan || '',
+    subject: queryData.subject,
+    type: queryData.type,
+    message: queryData.message,
+    status: 'open',
+    created_at: new Date().toISOString()
+  };
+
   try {
-    const { error } = await supabase.from('queries').insert([{
-      student_name: queryData.studentName,
-      student_email: queryData.studentEmail || '',
-      student_plan: queryData.studentPlan || '',
-      subject: queryData.subject,
-      type: queryData.type,
-      message: queryData.message,
-      status: 'open',
-    }]);
-    return !error;
-  } catch {
-    return false;
+    const local = JSON.parse(localStorage.getItem('th3ory_local_queries') || '[]');
+    local.unshift(payload);
+    localStorage.setItem('th3ory_local_queries', JSON.stringify(local));
+  } catch {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.from('queries').insert([{
+        student_name: queryData.studentName,
+        student_email: queryData.studentEmail || '',
+        student_plan: queryData.studentPlan || '',
+        subject: queryData.subject,
+        type: queryData.type,
+        message: queryData.message,
+        status: 'open',
+      }]);
+    } catch {}
   }
+  return true;
 }
 
 export async function fetchQueriesFromSupabase() {
-  if (!isSupabaseConfigured || !supabase) return null;
+  let local = [];
+  try {
+    local = (JSON.parse(localStorage.getItem('th3ory_local_queries') || '[]')).map(q => ({
+      id: q.id,
+      studentName: q.student_name || q.studentName,
+      studentEmail: q.student_email || q.studentEmail,
+      studentPlan: q.student_plan || q.studentPlan,
+      subject: q.subject,
+      type: q.type,
+      message: q.message,
+      status: q.status,
+      reply: q.reply,
+      createdAt: q.created_at || q.createdAt,
+      repliedAt: q.replied_at || q.repliedAt,
+    }));
+  } catch {}
+
+  if (!isSupabaseConfigured || !supabase) return local;
+
   try {
     const { data, error } = await supabase.from('queries').select('*').order('created_at', { ascending: false });
-    if (error) return null;
-    return data.map(q => ({
+    if (error || !data) return local;
+    const sbQueries = data.map(q => ({
       id: q.id,
       studentName: q.student_name,
+      studentEmail: q.student_email,
       studentPlan: q.student_plan,
       subject: q.subject,
       type: q.type,
@@ -271,8 +307,14 @@ export async function fetchQueriesFromSupabase() {
       createdAt: q.created_at,
       repliedAt: q.replied_at,
     }));
+
+    const map = new Map();
+    local.forEach(q => map.set(q.id || `${q.studentName}_${q.subject}`, q));
+    sbQueries.forEach(q => map.set(q.id || `${q.studentName}_${q.subject}`, q));
+
+    return Array.from(map.values());
   } catch {
-    return null;
+    return local;
   }
 }
 
@@ -293,49 +335,77 @@ export function subscribeToQueries(onQueryChange) {
 
 // ─── Enterprise Quotes (Dedicated Table: enterprise_quotes) ──────────────────
 export async function saveEnterpriseQuoteToSupabase(quoteData) {
-  if (!isSupabaseConfigured || !supabase) return false;
-  try {
-    const payload = {
-      org_name: quoteData.orgName || '',
-      contact_name: quoteData.contactName || '',
-      email: quoteData.email || '',
-      phone: quoteData.phone || '',
-      audience_type: quoteData.audienceType || 'Students',
-      pupil_count: quoteData.pupilCount || '50-100',
-      notes: quoteData.notes || '',
-      status: 'pending',
-    };
+  const payload = {
+    id: `eq_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+    org_name: quoteData.orgName || '',
+    contact_name: quoteData.contactName || '',
+    email: quoteData.email || '',
+    phone: quoteData.phone || '',
+    audience_type: quoteData.audienceType || 'Students',
+    pupil_count: quoteData.pupilCount || '50-100',
+    notes: quoteData.notes || '',
+    status: 'pending',
+    created_at: new Date().toISOString()
+  };
 
-    // Try dedicated table enterprise_quotes first
-    const { error } = await supabase.from('enterprise_quotes').insert([payload]);
-    if (error) {
-      console.warn('[Supabase] enterprise_quotes table insert fallback to queries table:', error.message);
-      // Fallback to queries table if enterprise_quotes schema is not yet created
-      await supabase.from('queries').insert([{
-        student_name: quoteData.contactName || quoteData.orgName,
-        student_email: quoteData.email,
-        student_plan: 'Enterprise Quote',
-        subject: `Enterprise Quote Request: ${quoteData.orgName}`,
-        type: 'Enterprise Quote',
-        message: `Org: ${quoteData.orgName} | Audience: ${quoteData.audienceType} | Pupils: ${quoteData.pupilCount} | Phone: ${quoteData.phone} | Notes: ${quoteData.notes}`,
-        status: 'open'
+  try {
+    const local = JSON.parse(localStorage.getItem('th3ory_local_quotes') || '[]');
+    local.unshift(payload);
+    localStorage.setItem('th3ory_local_quotes', JSON.stringify(local));
+    window.dispatchEvent(new CustomEvent('th3ory_quote_change', { detail: payload }));
+  } catch {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { error } = await supabase.from('enterprise_quotes').insert([{
+        org_name: payload.org_name,
+        contact_name: payload.contact_name,
+        email: payload.email,
+        phone: payload.phone,
+        audience_type: payload.audience_type,
+        pupil_count: payload.pupil_count,
+        notes: payload.notes,
+        status: payload.status
       }]);
+
+      if (error) {
+        console.warn('[Supabase] enterprise_quotes table insert fallback to queries table:', error.message);
+        await supabase.from('queries').insert([{
+          student_name: quoteData.contactName || quoteData.orgName,
+          student_email: quoteData.email,
+          student_plan: 'Enterprise Quote',
+          subject: `Enterprise Quote Request: ${quoteData.orgName}`,
+          type: 'Enterprise Quote',
+          message: `Org: ${quoteData.orgName} | Audience: ${quoteData.audienceType} | Pupils: ${quoteData.pupilCount} | Phone: ${quoteData.phone} | Notes: ${quoteData.notes}`,
+          status: 'open'
+        }]);
+      }
+    } catch (err) {
+      console.error('[Supabase] Exception in saveEnterpriseQuoteToSupabase:', err);
     }
-    return true;
-  } catch (err) {
-    console.error('[Supabase] Exception in saveEnterpriseQuoteToSupabase:', err);
-    return false;
   }
+  return true;
 }
 
 export async function fetchEnterpriseQuotesFromSupabase() {
-  if (!isSupabaseConfigured || !supabase) return null;
+  let local = [];
+  try {
+    local = JSON.parse(localStorage.getItem('th3ory_local_quotes') || '[]');
+  } catch {}
+
+  if (!isSupabaseConfigured || !supabase) return local;
+
   try {
     const { data, error } = await supabase.from('enterprise_quotes').select('*').order('created_at', { ascending: false });
-    if (error) return null;
-    return data;
+    if (error || !data) return local;
+
+    const map = new Map();
+    local.forEach(item => map.set(item.id || `${item.email}_${item.org_name}`, item));
+    data.forEach(item => map.set(item.id || `${item.email}_${item.org_name}`, item));
+
+    return Array.from(map.values());
   } catch {
-    return null;
+    return local;
   }
 }
 
@@ -356,81 +426,121 @@ export function subscribeToEnterpriseQuotes(onQuoteChange) {
 
 // ─── Contact Us Form Inquiries (Dedicated Table: contact_inquiries) ───────────
 export async function saveContactInquiryToSupabase(contactData) {
-  if (!isSupabaseConfigured || !supabase) return false;
-  try {
-    const payload = {
-      name: contactData.name || '',
-      email: contactData.email || '',
-      subject: contactData.subject || 'General Inquiry',
-      message: contactData.message || '',
-      status: 'new',
-    };
+  const payload = {
+    id: `ci_${Date.now()}`,
+    name: contactData.name || '',
+    email: contactData.email || '',
+    subject: contactData.subject || 'General Inquiry',
+    message: contactData.message || '',
+    status: 'new',
+    created_at: new Date().toISOString()
+  };
 
-    // Try dedicated table contact_inquiries first
-    const { error } = await supabase.from('contact_inquiries').insert([payload]);
-    if (error) {
-      console.warn('[Supabase] contact_inquiries table insert fallback to queries table:', error.message);
-      // Fallback to queries table if contact_inquiries schema is not yet created
-      await supabase.from('queries').insert([{
-        student_name: contactData.name,
-        student_email: contactData.email,
-        student_plan: 'Public Visitor',
-        subject: `Contact Form: ${contactData.subject}`,
-        type: contactData.subject,
-        message: contactData.message,
-        status: 'open'
+  try {
+    const local = JSON.parse(localStorage.getItem('th3ory_local_inquiries') || '[]');
+    local.unshift(payload);
+    localStorage.setItem('th3ory_local_inquiries', JSON.stringify(local));
+  } catch {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { error } = await supabase.from('contact_inquiries').insert([{
+        name: payload.name,
+        email: payload.email,
+        subject: payload.subject,
+        message: payload.message,
+        status: payload.status
       }]);
+
+      if (error) {
+        console.warn('[Supabase] contact_inquiries table insert fallback to queries table:', error.message);
+        await supabase.from('queries').insert([{
+          student_name: contactData.name,
+          student_email: contactData.email,
+          student_plan: 'Public Visitor',
+          subject: `Contact Form: ${contactData.subject}`,
+          type: contactData.subject,
+          message: contactData.message,
+          status: 'open'
+        }]);
+      }
+    } catch (err) {
+      console.error('[Supabase] Exception in saveContactInquiryToSupabase:', err);
     }
-    return true;
-  } catch (err) {
-    console.error('[Supabase] Exception in saveContactInquiryToSupabase:', err);
-    return false;
   }
+  return true;
 }
 
 export async function updateQueryStatusInSupabase(queryId, status, replyText = '') {
-  if (!isSupabaseConfigured || !supabase) return false;
   try {
-    const payload = { status, updated_at: new Date().toISOString() };
-    if (replyText) {
-      payload.reply = replyText;
-      payload.replied_at = new Date().toISOString();
-    }
-    const { error } = await supabase.from('queries').update(payload).eq('id', queryId);
-    return !error;
-  } catch {
-    return false;
+    const local = JSON.parse(localStorage.getItem('th3ory_local_queries') || '[]');
+    const updatedLocal = local.map(q => q.id === queryId ? { ...q, status, reply: replyText || q.reply } : q);
+    localStorage.setItem('th3ory_local_queries', JSON.stringify(updatedLocal));
+  } catch {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const payload = { status, updated_at: new Date().toISOString() };
+      if (replyText) {
+        payload.reply = replyText;
+        payload.replied_at = new Date().toISOString();
+      }
+      await supabase.from('queries').update(payload).eq('id', queryId);
+    } catch {}
   }
+  return true;
 }
 
 export async function updateEnterpriseQuoteStatusInSupabase(quoteId, status) {
-  if (!isSupabaseConfigured || !supabase) return false;
   try {
-    const { error } = await supabase.from('enterprise_quotes').update({ status, updated_at: new Date().toISOString() }).eq('id', quoteId);
-    return !error;
-  } catch {
-    return false;
+    const local = JSON.parse(localStorage.getItem('th3ory_local_quotes') || '[]');
+    const updatedLocal = local.map(q => q.id === quoteId ? { ...q, status } : q);
+    localStorage.setItem('th3ory_local_quotes', JSON.stringify(updatedLocal));
+    window.dispatchEvent(new CustomEvent('th3ory_quote_change', { detail: { quoteId, status } }));
+  } catch {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.from('enterprise_quotes').update({ status, updated_at: new Date().toISOString() }).eq('id', quoteId);
+    } catch {}
   }
+  return true;
 }
 
 export async function updateContactInquiryStatusInSupabase(inquiryId, status) {
-  if (!isSupabaseConfigured || !supabase) return false;
   try {
-    const { error } = await supabase.from('contact_inquiries').update({ status, updated_at: new Date().toISOString() }).eq('id', inquiryId);
-    return !error;
-  } catch {
-    return false;
+    const local = JSON.parse(localStorage.getItem('th3ory_local_inquiries') || '[]');
+    const updatedLocal = local.map(i => i.id === inquiryId ? { ...i, status } : i);
+    localStorage.setItem('th3ory_local_inquiries', JSON.stringify(updatedLocal));
+  } catch {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.from('contact_inquiries').update({ status, updated_at: new Date().toISOString() }).eq('id', inquiryId);
+    } catch {}
   }
+  return true;
 }
 
 export async function fetchContactInquiriesFromSupabase() {
-  if (!isSupabaseConfigured || !supabase) return null;
+  let local = [];
+  try {
+    local = JSON.parse(localStorage.getItem('th3ory_local_inquiries') || '[]');
+  } catch {}
+
+  if (!isSupabaseConfigured || !supabase) return local;
+
   try {
     const { data, error } = await supabase.from('contact_inquiries').select('*').order('created_at', { ascending: false });
-    if (error) return null;
-    return data;
+    if (error || !data) return local;
+
+    const map = new Map();
+    local.forEach(item => map.set(item.id || `${item.email}_${item.subject}`, item));
+    data.forEach(item => map.set(item.id || `${item.email}_${item.subject}`, item));
+
+    return Array.from(map.values());
   } catch {
-    return null;
+    return local;
   }
 }
 
