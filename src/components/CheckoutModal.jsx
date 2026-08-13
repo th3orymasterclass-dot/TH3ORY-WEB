@@ -459,150 +459,33 @@ export default function CheckoutModal({
                 <span className="text-xs text-slate-400">Total Due: <strong className="text-amber-400 text-sm font-bold">${grandTotalUSD} / ₹{grandTotalINR.toLocaleString('en-IN')}</strong></span>
               </div>
 
-              {/* Payment Method Selector Tabs */}
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Select Payment Gateway</h4>
-                <div className="grid grid-cols-3 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('razorpay')}
-                    className={`p-3 rounded-2xl border text-xs font-semibold flex flex-col items-center gap-1.5 transition-all ${
-                      paymentMethod === 'razorpay' ? 'bg-amber-500/15 border-amber-500 text-amber-300 shadow-lg' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
-                    }`}
-                  >
-                    <Sparkles className="w-5 h-5 text-amber-400" />
-                    <span className="font-bold text-white">Razorpay Live</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('card')}
-                    className={`p-3 rounded-2xl border text-xs font-semibold flex flex-col items-center gap-1.5 transition-all ${
-                      paymentMethod === 'card' ? 'bg-indigo-950/60 border-indigo-500 text-white shadow-lg' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
-                    }`}
-                  >
-                    <CreditCard className="w-5 h-5 text-indigo-400" />
-                    <span>Credit / Debit Card</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('upi')}
-                    className={`p-3 rounded-2xl border text-xs font-semibold flex flex-col items-center gap-1.5 transition-all ${
-                      paymentMethod === 'upi' ? 'bg-indigo-950/60 border-indigo-500 text-white shadow-lg' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
-                    }`}
-                  >
-                    <QrCode className="w-5 h-5 text-emerald-400" />
-                    <span>UPI / Instant QR</span>
-                  </button>
+              {/* RAZORPAY LIVE GATEWAY PANEL */}
+              <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5 font-brand">
+                    <ShieldCheck className="w-4 h-4 text-amber-400" /> Razorpay SSL 256-Bit Gateway
+                  </span>
+                  <span className="text-[10px] font-mono font-bold bg-slate-950 px-2.5 py-1 rounded-full text-amber-300 border border-amber-500/30">
+                    LIVE GATEWAY ACTIVE
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Clicking <strong className="text-white">Authorize & Pay Securely</strong> will launch the secure <strong>Razorpay Checkout</strong> popup supporting <strong>UPI (GPay, PhonePe, Paytm), Credit/Debit Cards, NetBanking & Wallets</strong>.
+                </p>
+                <div className="flex flex-wrap gap-2 text-[10px] text-slate-400 font-mono pt-1">
+                  {['UPI', 'GPay', 'PhonePe', 'Paytm', 'Visa', 'Mastercard', 'NetBanking'].map(b => (
+                    <span key={b} className="px-2 py-0.5 bg-slate-900 border border-slate-800 rounded-md text-slate-300">{b}</span>
+                  ))}
                 </div>
               </div>
-
-              {/* RAZORPAY LIVE BANNER */}
-              {paymentMethod === 'razorpay' && (
-                <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <ShieldCheck className="w-4 h-4 text-amber-400" /> Official Razorpay Live Gateway
-                    </span>
-                    <span className="text-[10px] font-mono font-bold bg-slate-950 px-2 py-0.5 rounded text-amber-300 border border-amber-500/20">
-                      LIVE PRODUCTION
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-300 leading-relaxed">
-                    Clicking <strong className="text-white">Pay & Complete Enrollment</strong> will open the secure <strong>Razorpay Checkout</strong> popup supporting <strong>UPI (GPay, PhonePe, Paytm), All Credit/Debit Cards, Netbanking & EMI</strong>.
-                  </p>
-                </div>
-              )}
-
-              {/* CARD PAYMENT INPUTS */}
-              {paymentMethod === 'card' && (
-                <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-4">
-                  <div className="flex items-center justify-between text-xs text-slate-400">
-                    <span>Powered by Stripe SSL</span>
-                    <div className="flex gap-2 text-[10px] font-bold text-slate-500">
-                      <span>VISA</span> • <span>MC</span> • <span>AMEX</span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">Card Number</label>
-                    <input
-                      type="text"
-                      value={formData.cardNumber}
-                      onChange={(e) => setFormData({ ...formData, cardNumber: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm font-mono text-slate-100 focus:outline-none focus:border-indigo-500"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-3">
-                    <div>
-                      <label className="block text-xs font-medium text-slate-300 mb-1">Expires</label>
-                      <input
-                        type="text"
-                        value={formData.cardExpiry}
-                        onChange={(e) => setFormData({ ...formData, cardExpiry: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-slate-100"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-slate-300 mb-1">CVC</label>
-                      <input
-                        type="text"
-                        value={formData.cardCvc}
-                        onChange={(e) => setFormData({ ...formData, cardCvc: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-slate-100"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-slate-300 mb-1">Zip Code</label>
-                      <input
-                        type="text"
-                        value={formData.cardZip}
-                        onChange={(e) => setFormData({ ...formData, cardZip: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-slate-100"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* PAYPAL EXPRESS */}
-              {paymentMethod === 'paypal' && (
-                <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 text-center space-y-3">
-                  <div className="w-12 h-12 mx-auto rounded-full bg-sky-500/20 text-sky-400 flex items-center justify-center font-bold text-xl">
-                    P
-                  </div>
-                  <h4 className="text-sm font-bold text-white">PayPal One-Touch Checkout</h4>
-                  <p className="text-xs text-slate-400">You will be securely redirected to approve payment on PayPal.</p>
-                </div>
-              )}
-
-              {/* UPI PAY */}
-              {paymentMethod === 'upi' && (
-                <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 text-center space-y-4">
-                  <div className="w-24 h-24 mx-auto p-2 bg-white rounded-xl shadow-lg flex items-center justify-center">
-                    <QrCode className="w-20 h-20 text-slate-900" />
-                  </div>
-                  <div className="text-xs text-slate-300 font-mono">
-                    Scan with GPay, PhonePe, Paytm or enter UPI ID below
-                  </div>
-                  <input
-                    type="text"
-                    value={formData.upiId}
-                    onChange={(e) => setFormData({ ...formData, upiId: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-center text-emerald-400"
-                  />
-                </div>
-              )}
 
               {/* Submit Payment Button */}
               <button
                 type="submit"
-                className="w-full py-4 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 hover:from-indigo-600 hover:to-pink-600 text-white font-bold text-base shadow-xl shadow-indigo-500/30 transition-all flex items-center justify-center gap-2"
+                className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-extrabold text-base shadow-xl shadow-amber-500/20 transition-all flex items-center justify-center gap-2 uppercase tracking-wider"
               >
                 <Lock className="w-4 h-4" />
-                <span>Authorize & Pay ${grandTotal}</span>
+                <span>Authorize & Pay ${grandTotalUSD} / ₹{grandTotalINR.toLocaleString('en-IN')} via Razorpay</span>
               </button>
             </form>
           )}

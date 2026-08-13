@@ -52,36 +52,12 @@ const STEPS = [
 // ─── Payment gateways config ───────────────────────────────────────────────────
 const GATEWAYS = [
   {
-    id: 'stripe',
-    name: 'Credit / Debit Card',
-    desc: 'Visa, Mastercard, Amex — secured by Stripe',
-    icon: '💳',
-    badge: 'Most Popular',
-    badgeColor: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  },
-  {
     id: 'razorpay',
-    name: 'Razorpay',
-    desc: 'UPI, NetBanking, Wallets, Cards (India)',
+    name: 'Razorpay SSL Gateway',
+    desc: 'Pay securely via UPI (GPay, PhonePe, Paytm), Credit/Debit Cards, NetBanking & Wallets',
     icon: '⚡',
-    badge: 'Recommended for India',
-    badgeColor: 'bg-blue-600/20 text-blue-300 border-blue-600/30',
-  },
-  {
-    id: 'paypal',
-    name: 'PayPal',
-    desc: 'Pay using your PayPal account or guest checkout',
-    icon: '🅿️',
-    badge: null,
-    badgeColor: '',
-  },
-  {
-    id: 'upi',
-    name: 'UPI / Bank Transfer',
-    desc: 'Google Pay, PhonePe, Paytm, BHIM',
-    icon: '📱',
-    badge: 'Instant',
-    badgeColor: 'bg-green-500/20 text-green-400 border-green-500/30',
+    badge: 'Official Gateway',
+    badgeColor: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
   },
 ];
 
@@ -804,7 +780,7 @@ export default function EnrollmentPage({ initialPlan, onBack }) {
     plan: initialPlan || null,
     isMonthly: false,
     coupon: '',
-    gateway: 'stripe',
+    gateway: 'razorpay',
     receipt: null,
   });
 
