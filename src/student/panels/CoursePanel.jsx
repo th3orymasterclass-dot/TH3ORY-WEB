@@ -21,25 +21,25 @@ function VideoModal({ url, title, onClose }) {
   const gdrive = parseGoogleDriveUrl(url);
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 selection:bg-none select-none" onClick={onClose} onContextMenu={e => e.preventDefault()}>
       <div className="w-full max-w-4xl" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2 min-w-0">
             <h3 className="text-white font-bold text-sm truncate flex-1">{title}</h3>
             {gdrive.isGDrive && (
               <span className="text-[10px] bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded-full flex items-center gap-1 font-bold shrink-0">
-                <HardDrive className="w-3 h-3" /> GDrive Stream
+                <HardDrive className="w-3 h-3" /> Protected GDrive Stream
               </span>
             )}
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-white ml-3"><X className="w-5 h-5"/></button>
         </div>
-        <div className="aspect-video bg-slate-950 rounded-2xl overflow-hidden border border-slate-800">
+        <div className="aspect-video bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 relative" onContextMenu={e => e.preventDefault()}>
           {embedUrl ? (
             <iframe
               src={embedUrl}
               title={title}
-              className="w-full h-full border-0"
+              className="w-full h-full border-0 pointer-events-auto"
               allowFullScreen
               allow="autoplay; fullscreen"
             />
@@ -51,14 +51,12 @@ function VideoModal({ url, title, onClose }) {
             </div>
           )}
         </div>
-        {gdrive.isGDrive && (
-          <div className="mt-2 flex items-center justify-between text-xs text-slate-400">
-            <span className="flex items-center gap-1"><HardDrive className="w-3.5 h-3.5 text-blue-400"/> Google Drive Stream Active</span>
-            <a href={gdrive.downloadUrl} target="_blank" rel="noreferrer" className="text-amber-400 hover:underline flex items-center gap-1">
-              <Download className="w-3.5 h-3.5"/> Direct Download Stream
-            </a>
-          </div>
-        )}
+        <div className="mt-2 flex items-center justify-between text-xs text-slate-400">
+          <span className="flex items-center gap-1 text-slate-400"><HardDrive className="w-3.5 h-3.5 text-blue-400"/> Google Drive Stream Active</span>
+          <span className="text-amber-400/90 font-medium flex items-center gap-1 bg-amber-950/40 border border-amber-500/20 px-2.5 py-0.5 rounded-full text-[11px]">
+            🔒 Stream Only • Direct Downloads Disabled
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -67,29 +65,25 @@ function VideoModal({ url, title, onClose }) {
 function ResourceCard({ item }) {
   const typeColors = { video:'text-blue-400', pdf:'text-red-400', worksheet:'text-green-400', quiz:'text-purple-400', audio:'text-pink-400', resource:'text-amber-400', image:'text-cyan-400', archive:'text-slate-400' };
   const gdrive = parseGoogleDriveUrl(item.url);
+  const streamUrl = getEmbeddableMediaUrl(item.url);
 
   return (
-    <div className="flex items-center gap-3 px-4 py-3 bg-slate-950/60 rounded-xl hover:bg-slate-950 border border-slate-800 hover:border-slate-700 transition-all group">
+    <div className="flex items-center gap-3 px-4 py-3 bg-slate-950/60 rounded-xl hover:bg-slate-950 border border-slate-800 hover:border-slate-700 transition-all group select-none">
       <FileText className={`w-4 h-4 shrink-0 ${typeColors[item.type] || 'text-slate-400'}`}/>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <p className="text-white text-sm font-medium truncate">{item.title}</p>
           {gdrive.isGDrive && (
             <span className="text-[10px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30 px-1.5 py-0.5 rounded flex items-center gap-1 shrink-0">
-              <HardDrive className="w-2.5 h-2.5" /> GDrive
+              <HardDrive className="w-2.5 h-2.5" /> GDrive Stream
             </span>
           )}
         </div>
         {item.duration && <p className="text-slate-500 text-xs">{item.duration}</p>}
       </div>
       <div className="flex items-center gap-2">
-        {gdrive.isGDrive ? (
-          <a href={gdrive.downloadUrl} target="_blank" rel="noreferrer" className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 font-medium bg-blue-950/40 border border-blue-500/30 px-2.5 py-1 rounded-lg">
-            <Download className="w-3.5 h-3.5"/> Download
-          </a>
-        ) : null}
-        <a href={item.url} target="_blank" rel="noreferrer" className="p-1.5 text-slate-500 hover:text-white transition-colors">
-          <ExternalLink className="w-4 h-4"/>
+        <a href={streamUrl} target="_blank" rel="noreferrer" className="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1 font-medium bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded-lg">
+          <ExternalLink className="w-3.5 h-3.5"/> Stream Resource
         </a>
       </div>
     </div>

@@ -85,8 +85,8 @@ function ContentCard({ item, onEdit, onDelete, onTogglePublish, viewMode }) {
             <AccessIcon className="w-3 h-3" />{accessConf.label}
           </span>
           {isDrive && (
-            <a href={gdrive.downloadUrl || item.url} target="_blank" rel="noreferrer" title="Download from Google Drive" className="p-1.5 rounded-lg text-blue-400 hover:bg-blue-950/40 transition-colors">
-              <Download className="w-4 h-4" />
+            <a href={gdrive.embedUrl || item.url} target="_blank" rel="noreferrer" title="Stream View from Google Drive" className="p-1.5 rounded-lg text-blue-400 hover:bg-blue-950/40 transition-colors">
+              <ExternalLink className="w-4 h-4" />
             </a>
           )}
           <button onClick={() => onTogglePublish(item.id)} className={`p-1.5 rounded-lg transition-colors ${item.published ? 'text-green-400 hover:bg-green-950/30' : 'text-slate-500 hover:bg-slate-800'}`}>

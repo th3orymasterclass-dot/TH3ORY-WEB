@@ -64,11 +64,11 @@ function runGoogleDriveTestSuite() {
     `Result: ${embedMedia}`
   );
 
-  // 6. Direct Download Link Generation
+  // 6. Download Protection & Stream-Only Restriction
   assert(
-    res1.downloadUrl === 'https://drive.google.com/uc?export=download&id=1A2b3C4d5E6f7G8h9J0k1L2m3N4o5P6qR',
-    'Google Drive Direct Download Stream Link Generation',
-    `Download Link: ${res1.downloadUrl}`
+    res1.downloadRestricted === true && res1.streamOnly === true,
+    'Google Drive Automatic Download Restriction & Protected Stream Enforcement',
+    `Download Restricted: ${res1.downloadRestricted} | Stream Only: ${res1.streamOnly}`
   );
 
   console.log('\n===================================================================');

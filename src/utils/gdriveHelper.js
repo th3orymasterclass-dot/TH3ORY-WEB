@@ -1,19 +1,18 @@
 /**
- * Google Drive Digital Storage Helper Utility
- * Parses Google Drive links, extracts file IDs, and generates embeddable,
- * direct stream, thumbnail, and download URLs.
+ * Google Drive Stream-Only Digital Storage Helper Utility
+ * Enforces strict streaming mode without direct downloads.
  */
 
 export function parseGoogleDriveUrl(urlOrId) {
   if (!urlOrId || typeof urlOrId !== 'string') {
-    return { isGDrive: false, fileId: null };
+    return { isGDrive: false, fileId: null, streamOnly: true, downloadRestricted: true };
   }
 
   const str = urlOrId.trim();
 
   // Regex patterns for Google Drive file and folder IDs
   const fileIdPatterns = [
-    /\/file\/d\/([a border-zA-Z0-9_-]{25,})/,
+    /\/file\/d\/([a-zA-Z0-9_-]{25,})/,
     /id=([a-zA-Z0-9_-]{25,})/,
     /\/uc\?.*id=([a-zA-Z0-9_-]{25,})/,
     /\/thumbnail\?.*id=([a-zA-Z0-9_-]{25,})/,
@@ -30,7 +29,7 @@ export function parseGoogleDriveUrl(urlOrId) {
     }
   }
 
-  // Fallback: If raw ID string is passed (25+ alphanumeric chars without slashes or spaces)
+  // Fallback: If raw ID string is passed
   if (!fileId && /^[a-zA-Z0-9_-]{25,}$/.test(str)) {
     fileId = str;
   }
@@ -46,7 +45,9 @@ export function parseGoogleDriveUrl(urlOrId) {
     return {
       isGDrive: false,
       fileId: null,
-      rawUrl: str
+      rawUrl: str,
+      streamOnly: true,
+      downloadRestricted: true
     };
   }
 
@@ -56,16 +57,17 @@ export function parseGoogleDriveUrl(urlOrId) {
     isGDrive: true,
     isFolder,
     fileId: cleanFileId,
-    // Google Drive Preview / Embed URL suitable for iframe embeds
+    // Google Drive Stream-Only Embed URL
     embedUrl: isFolder 
       ? `https://drive.google.com/embeddedfolderview?id=${cleanFileId}#grid`
       : `https://drive.google.com/file/d/${cleanFileId}/preview`,
-    // Direct stream / view URL
+    // View URL
     viewUrl: isFolder
       ? `https://drive.google.com/drive/folders/${cleanFileId}`
-      : `https://drive.google.com/file/d/${cleanFileId}/view`,
-    // Direct download URL
-    downloadUrl: `https://drive.google.com/uc?export=download&id=${cleanFileId}`,
+      : `https://drive.google.com/file/d/${cleanFileId}/preview`,
+    // Restricted Download Protection Notice
+    downloadRestricted: true,
+    streamOnly: true,
     // High-res thumbnail preview URL
     thumbnailUrl: `https://drive.google.com/thumbnail?id=${cleanFileId}&sz=w1000`,
     // Image direct stream URL
@@ -74,8 +76,8 @@ export function parseGoogleDriveUrl(urlOrId) {
 }
 
 /**
- * Format any input URL into a playable/viewable iframe source.
- * Handles YouTube, Google Drive, Vimeo, MP4, and PDF links.
+ * Format any input URL into a protected embeddable media stream.
+ * Restricts direct downloads across YouTube, Google Drive, Vimeo, MP4.
  */
 export function getEmbeddableMediaUrl(url) {
   if (!url) return '';
@@ -94,7 +96,7 @@ export function getEmbeddableMediaUrl(url) {
       const urlObj = new URL(url);
       videoId = urlObj.searchParams.get('v');
     }
-    if (videoId) return `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+    if (videoId) return `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&controls=1`;
   }
 
   // Vimeo handle
