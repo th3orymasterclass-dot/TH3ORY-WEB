@@ -30,7 +30,7 @@ function VideoModal({ url, title, onClose }) {
   const gdrive = parseGoogleDriveUrl(url);
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 selection:bg-none select-none" onClick={onClose} onContextMenu={e => e.preventDefault()}>
+    <div className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-3 sm:p-5" onClick={onClose}>
       <div className="w-full max-w-4xl max-h-[95vh] flex flex-col" onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
@@ -43,7 +43,7 @@ function VideoModal({ url, title, onClose }) {
             )}
           </div>
           <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
-            <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold sm:hidden">
+            <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
               🔒 Stream-Only Mode
             </span>
             <button onClick={onClose} className="p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white transition-colors shrink-0">
@@ -53,15 +53,7 @@ function VideoModal({ url, title, onClose }) {
         </div>
 
         {/* Video Player Box */}
-        <div className="aspect-video w-full bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 relative selection:bg-none select-none shadow-2xl" onContextMenu={e => e.preventDefault()}>
-          {/* Top-Right Shield Overlay: Only covers the tiny external pop-out icon without blocking video controls */}
-          <div
-            className="absolute top-0 right-0 w-10 h-10 sm:w-12 sm:h-12 z-30 bg-transparent cursor-default pointer-events-auto select-none"
-            onClick={e => { e.preventDefault(); e.stopPropagation(); }}
-            onContextMenu={e => e.preventDefault()}
-            title="External tab exit disabled for security"
-          />
-
+        <div className="aspect-video w-full bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 relative shadow-2xl">
           {embedUrl ? (
             <iframe
               src={embedUrl}
@@ -85,7 +77,7 @@ function VideoModal({ url, title, onClose }) {
             <HardDrive className="w-3.5 h-3.5 text-blue-400 shrink-0"/> Protected In-App Stream Player
           </span>
           <span className="text-amber-400 font-bold flex items-center gap-1.5 bg-amber-950/40 border border-amber-500/30 px-2.5 py-1 rounded-full text-[11px]">
-            🔒 Stream-Only Mode • Pop-outs &amp; Downloads Disabled
+            🔒 Stream-Only Mode • All Video Controls Enabled
           </span>
         </div>
       </div>
@@ -339,17 +331,46 @@ export default function CoursePanel({ profile, initialLevelId, initialLessonId }
                     </div>
                   );
                 }
+                const embedUrl = getEmbeddableMediaUrl(videoUrl);
                 return (
-                  <button
-                    onClick={() => setVideoModal({ url: videoUrl, title: activeLesson.lesson.title })}
-                    className="w-full aspect-video max-h-56 bg-slate-950 rounded-xl flex flex-col items-center justify-center border border-slate-800 hover:border-amber-500/30 group transition-all relative overflow-hidden"
-                  >
-                    <div className="w-16 h-16 rounded-full bg-amber-500/20 border-2 border-amber-500/40 flex items-center justify-center group-hover:bg-amber-500/30 transition-all mb-3 z-10">
-                      <Play className="w-7 h-7 text-amber-400 fill-amber-400 ml-1"/>
+                  <div className="space-y-3">
+                    <div className="aspect-video w-full bg-slate-950 rounded-xl overflow-hidden border border-slate-800 shadow-xl relative">
+                      {embedUrl ? (
+                        <iframe
+                          src={embedUrl}
+                          title={activeLesson.lesson.title}
+                          className="w-full h-full border-0 pointer-events-auto"
+                          allowFullScreen
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 gap-2.5 p-4 text-center">
+                          <Play className="w-10 h-10 opacity-30"/>
+                          <p className="text-sm font-medium text-slate-300">No video stream assigned to this lesson yet.</p>
+                          <p className="text-xs text-slate-500">Admin can assign video URLs in the Content Library.</p>
+                        </div>
+                      )}
                     </div>
-                    <p className="text-white font-bold text-sm z-10">Watch Lesson Video</p>
-                    <p className="text-slate-500 text-xs mt-1 z-10">{activeLesson.lesson.duration}</p>
-                  </button>
+
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 px-1 text-xs">
+                      <div className="flex items-center gap-2 text-slate-400">
+                        <span className="flex items-center gap-1.5 text-blue-400 font-bold bg-blue-950/40 border border-blue-500/30 px-2.5 py-1 rounded-full text-[11px]">
+                          <HardDrive className="w-3.5 h-3.5 text-blue-400"/> In-App Stream Player
+                        </span>
+                        <span className="text-emerald-400 font-bold bg-emerald-950/40 border border-emerald-500/30 px-2 py-0.5 rounded-full text-[11px]">
+                          🔒 All Video Controls Enabled
+                        </span>
+                      </div>
+                      {embedUrl && (
+                        <button
+                          onClick={() => setVideoModal({ url: videoUrl, title: activeLesson.lesson.title })}
+                          className="text-xs text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-lg transition-all self-start sm:self-auto"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5"/> Expand Modal View
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 );
               })()}
             </div>

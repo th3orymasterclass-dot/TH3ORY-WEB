@@ -33,14 +33,7 @@ export default function VideoModal({ isOpen, onClose, onEnrollClick }) {
         </div>
 
         {/* Video Player Box */}
-        <div className="relative aspect-video bg-black flex items-center justify-center select-none" onContextMenu={e => e.preventDefault()}>
-          {/* Top-Right Shield Overlay: Only covers the tiny external pop-out icon without blocking video controls */}
-          <div
-            className="absolute top-0 right-0 w-10 h-10 sm:w-12 sm:h-12 z-30 bg-transparent cursor-default pointer-events-auto select-none"
-            onClick={e => { e.preventDefault(); e.stopPropagation(); }}
-            onContextMenu={e => e.preventDefault()}
-            title="External tab exit disabled for security"
-          />
+        <div className="relative aspect-video bg-black flex items-center justify-center">
           <iframe
             src={embedUrl}
             title={videoPreviewData.title}
