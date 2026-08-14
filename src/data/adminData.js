@@ -69,6 +69,7 @@ export function resetAllData() {
 import { useState, useEffect } from 'react';
 import {
   fetchSiteSettingsFromSupabase,
+  saveSiteSettingsToSupabase,
   subscribeToSiteSettings,
   fetchReviewsFromSupabase,
   subscribeToReviews,
