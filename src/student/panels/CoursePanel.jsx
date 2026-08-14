@@ -54,9 +54,9 @@ function VideoModal({ url, title, onClose }) {
 
         {/* Video Player Box */}
         <div className="aspect-video w-full bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 relative selection:bg-none select-none shadow-2xl" onContextMenu={e => e.preventDefault()}>
-          {/* Top-Right Shield Overlay: Prevents Google Drive pop-out & external tab exits on all devices */}
+          {/* Top-Right Shield Overlay: Only covers the tiny external pop-out icon without blocking video controls */}
           <div
-            className="absolute top-0 right-0 w-36 h-16 sm:w-28 sm:h-16 z-30 bg-transparent cursor-default pointer-events-auto touch-none select-none"
+            className="absolute top-0 right-0 w-10 h-10 sm:w-12 sm:h-12 z-30 bg-transparent cursor-default pointer-events-auto select-none"
             onClick={e => { e.preventDefault(); e.stopPropagation(); }}
             onContextMenu={e => e.preventDefault()}
             title="External tab exit disabled for security"
@@ -68,8 +68,7 @@ function VideoModal({ url, title, onClose }) {
               title={title}
               className="w-full h-full border-0 pointer-events-auto"
               allowFullScreen
-              allow="autoplay; fullscreen"
-              sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
             />
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 gap-3 p-4 text-center">
