@@ -29,6 +29,7 @@ export default function Navbar({ onOpenCheckout, onOpenDashboard, isEnrolled }) 
           {/* Desktop Nav Links */}
           <nav className="hidden md:flex items-center gap-6 text-xs font-bold uppercase tracking-wider text-slate-300">
             <a href="#pillars" className="hover:text-amber-400 transition-colors">5 Pillars</a>
+            <a href="#instructor" className="hover:text-amber-400 transition-colors">Instructor</a>
             <a href="#roadmap" className="hover:text-amber-400 transition-colors">30-Day Roadmap</a>
             <a href="#structure" className="hover:text-amber-400 transition-colors">Structure</a>
             <a href="#outcomes" className="hover:text-amber-400 transition-colors">Outcomes & Bonuses</a>
@@ -90,6 +91,7 @@ export default function Navbar({ onOpenCheckout, onOpenDashboard, isEnrolled }) 
         {mobileMenuOpen && (
           <div className="md:hidden mt-4 pt-4 border-t border-slate-800 glass-card rounded-2xl p-5 flex flex-col gap-4 text-slate-200 text-sm font-bold uppercase tracking-wider animate-fade-in">
             <a href="#pillars" onClick={() => setMobileMenuOpen(false)} className="hover:text-amber-400">5 Pillars</a>
+            <a href="#instructor" onClick={() => setMobileMenuOpen(false)} className="hover:text-amber-400">Instructor</a>
             <a href="#roadmap" onClick={() => setMobileMenuOpen(false)} className="hover:text-amber-400">30-Day Roadmap</a>
             <a href="#structure" onClick={() => setMobileMenuOpen(false)} className="hover:text-amber-400">Structure</a>
             <a href="#outcomes" onClick={() => setMobileMenuOpen(false)} className="hover:text-amber-400">Outcomes & Bonuses</a>

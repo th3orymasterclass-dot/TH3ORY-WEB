@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
 import PillarsSection from './components/PillarsSection';
+import InstructorSection from './components/InstructorSection';
 import VideoModal from './components/VideoModal';
 import CurriculumExplorer from './components/CurriculumExplorer';
 import OutcomesSection from './components/OutcomesSection';
@@ -96,6 +97,10 @@ export default function App() {
         />
 
         <PillarsSection />
+
+        <InstructorSection
+          onOpenCheckout={() => handleOpenCheckoutWithPlan(mainPlan, false)}
+        />
 
         <CurriculumExplorer
           onOpenVideo={() => setIsVideoModalOpen(true)}

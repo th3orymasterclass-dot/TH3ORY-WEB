@@ -83,11 +83,28 @@ export const courseDetails = {
     { name: "COMMUNITY ACCESS", description: "Private network of high-achievers, entrepreneurs & leaders.", icon: "Users" }
   ],
   instructor: {
-    name: "TH3ORY Founders Council",
-    role: "Psychology of Influence & Executive Leadership Experts",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80",
-    bio: "Combining behavioral neuroscience, executive communication, and high-performance psychology to decode human attraction, respect, and long-term legacy.",
-    companies: ["Fortune 500 Boardrooms", "Y Combinator Founders", "TED Speakers", "Top Executives"]
+    name: "SRAVAN SUDHAKARAN",
+    title: "Mentalist | Human Behaviour Coach | Hypnotist | Criminologist | LifeSkill Trainer | Author",
+    role: "Mentalist, Human Behaviour Coach, Hypnotist, Criminologist, LifeSkill Trainer, Author",
+    avatar: "/instructor.png",
+    bio: "Sravan Sudhakaran is a renowned Mentalist, Human Behaviour Coach, Hypnotist, Criminologist, LifeSkill Trainer, and Author. With deep expertise in psychological influence, behavioral engineering, and non-verbal communication, Sravan empowers leaders, students, and professionals to master body language, cognitive perception, and elite interpersonal influence.",
+    titles: [
+      "Mentalist",
+      "Human Behaviour Coach",
+      "Hypnotist",
+      "Criminologist",
+      "LifeSkill Trainer",
+      "Author"
+    ],
+    credentials: [
+      "Master Mentalist & Behavioral Profiler",
+      "Certified Human Behaviour Coach",
+      "Clinical Hypnotist & Subconscious Mind Coach",
+      "Criminology & Psychological Investigator",
+      "Empowered 18,450+ Students & Leaders",
+      "Published Author & LifeSkill Master"
+    ],
+    companies: ["Behavioral Research", "Criminology & Profiling", "Executive Coaching", "Mindset Transformation"]
   }
 };
 
