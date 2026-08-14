@@ -813,3 +813,143 @@ export async function deleteCourseContentFromSupabase(id) {
     return false;
   }
 }
+
+// ─── Newsletter Subscribers (Dedicated Table: newsletter_subscribers) ─────────
+export async function saveNewsletterSubscriberToSupabase(email, source = 'website_footer') {
+  if (!email || !email.trim()) return false;
+  const cleanEmail = email.trim().toLowerCase();
+
+  const payload = {
+    id: `sub_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+    email: cleanEmail,
+    status: 'active',
+    source: source,
+    created_at: new Date().toISOString()
+  };
+
+  try {
+    const local = JSON.parse(localStorage.getItem('th3ory_local_newsletter_subs') || '[]');
+    const existing = local.find(s => s.email === cleanEmail);
+    if (!existing) {
+      local.unshift(payload);
+      localStorage.setItem('th3ory_local_newsletter_subs', JSON.stringify(local));
+    }
+  } catch {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { error } = await supabase.from('newsletter_subscribers').upsert([{
+        email: cleanEmail,
+        status: 'active',
+        source: source
+      }], { onConflict: 'email' });
+
+      if (error) {
+        console.warn('[Supabase] newsletter_subscribers table fallback to queries table:', error.message);
+        await supabase.from('queries').insert([{
+          student_name: 'Newsletter Subscriber',
+          student_email: cleanEmail,
+          student_plan: 'Cognitive Dispatch',
+          subject: 'Newsletter Subscription',
+          type: 'Newsletter',
+          message: `Subscribed to TH3ORY Cognitive Insights Newsletter from ${source}`,
+          status: 'open'
+        }]);
+      } else {
+        console.log('[Supabase] Newsletter subscriber saved:', cleanEmail);
+      }
+    } catch (err) {
+      console.error('[Supabase] Exception in saveNewsletterSubscriberToSupabase:', err);
+    }
+  }
+  return true;
+}
+
+export async function fetchNewsletterSubscribersFromSupabase() {
+  let local = [];
+  try {
+    local = JSON.parse(localStorage.getItem('th3ory_local_newsletter_subs') || '[]');
+  } catch {}
+
+  if (!isSupabaseConfigured || !supabase) return local;
+
+  try {
+    const { data, error } = await supabase.from('newsletter_subscribers').select('*').order('created_at', { ascending: false });
+    if (error || !data) {
+      // Fallback check from queries table for Newsletter type
+      const { data: qData } = await supabase.from('queries').select('*').eq('type', 'Newsletter');
+      if (qData && qData.length > 0) {
+        const querySubs = qData.map(q => ({
+          id: q.id,
+          email: q.student_email,
+          status: 'active',
+          source: 'website_footer',
+          created_at: q.created_at
+        }));
+        const map = new Map();
+        local.forEach(s => map.set(s.email, s));
+        querySubs.forEach(s => map.set(s.email, s));
+        return Array.from(map.values());
+      }
+      return local;
+    }
+
+    const map = new Map();
+    local.forEach(item => map.set(item.email, item));
+    data.forEach(item => map.set(item.email, item));
+
+    return Array.from(map.values());
+  } catch {
+    return local;
+  }
+}
+
+export async function updateNewsletterSubscriberStatusInSupabase(idOrEmail, status = 'unsubscribed') {
+  if (!isSupabaseConfigured || !supabase) return false;
+  if (!isAdminAuthenticated()) {
+    console.error('[Access Control Denied] Authorised Admin session required.');
+    return false;
+  }
+  try {
+    const { error } = await supabase
+      .from('newsletter_subscribers')
+      .update({ status })
+      .or(`id.eq.${idOrEmail},email.eq.${idOrEmail}`);
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
+export async function deleteNewsletterSubscriberFromSupabase(idOrEmail) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  if (!isAdminAuthenticated()) {
+    console.error('[Access Control Denied] Authorised Admin session required.');
+    return false;
+  }
+  try {
+    const { error } = await supabase
+      .from('newsletter_subscribers')
+      .delete()
+      .or(`id.eq.${idOrEmail},email.eq.${idOrEmail}`);
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
+export function subscribeToNewsletterSubscribers(onSubscribersChange) {
+  if (!isSupabaseConfigured || !supabase) return () => {};
+  try {
+    const sub = supabase
+      .channel(`newsletter_subscribers_${Date.now()}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'newsletter_subscribers' }, () => {
+        fetchNewsletterSubscribersFromSupabase().then(res => { if (res) onSubscribersChange(res); });
+      })
+      .subscribe();
+    return () => { try { supabase.removeChannel(sub); } catch {} };
+  } catch {
+    return () => {};
+  }
+}
+

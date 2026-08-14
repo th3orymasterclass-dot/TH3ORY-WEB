@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, Send, CheckCircle2, MessageSquare, Sparkles, Phone, MapPin, Globe, ShieldCheck } from 'lucide-react';
-import { saveContactInquiryToSupabase } from '../services/supabaseService';
+import { saveContactInquiryToSupabase, saveNewsletterSubscriberToSupabase } from '../services/supabaseService';
 
 export default function ContactSection() {
   // Contact Form State
@@ -38,13 +38,7 @@ export default function ContactSection() {
     if (!newsletterEmail) return;
 
     setNewsletterLoading(true);
-    await saveQueryToSupabase({
-      subject: 'Newsletter Subscription',
-      type: 'Newsletter',
-      studentName: 'Subscriber',
-      studentEmail: newsletterEmail,
-      message: 'Subscribed to TH3ORY Cognitive Insights Newsletter'
-    });
+    await saveNewsletterSubscriberToSupabase(newsletterEmail, 'website_footer');
     setNewsletterLoading(false);
     setNewsletterSubscribed(true);
     setNewsletterEmail('');

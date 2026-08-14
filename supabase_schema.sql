@@ -122,6 +122,15 @@ CREATE TABLE IF NOT EXISTS public.site_settings (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 9. NEWSLETTER SUBSCRIBERS TABLE (Cognitive Dispatch Newsletter Subscribers)
+CREATE TABLE IF NOT EXISTS public.newsletter_subscribers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email TEXT UNIQUE NOT NULL,
+    status TEXT DEFAULT 'active',
+    source TEXT DEFAULT 'website_footer',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- ==============================================================================
 -- ROW LEVEL SECURITY (RLS) PERMISSIONS
 -- Grant anonymous/public access to insert & read records for seamless web functionality
@@ -135,6 +144,7 @@ ALTER TABLE public.contact_inquiries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.course_contents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.newsletter_subscribers ENABLE ROW LEVEL SECURITY;
 
 -- Allow Public/Anon Read/Write policies for active client operations
 CREATE POLICY "Allow public read/insert on enrollments" ON public.enrollments FOR ALL USING (true) WITH CHECK (true);
@@ -145,6 +155,7 @@ CREATE POLICY "Allow public read/insert on contact_inquiries" ON public.contact_
 CREATE POLICY "Allow public read/insert on reviews" ON public.reviews FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public read/insert on course_contents" ON public.course_contents FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public read/insert on site_settings" ON public.site_settings FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow public read/insert on newsletter_subscribers" ON public.newsletter_subscribers FOR ALL USING (true) WITH CHECK (true);
 
 -- ==============================================================================
 -- SUPABASE REALTIME REPLICATION ENABLEMENT
@@ -160,7 +171,8 @@ BEGIN
       public.contact_inquiries,
       public.reviews,
       public.course_contents,
-      public.site_settings;
+      public.site_settings,
+      public.newsletter_subscribers;
   END IF;
 EXCEPTION WHEN OTHERS THEN
   RAISE NOTICE 'Publication table addition skipped or already present.';

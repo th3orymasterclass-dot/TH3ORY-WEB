@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Type, Flame, BookOpen, Tag,
   Star, HelpCircle, User, Gift, Target, Video,
   LogOut, ChevronRight, Menu, X, ExternalLink, Shield,
-  FolderOpen, Layers, ShoppingBag, MessageSquare, Building2
+  FolderOpen, Layers, ShoppingBag, MessageSquare, Building2, Mail
 } from 'lucide-react';
 import useAdminData from './useAdminData';
 import { isAdminAuthenticated } from '../data/adminData';
@@ -23,6 +23,7 @@ import BonusesPanel        from './panels/BonusesPanel';
 import OutcomesPanel       from './panels/OutcomesPanel';
 import MediaPanel          from './panels/MediaPanel';
 import IntegrationsPanel   from './panels/IntegrationsPanel';
+import NewsletterPanel     from './panels/NewsletterPanel';
 import { Database }        from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -31,6 +32,7 @@ const NAV_ITEMS = [
   { id: 'enrollments', label: 'Enrollments & Sales',icon: ShoppingBag, badge: 'LIVE' },
   { id: 'coupons',     label: 'Coupons & Affiliations', icon: Tag, badge: 'OFFERS' },
   { id: 'requests',    label: 'Queries & Quotes',   icon: MessageSquare, badge: 'DB' },
+  { id: 'newsletter',  label: 'Newsletter Subscribers', icon: Mail, badge: 'COMM' },
   { id: 'integrations',label: 'Integrations & API', icon: Database, badge: 'DIAG' },
   { id: '__divider1',  divider: true, label: 'SITE CONTENT' },
   { id: 'hero',        label: 'Hero & Branding',     icon: Type },
@@ -53,7 +55,7 @@ export default function AdminApp({ onLogout }) {
   const [active, setActive] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 768 : true));
   const adminState = useAdminData();
-  const { data, save, reset, defaults, lastSaved, enrollments, queries, enterpriseQuotes, contactInquiries, updateQueryStatus, updateQuoteStatus, updateInquiryStatus } = adminState;
+  const { data, save, reset, defaults, lastSaved, enrollments, queries, enterpriseQuotes, contactInquiries, newsletterSubscribers, updateQueryStatus, updateQuoteStatus, updateInquiryStatus, updateSubscriberStatus, deleteSubscriber } = adminState;
 
   // Enforce session access control
   React.useEffect(() => {
@@ -70,6 +72,7 @@ export default function AdminApp({ onLogout }) {
       case 'enrollments':return <EnrollmentsPanel enrollments={enrollments} />;
       case 'coupons':    return <CouponsPanel     save={save} enrollments={enrollments} />;
       case 'requests':   return <QueriesQuotesPanel queries={queries} enterpriseQuotes={enterpriseQuotes} contactInquiries={contactInquiries} updateQueryStatus={updateQueryStatus} updateQuoteStatus={updateQuoteStatus} updateInquiryStatus={updateInquiryStatus} />;
+      case 'newsletter': return <NewsletterPanel subscribers={newsletterSubscribers} updateSubscriberStatus={updateSubscriberStatus} deleteSubscriber={deleteSubscriber} save={save} data={data} />;
       case 'integrations':return <IntegrationsPanel />;
       case 'hero':       return <HeroPanel       {...panelProps} />;
       case 'urgency':    return <UrgencyPanel    {...panelProps} />;
