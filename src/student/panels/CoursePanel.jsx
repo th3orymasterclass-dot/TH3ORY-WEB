@@ -194,9 +194,9 @@ export default function CoursePanel({ profile, initialLevelId, initialLessonId }
   const completedCount = Object.keys(progress).length;
 
   return (
-    <div className="flex gap-6 h-full">
+    <div className="flex flex-col lg:flex-row gap-6 h-full">
       {/* Left: level/lesson list */}
-      <div className="w-80 shrink-0 space-y-3 overflow-y-auto pr-1" style={{maxHeight:'calc(100vh - 120px)'}}>
+      <div className="w-full lg:w-80 shrink-0 space-y-3 overflow-y-auto pr-1 max-h-[40vh] lg:max-h-[calc(100vh-120px)]">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-white font-black text-lg">My Course</h2>
           <span className="text-slate-500 text-xs">{completedCount}/{totalLessons} done</span>

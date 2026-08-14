@@ -22,7 +22,7 @@ const NAV = [
 export default function StudentApp({ profile, onLogout }) {
   const [active, setActive]       = useState('home');
   const [navExtra, setNavExtra]   = useState({}); // e.g. { levelId, lessonId }
-  const [sidebarOpen, setSidebar] = useState(true);
+  const [sidebarOpen, setSidebar] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 768 : true));
   const [progress, setProgress]   = useState(getProgress());
 
   // Live reactive admin data (levels, content, etc.)
@@ -59,10 +59,20 @@ export default function StudentApp({ profile, onLogout }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#060910] text-slate-100 flex" style={{fontFamily:"'Plus Jakarta Sans', system-ui, sans-serif"}}>
+    <div className="min-h-screen bg-[#060910] text-slate-100 flex relative" style={{fontFamily:"'Plus Jakarta Sans', system-ui, sans-serif"}}>
+
+      {/* Mobile Drawer Overlay */}
+      {sidebarOpen && (
+        <div
+          onClick={() => setSidebar(false)}
+          className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-40 md:hidden"
+        />
+      )}
 
       {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'w-64' : 'w-0 overflow-hidden'} shrink-0 transition-all duration-300 flex flex-col bg-slate-950 border-r border-slate-800/60`}>
+      <aside className={`fixed md:static inset-y-0 left-0 z-50 w-64 shrink-0 transition-transform duration-300 flex flex-col bg-slate-950 border-r border-slate-800/60 shadow-2xl md:shadow-none ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:w-0 md:overflow-hidden'
+      }`}>
         {/* Brand */}
         <div className="px-5 py-5 border-b border-slate-800/60">
           <div className="flex items-center gap-3">
@@ -137,25 +147,25 @@ export default function StudentApp({ profile, onLogout }) {
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
-        <header className="h-14 border-b border-slate-800/60 flex items-center px-5 gap-4 shrink-0 bg-slate-950/50 backdrop-blur-sm sticky top-0 z-10">
-          <button onClick={() => setSidebar(o => !o)} className="text-slate-500 hover:text-white transition-colors">
+        <header className="h-14 border-b border-slate-800/60 flex items-center px-4 sm:px-5 gap-4 shrink-0 bg-slate-950/50 backdrop-blur-sm sticky top-0 z-10">
+          <button onClick={() => setSidebar(o => !o)} className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800/50 transition-colors">
             {sidebarOpen ? <X className="w-5 h-5"/> : <Menu className="w-5 h-5"/>}
           </button>
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-slate-500">Student Portal</span>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-700"/>
-            <span className="text-white font-semibold">{currentNav?.label}</span>
+          <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm min-w-0 truncate">
+            <span className="text-slate-500 hidden sm:inline">Student Portal</span>
+            <ChevronRight className="w-3.5 h-3.5 text-slate-700 hidden sm:inline"/>
+            <span className="text-white font-semibold truncate">{currentNav?.label}</span>
           </div>
           {/* Certificate badge */}
           {pct === 100 && (
-            <div className="ml-auto flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-full px-3 py-1 text-amber-400 text-xs font-bold">
+            <div className="ml-auto flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-full px-3 py-1 text-amber-400 text-xs font-bold shrink-0">
               <Award className="w-3.5 h-3.5"/> Certificate Ready!
             </div>
           )}
         </header>
 
         {/* Panel */}
-        <main className="flex-1 overflow-y-auto p-5 lg:p-8">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           <div className="max-w-6xl mx-auto">
             {renderPanel()}
           </div>

@@ -51,7 +51,7 @@ const NAV_ITEMS = [
 
 export default function AdminApp({ onLogout }) {
   const [active, setActive] = useState('overview');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 768 : true));
   const adminState = useAdminData();
   const { data, save, reset, defaults, lastSaved, enrollments, queries, enterpriseQuotes, contactInquiries, updateQueryStatus, updateQuoteStatus, updateInquiryStatus } = adminState;
 
@@ -89,10 +89,20 @@ export default function AdminApp({ onLogout }) {
   const currentNav = NAV_ITEMS.find(n => n.id === active);
 
   return (
-    <div className="min-h-screen bg-[#060910] text-slate-100 flex" style={{fontFamily:"'Plus Jakarta Sans', system-ui, sans-serif"}}>
+    <div className="min-h-screen bg-[#060910] text-slate-100 flex relative" style={{fontFamily:"'Plus Jakarta Sans', system-ui, sans-serif"}}>
+
+      {/* Mobile Drawer Overlay */}
+      {sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-40 md:hidden"
+        />
+      )}
 
       {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'w-64' : 'w-0 overflow-hidden'} shrink-0 transition-all duration-300 flex flex-col bg-slate-950 border-r border-slate-800/60`}>
+      <aside className={`fixed md:static inset-y-0 left-0 z-50 w-64 shrink-0 transition-transform duration-300 flex flex-col bg-slate-950 border-r border-slate-800/60 shadow-2xl md:shadow-none ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:w-0 md:overflow-hidden'
+      }`}>
         {/* Brand */}
         <div className="px-5 py-5 border-b border-slate-800/60">
           <div className="flex items-center gap-3">
@@ -163,22 +173,22 @@ export default function AdminApp({ onLogout }) {
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
-        <header className="h-14 border-b border-slate-800/60 flex items-center px-5 gap-4 shrink-0 bg-slate-950/50 backdrop-blur-sm sticky top-0 z-10">
+        <header className="h-14 border-b border-slate-800/60 flex items-center px-4 sm:px-5 gap-4 shrink-0 bg-slate-950/50 backdrop-blur-sm sticky top-0 z-10">
           <button
             onClick={() => setSidebarOpen(o => !o)}
-            className="text-slate-500 hover:text-white transition-colors"
+            className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800/50 transition-colors"
           >
             {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
 
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-slate-500">Admin</span>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-700" />
-            <span className="text-white font-semibold">{currentNav?.label}</span>
+          <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm min-w-0 truncate">
+            <span className="text-slate-500 hidden sm:inline">Admin</span>
+            <ChevronRight className="w-3.5 h-3.5 text-slate-700 hidden sm:inline" />
+            <span className="text-white font-semibold truncate">{currentNav?.label}</span>
           </div>
 
           {lastSaved && (
-            <div className="ml-auto flex items-center gap-2 bg-green-950/40 border border-green-500/20 rounded-full px-3 py-1 text-green-400 text-xs">
+            <div className="ml-auto flex items-center gap-2 bg-green-950/40 border border-green-500/20 rounded-full px-3 py-1 text-green-400 text-xs shrink-0">
               <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
               Saved {lastSaved.toLocaleTimeString()}
             </div>
@@ -186,7 +196,7 @@ export default function AdminApp({ onLogout }) {
         </header>
 
         {/* Panel content */}
-        <main className="flex-1 overflow-y-auto p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           <div className="max-w-5xl mx-auto">
             {renderPanel()}
           </div>

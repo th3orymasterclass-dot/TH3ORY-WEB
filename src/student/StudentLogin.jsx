@@ -106,7 +106,7 @@ export default function StudentLogin({ onAuthenticated }) {
           <p className="text-slate-500 text-sm mt-1">Access your enrolled course dashboard</p>
         </div>
 
-        <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-8 shadow-2xl backdrop-blur-sm">
+        <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-5 sm:p-8 shadow-2xl backdrop-blur-sm">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">

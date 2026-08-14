@@ -96,7 +96,7 @@ export default function DashboardHome({ profile, onNavigate }) {
       {/* Level progress rings */}
       <div>
         <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-4">Level Progress</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
           {levels.map((lvl, i) => {
             const done = lvl.lessons.filter(ls => progress[ls.id]).length;
             const pct  = lvl.lessons.length ? Math.round((done / lvl.lessons.length) * 100) : 0;
