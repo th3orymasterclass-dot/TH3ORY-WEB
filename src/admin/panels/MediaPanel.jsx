@@ -55,13 +55,13 @@ export default function MediaPanel({ data, save, reset }) {
       </div>
 
       {/* Video Preview */}
-      <div className="relative rounded-2xl overflow-hidden border border-slate-800 aspect-video max-w-xl bg-black shadow-xl">
+      <div className="relative rounded-2xl overflow-hidden border border-slate-800 aspect-video max-w-xl bg-black">
         {video?.videoUrl ? (
           <iframe
             src={getEmbeddableMediaUrl(video.videoUrl)}
             title={video.title || 'Course Preview'}
-            className="w-full h-full border-0 pointer-events-auto"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+            className="w-full h-full border-0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
           />
         ) : (

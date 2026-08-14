@@ -30,54 +30,49 @@ function VideoModal({ url, title, onClose }) {
   const gdrive = parseGoogleDriveUrl(url);
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-3 sm:p-5" onClick={onClose}>
-      <div className="w-full max-w-4xl max-h-[95vh] flex flex-col" onClick={e => e.stopPropagation()}>
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-          <div className="flex items-center gap-2 min-w-0 pr-2">
-            <h3 className="text-white font-bold text-sm sm:text-base truncate">{title}</h3>
+    <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 selection:bg-none select-none" onClick={onClose} onContextMenu={e => e.preventDefault()}>
+      <div className="w-full max-w-4xl" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <h3 className="text-white font-bold text-sm truncate flex-1">{title}</h3>
             {gdrive.isGDrive && (
               <span className="text-[10px] bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded-full flex items-center gap-1 font-bold shrink-0">
-                <HardDrive className="w-3 h-3" /> GDrive Stream
+                <HardDrive className="w-3 h-3" /> Protected GDrive Stream
               </span>
             )}
           </div>
-          <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
-            <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
-              🔒 Stream-Only Mode
-            </span>
-            <button onClick={onClose} className="p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white transition-colors shrink-0">
-              <X className="w-5 h-5"/>
-            </button>
-          </div>
+          <button onClick={onClose} className="text-slate-400 hover:text-white ml-3"><X className="w-5 h-5"/></button>
         </div>
+        <div className="aspect-video bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 relative selection:bg-none select-none" onContextMenu={e => e.preventDefault()}>
+          {/* Top-Right Shield Overlay: Prevents Google Drive pop-out & YouTube title pop-out clicks */}
+          <div
+            className="absolute top-0 right-0 w-28 h-16 z-30 bg-transparent cursor-default pointer-events-auto"
+            onClick={e => { e.preventDefault(); e.stopPropagation(); }}
+            onContextMenu={e => e.preventDefault()}
+            title="External tab exit disabled for security"
+          />
 
-        {/* Video Player Box */}
-        <div className="aspect-video w-full bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 relative shadow-2xl">
           {embedUrl ? (
             <iframe
               src={embedUrl}
               title={title}
               className="w-full h-full border-0 pointer-events-auto"
               allowFullScreen
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+              allow="autoplay; fullscreen"
+              sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
             />
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 gap-3 p-4 text-center">
+            <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 gap-3">
               <Play className="w-12 h-12 opacity-30"/>
-              <p className="text-sm font-medium text-slate-300">No video stream URL assigned to this lesson yet.</p>
-              <p className="text-xs text-slate-500">Admin can assign video URLs in the Content Library.</p>
+              <p className="text-sm">No video URL assigned to this lesson yet.</p>
+              <p className="text-xs text-slate-600">Admin can assign video URLs in the Content Library.</p>
             </div>
           )}
         </div>
-
-        {/* Footer Security Badges */}
-        <div className="mt-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
-          <span className="flex items-center gap-1.5 text-blue-400 font-bold bg-blue-950/40 border border-blue-500/30 px-2.5 py-1 rounded-full text-[11px]">
-            <HardDrive className="w-3.5 h-3.5 text-blue-400 shrink-0"/> Protected In-App Stream Player
-          </span>
-          <span className="text-amber-400 font-bold flex items-center gap-1.5 bg-amber-950/40 border border-amber-500/30 px-2.5 py-1 rounded-full text-[11px]">
-            🔒 Stream-Only Mode • All Video Controls Enabled
+        <div className="mt-2 flex items-center justify-between text-xs text-slate-400">
+          <span className="flex items-center gap-1 text-slate-400"><HardDrive className="w-3.5 h-3.5 text-blue-400"/> Protected In-App Player</span>
+          <span className="text-amber-400/90 font-medium flex items-center gap-1 bg-amber-950/40 border border-amber-500/20 px-2.5 py-0.5 rounded-full text-[11px]">
+            🔒 Stream Only • Pop-out &amp; External Tabs Disabled
           </span>
         </div>
       </div>
@@ -97,35 +92,29 @@ function ResourceCard({ item, onStreamResource }) {
   const badge = accessBadges[accessKey] || accessBadges.enrolled;
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 bg-slate-950/60 rounded-xl hover:bg-slate-950 border border-slate-800 hover:border-slate-700 transition-all group select-none">
-      <div className="flex items-center gap-3 min-w-0 flex-1">
-        <FileText className={`w-4 h-4 shrink-0 ${typeColors[item.type] || 'text-slate-400'}`}/>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-white text-sm font-medium truncate">{item.title}</p>
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${badge.color} shrink-0`}>
-              {badge.label}
+    <div className="flex items-center gap-3 px-4 py-3 bg-slate-950/60 rounded-xl hover:bg-slate-950 border border-slate-800 hover:border-slate-700 transition-all group select-none">
+      <FileText className={`w-4 h-4 shrink-0 ${typeColors[item.type] || 'text-slate-400'}`}/>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className="text-white text-sm font-medium truncate">{item.title}</p>
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${badge.color} shrink-0`}>
+            {badge.label}
+          </span>
+          {gdrive.isGDrive && (
+            <span className="text-[10px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30 px-1.5 py-0.5 rounded flex items-center gap-1 shrink-0">
+              <HardDrive className="w-2.5 h-2.5" /> GDrive Stream
             </span>
-            <span className="text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded flex items-center gap-1 shrink-0">
-              🔒 Stream Only
-            </span>
-            {gdrive.isGDrive && (
-              <span className="text-[10px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30 px-1.5 py-0.5 rounded flex items-center gap-1 shrink-0">
-                <HardDrive className="w-2.5 h-2.5" /> GDrive Stream
-              </span>
-            )}
-          </div>
-          {item.duration && <p className="text-slate-500 text-xs mt-0.5">{item.duration}</p>}
+          )}
         </div>
+        {item.duration && <p className="text-slate-500 text-xs">{item.duration}</p>}
       </div>
-
-      <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
+      <div className="flex items-center gap-2">
         <button
           type="button"
           onClick={() => onStreamResource(item)}
-          className="w-full sm:w-auto text-xs text-amber-400 hover:text-amber-300 flex items-center justify-center gap-1.5 font-bold bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 px-3 py-1.5 rounded-lg transition-all"
+          className="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1 font-medium bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded-lg transition-all"
         >
-          <Play className="w-3.5 h-3.5 fill-amber-400"/> Stream In-App
+          <Play className="w-3.5 h-3.5"/> Stream In-App
         </button>
       </div>
     </div>
@@ -331,46 +320,17 @@ export default function CoursePanel({ profile, initialLevelId, initialLessonId }
                     </div>
                   );
                 }
-                const embedUrl = getEmbeddableMediaUrl(videoUrl);
                 return (
-                  <div className="space-y-3">
-                    <div className="aspect-video w-full bg-slate-950 rounded-xl overflow-hidden border border-slate-800 shadow-xl relative">
-                      {embedUrl ? (
-                        <iframe
-                          src={embedUrl}
-                          title={activeLesson.lesson.title}
-                          className="w-full h-full border-0 pointer-events-auto"
-                          allowFullScreen
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 gap-2.5 p-4 text-center">
-                          <Play className="w-10 h-10 opacity-30"/>
-                          <p className="text-sm font-medium text-slate-300">No video stream assigned to this lesson yet.</p>
-                          <p className="text-xs text-slate-500">Admin can assign video URLs in the Content Library.</p>
-                        </div>
-                      )}
+                  <button
+                    onClick={() => setVideoModal({ url: videoUrl, title: activeLesson.lesson.title })}
+                    className="w-full aspect-video max-h-56 bg-slate-950 rounded-xl flex flex-col items-center justify-center border border-slate-800 hover:border-amber-500/30 group transition-all relative overflow-hidden"
+                  >
+                    <div className="w-16 h-16 rounded-full bg-amber-500/20 border-2 border-amber-500/40 flex items-center justify-center group-hover:bg-amber-500/30 transition-all mb-3 z-10">
+                      <Play className="w-7 h-7 text-amber-400 fill-amber-400 ml-1"/>
                     </div>
-
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 px-1 text-xs">
-                      <div className="flex items-center gap-2 text-slate-400">
-                        <span className="flex items-center gap-1.5 text-blue-400 font-bold bg-blue-950/40 border border-blue-500/30 px-2.5 py-1 rounded-full text-[11px]">
-                          <HardDrive className="w-3.5 h-3.5 text-blue-400"/> In-App Stream Player
-                        </span>
-                        <span className="text-emerald-400 font-bold bg-emerald-950/40 border border-emerald-500/30 px-2 py-0.5 rounded-full text-[11px]">
-                          🔒 All Video Controls Enabled
-                        </span>
-                      </div>
-                      {embedUrl && (
-                        <button
-                          onClick={() => setVideoModal({ url: videoUrl, title: activeLesson.lesson.title })}
-                          className="text-xs text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-lg transition-all self-start sm:self-auto"
-                        >
-                          <ExternalLink className="w-3.5 h-3.5"/> Expand Modal View
-                        </button>
-                      )}
-                    </div>
-                  </div>
+                    <p className="text-white font-bold text-sm z-10">Watch Lesson Video</p>
+                    <p className="text-slate-500 text-xs mt-1 z-10">{activeLesson.lesson.duration}</p>
+                  </button>
                 );
               })()}
             </div>
