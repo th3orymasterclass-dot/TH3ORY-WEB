@@ -89,29 +89,29 @@ export default function AdminApp({ onLogout }) {
   const currentNav = NAV_ITEMS.find(n => n.id === active);
 
   return (
-    <div className="min-h-screen bg-[#060910] text-slate-100 flex relative" style={{fontFamily:"'Plus Jakarta Sans', system-ui, sans-serif"}}>
+    <div className="min-h-screen bg-[#15171A] text-[#FAFAF7] flex relative" style={{fontFamily:"'Plus Jakarta Sans', system-ui, sans-serif"}}>
 
       {/* Mobile Drawer Overlay */}
       {sidebarOpen && (
         <div
           onClick={() => setSidebarOpen(false)}
-          className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-40 md:hidden"
+          className="fixed inset-0 bg-[#15171A]/80 backdrop-blur-xs z-40 md:hidden"
         />
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed md:static inset-y-0 left-0 z-50 w-64 shrink-0 transition-transform duration-300 flex flex-col bg-slate-950 border-r border-slate-800/60 shadow-2xl md:shadow-none ${
+      <aside className={`fixed md:static inset-y-0 left-0 z-50 w-64 shrink-0 transition-transform duration-300 flex flex-col bg-[#15171A] border-r border-[#555A66]/30 shadow-2xl md:shadow-none ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:w-0 md:overflow-hidden'
       }`}>
         {/* Brand */}
-        <div className="px-5 py-5 border-b border-slate-800/60">
+        <div className="px-5 py-5 border-b border-[#555A66]/30">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center shrink-0">
-              <Shield className="w-5 h-5 text-slate-950" />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#7C5CFC] to-[#6344E0] flex items-center justify-center shrink-0 shadow-md">
+              <Shield className="w-5 h-5 text-[#FAFAF7]" />
             </div>
             <div>
-              <p className="font-black text-white text-sm tracking-tight">TH3ORY</p>
-              <p className="text-slate-500 text-xs">Admin Dashboard</p>
+              <p className="font-black text-[#FAFAF7] text-sm tracking-tight font-heading">TH3ORY</p>
+              <p className="text-[#555A66] text-xs font-semibold">Admin Dashboard</p>
             </div>
           </div>
         </div>
@@ -122,7 +122,7 @@ export default function AdminApp({ onLogout }) {
             if (item.divider) {
               return (
                 <div key={item.id} className="pt-4 pb-1.5 px-2">
-                  <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.15em]">{item.label}</p>
+                  <p className="text-[10px] font-black text-[#555A66] uppercase tracking-[0.15em]">{item.label}</p>
                 </div>
               );
             }
@@ -134,16 +134,16 @@ export default function AdminApp({ onLogout }) {
                 onClick={() => { setActive(item.id); if (window.innerWidth < 768) setSidebarOpen(false); }}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group ${
                   isActive
-                    ? 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                    ? 'bg-[#7C5CFC]/20 text-[#FAFAF7] border border-[#7C5CFC]/30 font-bold'
+                    : 'text-[#555A66] hover:text-[#FAFAF7] hover:bg-[#7C5CFC]/10'
                 }`}
               >
-                <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-amber-400' : 'text-slate-500 group-hover:text-slate-300'}`} />
+                <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#FFC857]' : 'text-[#555A66] group-hover:text-[#E9E4FF]'}`} />
                 <span className="truncate">{item.label}</span>
                 {item.badge && !isActive && (
-                  <span className="ml-auto text-[9px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded-full uppercase tracking-wider">{item.badge}</span>
+                  <span className="ml-auto text-[9px] font-black bg-[#FFC857]/20 text-[#FFC857] border border-[#FFC857]/30 px-1.5 py-0.5 rounded-full uppercase tracking-wider">{item.badge}</span>
                 )}
-                {isActive && <ChevronRight className="w-3.5 h-3.5 ml-auto text-amber-500/60" />}
+                {isActive && <ChevronRight className="w-3.5 h-3.5 ml-auto text-[#FFC857]" />}
               </button>
             );
           })}

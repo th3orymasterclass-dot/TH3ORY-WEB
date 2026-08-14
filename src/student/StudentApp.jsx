@@ -59,56 +59,56 @@ export default function StudentApp({ profile, onLogout }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#060910] text-slate-100 flex relative" style={{fontFamily:"'Plus Jakarta Sans', system-ui, sans-serif"}}>
+    <div className="min-h-screen bg-[#15171A] text-[#FAFAF7] flex relative" style={{fontFamily:"'Plus Jakarta Sans', system-ui, sans-serif"}}>
 
       {/* Mobile Drawer Overlay */}
       {sidebarOpen && (
         <div
           onClick={() => setSidebar(false)}
-          className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-40 md:hidden"
+          className="fixed inset-0 bg-[#15171A]/80 backdrop-blur-xs z-40 md:hidden"
         />
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed md:static inset-y-0 left-0 z-50 w-64 shrink-0 transition-transform duration-300 flex flex-col bg-slate-950 border-r border-slate-800/60 shadow-2xl md:shadow-none ${
+      <aside className={`fixed md:static inset-y-0 left-0 z-50 w-64 shrink-0 transition-transform duration-300 flex flex-col bg-[#15171A] border-r border-[#555A66]/30 shadow-2xl md:shadow-none ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:w-0 md:overflow-hidden'
       }`}>
         {/* Brand */}
-        <div className="px-5 py-5 border-b border-slate-800/60">
+        <div className="px-5 py-5 border-b border-[#555A66]/30">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center shrink-0">
-              <GraduationCap className="w-5 h-5 text-slate-950"/>
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#7C5CFC] to-[#6344E0] flex items-center justify-center shrink-0 shadow-md">
+              <GraduationCap className="w-5 h-5 text-[#FAFAF7]"/>
             </div>
             <div>
-              <p className="font-black text-white text-sm tracking-tight">TH3ORY</p>
-              <p className="text-slate-500 text-xs">Student Portal</p>
+              <p className="font-black text-[#FAFAF7] text-sm tracking-tight font-heading">TH3ORY</p>
+              <p className="text-[#555A66] text-xs font-semibold">Student Portal</p>
             </div>
           </div>
         </div>
 
         {/* Student card */}
-        <div className="px-4 py-4 border-b border-slate-800/60">
-          <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">
+        <div className="px-4 py-4 border-b border-[#555A66]/30">
+          <div className="bg-[#7C5CFC]/10 border border-[#7C5CFC]/20 rounded-xl p-3">
             <div className="flex items-center gap-2.5 mb-2.5">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center text-slate-950 font-black text-sm shrink-0">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#7C5CFC] to-[#6344E0] flex items-center justify-center text-[#FAFAF7] font-black text-sm shrink-0">
                 {profile.name[0].toUpperCase()}
               </div>
               <div className="min-w-0">
-                <p className="text-white font-bold text-sm truncate">{profile.name}</p>
-                <p className="text-slate-500 text-xs truncate">{profile.plan}</p>
+                <p className="text-[#FAFAF7] font-bold text-sm truncate">{profile.name}</p>
+                <p className="text-[#555A66] text-xs truncate">{profile.plan}</p>
               </div>
             </div>
             {/* Progress bar */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-slate-500 text-xs">Course Progress</span>
-                <span className="text-amber-400 text-xs font-bold">{pct}%</span>
+                <span className="text-[#555A66] text-xs font-medium">Course Progress</span>
+                <span className="text-[#FFC857] text-xs font-bold">{pct}%</span>
               </div>
-              <div className="h-1.5 bg-slate-800 rounded-full">
-                <div className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full transition-all duration-700"
+              <div className="h-1.5 bg-[#15171A] rounded-full border border-[#555A66]/20">
+                <div className="h-full bg-gradient-to-r from-[#7C5CFC] to-[#9277FF] rounded-full transition-all duration-700"
                   style={{width:`${pct}%`}}/>
               </div>
-              <p className="text-slate-600 text-xs mt-1">{done}/{totalLessons} lessons</p>
+              <p className="text-[#555A66] text-xs mt-1">{done}/{totalLessons} lessons</p>
             </div>
           </div>
         </div>
@@ -121,11 +121,11 @@ export default function StudentApp({ profile, onLogout }) {
             return (
               <button key={item.id} onClick={() => { setActive(item.id); setNavExtra({}); if (window.innerWidth < 768) setSidebar(false); }}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group ${
-                  isActive ? 'bg-amber-500/15 text-amber-400 border border-amber-500/20' : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                  isActive ? 'bg-[#7C5CFC]/20 text-[#FAFAF7] border border-[#7C5CFC]/30 font-bold' : 'text-[#555A66] hover:text-[#FAFAF7] hover:bg-[#7C5CFC]/10'
                 }`}>
-                <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-amber-400' : 'text-slate-500 group-hover:text-slate-300'}`}/>
+                <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#FFC857]' : 'text-[#555A66] group-hover:text-[#E9E4FF]'}`}/>
                 <span className="truncate">{item.label}</span>
-                {isActive && <ChevronRight className="w-3.5 h-3.5 ml-auto text-amber-500/60"/>}
+                {isActive && <ChevronRight className="w-3.5 h-3.5 ml-auto text-[#FFC857]"/>}
               </button>
             );
           })}
