@@ -45,6 +45,8 @@ export default function InstructorSection({ onOpenCheckout }) {
     }
   ];
 
+  const avatarSrc = (inst?.avatar && !inst.avatar.includes('unsplash.com')) ? inst.avatar : "/instructor.png";
+
   return (
     <section id="instructor" className="py-24 relative bg-slate-950/80 border-t border-slate-900 overflow-hidden">
       {/* Background ambient lighting effects */}
@@ -77,7 +79,7 @@ export default function InstructorSection({ onOpenCheckout }) {
               
               <div className="relative rounded-3xl overflow-hidden border-2 border-amber-500/40 bg-slate-900 shadow-2xl">
                 <img
-                  src={inst.avatar || "/instructor.png"}
+                  src={avatarSrc}
                   alt="Sravan Sudhakaran - Mentalist & Human Behaviour Coach"
                   className="w-full h-auto object-cover object-top hover:scale-105 transition-transform duration-700"
                 />

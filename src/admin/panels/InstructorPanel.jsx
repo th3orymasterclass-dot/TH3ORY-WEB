@@ -29,15 +29,13 @@ export default function InstructorPanel({ data, save, reset }) {
       </div>
 
       {/* Avatar preview */}
-      {inst.avatar && (
-        <div className="flex items-center gap-4 p-4 bg-slate-900 border border-slate-800 rounded-2xl">
-          <img src={inst.avatar} alt="" className="w-16 h-16 rounded-2xl object-cover border border-slate-700" onError={e => e.target.style.display='none'} />
-          <div>
-            <p className="text-white font-bold text-sm">{inst.name || 'Instructor Name'}</p>
-            <p className="text-slate-400 text-xs">{inst.role || 'Role'}</p>
-          </div>
+      <div className="flex items-center gap-4 p-4 bg-slate-900 border border-slate-800 rounded-2xl">
+        <img src={(inst.avatar && !inst.avatar.includes('unsplash.com')) ? inst.avatar : '/instructor.png'} alt="" className="w-16 h-16 rounded-2xl object-cover border border-slate-700" onError={e => e.target.style.display='none'} />
+        <div>
+          <p className="text-white font-bold text-sm">{inst.name || 'SRAVAN SUDHAKARAN'}</p>
+          <p className="text-slate-400 text-xs">{inst.role || 'Mentalist, Human Behaviour Coach, Hypnotist, Criminologist, LifeSkill Trainer, Author'}</p>
         </div>
-      )}
+      </div>
 
       <div className="space-y-4">
         {[

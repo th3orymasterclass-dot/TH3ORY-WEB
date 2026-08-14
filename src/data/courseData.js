@@ -6,12 +6,6 @@ export const courseDetails = {
   bannerQuote: "EVERY INTERACTION IS AN OPPORTUNITY. MAKE YOURS COUNT.",
   footerQuote: "Your influence is your currency. Invest in it daily. TH3ORY is your blueprint.",
   tagline: "LEARN. PRACTICE. INFLUENCE. TRANSFORM.",
-  instructor: {
-    name: "Mentalist Sravan Production",
-    title: "Integrated Production House for Cognitive Experiments",
-    bio: "Pioneering interactive behavioral studies, high-stakes psychological influence frameworks, and real-world cognitive engineering.",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
-  },
   rating: 4.98,
   totalStudents: 18450,
   lastUpdated: "August 2026",
