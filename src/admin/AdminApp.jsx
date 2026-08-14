@@ -24,11 +24,13 @@ import OutcomesPanel       from './panels/OutcomesPanel';
 import MediaPanel          from './panels/MediaPanel';
 import IntegrationsPanel   from './panels/IntegrationsPanel';
 import NewsletterPanel     from './panels/NewsletterPanel';
-import { Database }        from 'lucide-react';
+import FeatureFlagsPanel   from './panels/FeatureFlagsPanel';
+import { Database, Sliders } from 'lucide-react';
 
 const NAV_ITEMS = [
   { id: 'overview',    label: 'Overview',           icon: LayoutDashboard },
   { id: '__divider_db', divider: true, label: 'DATABASE & SALES' },
+  { id: 'feature_flags', label: 'Vercel Feature Flags', icon: Sliders, badge: 'VERCEL' },
   { id: 'enrollments', label: 'Enrollments & Sales',icon: ShoppingBag, badge: 'LIVE' },
   { id: 'coupons',     label: 'Coupons & Affiliations', icon: Tag, badge: 'OFFERS' },
   { id: 'requests',    label: 'Queries & Quotes',   icon: MessageSquare, badge: 'DB' },
@@ -69,6 +71,7 @@ export default function AdminApp({ onLogout }) {
   const renderPanel = () => {
     switch (active) {
       case 'overview':   return <OverviewPanel   {...panelProps} />;
+      case 'feature_flags': return <FeatureFlagsPanel />;
       case 'enrollments':return <EnrollmentsPanel enrollments={enrollments} />;
       case 'coupons':    return <CouponsPanel     save={save} enrollments={enrollments} />;
       case 'requests':   return <QueriesQuotesPanel queries={queries} enterpriseQuotes={enterpriseQuotes} contactInquiries={contactInquiries} updateQueryStatus={updateQueryStatus} updateQuoteStatus={updateQuoteStatus} updateInquiryStatus={updateInquiryStatus} />;

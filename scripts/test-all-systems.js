@@ -191,7 +191,7 @@ assert(razorpayOrderApi.includes('serverVerifiedPrice'), 'api/create-razorpay-or
 
 
 // ── Test Suite 9: Database Schema Expansion Audit ───────────────────────────
-console.log('\n▶ [Suite 9/9]: Database Schema & RLS Security Audit');
+console.log('\n▶ [Suite 9/10]: Database Schema & RLS Security Audit');
 
 const schemaPath = path.join(rootDir, 'supabase_schema.sql');
 const schemaContent = fs.readFileSync(schemaPath, 'utf8');
@@ -203,10 +203,30 @@ assert(schemaContent.includes('idx_user_progress_email_lesson'), 'supabase_schem
 assert(schemaContent.includes('idx_certificates_cert_id'), 'supabase_schema.sql includes certificates index');
 
 
+// ── Test Suite 10: Vercel Feature Flags System Audit ────────────────────────
+console.log('\n▶ [Suite 10/10]: Vercel Feature Flags System Audit');
+
+const featureFlagsApiExists = fs.existsSync(path.join(rootDir, 'api/feature-flags.js'));
+assert(featureFlagsApiExists, 'api/feature-flags.js serverless handler exists');
+
+if (featureFlagsApiExists) {
+  const flagsApiContent = fs.readFileSync(path.join(rootDir, 'api/feature-flags.js'), 'utf8');
+  assert(flagsApiContent.includes('VERCEL_FLAGS_'), 'api/feature-flags.js checks VERCEL_FLAGS_ environment variables');
+  assert(flagsApiContent.includes('DEFAULT_FEATURE_FLAGS'), 'api/feature-flags.js defines default feature flags');
+}
+
+const contextExists = fs.existsSync(path.join(rootDir, 'src/context/FeatureFlagContext.jsx'));
+assert(contextExists, 'src/context/FeatureFlagContext.jsx React context exists');
+
+const adminPanelExists = fs.existsSync(path.join(rootDir, 'src/admin/panels/FeatureFlagsPanel.jsx'));
+assert(adminPanelExists, 'src/admin/panels/FeatureFlagsPanel.jsx admin panel exists');
+
+
 // ── Final Test Summary Report ────────────────────────────────────────────────
 console.log('\n============================================================');
 console.log(`  TEST RESULTS: ${passedTests} Passed | ${failedTests} Failed | ${totalTests} Total`);
 console.log('============================================================\n');
+
 
 if (failedTests > 0) {
   process.exit(1);

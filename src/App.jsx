@@ -17,17 +17,24 @@ import Footer from './components/Footer';
 import SEOHead from './components/SEOHead';
 import StructuredData from './components/StructuredData';
 import { useTh3oryLive } from './data/adminData';
-import { Crown, ShoppingBag } from 'lucide-react';
+import { useFeatureFlags } from './context/FeatureFlagContext';
+import { Crown, ShoppingBag, ShieldAlert } from 'lucide-react';
 
 export default function App() {
   const { plans: pricingPlans } = useTh3oryLive();
   const mainPlan = pricingPlans[0] || {};
+  const { isFeatureEnabled } = useFeatureFlags();
 
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const [showEnrollmentPage, setShowEnrollmentPage] = useState(false);
-  
+
+  const showQuickBar = isFeatureEnabled('SHOW_QUICK_ENROLLMENT_BAR', true);
+  const showSeatsUrgency = isFeatureEnabled('SHOW_LIMITED_SEATS_BANNER', true);
+  const showReviews = isFeatureEnabled('ENABLE_LIVE_REVIEWS', true);
+  const isMaintenanceMode = isFeatureEnabled('MAINTENANCE_MODE', false);
+
   // Checkout state
   const [selectedPlan, setSelectedPlan] = useState(null); // null = use live plans[0]
   const [isMonthly, setIsMonthly] = useState(false);
@@ -72,28 +79,38 @@ export default function App() {
       <SEOHead />
       <StructuredData />
 
-      {/* Sticky Bottom Quick Enrollment Bar */}
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 w-[92%] max-w-lg glass-panel rounded-2xl p-3.5 border border-[#E9E4FF]/20 shadow-2xl flex items-center justify-between gap-3 animate-fade-in">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#9277FF] flex items-center justify-center text-[#FAFAF7] font-bold text-xs shadow-md">
-            <Crown className="w-4 h-4 fill-[#FAFAF7]" />
-          </div>
-          <div className="text-left">
-            <div className="text-xs font-bold text-[#FAFAF7] flex items-center gap-1 font-brand">
-              TH3ORY Masterclass <span className="text-[10px] text-[#FFC857] font-normal font-sans">• 5 Seats Left</span>
-            </div>
-            <div className="text-[11px] text-[#555A66]">Code 'TH3ORY20' for 20% OFF</div>
-          </div>
+      {/* Maintenance Mode Notice Banner */}
+      {isMaintenanceMode && (
+        <div className="bg-amber-500 text-slate-950 px-4 py-2 text-center text-xs font-bold font-sans flex items-center justify-center gap-2 z-50 sticky top-0 border-b border-amber-600 shadow-lg">
+          <ShieldAlert className="w-4 h-4 text-slate-950" />
+          <span>SYSTEM NOTICE: Platform maintenance is currently in progress. Live checkouts are temporarily paused.</span>
         </div>
+      )}
 
-        <button
-          onClick={() => handleOpenCheckoutWithPlan(mainPlan, false)}
-          className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#6344E0] hover:from-[#6c4ce0] hover:to-[#5233d0] text-[#FAFAF7] font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-[#7C5CFC]/25 transition-all flex items-center gap-1.5 whitespace-nowrap"
-        >
-          <ShoppingBag className="w-3.5 h-3.5" />
-          <span>{isEnrolled ? 'View Receipt' : `Enroll ($${mainPlan.priceFull || 149} / ₹${mainPlan.priceINR?.toLocaleString('en-IN') || '11,999'})`}</span>
-        </button>
-      </div>
+      {/* Sticky Bottom Quick Enrollment Bar (Controlled via Vercel Feature Flag) */}
+      {showQuickBar && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 w-[92%] max-w-lg glass-panel rounded-2xl p-3.5 border border-[#E9E4FF]/20 shadow-2xl flex items-center justify-between gap-3 animate-fade-in">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#9277FF] flex items-center justify-center text-[#FAFAF7] font-bold text-xs shadow-md">
+              <Crown className="w-4 h-4 fill-[#FAFAF7]" />
+            </div>
+            <div className="text-left">
+              <div className="text-xs font-bold text-[#FAFAF7] flex items-center gap-1 font-brand">
+                TH3ORY Masterclass {showSeatsUrgency && <span className="text-[10px] text-[#FFC857] font-normal font-sans">• 5 Seats Left</span>}
+              </div>
+              <div className="text-[11px] text-[#555A66]">Code 'TH3ORY20' for 20% OFF</div>
+            </div>
+          </div>
+
+          <button
+            onClick={() => handleOpenCheckoutWithPlan(mainPlan, false)}
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#6344E0] hover:from-[#6c4ce0] hover:to-[#5233d0] text-[#FAFAF7] font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-[#7C5CFC]/25 transition-all flex items-center gap-1.5 whitespace-nowrap"
+          >
+            <ShoppingBag className="w-3.5 h-3.5" />
+            <span>{isEnrolled ? 'View Receipt' : `Enroll ($${mainPlan.priceFull || 149} / ₹${mainPlan.priceINR?.toLocaleString('en-IN') || '11,999'})`}</span>
+          </button>
+        </div>
+      )}
 
       {/* Main Navigation Header */}
       <Navbar
@@ -121,7 +138,7 @@ export default function App() {
 
         <OutcomesSection />
 
-        <Testimonials />
+        {showReviews && <Testimonials />}
 
         <PricingSection
           onSelectPlan={handleOpenCheckoutWithPlan}

@@ -9,6 +9,7 @@ import EnrollmentPage from './components/EnrollmentPage.jsx';
 import CertificateVerification from './components/CertificateVerification.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import NotFoundPage from './components/NotFoundPage.jsx';
+import { FeatureFlagProvider } from './context/FeatureFlagContext.jsx';
 import './index.css';
 
 function Root() {
@@ -97,7 +98,9 @@ function Root() {
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>
-      <Root/>
+      <FeatureFlagProvider>
+        <Root/>
+      </FeatureFlagProvider>
     </ErrorBoundary>
   </React.StrictMode>
 );
