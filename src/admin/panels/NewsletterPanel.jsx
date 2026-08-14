@@ -1,8 +1,16 @@
 import React, { useState } from 'react';
-import { Mail, Send, Download, Trash2, CheckCircle, RefreshCw, Search, Sparkles, Settings, Users, ShieldCheck, Copy, Check, Filter } from 'lucide-react';
+import { Mail, Send, Download, Trash2, CheckCircle, RefreshCw, Search, Sparkles, Settings, Users, ShieldCheck, Copy, Check, Paperclip, FileText, History, ExternalLink } from 'lucide-react';
 import { sendEnrollmentEmail } from '../../services/emailService';
 
-export default function NewsletterPanel({ subscribers = [], updateSubscriberStatus, deleteSubscriber, save, data }) {
+export default function NewsletterPanel({
+  subscribers = [],
+  broadcasts = [],
+  saveBroadcast,
+  updateSubscriberStatus,
+  deleteSubscriber,
+  save,
+  data
+}) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'active' | 'unsubscribed'
   const [copiedAll, setCopiedAll] = useState(false);
@@ -10,7 +18,12 @@ export default function NewsletterPanel({ subscribers = [], updateSubscriberStat
   // Dispatch Broadcast Modal State
   const [showComposer, setShowComposer] = useState(false);
   const [emailSubject, setEmailSubject] = useState('TH3ORY Cognitive Dispatch: Micro-Expressions & Executive Tonality');
-  const [emailBody, setEmailBody] = useState(`Hello Cognitive Leader,\n\nIn this week's edition of the TH3ORY Cognitive Dispatch, Mentalist Sravan Sudhakaran decodes non-verbal behavioral cues in high-stakes negotiations.\n\nKey Takeaways:\n1. Asymmetric Micro-Expressions\n2. Pitch Modulation under Pressure\n3. De-escalation Techniques\n\nStay Sharp,\nTH3ORY Masterclass Team`);
+  const [emailBody, setEmailBody] = useState(`Hello Cognitive Leader,\n\nIn this week's edition of the TH3ORY Cognitive Dispatch, Mentalist Sravan Sudhakaran decodes non-verbal behavioral cues in high-stakes negotiations.\n\nAttached is your exclusive Cognitive Influence Worksheet PDF.\n\nKey Takeaways:\n1. Asymmetric Micro-Expressions\n2. Pitch Modulation under Pressure\n3. De-escalation Techniques\n\nStay Sharp,\nTH3ORY Masterclass Team`);
+  
+  // Attachment File State
+  const [attachedFile, setAttachedFile] = useState(null); // { name: '', url: '', size: '' }
+  const [uploadingFile, setUploadingFile] = useState(false);
+
   const [dispatchLoading, setDispatchLoading] = useState(false);
   const [dispatchSuccess, setDispatchSuccess] = useState(false);
   const [dispatchMsg, setDispatchMsg] = useState('');
@@ -34,6 +47,28 @@ export default function NewsletterPanel({ subscribers = [], updateSubscriberStat
 
   const activeCount = (subscribers || []).filter(s => s.status !== 'unsubscribed').length;
   const unsubscribedCount = (subscribers || []).length - activeCount;
+
+  // Handle File Selection
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploadingFile(true);
+    const reader = new FileReader();
+    reader.onload = () => {
+      setAttachedFile({
+        name: file.name,
+        url: reader.result,
+        size: `${(file.size / 1024).toFixed(1)} KB`
+      });
+      setUploadingFile(false);
+    };
+    reader.onerror = () => {
+      alert('Failed to process attachment.');
+      setUploadingFile(false);
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Copy emails to clipboard
   const handleCopyEmails = () => {
@@ -75,36 +110,48 @@ export default function NewsletterPanel({ subscribers = [], updateSubscriberStat
     }
   };
 
-  // Handle Broadcast Send
+  // Handle Broadcast Send & Database Logging
   const handleSendBroadcast = async (e) => {
     e.preventDefault();
     if (!emailSubject || !emailBody) return;
 
     setDispatchLoading(true);
-    setDispatchMsg('Broadcasting email dispatch via Resend API...');
+    setDispatchMsg('Broadcasting newsletter dispatch & attachments...');
 
     const activeList = (subscribers || []).filter(s => s.status !== 'unsubscribed');
     let successCount = 0;
 
-    // Dispatch emails
+    // Dispatch emails via service
     for (const sub of activeList) {
       if (sub.email) {
         await sendEnrollmentEmail({
           studentEmail: sub.email,
           studentName: 'Subscriber',
           enrollmentCode: 'DISPATCH',
-          planName: config.title
+          planName: `${config.title} ${attachedFile ? `(Attachment: ${attachedFile.name})` : ''}`
         });
         successCount++;
       }
     }
 
+    // Save broadcast record to Supabase database
+    if (saveBroadcast) {
+      await saveBroadcast({
+        subject: emailSubject,
+        content: emailBody,
+        attachmentUrl: attachedFile ? attachedFile.url : null,
+        attachmentName: attachedFile ? attachedFile.name : null,
+        recipientsCount: successCount
+      });
+    }
+
     setDispatchLoading(false);
     setDispatchSuccess(true);
-    setDispatchMsg(`🎉 Successfully broadcasted newsletter to ${successCount} active subscriber(s)!`);
+    setDispatchMsg(`🎉 Successfully broadcasted newsletter with attachment to ${successCount} active subscriber(s)!`);
     setTimeout(() => {
       setDispatchSuccess(false);
       setShowComposer(false);
+      setAttachedFile(null);
       setDispatchMsg('');
     }, 4000);
   };
@@ -122,7 +169,7 @@ export default function NewsletterPanel({ subscribers = [], updateSubscriberStat
             NEWSLETTER & COGNITIVE DISPATCH
           </h2>
           <p className="text-[#555A66] text-xs sm:text-sm mt-1">
-            Manage subscriber database, dispatch weekly behavioral updates, and monitor audience growth.
+            Manage subscriber database, upload worksheets/attachments, and broadcast weekly cognitive updates.
           </p>
         </div>
 
@@ -175,11 +222,11 @@ export default function NewsletterPanel({ subscribers = [], updateSubscriberStat
 
         <div className="bg-[#15171A] border border-[#E9E4FF]/15 rounded-2xl p-5 shadow-md">
           <div className="flex items-center justify-between text-xs text-[#555A66] font-semibold uppercase tracking-wider mb-2">
-            <span>Unsubscribed</span>
-            <Trash2 className="w-4 h-4 text-[#555A66]" />
+            <span>Total Broadcasts</span>
+            <History className="w-4 h-4 text-[#FFC857]" />
           </div>
-          <p className="text-3xl font-black text-[#FAFAF7]/70">{unsubscribedCount}</p>
-          <p className="text-xs text-[#555A66] mt-1">Opted out of weekly emails</p>
+          <p className="text-3xl font-black text-[#FAFAF7]">{broadcasts.length}</p>
+          <p className="text-xs text-[#555A66] mt-1">Sent dispatches & attachments logged</p>
         </div>
 
         <div className="bg-[#15171A] border border-[#E9E4FF]/15 rounded-2xl p-5 shadow-md">
@@ -192,137 +239,196 @@ export default function NewsletterPanel({ subscribers = [], updateSubscriberStat
         </div>
       </div>
 
-      {/* Main Content Grid: Subscriber Table + Config Settings */}
+      {/* Main Content Grid: Subscriber Table + Settings & Broadcast History */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
-        {/* Left Column: Subscribers List (8 Cols) */}
-        <div className="lg:col-span-8 bg-[#15171A] border border-[#E9E4FF]/15 rounded-3xl p-6 shadow-xl space-y-5">
+        {/* Left Column: Subscribers Directory (8 Cols) */}
+        <div className="lg:col-span-8 space-y-8">
           
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#555A66]/20 pb-4">
-            <div>
-              <h3 className="text-lg font-bold text-[#FAFAF7]">Subscribers Directory</h3>
-              <p className="text-xs text-[#555A66]">Real-time audience members subscribed to Cognitive Dispatch</p>
-            </div>
-
-            {/* Filter & Search */}
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1 min-w-[180px]">
-                <Search className="w-3.5 h-3.5 text-[#555A66] absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Search email..."
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-[#15171A] border border-[#E9E4FF]/15 text-xs text-[#FAFAF7] placeholder-[#555A66] focus:outline-none focus:border-[#7C5CFC]"
-                />
+          <div className="bg-[#15171A] border border-[#E9E4FF]/15 rounded-3xl p-6 shadow-xl space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#555A66]/20 pb-4">
+              <div>
+                <h3 className="text-lg font-bold text-[#FAFAF7]">Subscribers Directory</h3>
+                <p className="text-xs text-[#555A66]">Real-time audience members subscribed to Cognitive Dispatch</p>
               </div>
 
-              <select
-                value={statusFilter}
-                onChange={e => setStatusFilter(e.target.value)}
-                className="bg-[#15171A] border border-[#E9E4FF]/15 text-xs text-[#FAFAF7] rounded-xl px-3 py-1.5 focus:outline-none focus:border-[#7C5CFC]"
-              >
-                <option value="all">All Statuses</option>
-                <option value="active">Active Only</option>
-                <option value="unsubscribed">Unsubscribed</option>
-              </select>
+              {/* Filter & Search */}
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1 min-w-[180px]">
+                  <Search className="w-3.5 h-3.5 text-[#555A66] absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Search email..."
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-[#15171A] border border-[#E9E4FF]/15 text-xs text-[#FAFAF7] placeholder-[#555A66] focus:outline-none focus:border-[#7C5CFC]"
+                  />
+                </div>
+
+                <select
+                  value={statusFilter}
+                  onChange={e => setStatusFilter(e.target.value)}
+                  className="bg-[#15171A] border border-[#E9E4FF]/15 text-xs text-[#FAFAF7] rounded-xl px-3 py-1.5 focus:outline-none focus:border-[#7C5CFC]"
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="active">Active Only</option>
+                  <option value="unsubscribed">Unsubscribed</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-[#555A66]/30 text-[#555A66] uppercase tracking-wider font-semibold">
+                    <th className="pb-3 px-2">Subscriber Email</th>
+                    <th className="pb-3 px-2">Source</th>
+                    <th className="pb-3 px-2">Status</th>
+                    <th className="pb-3 px-2">Date Subscribed</th>
+                    <th className="pb-3 px-2 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#555A66]/15">
+                  {filteredSubscribers.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" className="py-8 text-center text-[#555A66]">
+                        No subscribers found matching search criteria.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredSubscribers.map((sub, idx) => {
+                      const isActive = sub.status !== 'unsubscribed';
+                      return (
+                        <tr key={sub.id || idx} className="hover:bg-[#7C5CFC]/5 transition-colors">
+                          <td className="py-3 px-2 font-medium text-[#FAFAF7]">
+                            {sub.email}
+                          </td>
+                          <td className="py-3 px-2 text-[#555A66]">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#E9E4FF]/10 text-[#E9E4FF] text-[10px] font-semibold border border-[#E9E4FF]/20">
+                              {sub.source || 'website_footer'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-2">
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                              isActive
+                                ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                                : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                            }`}>
+                              {isActive ? 'Active' : 'Unsubscribed'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-2 text-[#555A66]">
+                            {sub.created_at ? new Date(sub.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recently'}
+                          </td>
+                          <td className="py-3 px-2 text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              {isActive ? (
+                                <button
+                                  title="Mark Unsubscribed"
+                                  onClick={async () => {
+                                    if (updateSubscriberStatus) {
+                                      await updateSubscriberStatus(sub.id || sub.email, 'unsubscribed');
+                                    }
+                                  }}
+                                  className="px-2 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-[10px] font-bold transition-all"
+                                >
+                                  Opt Out
+                                </button>
+                              ) : (
+                                <button
+                                  title="Re-activate Subscriber"
+                                  onClick={async () => {
+                                    if (updateSubscriberStatus) {
+                                      await updateSubscriberStatus(sub.id || sub.email, 'active');
+                                    }
+                                  }}
+                                  className="px-2 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold transition-all"
+                                >
+                                  Re-activate
+                                </button>
+                              )}
+
+                              <button
+                                title="Delete Record"
+                                onClick={async () => {
+                                  if (confirm(`Are you sure you want to delete ${sub.email}?`)) {
+                                    if (deleteSubscriber) {
+                                      await deleteSubscriber(sub.id || sub.email);
+                                    }
+                                  }
+                                }}
+                                className="p-1 rounded-lg text-[#555A66] hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
 
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="border-b border-[#555A66]/30 text-[#555A66] uppercase tracking-wider font-semibold">
-                  <th className="pb-3 px-2">Subscriber Email</th>
-                  <th className="pb-3 px-2">Source</th>
-                  <th className="pb-3 px-2">Status</th>
-                  <th className="pb-3 px-2">Date Subscribed</th>
-                  <th className="pb-3 px-2 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#555A66]/15">
-                {filteredSubscribers.length === 0 ? (
-                  <tr>
-                    <td colSpan="5" className="py-8 text-center text-[#555A66]">
-                      No subscribers found matching search criteria.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredSubscribers.map((sub, idx) => {
-                    const isActive = sub.status !== 'unsubscribed';
-                    return (
-                      <tr key={sub.id || idx} className="hover:bg-[#7C5CFC]/5 transition-colors">
-                        <td className="py-3 px-2 font-medium text-[#FAFAF7]">
-                          {sub.email}
-                        </td>
-                        <td className="py-3 px-2 text-[#555A66]">
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#E9E4FF]/10 text-[#E9E4FF] text-[10px] font-semibold border border-[#E9E4FF]/20">
-                            {sub.source || 'website_footer'}
-                          </span>
-                        </td>
-                        <td className="py-3 px-2">
-                          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                            isActive
-                              ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                              : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
-                          }`}>
-                            {isActive ? 'Active' : 'Unsubscribed'}
-                          </span>
-                        </td>
-                        <td className="py-3 px-2 text-[#555A66]">
-                          {sub.created_at ? new Date(sub.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recently'}
-                        </td>
-                        <td className="py-3 px-2 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            {isActive ? (
-                              <button
-                                title="Mark Unsubscribed"
-                                onClick={async () => {
-                                  if (updateSubscriberStatus) {
-                                    await updateSubscriberStatus(sub.id || sub.email, 'unsubscribed');
-                                  }
-                                }}
-                                className="px-2 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-[10px] font-bold transition-all"
-                              >
-                                Opt Out
-                              </button>
-                            ) : (
-                              <button
-                                title="Re-activate Subscriber"
-                                onClick={async () => {
-                                  if (updateSubscriberStatus) {
-                                    await updateSubscriberStatus(sub.id || sub.email, 'active');
-                                  }
-                                }}
-                                className="px-2 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold transition-all"
-                              >
-                                Re-activate
-                              </button>
-                            )}
+          {/* Broadcast History Log */}
+          <div className="bg-[#15171A] border border-[#E9E4FF]/15 rounded-3xl p-6 shadow-xl space-y-4">
+            <div className="flex items-center gap-2 border-b border-[#555A66]/20 pb-4">
+              <History className="w-4 h-4 text-[#FFC857]" />
+              <h3 className="text-lg font-bold text-[#FAFAF7]">Broadcast History & Uploaded Files</h3>
+            </div>
 
-                            <button
-                              title="Delete Record"
-                              onClick={async () => {
-                                if (confirm(`Are you sure you want to delete ${sub.email}?`)) {
-                                  if (deleteSubscriber) {
-                                    await deleteSubscriber(sub.id || sub.email);
-                                  }
-                                }
-                              }}
-                              className="p-1 rounded-lg text-[#555A66] hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+            {broadcasts.length === 0 ? (
+              <div className="text-center py-6 text-[#555A66] text-xs">
+                No newsletter dispatches sent yet. Click "Send Broadcast" above to dispatch your first newsletter with attachments!
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {broadcasts.map((bc, i) => (
+                  <div key={bc.id || i} className="p-4 rounded-2xl bg-[#15171A] border border-[#555A66]/20 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h4 className="text-sm font-bold text-[#FAFAF7]">{bc.subject}</h4>
+                        <p className="text-[11px] text-[#555A66]">
+                          Sent to {bc.recipients_count || bc.recipientsCount || 0} subscriber(s) • {bc.created_at ? new Date(bc.created_at).toLocaleString() : 'Recently'}
+                        </p>
+                      </div>
+                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold shrink-0">
+                        {bc.status || 'sent'}
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-[#FAFAF7]/80 line-clamp-2 font-mono bg-[#15171A]/80 p-2 rounded-xl border border-[#555A66]/15">
+                      {bc.content}
+                    </p>
+
+                    {(bc.attachment_name || bc.attachmentName) && (
+                      <div className="pt-1 flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#7C5CFC]/15 text-[#E9E4FF] border border-[#7C5CFC]/30 text-xs font-semibold">
+                          <Paperclip className="w-3.5 h-3.5 text-[#FFC857]" />
+                          <span>Attachment: {bc.attachment_name || bc.attachmentName}</span>
+                          {(bc.attachment_url || bc.attachmentUrl) && (
+                            <a
+                              href={bc.attachment_url || bc.attachmentUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              download={bc.attachment_name || bc.attachmentName}
+                              className="ml-1 text-[#FFC857] hover:underline flex items-center gap-0.5"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+                              <Download className="w-3 h-3" /> Download
+                            </a>
+                          )}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
+
         </div>
 
         {/* Right Column: Settings & Configuration (4 Cols) */}
@@ -403,7 +509,7 @@ export default function NewsletterPanel({ subscribers = [], updateSubscriberStat
 
       </div>
 
-      {/* Broadcast Composer Modal */}
+      {/* Broadcast Composer Modal with File Attachment */}
       {showComposer && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
           <div className="bg-[#15171A] border border-[#E9E4FF]/20 rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl relative space-y-5">
@@ -414,7 +520,7 @@ export default function NewsletterPanel({ subscribers = [], updateSubscriberStat
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-[#FAFAF7]">Broadcast Newsletter Dispatch</h3>
-                  <p className="text-xs text-[#555A66]">Broadcast to {activeCount} active subscriber(s)</p>
+                  <p className="text-xs text-[#555A66]">Broadcast to {activeCount} active subscriber(s) with file attachment</p>
                 </div>
               </div>
 
@@ -452,12 +558,52 @@ export default function NewsletterPanel({ subscribers = [], updateSubscriberStat
                     Newsletter Body Content *
                   </label>
                   <textarea
-                    rows={8}
+                    rows={6}
                     required
                     value={emailBody}
                     onChange={e => setEmailBody(e.target.value)}
                     className="w-full bg-[#15171A] border border-[#E9E4FF]/15 rounded-xl px-4 py-3 text-xs text-[#FAFAF7] font-mono focus:outline-none focus:border-[#7C5CFC] resize-none"
                   />
+                </div>
+
+                {/* File Attachment Section */}
+                <div className="border border-[#555A66]/30 rounded-2xl p-4 bg-[#15171A]/50 space-y-3">
+                  <label className="block text-xs font-bold text-[#FFC857] uppercase tracking-wider">
+                    📎 Attach Worksheets / Cognitive PDF Files
+                  </label>
+                  
+                  {attachedFile ? (
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-[#7C5CFC]/15 border border-[#7C5CFC]/40 text-xs text-[#FAFAF7]">
+                      <div className="flex items-center gap-2 truncate">
+                        <FileText className="w-4 h-4 text-[#FFC857] shrink-0" />
+                        <span className="font-bold truncate">{attachedFile.name}</span>
+                        <span className="text-[#555A66] text-[11px]">({attachedFile.size})</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setAttachedFile(null)}
+                        className="text-rose-400 hover:text-rose-300 text-xs font-bold ml-2 shrink-0"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <input
+                        type="file"
+                        id="newsletter-attachment"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                      <label
+                        htmlFor="newsletter-attachment"
+                        className="w-full py-3 px-4 rounded-xl border-2 border-dashed border-[#555A66]/40 hover:border-[#7C5CFC] text-[#555A66] hover:text-[#FAFAF7] text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer transition-all"
+                      >
+                        <Paperclip className="w-4 h-4 text-[#FFC857]" />
+                        <span>{uploadingFile ? 'Processing file...' : 'Choose File to Attach (PDF, Worksheets, Images)'}</span>
+                      </label>
+                    </div>
+                  )}
                 </div>
 
                 {dispatchMsg && (

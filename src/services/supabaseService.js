@@ -953,3 +953,82 @@ export function subscribeToNewsletterSubscribers(onSubscribersChange) {
   }
 }
 
+// ─── Newsletter Broadcasts & Attachments (Dedicated Table: newsletter_broadcasts) ───
+export async function saveNewsletterBroadcastToSupabase(broadcastData) {
+  const payload = {
+    id: `bc_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+    subject: broadcastData.subject || 'TH3ORY Cognitive Dispatch',
+    content: broadcastData.content || '',
+    attachment_url: broadcastData.attachmentUrl || null,
+    attachment_name: broadcastData.attachmentName || null,
+    recipients_count: broadcastData.recipientsCount || 0,
+    status: 'sent',
+    created_at: new Date().toISOString()
+  };
+
+  try {
+    const local = JSON.parse(localStorage.getItem('th3ory_local_newsletter_broadcasts') || '[]');
+    local.unshift(payload);
+    localStorage.setItem('th3ory_local_newsletter_broadcasts', JSON.stringify(local));
+  } catch {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { error } = await supabase.from('newsletter_broadcasts').insert([{
+        subject: payload.subject,
+        content: payload.content,
+        attachment_url: payload.attachment_url,
+        attachment_name: payload.attachment_name,
+        recipients_count: payload.recipients_count,
+        status: payload.status
+      }]);
+      if (error) {
+        console.warn('[Supabase] error saving newsletter_broadcast:', error.message);
+      } else {
+        console.log('[Supabase] Newsletter broadcast log saved cleanly.');
+      }
+    } catch (err) {
+      console.error('[Supabase] Exception saving newsletter broadcast:', err);
+    }
+  }
+  return true;
+}
+
+export async function fetchNewsletterBroadcastsFromSupabase() {
+  let local = [];
+  try {
+    local = JSON.parse(localStorage.getItem('th3ory_local_newsletter_broadcasts') || '[]');
+  } catch {}
+
+  if (!isSupabaseConfigured || !supabase) return local;
+
+  try {
+    const { data, error } = await supabase.from('newsletter_broadcasts').select('*').order('created_at', { ascending: false });
+    if (error || !data) return local;
+
+    const map = new Map();
+    local.forEach(item => map.set(item.id || `${item.subject}_${item.created_at}`, item));
+    data.forEach(item => map.set(item.id || `${item.subject}_${item.created_at}`, item));
+
+    return Array.from(map.values());
+  } catch {
+    return local;
+  }
+}
+
+export function subscribeToNewsletterBroadcasts(onBroadcastsChange) {
+  if (!isSupabaseConfigured || !supabase) return () => {};
+  try {
+    const sub = supabase
+      .channel(`newsletter_broadcasts_${Date.now()}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'newsletter_broadcasts' }, () => {
+        fetchNewsletterBroadcastsFromSupabase().then(res => { if (res) onBroadcastsChange(res); });
+      })
+      .subscribe();
+    return () => { try { supabase.removeChannel(sub); } catch {} };
+  } catch {
+    return () => {};
+  }
+}
+
+

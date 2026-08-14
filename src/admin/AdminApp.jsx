@@ -55,7 +55,7 @@ export default function AdminApp({ onLogout }) {
   const [active, setActive] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 768 : true));
   const adminState = useAdminData();
-  const { data, save, reset, defaults, lastSaved, enrollments, queries, enterpriseQuotes, contactInquiries, newsletterSubscribers, updateQueryStatus, updateQuoteStatus, updateInquiryStatus, updateSubscriberStatus, deleteSubscriber } = adminState;
+  const { data, save, reset, defaults, lastSaved, enrollments, queries, enterpriseQuotes, contactInquiries, newsletterSubscribers, newsletterBroadcasts, saveBroadcast, updateQueryStatus, updateQuoteStatus, updateInquiryStatus, updateSubscriberStatus, deleteSubscriber } = adminState;
 
   // Enforce session access control
   React.useEffect(() => {
@@ -72,7 +72,7 @@ export default function AdminApp({ onLogout }) {
       case 'enrollments':return <EnrollmentsPanel enrollments={enrollments} />;
       case 'coupons':    return <CouponsPanel     save={save} enrollments={enrollments} />;
       case 'requests':   return <QueriesQuotesPanel queries={queries} enterpriseQuotes={enterpriseQuotes} contactInquiries={contactInquiries} updateQueryStatus={updateQueryStatus} updateQuoteStatus={updateQuoteStatus} updateInquiryStatus={updateInquiryStatus} />;
-      case 'newsletter': return <NewsletterPanel subscribers={newsletterSubscribers} updateSubscriberStatus={updateSubscriberStatus} deleteSubscriber={deleteSubscriber} save={save} data={data} />;
+      case 'newsletter': return <NewsletterPanel subscribers={newsletterSubscribers} broadcasts={newsletterBroadcasts} saveBroadcast={saveBroadcast} updateSubscriberStatus={updateSubscriberStatus} deleteSubscriber={deleteSubscriber} save={save} data={data} />;
       case 'integrations':return <IntegrationsPanel />;
       case 'hero':       return <HeroPanel       {...panelProps} />;
       case 'urgency':    return <UrgencyPanel    {...panelProps} />;

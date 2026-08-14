@@ -131,6 +131,18 @@ CREATE TABLE IF NOT EXISTS public.newsletter_subscribers (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 10. NEWSLETTER BROADCASTS TABLE (Dispatched Newsletters & File Attachments)
+CREATE TABLE IF NOT EXISTS public.newsletter_broadcasts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    subject TEXT NOT NULL,
+    content TEXT NOT NULL,
+    attachment_url TEXT,
+    attachment_name TEXT,
+    recipients_count INT DEFAULT 0,
+    status TEXT DEFAULT 'sent',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- ==============================================================================
 -- ROW LEVEL SECURITY (RLS) PERMISSIONS
 -- Grant anonymous/public access to insert & read records for seamless web functionality
@@ -145,6 +157,7 @@ ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.course_contents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.newsletter_subscribers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.newsletter_broadcasts ENABLE ROW LEVEL SECURITY;
 
 -- Allow Public/Anon Read/Write policies for active client operations
 CREATE POLICY "Allow public read/insert on enrollments" ON public.enrollments FOR ALL USING (true) WITH CHECK (true);
@@ -156,6 +169,7 @@ CREATE POLICY "Allow public read/insert on reviews" ON public.reviews FOR ALL US
 CREATE POLICY "Allow public read/insert on course_contents" ON public.course_contents FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public read/insert on site_settings" ON public.site_settings FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public read/insert on newsletter_subscribers" ON public.newsletter_subscribers FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow public read/insert on newsletter_broadcasts" ON public.newsletter_broadcasts FOR ALL USING (true) WITH CHECK (true);
 
 -- ==============================================================================
 -- SUPABASE REALTIME REPLICATION ENABLEMENT
@@ -172,7 +186,8 @@ BEGIN
       public.reviews,
       public.course_contents,
       public.site_settings,
-      public.newsletter_subscribers;
+      public.newsletter_subscribers,
+      public.newsletter_broadcasts;
   END IF;
 EXCEPTION WHEN OTHERS THEN
   RAISE NOTICE 'Publication table addition skipped or already present.';

@@ -22,6 +22,9 @@ import {
   subscribeToContactInquiries,
   fetchNewsletterSubscribersFromSupabase,
   subscribeToNewsletterSubscribers,
+  fetchNewsletterBroadcastsFromSupabase,
+  subscribeToNewsletterBroadcasts,
+  saveNewsletterBroadcastToSupabase,
   updateQueryStatusInSupabase,
   updateEnterpriseQuoteStatusInSupabase,
   updateContactInquiryStatusInSupabase,
@@ -47,6 +50,7 @@ export default function useAdminData() {
   const [enterpriseQuotes, setEnterpriseQuotes] = useState([]);
   const [contactInquiries, setContactInquiries] = useState([]);
   const [newsletterSubscribers, setNewsletterSubscribers] = useState([]);
+  const [newsletterBroadcasts, setNewsletterBroadcasts] = useState([]);
   const [lastSaved, setLastSaved] = useState(null);
 
   // Re-read after any save & hydrate from Supabase Realtime
@@ -96,12 +100,13 @@ export default function useAdminData() {
       }
     });
 
-    // 2. Fetch Enrollments, Queries, Quotes, Inquiries & Subscribers
+    // 2. Fetch Enrollments, Queries, Quotes, Inquiries, Subscribers & Broadcasts
     fetchEnrollmentsFromSupabase().then(res => setEnrollments(res));
     fetchQueriesFromSupabase().then(res => { if (res) setQueries(res); });
     fetchEnterpriseQuotesFromSupabase().then(res => { if (res) setEnterpriseQuotes(res); });
     fetchContactInquiriesFromSupabase().then(res => { if (res) setContactInquiries(res); });
     fetchNewsletterSubscribersFromSupabase().then(res => { if (res) setNewsletterSubscribers(res); });
+    fetchNewsletterBroadcastsFromSupabase().then(res => { if (res) setNewsletterBroadcasts(res); });
 
     // 3. Supabase Realtime Subscriptions
     const unsubSettings = subscribeToSiteSettings((key, val) => {
@@ -145,6 +150,10 @@ export default function useAdminData() {
       setNewsletterSubscribers(subsList);
     });
 
+    const unsubBroadcasts = subscribeToNewsletterBroadcasts((broadcastsList) => {
+      setNewsletterBroadcasts(broadcastsList);
+    });
+
     return () => {
       window.removeEventListener('th3ory_data_change', handler);
       unsubSettings();
@@ -155,6 +164,7 @@ export default function useAdminData() {
       unsubQuotes();
       unsubInquiries();
       unsubSubscribers();
+      unsubBroadcasts();
     };
   }, []);
 
@@ -204,6 +214,8 @@ export default function useAdminData() {
     enterpriseQuotes,
     contactInquiries,
     newsletterSubscribers,
+    newsletterBroadcasts,
+    saveBroadcast: saveNewsletterBroadcastToSupabase,
     updateQueryStatus: updateQueryStatusInSupabase,
     updateQuoteStatus: updateEnterpriseQuoteStatusInSupabase,
     updateInquiryStatus: updateContactInquiryStatusInSupabase,
