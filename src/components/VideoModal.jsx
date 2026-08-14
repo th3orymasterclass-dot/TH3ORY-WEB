@@ -36,7 +36,7 @@ export default function VideoModal({ isOpen, onClose, onEnrollClick }) {
         <div className="relative aspect-video bg-black flex items-center justify-center select-none" onContextMenu={e => e.preventDefault()}>
           {/* Top-Right Shield Overlay: Prevents Google Drive pop-out & YouTube title pop-out clicks */}
           <div
-            className="absolute top-0 right-0 w-28 h-16 z-30 bg-transparent cursor-default pointer-events-auto"
+            className="absolute top-0 right-0 w-36 h-16 sm:w-28 sm:h-16 z-30 bg-transparent cursor-default pointer-events-auto touch-none select-none"
             onClick={e => { e.preventDefault(); e.stopPropagation(); }}
             onContextMenu={e => e.preventDefault()}
             title="External tab exit disabled for security"
@@ -52,10 +52,10 @@ export default function VideoModal({ isOpen, onClose, onEnrollClick }) {
         </div>
 
         {/* Modal Footer & Quick CTA */}
-        <div className="p-5 bg-slate-900/80 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-4 text-xs text-slate-400">
-            <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
-              <Shield className="w-4 h-4 text-emerald-400" /> 100% Risk Free 14-Day Guarantee
+        <div className="p-4 sm:p-5 bg-slate-900/80 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
+            <span className="flex items-center gap-1.5 text-emerald-400 font-medium bg-emerald-950/40 border border-emerald-500/30 px-2.5 py-1 rounded-full text-[11px]">
+              🔒 Protected Stream Only
             </span>
             <span className="flex items-center gap-1.5 text-indigo-400 font-medium">
               <Award className="w-4 h-4 text-indigo-400" /> Certificate Included

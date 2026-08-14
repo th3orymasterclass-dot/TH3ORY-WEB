@@ -293,16 +293,24 @@ function ContentModal({ item, levels, onSave, onClose }) {
                   />
                 </div>
                 {parsedDrive.isGDrive ? (
-                  <div className="p-3 bg-blue-950/40 border border-blue-500/30 rounded-xl text-xs space-y-1">
-                    <div className="flex items-center gap-1.5 text-blue-400 font-bold">
-                      <CheckCircle2 className="w-4 h-4 text-blue-400" /> Valid Google Drive Digital Storage File Detected!
+                  <div className="p-3.5 bg-blue-950/40 border border-blue-500/30 rounded-xl text-xs space-y-1.5">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-1.5 text-blue-400 font-bold">
+                        <CheckCircle2 className="w-4 h-4 text-blue-400" /> Valid Google Drive Stream File Detected!
+                      </div>
+                      <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
+                        🔒 Stream-Only Mode Active
+                      </span>
                     </div>
                     <p className="text-slate-300"><strong>File ID:</strong> <code className="text-blue-300 font-mono">{parsedDrive.fileId}</code></p>
                     <p className="text-slate-300"><strong>Embed Stream URL:</strong> <code className="text-slate-400 font-mono">{parsedDrive.embedUrl}</code></p>
+                    <p className="text-[11px] text-slate-400 pt-0.5">
+                      Protected Stream: External pop-outs, raw downloads, and tab exits are automatically restricted for students.
+                    </p>
                   </div>
                 ) : (
                   <p className="text-xs text-slate-500">
-                    💡 Tip: Paste any Google Drive link set to <em>"Anyone with the link can view"</em>. It will be auto-formatted for high-speed streaming and direct download.
+                    💡 Tip: Paste any Google Drive link set to <em>"Anyone with the link can view"</em>. It will be auto-formatted for protected in-app streaming.
                   </p>
                 )}
               </div>
