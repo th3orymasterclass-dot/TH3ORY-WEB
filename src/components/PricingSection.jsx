@@ -7,7 +7,6 @@ import { sendEnrollmentEmail } from '../services/emailService';
 export default function PricingSection({ onSelectPlan, couponCode, setCouponCode, couponDiscount, setCouponDiscount }) {
   const { plans } = useTh3oryLive();
   const [currency, setCurrency] = useState('USD'); // 'USD' | 'INR'
-  const [isMonthly, setIsMonthly] = useState(false);
   const [couponInput, setCouponInput] = useState(couponCode || '');
   const [couponMsg, setCouponMsg] = useState(couponDiscount > 0 ? `${couponCode} applied (${couponDiscount}% OFF)` : '');
 
@@ -57,54 +56,38 @@ export default function PricingSection({ onSelectPlan, couponCode, setCouponCode
   };
 
   return (
-    <section id="pricing" className="py-24 relative bg-slate-950 border-t border-slate-900">
+    <section id="pricing" className="py-24 relative bg-[#15171A] border-t border-[#555A66]/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/10 text-amber-400 text-xs font-bold uppercase tracking-widest border border-amber-500/30">
-            <Crown className="w-4 h-4" /> Transparent Pricing & Enterprise Access
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#7C5CFC]/10 text-[#FFC857] text-xs font-bold uppercase tracking-widest border border-[#7C5CFC]/30">
+            <Crown className="w-4 h-4 text-[#FFC857]" /> Transparent Pricing & Enterprise Access
           </div>
-          <h2 className="text-3xl sm:text-5xl font-extrabold font-heading text-white">
-            CHOOSE YOUR <span className="text-gradient-gold">PASS</span>
+          <h2 className="text-3xl sm:text-5xl font-extrabold font-heading text-[#FAFAF7]">
+            CHOOSE YOUR <span className="text-gradient-violet">PASS</span>
           </h2>
-          <p className="text-slate-400 text-base sm:text-lg">
-            Get single full access to the flagship 30-day masterclass, or request a custom enterprise quote for your pupils.
+          <p className="text-[#555A66] text-base sm:text-lg">
+            Get full lifetime-access single pass to the flagship 30-day masterclass, or request a custom enterprise quote for your pupils.
           </p>
 
-          {/* Controls: Currency Switcher + Billing Toggle */}
+          {/* Controls: Currency Switcher */}
           <div className="flex flex-wrap items-center justify-center gap-6 pt-4">
             
             {/* Currency Switcher */}
-            <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 rounded-xl p-1 text-xs font-bold">
+            <div className="flex items-center gap-1.5 bg-[#15171A] border border-[#E9E4FF]/15 rounded-xl p-1 text-xs font-bold">
               <button
                 onClick={() => setCurrency('USD')}
-                className={`px-3 py-1.5 rounded-lg transition-all ${currency === 'USD' ? 'bg-amber-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'}`}
+                className={`px-3.5 py-1.5 rounded-lg transition-all ${currency === 'USD' ? 'bg-[#7C5CFC] text-[#FAFAF7] shadow-md' : 'text-[#555A66] hover:text-[#FAFAF7]'}`}
               >
                 🇺🇸 USD ($149)
               </button>
               <button
                 onClick={() => setCurrency('INR')}
-                className={`px-3 py-1.5 rounded-lg transition-all ${currency === 'INR' ? 'bg-amber-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'}`}
+                className={`px-3.5 py-1.5 rounded-lg transition-all ${currency === 'INR' ? 'bg-[#7C5CFC] text-[#FAFAF7] shadow-md' : 'text-[#555A66] hover:text-[#FAFAF7]'}`}
               >
                 🇮🇳 INR (₹11,999)
               </button>
-            </div>
-
-            {/* Split Payment Switcher */}
-            <div className="flex items-center gap-3">
-              <span className={`text-xs font-semibold ${!isMonthly ? 'text-white' : 'text-slate-400'}`}>
-                One-Time Full
-              </span>
-              <button
-                onClick={() => setIsMonthly(!isMonthly)}
-                className="relative w-12 h-7 rounded-full bg-slate-900 p-1 border border-amber-500/30 transition-colors"
-              >
-                <div className={`w-5 h-5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 transition-transform ${isMonthly ? 'translate-x-5' : 'translate-x-0'}`} />
-              </button>
-              <span className={`text-xs font-semibold flex items-center gap-1.5 ${isMonthly ? 'text-white' : 'text-slate-400'}`}>
-                3-Month Instalments
-              </span>
             </div>
 
           </div>
@@ -113,18 +96,18 @@ export default function PricingSection({ onSelectPlan, couponCode, setCouponCode
           <div className="max-w-md mx-auto pt-2">
             <form onSubmit={applyCoupon} className="flex gap-2">
               <div className="relative flex-1">
-                <Tag className="w-4 h-4 text-amber-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Tag className="w-4 h-4 text-[#FFC857] absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   placeholder="Enter Promo Code (Try 'TH3ORY20')"
                   value={couponInput}
                   onChange={(e) => setCouponInput(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-[#15171A] border border-[#E9E4FF]/15 text-xs sm:text-sm text-[#FAFAF7] placeholder-[#555A66] focus:outline-none focus:border-[#7C5CFC]"
                 />
               </div>
               <button
                 type="submit"
-                className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs sm:text-sm transition-colors"
+                className="px-4 py-2.5 rounded-xl bg-[#7C5CFC] hover:bg-[#6344E0] text-[#FAFAF7] font-extrabold text-xs sm:text-sm transition-colors"
               >
                 Apply
               </button>
@@ -148,11 +131,11 @@ export default function PricingSection({ onSelectPlan, couponCode, setCouponCode
 
             if (!isEnt) {
               if (currency === 'INR') {
-                rawPrice = isMonthly ? 4299 : 11999;
+                rawPrice = plan.priceINR || 11999;
                 const finalPrice = couponDiscount > 0 ? Math.round(rawPrice * (1 - couponDiscount / 100)) : rawPrice;
                 displayPriceStr = `₹${finalPrice.toLocaleString('en-IN')}`;
               } else {
-                rawPrice = isMonthly ? 55 : 149;
+                rawPrice = plan.priceFull || 149;
                 const finalPrice = couponDiscount > 0 ? Math.round(rawPrice * (1 - couponDiscount / 100)) : rawPrice;
                 displayPriceStr = `$${finalPrice}`;
               }
@@ -163,39 +146,39 @@ export default function PricingSection({ onSelectPlan, couponCode, setCouponCode
                 key={plan.id}
                 className={`relative rounded-3xl p-8 flex flex-col justify-between transition-all duration-300 ${
                   plan.popular
-                    ? 'glass-panel border-2 border-amber-500 shadow-2xl shadow-amber-500/20 scale-[1.02] z-10'
-                    : 'glass-card border border-slate-800 hover:border-slate-700'
+                    ? 'glass-panel border-2 border-[#7C5CFC] shadow-2xl shadow-[#7C5CFC]/20 scale-[1.02] z-10'
+                    : 'glass-card border border-[#E9E4FF]/15 hover:border-[#7C5CFC]/40'
                 }`}
               >
                 {/* Popular Badge */}
                 {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 text-xs font-black shadow-lg flex items-center gap-1 uppercase tracking-wider">
-                    <Crown className="w-3.5 h-3.5 fill-slate-950" /> Flagship Single Pass
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-[#7C5CFC] via-[#9277FF] to-[#7C5CFC] text-[#FAFAF7] text-xs font-black shadow-lg flex items-center gap-1 uppercase tracking-wider">
+                    <Crown className="w-3.5 h-3.5 text-[#FFC857] fill-[#FFC857]" /> Flagship Single Pass
                   </div>
                 )}
 
                 <div>
-                  <div className="text-xs font-bold text-amber-400 uppercase tracking-widest mb-2 font-brand">{plan.badge}</div>
-                  <h3 className="text-2xl font-bold font-brand text-white">{plan.name}</h3>
+                  <div className="text-xs font-bold text-[#FFC857] uppercase tracking-widest mb-2 font-brand">{plan.badge}</div>
+                  <h3 className="text-2xl font-bold font-brand text-[#FAFAF7]">{plan.name}</h3>
 
                   {/* Price Tag */}
                   <div className="my-6 min-h-[70px] flex flex-col justify-center">
                     {isEnt ? (
                       <div>
-                        <span className="text-3xl sm:text-4xl font-extrabold font-brand text-amber-400">Custom Quote</span>
-                        <p className="text-slate-400 text-xs mt-1">Tailored pricing for pupils (Students & Professionals)</p>
+                        <span className="text-3xl sm:text-4xl font-extrabold font-brand text-[#FFC857]">Custom Quote</span>
+                        <p className="text-[#555A66] text-xs mt-1">Tailored pricing for pupils (Students & Professionals)</p>
                       </div>
                     ) : (
                       <div>
                         <div className="flex items-baseline gap-2">
-                          <span className="text-4xl sm:text-5xl font-extrabold font-brand text-white">{displayPriceStr}</span>
+                          <span className="text-4xl sm:text-5xl font-extrabold font-brand text-[#FAFAF7]">{displayPriceStr}</span>
                           {couponDiscount > 0 && (
-                            <span className="text-lg text-slate-500 line-through">
+                            <span className="text-lg text-[#555A66] line-through">
                               {currency === 'INR' ? `₹${rawPrice}` : `$${rawPrice}`}
                             </span>
                           )}
-                          <span className="text-slate-400 text-xs font-semibold">
-                            {isMonthly ? '/ month (3 mos)' : `one-time (${currency})`}
+                          <span className="text-[#555A66] text-xs font-semibold">
+                            one-time ({currency})
                           </span>
                         </div>
                         {couponDiscount > 0 && (
@@ -208,10 +191,10 @@ export default function PricingSection({ onSelectPlan, couponCode, setCouponCode
                   </div>
 
                   {/* Features List */}
-                  <ul className="space-y-3 my-6 text-xs sm:text-sm text-slate-300 border-t border-slate-900 pt-6">
+                  <ul className="space-y-3 my-6 text-xs sm:text-sm text-[#FAFAF7]/90 border-t border-[#555A66]/30 pt-6">
                     {plan.features.map((feat, idx) => (
                       <li key={idx} className="flex items-start gap-2.5">
-                        <Check className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                        <Check className="w-4 h-4 text-[#FFC857] flex-shrink-0 mt-0.5" />
                         <span>{feat}</span>
                       </li>
                     ))}
@@ -219,19 +202,19 @@ export default function PricingSection({ onSelectPlan, couponCode, setCouponCode
                 </div>
 
                 {/* Plan Action Button */}
-                <div className="pt-6 border-t border-slate-800">
+                <div className="pt-6 border-t border-[#555A66]/30">
                   {isEnt ? (
                     <button
                       onClick={() => setShowEnterpriseModal(true)}
-                      className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-xs uppercase tracking-wider shadow-xl shadow-purple-600/20 transition-all flex items-center justify-center gap-2"
+                      className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#7C5CFC] to-[#6344E0] hover:from-[#6c4ce0] hover:to-[#5233d0] text-[#FAFAF7] font-extrabold text-xs uppercase tracking-wider shadow-xl shadow-[#7C5CFC]/20 transition-all flex items-center justify-center gap-2"
                     >
                       <Building2 className="w-4 h-4" />
                       <span>Get Custom Quote for Pupils</span>
                     </button>
                   ) : (
                     <button
-                      onClick={() => onSelectPlan(plan, isMonthly)}
-                      className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 font-extrabold text-xs uppercase tracking-wider shadow-xl shadow-amber-500/30 transition-all flex items-center justify-center gap-2"
+                      onClick={() => onSelectPlan(plan, false)}
+                      className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#7C5CFC] via-[#9277FF] to-[#7C5CFC] hover:from-[#6c4ce0] hover:to-[#5233d0] text-[#FAFAF7] font-extrabold text-xs uppercase tracking-wider shadow-xl shadow-[#7C5CFC]/30 transition-all flex items-center justify-center gap-2"
                     >
                       <span>Enroll in Masterclass ({displayPriceStr})</span>
                       <ArrowRight className="w-4 h-4" />

@@ -261,30 +261,17 @@ function Step1({ form, setForm, onNext }) {
 // ─── Step 2: Plan Selection ────────────────────────────────────────────────────
 function Step2({ form, setForm, onNext, onBack }) {
   const plans   = getPlans();
-  const [monthly, setMonthly] = useState(false);
 
   const selected = form.plan;
-  const select = (plan) => setForm(f => ({ ...f, plan, isMonthly: monthly }));
+  const select = (plan) => setForm(f => ({ ...f, plan, isMonthly: false }));
 
-  const price = (plan) => monthly ? plan.priceMonthly : plan.priceFull;
+  const price = (plan) => plan.priceFull || 149;
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-black text-white mb-1">Choose Your Plan</h2>
-        <p className="text-slate-500 text-sm">Pick the tier that fits your goals and budget</p>
-      </div>
-
-      {/* Billing toggle */}
-      <div className="flex items-center gap-3 w-fit mx-auto bg-slate-900 border border-slate-800 rounded-xl p-1">
-        <button onClick={() => { setMonthly(false); setForm(f => ({...f, isMonthly: false})); }}
-          className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${!monthly ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}>
-          Pay in Full <span className="text-[10px] ml-1 opacity-70">Save 15%</span>
-        </button>
-        <button onClick={() => { setMonthly(true); setForm(f => ({...f, isMonthly: true})); }}
-          className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${monthly ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}>
-          Monthly 3-Pay
-        </button>
+        <h2 className="text-2xl font-black text-[#FAFAF7] mb-1">Choose Your Plan</h2>
+        <p className="text-[#555A66] text-sm">Select single full lifetime pass to the masterclass</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -296,31 +283,30 @@ function Step2({ form, setForm, onNext, onBack }) {
               onClick={() => select(plan)}
               className={`relative text-left rounded-2xl border-2 p-6 transition-all hover:scale-[1.01] ${
                 isSelected
-                  ? 'border-amber-500 bg-amber-500/10 shadow-xl shadow-amber-500/20'
+                  ? 'border-[#7C5CFC] bg-[#7C5CFC]/10 shadow-xl shadow-[#7C5CFC]/20'
                   : plan.popular
-                    ? 'border-amber-500/40 bg-slate-900/80 hover:border-amber-500/60'
-                    : 'border-slate-700 bg-slate-900/60 hover:border-slate-600'
+                    ? 'border-[#7C5CFC]/40 bg-[#15171A]/80 hover:border-[#7C5CFC]/60'
+                    : 'border-[#555A66]/30 bg-[#15171A]/60 hover:border-[#555A66]/60'
               }`}>
               {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-amber-500 rounded-full text-slate-950 text-[10px] font-black flex items-center gap-1">
-                  <Crown className="w-2.5 h-2.5"/> FLAGSHIP SINGLE PASS
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-[#7C5CFC] rounded-full text-[#FAFAF7] text-[10px] font-black flex items-center gap-1">
+                  <Crown className="w-2.5 h-2.5 text-[#FFC857] fill-[#FFC857]"/> FLAGSHIP SINGLE PASS
                 </div>
               )}
               {isSelected && (
-                <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center">
-                  <Check className="w-3 h-3 text-slate-950"/>
+                <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-[#7C5CFC] flex items-center justify-center">
+                  <Check className="w-3 h-3 text-[#FAFAF7]"/>
                 </div>
               )}
-              <p className="text-white font-black text-lg mb-0.5">{plan.name}</p>
-              <p className="text-amber-400 text-xs font-bold mb-4">{plan.badge}</p>
+              <p className="text-[#FAFAF7] font-black text-lg mb-0.5">{plan.name}</p>
+              <p className="text-[#FFC857] text-xs font-bold mb-4">{plan.badge}</p>
               <div className="flex items-baseline gap-1 mb-4">
                 {isEnt ? (
-                  <span className="text-2xl font-black text-amber-400">Custom Quote</span>
+                  <span className="text-2xl font-black text-[#FFC857]">Custom Quote</span>
                 ) : (
                   <>
-                    <span className="text-3xl sm:text-4xl font-black text-white">${price(plan)}</span>
-                    <span className="text-slate-400 text-xs"> (or ₹11,999 INR)</span>
-                    {monthly && <span className="text-slate-500 text-xs"> /mo × 3</span>}
+                    <span className="text-3xl sm:text-4xl font-black text-[#FAFAF7]">${price(plan)}</span>
+                    <span className="text-[#555A66] text-xs"> (or ₹11,999 INR)</span>
                   </>
                 )}
               </div>
@@ -562,15 +548,9 @@ function Step3({ form, setForm, onNext, onBack }) {
       <div className="bg-slate-950 border border-slate-800 rounded-2xl p-5 space-y-3">
         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Order Summary</p>
         <div className="flex justify-between text-sm">
-          <span className="text-slate-300">{plan?.name}</span>
-          <span className="text-white font-bold">${basePriceUSD} / ₹{basePriceINR.toLocaleString('en-IN')}</span>
+          <span className="text-[#FAFAF7]">{plan?.name}</span>
+          <span className="text-[#FAFAF7] font-bold">${basePriceUSD} / ₹{basePriceINR.toLocaleString('en-IN')}</span>
         </div>
-        {form.isMonthly && (
-          <div className="flex justify-between text-xs text-slate-500">
-            <span>3 monthly instalments of ${basePriceUSD} / ₹{basePriceINR.toLocaleString('en-IN')}</span>
-            <span>Total: ${basePriceUSD * 3}</span>
-          </div>
-        )}
 
         {/* Coupon */}
         <div className="pt-2 border-t border-slate-800 space-y-2">

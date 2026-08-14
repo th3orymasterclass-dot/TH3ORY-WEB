@@ -56,7 +56,7 @@ export default function PricingPanel({ data, save, reset }) {
               { label: 'Plan Name', key: 'name' },
               { label: 'Badge Text', key: 'badge' },
               { label: 'Full Price ($)', key: 'priceFull', type: 'number' },
-              { label: 'Monthly Price ($)', key: 'priceMonthly', type: 'number' },
+              { label: 'INR Price (₹)', key: 'priceINR', type: 'number' },
             ].map(f => (
               <div key={f.key}>
                 <label className="block text-xs text-slate-500 uppercase tracking-wider mb-1">{f.label}</label>

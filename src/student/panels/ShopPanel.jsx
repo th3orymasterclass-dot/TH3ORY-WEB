@@ -40,7 +40,7 @@ function PlanUpgradeCard({ plan, currentPlan }) {
       <h3 className="text-white font-bold text-lg mb-1">{plan.name}</h3>
       <div className="flex items-baseline gap-1 mb-4">
         <span className="text-3xl font-black text-white">${plan.priceFull}</span>
-        <span className="text-slate-500 text-sm">full / or ${plan.priceMonthly}/mo</span>
+        <span className="text-slate-500 text-sm">one-time pass</span>
       </div>
       <ul className="space-y-2 mb-5">
         {plan.features.map((f, i) => (
