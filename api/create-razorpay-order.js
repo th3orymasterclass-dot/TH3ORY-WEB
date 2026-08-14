@@ -18,11 +18,12 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const razorpayKeyId = process.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_TP7hT2Wt1nkqwg';
-  const razorpaySecret = process.env.RAZORPAY_KEY_SECRET || 'd1lNjZc17928tyS5hcQu5OV2';
+  const razorpayKeyId = process.env.VITE_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID;
+  const razorpaySecret = process.env.RAZORPAY_KEY_SECRET;
 
   if (!razorpayKeyId || !razorpaySecret) {
-    return res.status(500).json({ error: 'Razorpay keys not configured on server' });
+    console.error('[Razorpay API Error]: Missing RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET environment variables');
+    return res.status(500).json({ error: 'Razorpay payment Gateway keys are not configured on server' });
   }
 
   try {
@@ -31,19 +32,46 @@ export default async function handler(req, res) {
       key_secret: razorpaySecret,
     });
 
-    const { amount, currency = 'INR', receipt, notes } = req.body || {};
+    const { amount: clientAmount, currency = 'INR', receipt, notes, couponCode } = req.body || {};
 
-    if (!amount || amount <= 0) {
-      return res.status(400).json({ error: 'Invalid order amount' });
+    // Official authoritative server plan prices
+    const OFFICIAL_PRICES = {
+      INR: 11999,
+      USD: 149,
+    };
+
+    const targetCurrency = (currency || 'INR').toUpperCase();
+    const basePrice = OFFICIAL_PRICES[targetCurrency] || OFFICIAL_PRICES.INR;
+
+    // Server-side coupon verification
+    let discountPct = 0;
+    const cleanCoupon = (couponCode || notes?.couponCode || '').trim().toUpperCase();
+    if (cleanCoupon === 'TH3ORY20' || cleanCoupon === 'TH3ORY2026') {
+      discountPct = 20;
+    } else if (cleanCoupon === 'VIP50') {
+      discountPct = 50;
+    }
+
+    const calculatedPrice = basePrice * (1 - discountPct / 100);
+
+    // Prefer server-calculated price over raw client amount to prevent price tampering
+    const finalAmount = calculatedPrice > 0 ? calculatedPrice : (Number(clientAmount) || basePrice);
+
+    if (clientAmount && Math.abs(Number(clientAmount) - calculatedPrice) > 1) {
+      console.warn(`[Price Warning]: Client sent amount ${clientAmount}, but server calculated ${calculatedPrice}. Using server price.`);
     }
 
     // Amount in Razorpay is in sub-units (e.g., paise for INR)
     // 1 INR = 100 paise
     const options = {
-      amount: Math.round(Number(amount) * 100),
-      currency: currency.toUpperCase(),
+      amount: Math.round(Number(finalAmount) * 100),
+      currency: targetCurrency,
       receipt: receipt || `ORD-${Date.now()}`,
-      notes: notes || {},
+      notes: {
+        ...(notes || {}),
+        couponCode: cleanCoupon || 'NONE',
+        serverVerifiedPrice: finalAmount,
+      },
     };
 
     const order = await instance.orders.create(options);

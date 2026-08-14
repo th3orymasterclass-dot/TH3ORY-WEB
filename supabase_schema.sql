@@ -143,6 +143,63 @@ CREATE TABLE IF NOT EXISTS public.newsletter_broadcasts (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 11. USER PROGRESS TABLE (Persistent Student Course Module Progress Tracking)
+CREATE TABLE IF NOT EXISTS public.user_progress (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email TEXT NOT NULL,
+    lesson_id TEXT NOT NULL,
+    completed BOOLEAN DEFAULT true,
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(email, lesson_id)
+);
+
+-- 12. COUPONS TABLE (Official Database Discount Coupon Management)
+CREATE TABLE IF NOT EXISTS public.coupons (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    code TEXT UNIQUE NOT NULL,
+    discount_percentage NUMERIC(5, 2) DEFAULT 0.00,
+    discount_amount NUMERIC(10, 2) DEFAULT 0.00,
+    max_uses INT DEFAULT 1000,
+    current_uses INT DEFAULT 0,
+    expiry_date TIMESTAMPTZ,
+    active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 13. CERTIFICATES TABLE (Official Verifiable Graduate Completion Certificates)
+CREATE TABLE IF NOT EXISTS public.certificates (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    cert_id TEXT UNIQUE NOT NULL,
+    email TEXT NOT NULL,
+    student_name TEXT NOT NULL,
+    course_name TEXT DEFAULT 'TH3ORY Masterclass of Influencing',
+    issue_date DATE DEFAULT CURRENT_DATE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Performance & Security High-Frequency Query Indexes
+CREATE INDEX IF NOT EXISTS idx_enrollments_email ON public.enrollments(email);
+CREATE INDEX IF NOT EXISTS idx_enrollments_order_id ON public.enrollments(order_id);
+CREATE INDEX IF NOT EXISTS idx_student_accounts_email ON public.student_accounts(email);
+CREATE INDEX IF NOT EXISTS idx_user_progress_email_lesson ON public.user_progress(email, lesson_id);
+CREATE INDEX IF NOT EXISTS idx_coupons_code ON public.coupons(code);
+CREATE INDEX IF NOT EXISTS idx_certificates_cert_id ON public.certificates(cert_id);
+
+-- Seed default coupons
+INSERT INTO public.coupons (code, discount_percentage, active)
+VALUES 
+  ('TH3ORY20', 20.00, true),
+  ('TH3ORY2026', 20.00, true),
+  ('VIP50', 50.00, true)
+ON CONFLICT (code) DO NOTHING;
+
+-- Seed sample default certificate for verification testing
+INSERT INTO public.certificates (cert_id, email, student_name, course_name, issue_date)
+VALUES 
+  ('TH3ORY-CERT-2026-99', 'student@example.com', 'Alexander Vance', 'TH3ORY Masterclass of Influencing', '2026-08-15')
+ON CONFLICT (cert_id) DO NOTHING;
+
 -- ==============================================================================
 -- ROW LEVEL SECURITY (RLS) PERMISSIONS
 -- Grant anonymous/public access to insert & read records for seamless web functionality
@@ -158,6 +215,9 @@ ALTER TABLE public.course_contents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.newsletter_subscribers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.newsletter_broadcasts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_progress ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.coupons ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.certificates ENABLE ROW LEVEL SECURITY;
 
 -- Allow Public/Anon Read/Write policies for active client operations
 CREATE POLICY "Allow public read/insert on enrollments" ON public.enrollments FOR ALL USING (true) WITH CHECK (true);
@@ -170,6 +230,9 @@ CREATE POLICY "Allow public read/insert on course_contents" ON public.course_con
 CREATE POLICY "Allow public read/insert on site_settings" ON public.site_settings FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public read/insert on newsletter_subscribers" ON public.newsletter_subscribers FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public read/insert on newsletter_broadcasts" ON public.newsletter_broadcasts FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow public read/insert on user_progress" ON public.user_progress FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow public read/insert on coupons" ON public.coupons FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow public read/insert on certificates" ON public.certificates FOR ALL USING (true) WITH CHECK (true);
 
 -- ==============================================================================
 -- SUPABASE REALTIME REPLICATION ENABLEMENT
@@ -187,8 +250,12 @@ BEGIN
       public.course_contents,
       public.site_settings,
       public.newsletter_subscribers,
-      public.newsletter_broadcasts;
+      public.newsletter_broadcasts,
+      public.user_progress,
+      public.coupons,
+      public.certificates;
   END IF;
 EXCEPTION WHEN OTHERS THEN
   RAISE NOTICE 'Publication table addition skipped or already present.';
 END $$;
+

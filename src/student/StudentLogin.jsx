@@ -27,7 +27,34 @@ export default function StudentLogin({ onAuthenticated }) {
     setLoading(true);
     setError('');
 
-    // 1. Try Supabase verification first
+    // 1. Try Serverless Auth API handler first
+    try {
+      const res = await fetch('/api/student-auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail, code: inputCode })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.student) {
+          const profile = {
+            name: data.student.name || cleanEmail.split('@')[0],
+            email: data.student.email || cleanEmail,
+            enrolledAt: data.student.enrolledAt || new Date().toISOString(),
+            plan: data.student.plan || 'TH3ORY Masterclass',
+          };
+          sessionStorage.setItem('th3ory_student_auth', JSON.stringify(profile));
+          setLoading(false);
+          onAuthenticated(profile);
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('[StudentLogin] Serverless API unreachable, attempting direct database check:', err);
+    }
+
+    // 2. Try Direct Supabase verification
     const sbStudent = await verifyStudentCodeWithSupabase(cleanEmail, inputCode);
 
     if (sbStudent) {

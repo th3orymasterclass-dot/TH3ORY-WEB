@@ -14,6 +14,8 @@ import EnrollmentPage from './components/EnrollmentPage';
 import Testimonials from './components/Testimonials';
 import FAQSection from './components/FAQSection';
 import Footer from './components/Footer';
+import SEOHead from './components/SEOHead';
+import StructuredData from './components/StructuredData';
 import { useTh3oryLive } from './data/adminData';
 import { Crown, ShoppingBag } from 'lucide-react';
 
@@ -49,16 +51,27 @@ export default function App() {
 
   if (showEnrollmentPage) {
     return (
-      <EnrollmentPage
-        initialPlan={selectedPlan}
-        onBack={() => setShowEnrollmentPage(false)}
-      />
+      <>
+        <SEOHead
+          title="Enroll | TH3ORY Masterclass of Influencing"
+          description="Complete your enrollment in TH3ORY Masterclass. Secure instant 30-day access to all 50 video modules, workbooks, and cognitive resources."
+          canonicalUrl="https://th3ory.online/#/enroll"
+        />
+        <StructuredData />
+        <EnrollmentPage
+          initialPlan={selectedPlan}
+          onBack={() => setShowEnrollmentPage(false)}
+        />
+      </>
     );
   }
 
   return (
     <div className="min-h-screen bg-[#15171A] text-[#FAFAF7] relative selection:bg-[#7C5CFC] selection:text-[#FAFAF7]">
-      
+      {/* Dynamic SEO Metadata & Structured Data Schemas */}
+      <SEOHead />
+      <StructuredData />
+
       {/* Sticky Bottom Quick Enrollment Bar */}
       <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 w-[92%] max-w-lg glass-panel rounded-2xl p-3.5 border border-[#E9E4FF]/20 shadow-2xl flex items-center justify-between gap-3 animate-fade-in">
         <div className="flex items-center gap-2.5">
@@ -107,6 +120,8 @@ export default function App() {
         />
 
         <OutcomesSection />
+
+        <Testimonials />
 
         <PricingSection
           onSelectPlan={handleOpenCheckoutWithPlan}

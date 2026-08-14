@@ -8,6 +8,8 @@ import { getLevels, getContent, useTh3oryLive } from '../../data/adminData';
 import { getProgress, markLesson, getNotes, saveNote, getBookmarks, toggleBookmark } from '../studentData';
 import { parseGoogleDriveUrl, getEmbeddableMediaUrl } from '../../utils/gdriveHelper';
 
+import { saveStudentProgressToSupabase, fetchStudentProgressFromSupabase } from '../../services/supabaseService';
+
 // Plan access hierarchy: vip > enrolled > free
 const PLAN_RANK = { free: 0, enrolled: 1, vip: 2 };
 function getStudentPlanRank(planStr = '') {
@@ -140,8 +142,17 @@ export default function CoursePanel({ profile, initialLevelId, initialLessonId }
   useEffect(() => {
     const h = () => { setProgress(getProgress()); setBookmarks(getBookmarks()); };
     window.addEventListener('th3ory_student_change', h);
+    
+    // Fetch initial student progress from Supabase if profile email exists
+    if (profile?.email) {
+      fetchStudentProgressFromSupabase(profile.email).then(remoteProgress => {
+        if (remoteProgress && Object.keys(remoteProgress).length > 0) {
+          setProgress(prev => ({ ...prev, ...remoteProgress }));
+        }
+      });
+    }
     return () => window.removeEventListener('th3ory_student_change', h);
-  }, []);
+  }, [profile?.email]);
 
   useEffect(() => {
     if (initialLessonId) {
@@ -160,6 +171,9 @@ export default function CoursePanel({ profile, initialLevelId, initialLessonId }
     const done = !progress[lessonId];
     markLesson(lessonId, done);
     setProgress(getProgress());
+    if (profile?.email) {
+      saveStudentProgressToSupabase(profile.email, lessonId, done);
+    }
   };
 
   const handleBookmark = (lessonId) => {

@@ -1,10 +1,12 @@
-import React from 'react';
-import { ShieldCheck, Lock, CreditCard, Heart, GraduationCap, ArrowRight, Sparkles, Brain, Clapperboard } from 'lucide-react';
+import React, { useState } from 'react';
+import { ShieldCheck, Lock, CreditCard, Heart, GraduationCap, ArrowRight, Sparkles, Brain, Clapperboard, FileText } from 'lucide-react';
 import Logo from './Logo';
 import { getCourseDetails } from '../data/adminData';
+import LegalModal from './LegalModal';
 
 export default function Footer({ onOpenCheckout }) {
   const details = getCourseDetails();
+  const [legalModalTab, setLegalModalTab] = useState(null);
 
   return (
     <footer className="bg-slate-950 border-t border-amber-500/20 pt-16 pb-12 text-slate-400 text-xs sm:text-sm">
@@ -32,33 +34,35 @@ export default function Footer({ onOpenCheckout }) {
             </p>
             
             <div className="flex flex-wrap items-center gap-4 text-slate-500 pt-2">
-              <span className="flex items-center gap-1.5 text-green-400 text-xs font-semibold">
+              <button 
+                onClick={() => setLegalModalTab('refund')} 
+                className="flex items-center gap-1.5 text-green-400 text-xs font-semibold hover:underline"
+              >
                 <ShieldCheck className="w-4 h-4" /> 14-Day 100% Money-Back Guarantee
-              </span>
-              <span className="flex items-center gap-1.5 text-amber-400 text-xs font-semibold">
+              </button>
+              <button 
+                onClick={() => setLegalModalTab('privacy')} 
+                className="flex items-center gap-1.5 text-amber-400 text-xs font-semibold hover:underline"
+              >
                 <Lock className="w-4 h-4" /> 256-Bit SSL Checkout
-              </span>
+              </button>
             </div>
           </div>
 
           {/* Navigation Links */}
           <div className="space-y-3">
-            <h4 className="text-xs font-extrabold text-white uppercase tracking-widest">Navigation</h4>
+            <h4 className="text-xs font-extrabold text-white uppercase tracking-widest">Navigation & Legal</h4>
             <ul className="space-y-2 text-xs">
               <li><a href="#pillars" className="hover:text-amber-400 transition-colors">5 Pillars of Influence</a></li>
               <li><a href="#roadmap" className="hover:text-amber-400 transition-colors">30-Day Level Roadmap</a></li>
               <li><a href="#outcomes" className="hover:text-amber-400 transition-colors">Outcomes & Bonuses</a></li>
               <li><a href="#pricing" className="hover:text-amber-400 transition-colors">Pricing & Plans</a></li>
-              <li><a href="#contact" className="hover:text-amber-400 transition-colors">Contact Us & Newsletter</a></li>
-              <li><a href="#faq" className="hover:text-amber-400 transition-colors">FAQ & Support</a></li>
+              <li><button onClick={() => setLegalModalTab('privacy')} className="hover:text-amber-400 transition-colors text-left">Privacy Policy</button></li>
+              <li><button onClick={() => setLegalModalTab('terms')} className="hover:text-amber-400 transition-colors text-left">Terms of Service</button></li>
+              <li><button onClick={() => setLegalModalTab('refund')} className="hover:text-amber-400 transition-colors text-left">Refund Policy</button></li>
               <li className="pt-2 border-t border-slate-900">
                 <a href="/#/student" className="text-amber-400 font-bold hover:underline flex items-center gap-1">
                   <GraduationCap className="w-3.5 h-3.5"/> Student Portal →
-                </a>
-              </li>
-              <li>
-                <a href="/#/enroll" className="text-amber-400 font-bold hover:underline flex items-center gap-1">
-                  <ArrowRight className="w-3.5 h-3.5"/> Enrollment Page →
                 </a>
               </li>
             </ul>
@@ -90,7 +94,13 @@ export default function Footer({ onOpenCheckout }) {
           <div>
             &copy; 2026 Mentalist Sravan Production. All rights reserved. TH3ORY Masterclass of Influencing.
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <button onClick={() => setLegalModalTab('privacy')} className="hover:text-amber-400 transition-colors">Privacy</button>
+            <span>•</span>
+            <button onClick={() => setLegalModalTab('terms')} className="hover:text-amber-400 transition-colors">Terms</button>
+            <span>•</span>
+            <button onClick={() => setLegalModalTab('refund')} className="hover:text-amber-400 transition-colors">Refunds</button>
+            <span>•</span>
             <a href="/#/student" className="hover:text-amber-400 transition-colors">Student Login</a>
             <span>•</span>
             <a href="/#/admin-th3ory-x9k2" className="hover:text-amber-400 transition-colors">Admin Portal</a>
@@ -98,6 +108,14 @@ export default function Footer({ onOpenCheckout }) {
         </div>
 
       </div>
+
+      {/* Legal Modal */}
+      <LegalModal
+        isOpen={Boolean(legalModalTab)}
+        onClose={() => setLegalModalTab(null)}
+        initialTab={legalModalTab || 'privacy'}
+      />
     </footer>
   );
 }
+

@@ -1031,4 +1031,129 @@ export function subscribeToNewsletterBroadcasts(onBroadcastsChange) {
   }
 }
 
+// ─── Student Course Progress Syncing (Dedicated Table: user_progress) ──────────
+export async function saveStudentProgressToSupabase(email, lessonId, completed = true) {
+  if (!email || !lessonId) return false;
+  const cleanEmail = email.trim().toLowerCase();
+
+  try {
+    const local = JSON.parse(localStorage.getItem(`th3ory_progress_${cleanEmail}`) || '{}');
+    if (completed) local[lessonId] = true;
+    else delete local[lessonId];
+    localStorage.setItem(`th3ory_progress_${cleanEmail}`, JSON.stringify(local));
+  } catch {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      if (completed) {
+        await supabase.from('user_progress').upsert([{
+          email: cleanEmail,
+          lesson_id: lessonId,
+          completed: true,
+          updated_at: new Date().toISOString()
+        }], { onConflict: 'email,lesson_id' });
+      } else {
+        await supabase.from('user_progress').delete()
+          .eq('email', cleanEmail)
+          .eq('lesson_id', lessonId);
+      }
+    } catch (err) {
+      console.warn('[Supabase] Exception syncing student user_progress:', err);
+    }
+  }
+  return true;
+}
+
+export async function fetchStudentProgressFromSupabase(email) {
+  if (!email) return {};
+  const cleanEmail = email.trim().toLowerCase();
+  let local = {};
+  try {
+    local = JSON.parse(localStorage.getItem(`th3ory_progress_${cleanEmail}`) || '{}');
+  } catch {}
+
+  if (!isSupabaseConfigured || !supabase) return local;
+
+  try {
+    const { data, error } = await supabase.from('user_progress').select('lesson_id, completed').eq('email', cleanEmail);
+    if (error || !data) return local;
+
+    const progressObj = { ...local };
+    data.forEach(item => {
+      if (item.completed) progressObj[item.lesson_id] = true;
+    });
+
+    return progressObj;
+  } catch {
+    return local;
+  }
+}
+
+// ─── Server Coupon Validation ──────────────────────────────────────────────────
+export async function validateCouponWithServer(couponCode) {
+  const code = (couponCode || '').trim().toUpperCase();
+  if (!code) return { success: false, error: 'Empty coupon code' };
+
+  try {
+    const res = await fetch('/api/validate-coupon', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ couponCode: code })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && data.coupon) {
+        return { success: true, coupon: data.coupon };
+      }
+    }
+  } catch (err) {
+    console.warn('[SupabaseService] validateCoupon API call unreachable:', err);
+  }
+
+  // Database / Local fallback check
+  if (code === 'TH3ORY20' || code === 'TH3ORY2026') {
+    return { success: true, coupon: { code, discountPercentage: 20 } };
+  }
+  if (code === 'VIP50') {
+    return { success: true, coupon: { code, discountPercentage: 50 } };
+  }
+
+  return { success: false, error: `Invalid coupon code '${code}'` };
+}
+
+// ─── Certificate Verification Query ──────────────────────────────────────────
+export async function fetchCertificateById(certId) {
+  const cleanId = (certId || '').trim().toUpperCase();
+  if (!cleanId) return null;
+
+  try {
+    const res = await fetch(`/api/verify-certificate?certId=${encodeURIComponent(cleanId)}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && data.certificate) {
+        return data.certificate;
+      }
+    }
+  } catch (err) {
+    console.warn('[SupabaseService] verify-certificate API call unreachable:', err);
+  }
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data } = await supabase.from('certificates').select('*').eq('cert_id', cleanId).single();
+      if (data) {
+        return {
+          certId: data.cert_id,
+          studentName: data.student_name,
+          email: data.email,
+          courseName: data.course_name || 'TH3ORY Masterclass of Influencing',
+          issueDate: data.issue_date,
+          verified: true
+        };
+      }
+    } catch {}
+  }
+
+  return null;
+}
 

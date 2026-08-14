@@ -24,18 +24,43 @@ export default function AdminLogin({ onAuthenticated }) {
     }
     setLoading(true);
     setError('');
-    await new Promise(r => setTimeout(r, 600)); // slight delay to deter brute force
+
+    try {
+      // 1. Try serverless auth API first
+      const res = await fetch('/api/admin-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          sessionStorage.setItem('th3ory_admin_auth', '1');
+          localStorage.setItem('th3ory_admin_auth', '1');
+          if (data.token) sessionStorage.setItem('th3ory_admin_token', data.token);
+          setLoading(false);
+          onAuthenticated();
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('[AdminLogin] Serverless API unreachable, testing local hash fallback:', err);
+    }
+
+    // 2. Client-side SHA-256 fallback verification for static environment preview
     const hash = await sha256(password);
     if (hash === EXPECTED_HASH) {
       sessionStorage.setItem('th3ory_admin_auth', '1');
       localStorage.setItem('th3ory_admin_auth', '1');
+      setLoading(false);
       onAuthenticated();
     } else {
       setAttempts(a => a + 1);
       setError('Incorrect password. Access denied.');
       setPassword('');
+      setLoading(false);
     }
-    setLoading(false);
   }, [password, attempts, onAuthenticated]);
 
   return (

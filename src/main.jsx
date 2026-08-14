@@ -6,11 +6,10 @@ import AdminLogin from './admin/AdminLogin.jsx';
 import StudentApp   from './student/StudentApp.jsx';
 import StudentLogin from './student/StudentLogin.jsx';
 import EnrollmentPage from './components/EnrollmentPage.jsx';
+import CertificateVerification from './components/CertificateVerification.jsx';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
+import NotFoundPage from './components/NotFoundPage.jsx';
 import './index.css';
-
-const ADMIN_HASH   = '/admin-th3ory-x9k2';
-const STUDENT_HASH = '/student';
-const ENROLL_HASH  = '/enroll';
 
 function Root() {
   const getInitialView = () => {
@@ -20,6 +19,8 @@ function Root() {
     if (h.includes('admin') || p.includes('admin')) return 'admin';
     if (h.includes('student') || p.includes('student')) return 'student';
     if (h.includes('enroll') || p.includes('enroll')) return 'enroll';
+    if (h.includes('verify') || p.includes('verify')) return 'verify';
+    if (h.includes('404')) return '404';
     return 'public';
   };
 
@@ -76,12 +77,28 @@ function Root() {
     return <EnrollmentPage onBack={() => { window.location.hash = ''; setView('public'); }} />;
   }
 
+  // ── Certificate Verification ────────────────────────────────────────────────
+  if (view === 'verify') {
+    const hash = window.location.hash || '';
+    const parts = hash.split('/');
+    const certIdParam = parts[2] ? parts[2].toUpperCase() : 'TH3ORY-CERT-2026-99';
+    return <CertificateVerification initialCertId={certIdParam} />;
+  }
+
+  // ── 404 Page ───────────────────────────────────────────────────────────────
+  if (view === '404') {
+    return <NotFoundPage />;
+  }
+
   // ── Public ─────────────────────────────────────────────────────────────────
   return <App/>;
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <Root/>
+    <ErrorBoundary>
+      <Root/>
+    </ErrorBoundary>
   </React.StrictMode>
 );
+

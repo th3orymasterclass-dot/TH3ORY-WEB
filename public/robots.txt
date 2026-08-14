@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /#/admin-th3ory-x9k2
+Disallow: /api/
+
+Sitemap: https://th3ory.online/sitemap.xml

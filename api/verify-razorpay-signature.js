@@ -18,7 +18,12 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const razorpaySecret = process.env.RAZORPAY_KEY_SECRET || 'd1lNjZc17928tyS5hcQu5OV2';
+  const razorpaySecret = process.env.RAZORPAY_KEY_SECRET;
+
+  if (!razorpaySecret) {
+    console.error('[Razorpay Signature Error]: RAZORPAY_KEY_SECRET environment variable is missing.');
+    return res.status(500).json({ success: false, error: 'Server configuration error: missing payment secret' });
+  }
 
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body || {};
