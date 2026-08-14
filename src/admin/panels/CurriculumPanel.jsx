@@ -56,8 +56,8 @@ function LevelCard({ level, index, onChange, onDelete }) {
   return (
     <div className={`bg-slate-900 border ${ACCENT_COLORS[index % ACCENT_COLORS.length]} rounded-2xl overflow-hidden`}>
       {/* Header */}
-      <div className="flex items-center gap-3 px-5 py-4 cursor-pointer" onClick={() => setOpen(o => !o)}>
-        <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-2">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 px-5 py-4 cursor-pointer" onClick={() => setOpen(o => !o)}>
+        <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
           <input value={level.levelNumber ?? ''} onClick={e => e.stopPropagation()} onChange={e => onChange({ ...level, levelNumber: e.target.value })}
             className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-amber-400 text-xs font-bold focus:outline-none focus:border-amber-500/50" />
           <input value={level.name ?? ''} onClick={e => e.stopPropagation()} onChange={e => onChange({ ...level, name: e.target.value })}
@@ -67,12 +67,14 @@ function LevelCard({ level, index, onChange, onDelete }) {
           <input value={level.tagline ?? ''} onClick={e => e.stopPropagation()} onChange={e => onChange({ ...level, tagline: e.target.value })}
             className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-slate-400 text-xs focus:outline-none focus:border-amber-500/50" />
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="text-slate-600 text-xs">{level.lessons?.length ?? 0} lessons</span>
-          <button onClick={e => { e.stopPropagation(); onDelete(); }} className="text-red-500/50 hover:text-red-400">
-            <Trash2 className="w-4 h-4" />
-          </button>
-          {open ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
+        <div className="flex items-center justify-between w-full sm:w-auto gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800/80">
+          <span className="text-slate-500 text-xs">{level.lessons?.length ?? 0} lessons</span>
+          <div className="flex items-center gap-2">
+            <button onClick={e => { e.stopPropagation(); onDelete(); }} className="text-red-500/50 hover:text-red-400">
+              <Trash2 className="w-4 h-4" />
+            </button>
+            {open ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
+          </div>
         </div>
       </div>
 

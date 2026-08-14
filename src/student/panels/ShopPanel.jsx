@@ -92,7 +92,7 @@ function CheckoutModal({ addon, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl">
+      <div className="w-full max-w-md max-h-[90vh] overflow-y-auto bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl">
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
           <h3 className="text-white font-bold">Complete Purchase</h3>
           <button onClick={onClose}><X className="w-5 h-5 text-slate-500 hover:text-white"/></button>
@@ -162,10 +162,10 @@ export default function ShopPanel({ profile }) {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 p-1 bg-slate-900 border border-slate-800 rounded-xl w-fit">
+      <div className="flex gap-1 p-1 bg-slate-900 border border-slate-800 rounded-xl w-full sm:w-fit overflow-x-auto">
         {[{ id:'addons', label:'Add-ons' }, { id:'upgrade', label:'Upgrade Plan' }].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${tab === t.id ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}>
+            className={`flex-1 sm:flex-none px-5 py-2 rounded-lg text-sm font-bold transition-all shrink-0 ${tab === t.id ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}>
             {t.label}
           </button>
         ))}

@@ -44,7 +44,7 @@ export default function OverviewPanel({ data, reset, lastSaved, enrollments = []
       )}
 
       {/* Real-time Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {stats.map((s, i) => (
           <div key={i} className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
             <s.icon className={`w-5 h-5 ${s.color} mb-3`} />

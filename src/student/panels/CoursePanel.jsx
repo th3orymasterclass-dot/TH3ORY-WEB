@@ -280,9 +280,9 @@ export default function CoursePanel({ profile, initialLevelId, initialLessonId }
         ) : (
           <div className="space-y-5" key={activeLesson.lesson.id}>
             {/* Lesson header */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div className="flex items-start justify-between gap-4 mb-4">
-                <div className="flex-1">
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+                <div className="flex-1 min-w-0">
                   <p className="text-amber-400 text-xs font-bold uppercase tracking-wider mb-1">
                     {activeLesson.level.levelNumber}: {activeLesson.level.name}
                   </p>
@@ -292,13 +292,13 @@ export default function CoursePanel({ profile, initialLevelId, initialLessonId }
                     {activeLesson.lesson.preview && <span className="text-green-400 text-xs bg-green-500/10 border border-green-500/30 px-2 py-0.5 rounded-full">Free Preview</span>}
                   </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-end shrink-0">
                   <button onClick={() => handleBookmark(activeLesson.lesson.id)}
-                    className={`p-2 rounded-xl border transition-all ${bookmarks.includes(activeLesson.lesson.id) ? 'bg-amber-500/20 border-amber-500/40 text-amber-400' : 'border-slate-700 text-slate-500 hover:text-amber-400'}`}>
+                    className={`p-2.5 rounded-xl border transition-all ${bookmarks.includes(activeLesson.lesson.id) ? 'bg-amber-500/20 border-amber-500/40 text-amber-400' : 'border-slate-700 text-slate-500 hover:text-amber-400'}`}>
                     {bookmarks.includes(activeLesson.lesson.id) ? <BookmarkCheck className="w-4 h-4"/> : <Bookmark className="w-4 h-4"/>}
                   </button>
                   <button onClick={() => handleToggleDone(activeLesson.lesson.id)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border font-bold text-sm transition-all ${progress[activeLesson.lesson.id] ? 'bg-green-500/20 border-green-500/40 text-green-400' : 'border-slate-700 text-slate-400 hover:border-green-500/40 hover:text-green-400'}`}>
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border font-bold text-sm transition-all ${progress[activeLesson.lesson.id] ? 'bg-green-500/20 border-green-500/40 text-green-400' : 'border-slate-700 text-slate-400 hover:border-green-500/40 hover:text-green-400'}`}>
                     <CheckCircle2 className="w-4 h-4"/>
                     {progress[activeLesson.lesson.id] ? 'Completed' : 'Mark Complete'}
                   </button>

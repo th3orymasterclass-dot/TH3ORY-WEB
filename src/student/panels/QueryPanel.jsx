@@ -152,13 +152,13 @@ export default function QueryPanel({ profile }) {
   return (
     <div className="space-y-6 max-w-3xl">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-black text-white">Query Sessions</h2>
           <p className="text-slate-500 text-sm mt-1">Ask questions and get responses from the TH3ORY instructor team</p>
         </div>
         <button onClick={() => { setShowForm(true); setTimeout(() => formRef.current?.scrollIntoView({ behavior:'smooth' }), 100); }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition-all shrink-0">
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition-all shrink-0 self-start sm:self-auto">
           <Plus className="w-4 h-4"/> New Query
         </button>
       </div>
@@ -196,10 +196,10 @@ export default function QueryPanel({ profile }) {
 
       {/* Tab filter */}
       {queries.length > 0 && (
-        <div className="flex gap-1 p-1 bg-slate-900 border border-slate-800 rounded-xl w-fit">
+        <div className="flex gap-1 p-1 bg-slate-900 border border-slate-800 rounded-xl w-full sm:w-fit overflow-x-auto">
           {[{ id:'all', label:`All (${queries.length})` }, { id:'open', label:`Open (${openCount})` }, { id:'answered', label:`Answered (${answeredCount})` }].map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${tab === t.id ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}>
+              className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${tab === t.id ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}>
               {t.label}
             </button>
           ))}

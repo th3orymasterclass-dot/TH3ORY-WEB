@@ -95,7 +95,7 @@ export default function ReviewPanel({ profile }) {
           <p className="text-amber-300 text-sm">Your review will appear on the public course page and help future students make the right decision.</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-800 rounded-2xl p-7 space-y-6">
+        <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-7 space-y-6">
           {/* Course being reviewed */}
           <div className="pb-4 border-b border-slate-800">
             <p className="text-slate-500 text-xs uppercase tracking-wider mb-1">Reviewing</p>
