@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
 import PillarsSection from './components/PillarsSection';
@@ -69,6 +70,7 @@ export default function App() {
           initialPlan={selectedPlan}
           onBack={() => setShowEnrollmentPage(false)}
         />
+        <Analytics />
       </>
     );
   }
@@ -179,6 +181,9 @@ export default function App() {
         onClose={() => setIsDashboardOpen(false)}
         receipt={receipt}
       />
+
+      {/* Vercel Web Analytics */}
+      <Analytics />
     </div>
   );
 }
