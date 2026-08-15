@@ -213,13 +213,24 @@ if (featureFlagsApiExists) {
   const flagsApiContent = fs.readFileSync(path.join(rootDir, 'api/feature-flags.js'), 'utf8');
   assert(flagsApiContent.includes('VERCEL_FLAGS_'), 'api/feature-flags.js checks VERCEL_FLAGS_ environment variables');
   assert(flagsApiContent.includes('DEFAULT_FEATURE_FLAGS'), 'api/feature-flags.js defines default feature flags');
+  assert(flagsApiContent.includes('ENABLE_TRAILER_VIDEO'), 'api/feature-flags.js contains ENABLE_TRAILER_VIDEO flag');
+  assert(flagsApiContent.includes('ENABLE_TRAILER_VIDEO') && flagsApiContent.includes('enabled: false'), 'ENABLE_TRAILER_VIDEO is disabled by default in API');
 }
 
 const contextExists = fs.existsSync(path.join(rootDir, 'src/context/FeatureFlagContext.jsx'));
 assert(contextExists, 'src/context/FeatureFlagContext.jsx React context exists');
+if (contextExists) {
+  const contextContent = fs.readFileSync(path.join(rootDir, 'src/context/FeatureFlagContext.jsx'), 'utf8');
+  assert(contextContent.includes('ENABLE_TRAILER_VIDEO'), 'FeatureFlagContext defines ENABLE_TRAILER_VIDEO default flag');
+}
 
 const adminPanelExists = fs.existsSync(path.join(rootDir, 'src/admin/panels/FeatureFlagsPanel.jsx'));
 assert(adminPanelExists, 'src/admin/panels/FeatureFlagsPanel.jsx admin panel exists');
+
+const heroSectionPath = path.join(rootDir, 'src/components/HeroSection.jsx');
+const heroContent = fs.readFileSync(heroSectionPath, 'utf8');
+assert(heroContent.includes('ENABLE_TRAILER_VIDEO'), 'HeroSection.jsx checks ENABLE_TRAILER_VIDEO feature flag');
+assert(heroContent.includes('showTrailerButton'), 'HeroSection.jsx uses showTrailerButton flag check');
 
 
 // ── Final Test Summary Report ────────────────────────────────────────────────
