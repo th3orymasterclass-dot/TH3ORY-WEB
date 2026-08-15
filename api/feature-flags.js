@@ -32,6 +32,12 @@ const DEFAULT_FEATURE_FLAGS = {
     description: 'Renders the public graduate Wall of Love reviews section on landing page.',
     category: 'Social Proof'
   },
+  ENABLE_TRAILER_VIDEO: {
+    enabled: false,
+    name: 'Watch Trailer Video Button',
+    description: 'Controls the display of the Watch Trailer & 30-Day Arc video modal button on the main homepage.',
+    category: 'Landing Page & Media'
+  },
   MAINTENANCE_MODE: {
     enabled: false,
     name: 'Platform Maintenance Mode',

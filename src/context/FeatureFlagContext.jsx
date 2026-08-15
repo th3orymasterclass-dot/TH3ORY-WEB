@@ -6,6 +6,7 @@ const DEFAULT_FLAGS = {
   ENABLE_VIP_DISCOUNT: { enabled: true, name: 'VIP 50% Discount Coupons', description: 'Enables high-tier VIP discount codes on checkout.', category: 'Promotions & Pricing' },
   ENABLE_STUDENT_COMMUNITY: { enabled: true, name: 'Student Query & Support Sessions', description: 'Enables direct student query threads in Student Portal.', category: 'LMS Portal' },
   ENABLE_LIVE_REVIEWS: { enabled: true, name: 'Graduate Testimonials Wall', description: 'Renders the public graduate Wall of Love reviews section.', category: 'Social Proof' },
+  ENABLE_TRAILER_VIDEO: { enabled: false, name: 'Watch Trailer Video Button', description: 'Controls the display of the Watch Trailer button on homepage.', category: 'Landing Page & Media' },
   MAINTENANCE_MODE: { enabled: false, name: 'Platform Maintenance Mode', description: 'Puts checkout and portal in maintenance mode.', category: 'System Operations' },
   ENABLE_RAZORPAY_SANDBOX: { enabled: false, name: 'Payment Sandbox Mode', description: 'Forces Razorpay gateway to operate in test environment.', category: 'System Operations' }
 };

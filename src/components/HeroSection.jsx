@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Flame, ArrowRight, CheckCircle2, Crown } from 'lucide-react';
 import { useTh3oryLive } from '../data/adminData';
+import { useFeatureFlags } from '../context/FeatureFlagContext';
 
 export default function HeroSection({ onOpenVideo, onOpenCheckout }) {
   const { courseDetails } = useTh3oryLive();
+  const { isFeatureEnabled } = useFeatureFlags();
+  const showTrailerButton = isFeatureEnabled('ENABLE_TRAILER_VIDEO', false);
+
   const [timeLeft, setTimeLeft] = useState({ hours: 14, minutes: 32, seconds: 45 });
 
   useEffect(() => {
@@ -95,15 +99,17 @@ export default function HeroSection({ onOpenVideo, onOpenCheckout }) {
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
 
-            <button
-              onClick={onOpenVideo}
-              className="w-full sm:w-auto px-7 py-4 rounded-2xl glass-card text-[#FAFAF7] hover:bg-[#15171A] font-semibold text-base border border-[#555A66] hover:border-[#7C5CFC] transition-all flex items-center justify-center gap-3 group"
-            >
-              <div className="w-8 h-8 rounded-full bg-[#7C5CFC]/20 text-[#7C5CFC] flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Play className="w-4 h-4 fill-[#7C5CFC] ml-0.5" />
-              </div>
-              <span>Watch Trailer & 30-Day Arc</span>
-            </button>
+            {showTrailerButton && (
+              <button
+                onClick={onOpenVideo}
+                className="w-full sm:w-auto px-7 py-4 rounded-2xl glass-card text-[#FAFAF7] hover:bg-[#15171A] font-semibold text-base border border-[#555A66] hover:border-[#7C5CFC] transition-all flex items-center justify-center gap-3 group"
+              >
+                <div className="w-8 h-8 rounded-full bg-[#7C5CFC]/20 text-[#7C5CFC] flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Play className="w-4 h-4 fill-[#7C5CFC] ml-0.5" />
+                </div>
+                <span>Watch Trailer &amp; 30-Day Arc</span>
+              </button>
+            )}
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-[#555A66] pt-2 font-medium">
