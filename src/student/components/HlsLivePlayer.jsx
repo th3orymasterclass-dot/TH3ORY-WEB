@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Play, Pause, Volume2, VolumeX, Maximize, Radio, ShieldCheck, RefreshCw } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Maximize, Radio, ShieldCheck, RefreshCw, AlertCircle, Settings } from 'lucide-react';
 
 // Helper to dynamically load Hls.js script from CDN
 const loadHlsScript = () => {
@@ -30,12 +30,23 @@ const loadHlsScript = () => {
 export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
+  const retryTimerRef = useRef(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isLive, setIsLive] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [activeUrlIndex, setActiveUrlIndex] = useState(0);
+
+  // Candidate HLS URLs for automatic seamless fallback
+  const candidateUrls = [
+    streamUrl || 'https://stream.th3ory.online/live/th3ory_live_masterclass_key_2026.m3u8',
+    'https://stream.th3ory.online/live/live.m3u8',
+    'https://stream.th3ory.online/live/stream.m3u8'
+  ].filter(Boolean);
+
+  const currentStreamUrl = candidateUrls[activeUrlIndex] || candidateUrls[0];
 
   // Floating Watermark Position (Anti-Piracy)
   const [watermarkPos, setWatermarkPos] = useState({ top: '15%', left: '15%' });
@@ -50,11 +61,13 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
     return () => clearInterval(interval);
   }, []);
 
-  // Initialize HLS.js Stream Engine dynamically
+  // Initialize HLS.js Stream Engine dynamically with auto-recovery
   useEffect(() => {
     let isMounted = true;
     const video = videoRef.current;
-    if (!video || !streamUrl) return;
+    if (!video || !currentStreamUrl) return;
+
+    if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
 
     setHasError(false);
 
@@ -62,21 +75,30 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
       if (!isMounted) return;
 
       if (HlsClass && HlsClass.isSupported()) {
+        if (hlsRef.current) {
+          hlsRef.current.destroy();
+        }
+
         const hls = new HlsClass({
           enableWorker: true,
           lowLatencyMode: true,
           liveSyncDurationCount: 3,
           liveMaxLatencyDurationCount: 6,
           maxBufferLength: 10,
+          manifestLoadingTimeOut: 10000,
+          manifestLoadingMaxRetry: 3,
+          levelLoadingTimeOut: 10000,
+          levelLoadingMaxRetry: 3
         });
 
         hlsRef.current = hls;
-        hls.loadSource(streamUrl);
+        hls.loadSource(currentStreamUrl);
         hls.attachMedia(video);
 
         hls.on(HlsClass.Events.MANIFEST_PARSED, () => {
           if (!isMounted) return;
           setIsLive(true);
+          setHasError(false);
           video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
         });
 
@@ -85,25 +107,43 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
           if (data.fatal) {
             switch (data.type) {
               case HlsClass.ErrorTypes.NETWORK_ERROR:
-                setHasError(true);
-                setErrorMessage('Live stream connection offline or waiting for broadcast to start.');
-                hls.startLoad();
+                // Try fallback stream candidate URL if available
+                if (activeUrlIndex < candidateUrls.length - 1) {
+                  setActiveUrlIndex(prev => prev + 1);
+                } else {
+                  setHasError(true);
+                  setErrorMessage('Broadcast waiting or reconnecting to OBS server...');
+                  // Auto-retry connection every 5s until stream comes online
+                  retryTimerRef.current = setTimeout(() => {
+                    if (isMounted) {
+                      setActiveUrlIndex(0);
+                      hls.loadSource(candidateUrls[0]);
+                      hls.startLoad();
+                    }
+                  }, 5000);
+                }
                 break;
               case HlsClass.ErrorTypes.MEDIA_ERROR:
                 hls.recoverMediaError();
                 break;
               default:
                 hls.destroy();
+                setHasError(true);
                 break;
             }
           }
         });
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         // Mobile Safari Native HLS Support
-        video.src = streamUrl;
+        video.src = currentStreamUrl;
         video.addEventListener('loadedmetadata', () => {
           if (isMounted) {
             video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+          }
+        });
+        video.addEventListener('error', () => {
+          if (isMounted && activeUrlIndex < candidateUrls.length - 1) {
+            setActiveUrlIndex(prev => prev + 1);
           }
         });
       } else {
@@ -114,11 +154,12 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
 
     return () => {
       isMounted = false;
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
       if (hlsRef.current) {
         hlsRef.current.destroy();
       }
     };
-  }, [streamUrl]);
+  }, [currentStreamUrl, activeUrlIndex]);
 
   const togglePlay = () => {
     if (!videoRef.current) return;
@@ -147,9 +188,10 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
 
   const reloadStream = () => {
     setHasError(false);
-    if (hlsRef.current && streamUrl) {
-      hlsRef.current.loadSource(streamUrl);
-      if (videoRef.current) videoRef.current.play();
+    setActiveUrlIndex(0);
+    if (hlsRef.current && candidateUrls[0]) {
+      hlsRef.current.loadSource(candidateUrls[0]);
+      if (videoRef.current) videoRef.current.play().catch(() => {});
     }
   };
 
@@ -183,22 +225,26 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
         <span>🔴 LIVE BROADCAST</span>
       </div>
 
-      {/* Stream Error / Offline Overlay */}
+      {/* Stream Error / Offline Overlay with Auto-Reconnect Heartbeat */}
       {hasError && (
         <div className="absolute inset-0 z-30 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center space-y-4">
-          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center justify-center">
+          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center justify-center animate-pulse">
             <Radio className="w-7 h-7" />
           </div>
           <div>
             <h4 className="text-white font-extrabold text-lg">Broadcast Waiting or Reconnecting</h4>
-            <p className="text-slate-400 text-xs mt-1 max-w-sm">{errorMessage}</p>
+            <p className="text-slate-400 text-xs mt-1 max-w-sm">
+              {errorMessage || 'Mentalist Sravan is preparing the live broadcast in OBS Studio. Stream auto-connects upon launch.'}
+            </p>
           </div>
-          <button
-            onClick={reloadStream}
-            className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-lg cursor-pointer"
-          >
-            <RefreshCw className="w-4 h-4" /> Reconnect Live Stream
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={reloadStream}
+              className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-lg cursor-pointer"
+            >
+              <RefreshCw className="w-4 h-4" /> Manual Reconnect
+            </button>
+          </div>
         </div>
       )}
 
