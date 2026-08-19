@@ -27,47 +27,10 @@ export default function WebcamBroadcaster({ isOnAir, onToggleOnAir }) {
           rtcBroadcasterRef.current.updateStream(mediaStreamRef.current);
         }
       }
-
-      // Initialize Supabase Realtime Fallback Channel
-      if (isSupabaseConfigured && supabase && !realtimeChannelRef.current) {
-        realtimeChannelRef.current = supabase.channel('th3ory_webcam_stream');
-        realtimeChannelRef.current.subscribe();
-      }
-
-      // Throttled frame capture every 500ms (lightweight 480x270 JPEG for instant fallback)
-      if (frameTimerRef.current) clearInterval(frameTimerRef.current);
-      frameTimerRef.current = setInterval(() => {
-        if (!localVideoRef.current || !realtimeChannelRef.current) return;
-        const video = localVideoRef.current;
-        if (video.readyState >= 2 && video.videoWidth > 0) {
-          const canvas = canvasRef.current;
-          canvas.width = 480;
-          canvas.height = 270;
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const frameData = canvas.toDataURL('image/jpeg', 0.5);
-            realtimeChannelRef.current.send({
-              type: 'broadcast',
-              event: 'webcam_frame',
-              payload: { frame: frameData, timestamp: Date.now() }
-            }).catch(() => {});
-          }
-        }
-      }, 500);
-
     } else {
       if (rtcBroadcasterRef.current) {
         rtcBroadcasterRef.current.destroy();
         rtcBroadcasterRef.current = null;
-      }
-      if (frameTimerRef.current) {
-        clearInterval(frameTimerRef.current);
-        frameTimerRef.current = null;
-      }
-      if (realtimeChannelRef.current && supabase) {
-        try { supabase.removeChannel(realtimeChannelRef.current); } catch (e) {}
-        realtimeChannelRef.current = null;
       }
     }
 

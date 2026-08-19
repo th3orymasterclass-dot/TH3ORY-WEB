@@ -112,6 +112,41 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
     }
   }, [isMuted]);
 
+  // Step 4: Track actual presented/rendered frames using requestVideoFrameCallback
+  const [renderedFps, setRenderedFps] = useState(0);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !webcamStreamActive) return;
+
+    let frameCount = 0;
+    let lastTime = performance.now();
+    let callbackId = null;
+
+    const handleVideoFrame = (now) => {
+      frameCount++;
+      const elapsed = now - lastTime;
+      if (elapsed >= 1000) {
+        setRenderedFps(Math.round((frameCount * 1000) / elapsed));
+        frameCount = 0;
+        lastTime = now;
+      }
+      if (video && 'requestVideoFrameCallback' in video) {
+        callbackId = video.requestVideoFrameCallback(handleVideoFrame);
+      }
+    };
+
+    if ('requestVideoFrameCallback' in video) {
+      callbackId = video.requestVideoFrameCallback(handleVideoFrame);
+    }
+
+    return () => {
+      if (video && callbackId && 'cancelVideoFrameCallback' in video) {
+        try { video.cancelVideoFrameCallback(callbackId); } catch (e) {}
+      }
+    };
+  }, [webcamStreamActive]);
+
   // STABLE WebRTC Subscriber Engine for Direct HD Video & Audio Streaming
   useEffect(() => {
     if (broadcastState.source !== 'webcam') {
@@ -126,7 +161,10 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
     const subscriber = new WebRtcSubscriber(
       (remoteStream) => {
         if (videoRef.current) {
-          videoRef.current.srcObject = remoteStream;
+          // STEP 3: Avoid repeated srcObject re-assignment to prevent decoder resets
+          if (videoRef.current.srcObject !== remoteStream) {
+            videoRef.current.srcObject = remoteStream;
+          }
           videoRef.current.muted = isMuted;
           videoRef.current.play()
             .then(() => {
@@ -457,6 +495,7 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
       {showDebugPanel && (
         <WebRtcDebugPanel
           stats={rtcStats}
+          renderedFps={renderedFps}
           onClose={() => setShowDebugPanel(false)}
         />
       )}

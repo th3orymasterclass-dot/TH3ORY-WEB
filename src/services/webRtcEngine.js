@@ -12,16 +12,25 @@ const ICE_SERVERS = {
   iceCandidatePoolSize: 10
 };
 
+// WeakMap cache to calculate per-second delta metrics per peer connection
+const pcStatsCache = new WeakMap();
+
 // ─── WebRTC Diagnostics Collector Function ──────────────────────────────────
 export async function collectRtcStats(pc) {
   if (!pc) return null;
   try {
     const statsMap = await pc.getStats();
+    const nowTime = performance.now();
+    const prev = pcStatsCache.get(pc);
+    const timeDeltaSec = prev ? Math.max(0.1, (nowTime - prev.timestamp) / 1000) : 1;
+
     const metrics = {
+      timestamp: Date.now(),
       connectionState: pc.connectionState,
       iceConnectionState: pc.iceConnectionState,
       signalingState: pc.signalingState,
       rtt: 0,
+      availableIncomingBitrate: 0,
       availableOutgoingBitrate: 0,
       candidatePairState: 'unknown',
       audio: {
@@ -36,32 +45,56 @@ export async function collectRtcStats(pc) {
       },
       video: {
         codec: 'H.264 / VP8',
+        decoderImplementation: 'hardware',
         packetsReceived: 0,
         packetsLost: 0,
+        packetsDiscarded: 0,
+        bytesReceived: 0,
         jitter: 0,
         framesReceived: 0,
         framesDecoded: 0,
         framesDropped: 0,
+        keyFramesDecoded: 0,
+        nackCount: 0,
+        pliCount: 0,
+        firCount: 0,
+        qpSum: 0,
         fps: 0,
+        deltaDecoded: 0,
+        deltaDropped: 0,
+        deltaReceived: 0,
+        frameDropRate: 0,
         width: 0,
         height: 0,
-        bitrate: 0
+        bitrateKbps: 0
       },
       outbound: {
         packetsSent: 0,
         bytesSent: 0,
+        framesEncoded: 0,
+        framesSent: 0,
         retransmittedPacketsSent: 0,
         qualityLimitationReason: 'none',
-        bitrate: 0
+        bitrateKbps: 0
       }
+    };
+
+    let rawVideoInbound = {
+      framesDecoded: 0,
+      framesDropped: 0,
+      framesReceived: 0,
+      bytesReceived: 0
     };
 
     statsMap.forEach(report => {
       // Candidate Pair & RTT
-      if (report.type === 'candidate-pair' && report.state === 'succeeded') {
-        metrics.candidatePairState = report.state;
+      if (report.type === 'candidate-pair' && (report.state === 'succeeded' || report.nominated)) {
+        metrics.candidatePairState = report.state || 'active';
         if (report.currentRoundTripTime !== undefined) {
           metrics.rtt = Math.round(report.currentRoundTripTime * 1000); // ms
+        }
+        if (report.availableIncomingBitrate !== undefined) {
+          metrics.availableIncomingBitrate = Math.round(report.availableIncomingBitrate / 1000); // kbps
         }
         if (report.availableOutgoingBitrate !== undefined) {
           metrics.availableOutgoingBitrate = Math.round(report.availableOutgoingBitrate / 1000); // kbps
@@ -87,19 +120,38 @@ export async function collectRtcStats(pc) {
       if (report.type === 'inbound-rtp' && report.kind === 'video') {
         metrics.video.packetsReceived = report.packetsReceived || 0;
         metrics.video.packetsLost = report.packetsLost || 0;
+        metrics.video.packetsDiscarded = report.packetsDiscarded || 0;
+        metrics.video.bytesReceived = report.bytesReceived || 0;
         metrics.video.jitter = report.jitter ? Math.round(report.jitter * 1000) : 0;
         metrics.video.framesReceived = report.framesReceived || 0;
         metrics.video.framesDecoded = report.framesDecoded || 0;
         metrics.video.framesDropped = report.framesDropped || 0;
-        metrics.video.fps = report.framesPerSecond || 0;
+        metrics.video.keyFramesDecoded = report.keyFramesDecoded || 0;
+        metrics.video.nackCount = report.nackCount || 0;
+        metrics.video.pliCount = report.pliCount || 0;
+        metrics.video.firCount = report.firCount || 0;
+        metrics.video.qpSum = report.qpSum || 0;
+        metrics.video.fps = report.framesPerSecond ? Math.round(report.framesPerSecond) : 0;
         metrics.video.width = report.frameWidth || 0;
         metrics.video.height = report.frameHeight || 0;
+        if (report.decoderImplementation) {
+          metrics.video.decoderImplementation = report.decoderImplementation;
+        }
+
+        rawVideoInbound = {
+          framesDecoded: report.framesDecoded || 0,
+          framesDropped: report.framesDropped || 0,
+          framesReceived: report.framesReceived || 0,
+          bytesReceived: report.bytesReceived || 0
+        };
       }
 
       // Outbound Track
       if (report.type === 'outbound-rtp') {
         metrics.outbound.packetsSent += report.packetsSent || 0;
         metrics.outbound.bytesSent += report.bytesSent || 0;
+        metrics.outbound.framesEncoded += report.framesEncoded || 0;
+        metrics.outbound.framesSent += report.framesSent || 0;
         metrics.outbound.retransmittedPacketsSent += report.retransmittedPacketsSent || 0;
         if (report.qualityLimitationReason) {
           metrics.outbound.qualityLimitationReason = report.qualityLimitationReason;
@@ -115,6 +167,30 @@ export async function collectRtcStats(pc) {
           metrics.video.codec = report.mimeType.split('/')[1] || 'H264';
         }
       }
+    });
+
+    // Calculate per-second deltas & frame drop rate percentage
+    if (prev && prev.rawVideo) {
+      const dDecoded = Math.max(0, rawVideoInbound.framesDecoded - prev.rawVideo.framesDecoded);
+      const dDropped = Math.max(0, rawVideoInbound.framesDropped - prev.rawVideo.framesDropped);
+      const dReceived = Math.max(0, rawVideoInbound.framesReceived - prev.rawVideo.framesReceived);
+      const dBytes = Math.max(0, rawVideoInbound.bytesReceived - prev.rawVideo.bytesReceived);
+
+      metrics.video.deltaDecoded = dDecoded;
+      metrics.video.deltaDropped = dDropped;
+      metrics.video.deltaReceived = dReceived;
+      metrics.video.bitrateKbps = Math.round((dBytes * 8) / (timeDeltaSec * 1000));
+
+      const totalFrames = dDecoded + dDropped;
+      metrics.video.frameDropRate = totalFrames > 0
+        ? parseFloat(((dDropped / totalFrames) * 100).toFixed(1))
+        : 0;
+    }
+
+    // Save cache for next snapshot
+    pcStatsCache.set(pc, {
+      timestamp: nowTime,
+      rawVideo: rawVideoInbound
     });
 
     return metrics;
