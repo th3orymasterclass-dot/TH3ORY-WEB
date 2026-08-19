@@ -388,6 +388,7 @@ export default function StudentApp({ profile: initialProfile, onLogout }) {
               </>
             )}
           </button>
+          </div>
 
           {/* Certificate badge */}
           {pct === 100 && (
