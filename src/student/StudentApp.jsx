@@ -26,7 +26,7 @@ const NAV = [
   { id: 'home',           label: 'Dashboard',         icon: LayoutDashboard },
   { id: 'course',         label: 'My Course',         icon: BookOpen },
   { id: 'character_code', label: 'Character Code™',   icon: Zap },
-  { id: 'queries',        label: 'Email Support',     icon: Mail, flagKey: 'ENABLE_STUDENT_COMMUNITY' },
+  { id: 'queries',        label: 'Query Sessions',    icon: HelpCircle, flagKey: 'ENABLE_STUDENT_COMMUNITY' },
   { id: 'certificate',    label: 'Certificate',       icon: Award },
   { id: 'shop',           label: 'Upgrade & Add-ons', icon: ShoppingBag },
   { id: 'review',         label: 'Leave a Review',    icon: Star, flagKey: 'ENABLE_LIVE_REVIEWS' },
@@ -280,14 +280,10 @@ export default function StudentApp({ profile: initialProfile, onLogout }) {
             const Icon = item.icon;
             const isActive = active === item.id;
             return (
-              <button key={item.id} onClick={() => {
-                if (item.id === 'queries') {
-                  window.location.href = "mailto:team@th3ory.online?subject=Student%20Query%20-%20TH3ORY%20Masterclass";
-                } else {
-                  setActive(item.id);
-                  setNavExtra({});
-                }
-                if (window.innerWidth < 768) setSidebar(false);
+              <button key={item.id} onClick={() => { 
+                setActive(item.id); 
+                setNavExtra({}); 
+                if (window.innerWidth < 768) setSidebar(false); 
               }}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group ${
                   isActive
