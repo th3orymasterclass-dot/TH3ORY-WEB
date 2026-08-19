@@ -255,16 +255,31 @@ export default function QueryPanel({ profile, themeMode = 'dark' }) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 className={`text-2xl font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>Query Sessions</h2>
-          <p className={`text-sm mt-1 ${isLight ? 'text-slate-600' : 'text-slate-500'}`}>Ask questions and get responses from the TH3ORY instructor team</p>
+          <h2 className={`text-2xl font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>Email Support &amp; Queries</h2>
+          <p className={`text-sm mt-1 ${isLight ? 'text-slate-600' : 'text-slate-500'}`}>Reach out directly to the TH3ORY instructor team via <span className="font-mono font-bold text-amber-500">team@th3ory.online</span></p>
         </div>
-        {isCommunityEnabled && (
-          <button onClick={() => setShowForm(v => !v)}
-            className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-sm uppercase tracking-widest flex items-center gap-2 transition-all shadow-md shrink-0">
-            {showForm ? <X className="w-4 h-4"/> : <Plus className="w-4 h-4"/>}
-            {showForm ? 'Cancel' : 'Ask Question'}
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText('team@th3ory.online');
+              alert('Copied team@th3ory.online to clipboard!');
+            }}
+            className={`px-4 py-2.5 rounded-xl border text-xs font-bold transition-all ${
+              isLight ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700' : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300'
+            }`}
+          >
+            Copy Email
           </button>
-        )}
+          <a
+            href="mailto:team@th3ory.online?subject=Student%20Query%20-%20TH3ORY%20Masterclass"
+            onClick={(e) => {
+              window.location.href = "mailto:team@th3ory.online?subject=Student%20Query%20-%20TH3ORY%20Masterclass";
+            }}
+            className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs uppercase tracking-widest flex items-center gap-2 transition-all shadow-md shrink-0 cursor-pointer"
+          >
+            <Send className="w-4 h-4"/> Email Support
+          </a>
+        </div>
       </div>
 
       {/* Success banner */}

@@ -26,7 +26,7 @@ const NAV = [
   { id: 'home',           label: 'Dashboard',         icon: LayoutDashboard },
   { id: 'course',         label: 'My Course',         icon: BookOpen },
   { id: 'character_code', label: 'Character Code™',   icon: Zap },
-  { id: 'queries',        label: 'Query Sessions',    icon: HelpCircle, flagKey: 'ENABLE_STUDENT_COMMUNITY' },
+  { id: 'queries',        label: 'Email Support',     icon: Mail, flagKey: 'ENABLE_STUDENT_COMMUNITY' },
   { id: 'certificate',    label: 'Certificate',       icon: Award },
   { id: 'shop',           label: 'Upgrade & Add-ons', icon: ShoppingBag },
   { id: 'review',         label: 'Leave a Review',    icon: Star, flagKey: 'ENABLE_LIVE_REVIEWS' },
@@ -300,11 +300,16 @@ export default function StudentApp({ profile: initialProfile, onLogout }) {
 
         {/* Footer */}
         <div className={`px-3 pb-4 border-t pt-4 space-y-1 ${isLight ? 'border-slate-200' : 'border-slate-800/60'}`}>
-          <a href="mailto:team@th3ory.online?subject=Student%20Query%20-%20TH3ORY%20Masterclass"
+          <a
+            href="mailto:team@th3ory.online?subject=Student%20Query%20-%20TH3ORY%20Masterclass"
+            onClick={(e) => {
+              window.location.href = "mailto:team@th3ory.online?subject=Student%20Query%20-%20TH3ORY%20Masterclass";
+            }}
             className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
               isLight ? 'text-amber-700 hover:text-amber-800 hover:bg-amber-50' : 'text-amber-400 hover:text-amber-300 hover:bg-amber-500/10'
-            }`}>
-            <Mail className="w-4 h-4 text-amber-500"/> Email Support
+            }`}
+          >
+            <Mail className="w-4 h-4 text-amber-500"/> Email Support (team@th3ory.online)
           </a>
           <a href="/" target="_blank" rel="noreferrer"
             className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${

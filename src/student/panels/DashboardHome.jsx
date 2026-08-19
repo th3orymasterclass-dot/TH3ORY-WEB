@@ -204,6 +204,9 @@ export default function DashboardHome({ profile, onNavigate, themeMode = 'dark' 
         </div>
       </div>
 
+      {/* Daily Habit & 5-Pillar Tracker */}
+      <DailyHabitTracker profile={profile} themeMode={themeMode} isCourseCompleted={totalLessons > 0 && completedCount >= totalLessons} onNavigate={onNavigate} />
+
       {/* Continue learning */}
       {nextLesson && (
         <div className={`border rounded-2xl p-6 ${
@@ -229,22 +232,39 @@ export default function DashboardHome({ profile, onNavigate, themeMode = 'dark' 
       <div className={`border rounded-2xl p-6 ${
         isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-900 border-slate-800'
       }`}>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center shrink-0 text-amber-500">
               <Mail className="w-5 h-5"/>
             </div>
             <div>
               <h4 className={`font-bold text-base ${isLight ? 'text-slate-900' : 'text-white'}`}>Instructor Team Support</h4>
-              <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-600' : 'text-slate-500'}`}>Have a question or need assistance with your course? Reach out directly via email.</p>
+              <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-600' : 'text-slate-500'}`}>Have a question or need assistance with your course? Reach out directly via email at <span className="font-mono font-bold text-amber-500">team@th3ory.online</span>.</p>
             </div>
           </div>
-          <a
-            href="mailto:team@th3ory.online?subject=Student%20Query%20-%20TH3ORY%20Masterclass"
-            className="shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs uppercase tracking-widest transition-all shadow-md"
-          >
-            <Mail className="w-4 h-4"/> Email Support (team@th3ory.online)
-          </a>
+          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText('team@th3ory.online');
+                alert('Copied team@th3ory.online to clipboard!');
+              }}
+              className={`px-3 py-2.5 rounded-xl border text-xs font-bold transition-all ${
+                isLight ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700' : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300'
+              }`}
+            >
+              Copy Email
+            </button>
+            <a
+              href="mailto:team@th3ory.online?subject=Student%20Query%20-%20TH3ORY%20Masterclass"
+              onClick={(e) => {
+                // Ensure mailto client triggers smoothly on mobile and desktop
+                window.location.href = "mailto:team@th3ory.online?subject=Student%20Query%20-%20TH3ORY%20Masterclass";
+              }}
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs uppercase tracking-widest transition-all shadow-md cursor-pointer"
+            >
+              <Mail className="w-4 h-4"/> Email Support
+            </a>
+          </div>
         </div>
       </div>
 
