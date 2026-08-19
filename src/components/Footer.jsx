@@ -108,6 +108,12 @@ export default function Footer({ onOpenCheckout }) {
             <button onClick={() => setLegalModalTab('terms')} className="hover:text-amber-400 transition-colors cursor-pointer">Terms</button>
             <span>•</span>
             <button onClick={() => setLegalModalTab('refund')} className="hover:text-amber-400 transition-colors cursor-pointer">Refunds</button>
+            <a
+              href="mailto:team@th3ory.online?subject=Student%20Support%20-%20TH3ORY%20Masterclass"
+              className="hover:text-amber-400 font-bold transition-colors cursor-pointer text-amber-500"
+            >
+              Email Support
+            </a>
             <span>•</span>
             <a
               href="#student"

@@ -207,7 +207,7 @@ export default function ContactSection() {
                 </div>
                 <div className="flex items-center gap-2.5">
                   <Mail className="w-4 h-4 text-amber-400 shrink-0" />
-                  <span>team@th3ory.online</span>
+                  <a href="mailto:team@th3ory.online?subject=Course%20Inquiry%20-%20TH3ORY%20Masterclass" className="hover:text-amber-400 font-mono font-bold text-amber-500 transition-colors">team@th3ory.online</a>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0" />
