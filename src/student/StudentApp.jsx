@@ -358,16 +358,24 @@ export default function StudentApp({ profile: initialProfile, onLogout }) {
             <span className={`font-semibold truncate ${isLight ? 'text-slate-900' : 'text-white'}`}>{currentNav?.label}</span>
           </div>
 
-          {/* Theme Mode Toggle Button in Top Bar */}
-          <button
-            onClick={toggleTheme}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold transition-all ml-auto shrink-0 select-none ${
-              isLight
-                ? 'bg-slate-100 border-slate-300 text-slate-800 hover:bg-slate-200'
-                : 'bg-amber-500/10 border-amber-500/30 text-amber-300 hover:bg-amber-500/20'
-            }`}
-            title={`Switch to ${isLight ? 'Dark' : 'Light'} Mode`}
-          >
+          {/* Theme Mode Toggle & Live Masterclass Button in Top Bar */}
+          <div className="flex items-center gap-2 ml-auto shrink-0">
+            <button
+              onClick={() => navigate('live_session')}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-600/90 hover:bg-red-600 text-white text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-red-600/20 cursor-pointer animate-pulse"
+            >
+              <Radio className="w-3.5 h-3.5" />
+              <span>LIVE ROOM</span>
+            </button>
+            <button
+              onClick={toggleTheme}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold transition-all shrink-0 select-none ${
+                isLight
+                  ? 'bg-slate-100 border-slate-300 text-slate-800 hover:bg-slate-200'
+                  : 'bg-amber-500/10 border-amber-500/30 text-amber-300 hover:bg-amber-500/20'
+              }`}
+              title={`Switch to ${isLight ? 'Dark' : 'Light'} Mode`}
+            >
             {isLight ? (
               <>
                 <Moon className="w-3.5 h-3.5 text-slate-700" />

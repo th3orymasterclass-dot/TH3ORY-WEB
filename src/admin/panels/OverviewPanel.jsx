@@ -1,8 +1,26 @@
-import React from 'react';
-import { LayoutDashboard, TrendingUp, Users, BookOpen, Tag, Star, HelpCircle, User, Gift, Target, Video, Flame, Save, RotateCcw, Clock, DollarSign, Building2, Mail, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { LayoutDashboard, TrendingUp, Users, BookOpen, Tag, Star, HelpCircle, User, Gift, Target, Video, Flame, Save, RotateCcw, Clock, DollarSign, Building2, Mail, ShieldCheck, Radio, Play, Square, ExternalLink, Copy, CheckCircle2 } from 'lucide-react';
 
 export default function OverviewPanel({ data, reset, lastSaved, enrollments = [], queries = [], enterpriseQuotes = [], contactInquiries = [] }) {
   const d = data.courseDetails;
+
+  const [isOnAir, setIsOnAir] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('th3ory_live_on_air') === 'true';
+    }
+    return false;
+  });
+
+  const [copiedUrl, setCopiedUrl] = useState(false);
+  const rtmpUrl = 'rtmp://stream.th3ory.online/live';
+
+  const handleToggleOnAir = (status) => {
+    setIsOnAir(status);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('th3ory_live_on_air', status.toString());
+      window.dispatchEvent(new Event('th3ory_live_status_change'));
+    }
+  };
 
   const totalRevenueINR = enrollments.reduce((sum, item) => item.currency === 'INR' ? sum + Number(item.amount_paid || 0) : sum, 0);
   const totalRevenueUSD = enrollments.reduce((sum, item) => (item.currency === 'USD' || !item.currency) ? sum + Number(item.amount_paid || 0) : sum, 0);
@@ -32,6 +50,58 @@ export default function OverviewPanel({ data, reset, lastSaved, enrollments = []
             </span>
           </div>
           <p className="text-slate-500 text-sm mt-1">All updates sync live to the Supabase database and public landing page</p>
+        </div>
+      </div>
+
+      {/* LIVE BROADCAST QUICK CONTROL WIDGET */}
+      <div className={`p-6 rounded-3xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-6 transition-all ${
+        isOnAir
+          ? 'bg-gradient-to-r from-red-950/80 via-slate-900 to-slate-950 border-red-500/40 shadow-xl shadow-red-950/20'
+          : 'bg-slate-900 border-amber-500/30'
+      }`}>
+        <div className="flex items-start gap-4">
+          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black shrink-0 shadow-lg ${
+            isOnAir ? 'bg-red-600 text-white animate-pulse' : 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+          }`}>
+            <Radio className="w-6 h-6" />
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full ${
+                isOnAir ? 'bg-red-600 text-white animate-pulse' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+              }`}>
+                {isOnAir ? '🔴 BROADCASTING LIVE ON AIR' : 'SELF-HOSTED LIVE STREAM FACILITY'}
+              </span>
+              <span className="text-[10px] font-mono text-slate-400 font-bold">
+                {rtmpUrl}
+              </span>
+            </div>
+            <h3 className="text-lg font-extrabold text-white">Oracle Cloud NGINX Live RTMP Broadcast Engine</h3>
+            <p className="text-xs text-slate-400">Broadcast live sessions from OBS Studio directly to all enrolled students with zero platform fees.</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 shrink-0">
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(rtmpUrl);
+              setCopiedUrl(true);
+              setTimeout(() => setCopiedUrl(false), 3000);
+            }}
+            className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-all flex items-center gap-1.5"
+          >
+            {copiedUrl ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+            <span>{copiedUrl ? 'Copied' : 'Copy RTMP URL'}</span>
+          </button>
+          <button
+            onClick={() => handleToggleOnAir(!isOnAir)}
+            className={`px-5 py-2.5 rounded-xl font-extrabold text-xs uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer shadow-md ${
+              isOnAir ? 'bg-red-600 hover:bg-red-500 text-white animate-pulse' : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+            }`}
+          >
+            {isOnAir ? <Square className="w-4 h-4 fill-white" /> : <Play className="w-4 h-4 fill-white" />}
+            <span>{isOnAir ? 'END BROADCAST' : 'START LIVE STREAM'}</span>
+          </button>
         </div>
       </div>
 
