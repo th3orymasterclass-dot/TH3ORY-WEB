@@ -3,6 +3,7 @@ import { Play, Pause, Volume2, VolumeX, Maximize, Radio, ShieldCheck, RefreshCw,
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { subscribeToLiveBroadcastState, fetchLiveBroadcastStateFromSupabase } from '../../services/supabaseService';
 import { WebRtcSubscriber } from '../../services/webRtcEngine';
+import WebRtcDebugPanel from './WebRtcDebugPanel';
 
 // Helper to dynamically load Hls.js script from CDN
 const loadHlsScript = () => {
@@ -43,6 +44,10 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [activeUrlIndex, setActiveUrlIndex] = useState(0);
+
+  // WebRTC Diagnostics State
+  const [rtcStats, setRtcStats] = useState(null);
+  const [showDebugPanel, setShowDebugPanel] = useState(false);
 
   // Fallback Realtime Canvas Frame State
   const [canvasFrame, setCanvasFrame] = useState(null);
@@ -118,23 +123,28 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
       return;
     }
 
-    const subscriber = new WebRtcSubscriber((remoteStream) => {
-      if (videoRef.current) {
-        videoRef.current.srcObject = remoteStream;
-        videoRef.current.muted = isMuted;
-        videoRef.current.play()
-          .then(() => {
-            setIsPlaying(true);
-            setWebcamStreamActive(true);
-          })
-          .catch(() => {
-            setIsPlaying(false);
-            setWebcamStreamActive(true);
-          });
-        setIsLive(true);
-        setHasError(false);
+    const subscriber = new WebRtcSubscriber(
+      (remoteStream) => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = remoteStream;
+          videoRef.current.muted = isMuted;
+          videoRef.current.play()
+            .then(() => {
+              setIsPlaying(true);
+              setWebcamStreamActive(true);
+            })
+            .catch(() => {
+              setIsPlaying(false);
+              setWebcamStreamActive(true);
+            });
+          setIsLive(true);
+          setHasError(false);
+        }
+      },
+      (stats) => {
+        setRtcStats(stats);
       }
-    });
+    );
 
     rtcSubscriberRef.current = subscriber;
 
@@ -431,11 +441,25 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
         </span>
       </div>
 
-      {/* Live Badge Overlay */}
-      <div className="absolute top-4 left-4 z-20 flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-600/90 text-white text-xs font-black uppercase tracking-widest backdrop-blur-md shadow-lg border border-red-400/40 animate-pulse">
-        <Radio className="w-4 h-4 animate-spin" />
-        <span>🔴 LIVE BROADCAST ({broadcastState.source.toUpperCase()})</span>
+      {/* Live Badge Overlay with Dev Diagnostics Toggle */}
+      <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
+        <button
+          onClick={() => setShowDebugPanel(!showDebugPanel)}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-600/90 hover:bg-red-500 text-white text-xs font-black uppercase tracking-widest backdrop-blur-md shadow-lg border border-red-400/40 animate-pulse cursor-pointer"
+          title="Click to toggle WebRTC Dev Diagnostics Panel"
+        >
+          <Radio className="w-4 h-4 animate-spin" />
+          <span>🔴 LIVE BROADCAST ({broadcastState.source.toUpperCase()})</span>
+        </button>
       </div>
+
+      {/* Developer WebRTC Diagnostics Dashboard */}
+      {showDebugPanel && (
+        <WebRtcDebugPanel
+          stats={rtcStats}
+          onClose={() => setShowDebugPanel(false)}
+        />
+      )}
 
       {/* Bottom Glassmorphism Control Bar */}
       {(broadcastState.source === 'webcam' || broadcastState.source === 'obs_rtmp') && (

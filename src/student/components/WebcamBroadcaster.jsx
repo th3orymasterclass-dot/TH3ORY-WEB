@@ -101,16 +101,16 @@ export default function WebcamBroadcaster({ isOnAir, onToggleOnAir }) {
       try {
         stream = await navigator.mediaDevices.getUserMedia({
           video: {
-            width: { ideal: 1280, max: 1920 },
-            height: { ideal: 720, max: 1080 },
-            frameRate: { ideal: 30, max: 60 }
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            frameRate: { ideal: 30, max: 30 }
           },
           audio: {
+            channelCount: { ideal: 1 },
+            sampleRate: { ideal: 48000 },
             echoCancellation: true,
             noiseSuppression: true,
-            autoGainControl: true,
-            channelCount: 2,
-            sampleRate: 48000
+            autoGainControl: true
           }
         });
       } catch (audioErr) {
@@ -118,9 +118,9 @@ export default function WebcamBroadcaster({ isOnAir, onToggleOnAir }) {
         setMicWarning(true);
         stream = await navigator.mediaDevices.getUserMedia({
           video: {
-            width: { ideal: 1280, max: 1920 },
-            height: { ideal: 720, max: 1080 },
-            frameRate: { ideal: 30 }
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            frameRate: { ideal: 30, max: 30 }
           },
           audio: false
         });

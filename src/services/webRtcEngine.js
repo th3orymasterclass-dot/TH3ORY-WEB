@@ -12,13 +12,126 @@ const ICE_SERVERS = {
   iceCandidatePoolSize: 10
 };
 
+// ─── WebRTC Diagnostics Collector Function ──────────────────────────────────
+export async function collectRtcStats(pc) {
+  if (!pc) return null;
+  try {
+    const statsMap = await pc.getStats();
+    const metrics = {
+      connectionState: pc.connectionState,
+      iceConnectionState: pc.iceConnectionState,
+      signalingState: pc.signalingState,
+      rtt: 0,
+      availableOutgoingBitrate: 0,
+      candidatePairState: 'unknown',
+      audio: {
+        codec: 'Opus',
+        packetsReceived: 0,
+        packetsLost: 0,
+        jitter: 0,
+        jitterBufferDelay: 0,
+        jitterBufferTargetDelay: 0,
+        concealedSamples: 0,
+        audioLevel: 0
+      },
+      video: {
+        codec: 'H.264 / VP8',
+        packetsReceived: 0,
+        packetsLost: 0,
+        jitter: 0,
+        framesReceived: 0,
+        framesDecoded: 0,
+        framesDropped: 0,
+        fps: 0,
+        width: 0,
+        height: 0,
+        bitrate: 0
+      },
+      outbound: {
+        packetsSent: 0,
+        bytesSent: 0,
+        retransmittedPacketsSent: 0,
+        qualityLimitationReason: 'none',
+        bitrate: 0
+      }
+    };
+
+    statsMap.forEach(report => {
+      // Candidate Pair & RTT
+      if (report.type === 'candidate-pair' && report.state === 'succeeded') {
+        metrics.candidatePairState = report.state;
+        if (report.currentRoundTripTime !== undefined) {
+          metrics.rtt = Math.round(report.currentRoundTripTime * 1000); // ms
+        }
+        if (report.availableOutgoingBitrate !== undefined) {
+          metrics.availableOutgoingBitrate = Math.round(report.availableOutgoingBitrate / 1000); // kbps
+        }
+      }
+
+      // Inbound Audio Track
+      if (report.type === 'inbound-rtp' && report.kind === 'audio') {
+        metrics.audio.packetsReceived = report.packetsReceived || 0;
+        metrics.audio.packetsLost = report.packetsLost || 0;
+        metrics.audio.jitter = report.jitter ? Math.round(report.jitter * 1000) : 0; // ms
+        if (report.jitterBufferDelay !== undefined && report.jitterBufferEmittedCount) {
+          metrics.audio.jitterBufferDelay = Math.round((report.jitterBufferDelay / report.jitterBufferEmittedCount) * 1000);
+        }
+        if (report.jitterBufferTargetDelay !== undefined) {
+          metrics.audio.jitterBufferTargetDelay = Math.round(report.jitterBufferTargetDelay * 1000);
+        }
+        metrics.audio.concealedSamples = report.concealedSamples || 0;
+        metrics.audio.audioLevel = report.audioLevel ? Math.round(report.audioLevel * 100) : 0;
+      }
+
+      // Inbound Video Track
+      if (report.type === 'inbound-rtp' && report.kind === 'video') {
+        metrics.video.packetsReceived = report.packetsReceived || 0;
+        metrics.video.packetsLost = report.packetsLost || 0;
+        metrics.video.jitter = report.jitter ? Math.round(report.jitter * 1000) : 0;
+        metrics.video.framesReceived = report.framesReceived || 0;
+        metrics.video.framesDecoded = report.framesDecoded || 0;
+        metrics.video.framesDropped = report.framesDropped || 0;
+        metrics.video.fps = report.framesPerSecond || 0;
+        metrics.video.width = report.frameWidth || 0;
+        metrics.video.height = report.frameHeight || 0;
+      }
+
+      // Outbound Track
+      if (report.type === 'outbound-rtp') {
+        metrics.outbound.packetsSent += report.packetsSent || 0;
+        metrics.outbound.bytesSent += report.bytesSent || 0;
+        metrics.outbound.retransmittedPacketsSent += report.retransmittedPacketsSent || 0;
+        if (report.qualityLimitationReason) {
+          metrics.outbound.qualityLimitationReason = report.qualityLimitationReason;
+        }
+      }
+
+      // Codecs
+      if (report.type === 'codec') {
+        if (report.mimeType && report.mimeType.includes('audio')) {
+          metrics.audio.codec = report.mimeType.split('/')[1] || 'Opus';
+        }
+        if (report.mimeType && report.mimeType.includes('video')) {
+          metrics.video.codec = report.mimeType.split('/')[1] || 'H264';
+        }
+      }
+    });
+
+    return metrics;
+  } catch (err) {
+    return null;
+  }
+}
+
 // ─── WebRTC Broadcaster (Admin Teacher Side) ──────────────────────────────────
 export class WebRtcBroadcaster {
   constructor(localStream) {
     this.localStream = localStream;
     this.peerConnections = new Map(); // studentId -> RTCPeerConnection
     this.channel = null;
+    this.adaptationTimer = null;
     this.initChannel();
+    this.startAdaptationLoop();
   }
 
   updateStream(newStream) {
@@ -28,7 +141,7 @@ export class WebRtcBroadcaster {
       newStream.getTracks().forEach((track) => {
         const sender = senders.find((s) => s.track && s.track.kind === track.kind);
         if (sender) {
-          sender.replaceTrack(track);
+          sender.replaceTrack(track).catch(() => {});
         } else {
           pc.addTrack(track, newStream);
         }
@@ -86,24 +199,33 @@ export class WebRtcBroadcaster {
     const pc = new RTCPeerConnection(ICE_SERVERS);
     this.peerConnections.set(studentId, pc);
 
-    // Add local tracks (Video + Mic Audio) to peer connection
+    // Add local tracks (720p Video + 48kHz Mono Opus Audio)
     if (this.localStream) {
       this.localStream.getTracks().forEach((track) => {
         pc.addTrack(track, this.localStream);
       });
     }
 
-    // Set max bitrate & frame rate parameters for smooth video without dropping frames
+    // Set initial conservative video parameters (720p @ 30fps max, 1.8 Mbps)
     const senders = pc.getSenders();
     senders.forEach(sender => {
       if (sender.track && sender.track.kind === 'video') {
         const parameters = sender.getParameters();
         if (!parameters.encodings) parameters.encodings = [{}];
-        parameters.encodings[0].maxBitrate = 2500000; // 2.5 Mbps HD
+        parameters.encodings[0].maxBitrate = 1800000; // 1.8 Mbps starting target
         parameters.encodings[0].maxFramerate = 30;
         sender.setParameters(parameters).catch(() => {});
       }
     });
+
+    // Handle connection state changes & native ICE restart
+    pc.oniceconnectionstatechange = () => {
+      if (pc.iceConnectionState === 'failed') {
+        try {
+          pc.restartIce();
+        } catch (e) {}
+      }
+    };
 
     pc.onicecandidate = (event) => {
       if (event.candidate && this.channel) {
@@ -130,7 +252,45 @@ export class WebRtcBroadcaster {
     }
   }
 
+  // Automatic Network Adaptation Loop (Hysteresis control)
+  startAdaptationLoop() {
+    if (this.adaptationTimer) clearInterval(this.adaptationTimer);
+
+    this.adaptationTimer = setInterval(async () => {
+      this.peerConnections.forEach(async (pc) => {
+        if (pc.connectionState !== 'connected') return;
+
+        const stats = await collectRtcStats(pc);
+        if (!stats) return;
+
+        const sender = pc.getSenders().find(s => s.track && s.track.kind === 'video');
+        if (!sender) return;
+
+        const params = sender.getParameters();
+        if (!params.encodings || !params.encodings[0]) return;
+
+        let currentMaxBitrate = params.encodings[0].maxBitrate || 1800000;
+
+        // Conservative Adaptation: Lower video bitrate if high RTT or packet loss
+        if (stats.rtt > 250 || stats.outbound.qualityLimitationReason === 'bandwidth') {
+          // Degrade video quality to protect audio stability
+          const newBitrate = Math.max(400000, Math.floor(currentMaxBitrate * 0.75));
+          params.encodings[0].maxBitrate = newBitrate;
+          params.encodings[0].maxFramerate = 24;
+          sender.setParameters(params).catch(() => {});
+        } else if (stats.rtt < 100 && currentMaxBitrate < 1800000) {
+          // Gradual recovery when network improves
+          const newBitrate = Math.min(1800000, Math.floor(currentMaxBitrate * 1.2));
+          params.encodings[0].maxBitrate = newBitrate;
+          params.encodings[0].maxFramerate = 30;
+          sender.setParameters(params).catch(() => {});
+        }
+      });
+    }, 2000);
+  }
+
   destroy() {
+    if (this.adaptationTimer) clearInterval(this.adaptationTimer);
     this.peerConnections.forEach((pc) => pc.close());
     this.peerConnections.clear();
     if (this.channel && supabase) {
@@ -141,11 +301,13 @@ export class WebRtcBroadcaster {
 
 // ─── WebRTC Subscriber (Student Receiver Side) ──────────────────────────────
 export class WebRtcSubscriber {
-  constructor(onRemoteStream, studentId = `student_${Math.random().toString(36).substring(2, 9)}`) {
+  constructor(onRemoteStream, onStatsUpdate = null, studentId = `student_${Math.random().toString(36).substring(2, 9)}`) {
     this.onRemoteStream = onRemoteStream;
+    this.onStatsUpdate = onStatsUpdate;
     this.studentId = studentId;
     this.pc = null;
     this.channel = null;
+    this.statsTimer = null;
     this.remoteStream = new MediaStream();
     this.initChannel();
   }
@@ -211,6 +373,24 @@ export class WebRtcSubscriber {
       this.onRemoteStream(this.remoteStream);
     };
 
+    // Configure Audio Receiver Jitter Buffer Target (120ms Feature-Detected)
+    this.pc.addEventListener('track', () => {
+      const audioReceiver = this.pc.getReceivers().find(r => r.track && r.track.kind === 'audio');
+      if (audioReceiver && 'jitterBufferTarget' in audioReceiver) {
+        try {
+          audioReceiver.jitterBufferTarget = 120; // 120ms smooth playback buffer
+        } catch (e) {}
+      }
+    });
+
+    pc.oniceconnectionstatechange = () => {
+      if (this.pc && this.pc.iceConnectionState === 'failed') {
+        try {
+          this.pc.restartIce();
+        } catch (e) {}
+      }
+    };
+
     this.pc.onicecandidate = (event) => {
       if (event.candidate && this.channel) {
         this.channel.send({
@@ -232,9 +412,23 @@ export class WebRtcSubscriber {
         payload: { studentId: this.studentId, answer }
       });
     }
+
+    // Start Real-Time Diagnostics Polling Loop (1s Interval)
+    this.startDiagnostics();
+  }
+
+  startDiagnostics() {
+    if (this.statsTimer) clearInterval(this.statsTimer);
+    this.statsTimer = setInterval(async () => {
+      if (this.pc && this.onStatsUpdate) {
+        const stats = await collectRtcStats(this.pc);
+        if (stats) this.onStatsUpdate(stats);
+      }
+    }, 1000);
   }
 
   destroy() {
+    if (this.statsTimer) clearInterval(this.statsTimer);
     if (this.pc) {
       try { this.pc.close(); } catch (e) {}
     }
