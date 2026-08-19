@@ -1,11 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Camera, CameraOff, Mic, MicOff, Monitor, Radio, Square, Play, ShieldCheck, Volume2, Settings, AlertTriangle } from 'lucide-react';
 import { WebRtcBroadcaster } from '../../services/webRtcEngine';
+import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 
 export default function WebcamBroadcaster({ isOnAir, onToggleOnAir }) {
   const localVideoRef = useRef(null);
   const mediaStreamRef = useRef(null);
   const rtcBroadcasterRef = useRef(null);
+  const canvasRef = useRef(document.createElement('canvas'));
+  const frameTimerRef = useRef(null);
+  const realtimeChannelRef = useRef(null);
 
   const [cameraActive, setCameraActive] = useState(true);
   const [micActive, setMicActive] = useState(true);
@@ -13,18 +17,57 @@ export default function WebcamBroadcaster({ isOnAir, onToggleOnAir }) {
   const [devicePermissionError, setDevicePermissionError] = useState(null);
   const [micWarning, setMicWarning] = useState(false);
 
-  // Initialize WebRTC Broadcaster when stream is on air
+  // Initialize WebRTC Broadcaster & Throttled Realtime Frame Sync when on air
   useEffect(() => {
-    if (isOnAir && mediaStreamRef.current) {
-      if (!rtcBroadcasterRef.current) {
-        rtcBroadcasterRef.current = new WebRtcBroadcaster(mediaStreamRef.current);
-      } else {
-        rtcBroadcasterRef.current.updateStream(mediaStreamRef.current);
+    if (isOnAir) {
+      if (mediaStreamRef.current) {
+        if (!rtcBroadcasterRef.current) {
+          rtcBroadcasterRef.current = new WebRtcBroadcaster(mediaStreamRef.current);
+        } else {
+          rtcBroadcasterRef.current.updateStream(mediaStreamRef.current);
+        }
       }
+
+      // Initialize Supabase Realtime Fallback Channel
+      if (isSupabaseConfigured && supabase && !realtimeChannelRef.current) {
+        realtimeChannelRef.current = supabase.channel('th3ory_webcam_stream');
+        realtimeChannelRef.current.subscribe();
+      }
+
+      // Throttled frame capture every 500ms (lightweight 480x270 JPEG for instant fallback)
+      if (frameTimerRef.current) clearInterval(frameTimerRef.current);
+      frameTimerRef.current = setInterval(() => {
+        if (!localVideoRef.current || !realtimeChannelRef.current) return;
+        const video = localVideoRef.current;
+        if (video.readyState >= 2 && video.videoWidth > 0) {
+          const canvas = canvasRef.current;
+          canvas.width = 480;
+          canvas.height = 270;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const frameData = canvas.toDataURL('image/jpeg', 0.5);
+            realtimeChannelRef.current.send({
+              type: 'broadcast',
+              event: 'webcam_frame',
+              payload: { frame: frameData, timestamp: Date.now() }
+            }).catch(() => {});
+          }
+        }
+      }, 500);
+
     } else {
       if (rtcBroadcasterRef.current) {
         rtcBroadcasterRef.current.destroy();
         rtcBroadcasterRef.current = null;
+      }
+      if (frameTimerRef.current) {
+        clearInterval(frameTimerRef.current);
+        frameTimerRef.current = null;
+      }
+      if (realtimeChannelRef.current && supabase) {
+        try { supabase.removeChannel(realtimeChannelRef.current); } catch (e) {}
+        realtimeChannelRef.current = null;
       }
     }
 
@@ -33,10 +76,18 @@ export default function WebcamBroadcaster({ isOnAir, onToggleOnAir }) {
         rtcBroadcasterRef.current.destroy();
         rtcBroadcasterRef.current = null;
       }
+      if (frameTimerRef.current) {
+        clearInterval(frameTimerRef.current);
+        frameTimerRef.current = null;
+      }
+      if (realtimeChannelRef.current && supabase) {
+        try { supabase.removeChannel(realtimeChannelRef.current); } catch (e) {}
+        realtimeChannelRef.current = null;
+      }
     };
   }, [isOnAir]);
 
-  // Start Camera Stream with Fail-Safe Microphone Fallback
+  // Start Camera Stream with Microphone Fallback
   const startCamera = async () => {
     try {
       setDevicePermissionError(null);
@@ -48,7 +99,6 @@ export default function WebcamBroadcaster({ isOnAir, onToggleOnAir }) {
 
       let stream = null;
       try {
-        // Primary Attempt: Camera + HD Microphone Audio
         stream = await navigator.mediaDevices.getUserMedia({
           video: {
             width: { ideal: 1280, max: 1920 },
@@ -66,7 +116,6 @@ export default function WebcamBroadcaster({ isOnAir, onToggleOnAir }) {
       } catch (audioErr) {
         console.warn('Microphone access warning, falling back to camera video only:', audioErr);
         setMicWarning(true);
-        // Fallback Attempt: Video Only
         stream = await navigator.mediaDevices.getUserMedia({
           video: {
             width: { ideal: 1280, max: 1920 },
@@ -149,7 +198,6 @@ export default function WebcamBroadcaster({ isOnAir, onToggleOnAir }) {
       audioTrack.enabled = !audioTrack.enabled;
       setMicActive(audioTrack.enabled);
     } else {
-      // Retry requesting microphone track
       startCamera();
     }
   };

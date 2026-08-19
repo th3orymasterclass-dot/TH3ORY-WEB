@@ -44,6 +44,9 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
   const [errorMessage, setErrorMessage] = useState('');
   const [activeUrlIndex, setActiveUrlIndex] = useState(0);
 
+  // Fallback Realtime Canvas Frame State
+  const [canvasFrame, setCanvasFrame] = useState(null);
+
   // Global Realtime Broadcast State
   const [broadcastState, setBroadcastState] = useState({
     isOnAir: false,
@@ -54,7 +57,7 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
 
   const [webcamStreamActive, setWebcamStreamActive] = useState(false);
 
-  // Subscribe to live broadcast state updates from Supabase
+  // Subscribe to live broadcast state updates & Supabase Realtime Canvas Frames
   useEffect(() => {
     fetchLiveBroadcastStateFromSupabase().then(state => {
       if (state) setBroadcastState(prev => ({ ...prev, ...state }));
@@ -75,13 +78,36 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
     };
     window.addEventListener('th3ory_live_status_change', handleLocalStatus);
 
+    // Subscribe to Realtime Canvas Frames Fallback
+    let frameSub = null;
+    if (isSupabaseConfigured && supabase) {
+      frameSub = supabase.channel('th3ory_webcam_stream')
+        .on('broadcast', { event: 'webcam_frame' }, ({ payload }) => {
+          if (payload && payload.frame) {
+            setCanvasFrame(payload.frame);
+            setIsLive(true);
+          }
+        })
+        .subscribe();
+    }
+
     return () => {
       unsubscribe();
       window.removeEventListener('th3ory_live_status_change', handleLocalStatus);
+      if (frameSub && supabase) {
+        try { supabase.removeChannel(frameSub); } catch (e) {}
+      }
     };
   }, []);
 
-  // WebRTC Subscriber Engine for Smooth Direct HD Video & Audio Streaming
+  // Sync mute state to video element without tearing down WebRTC connection
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = isMuted;
+    }
+  }, [isMuted]);
+
+  // STABLE WebRTC Subscriber Engine for Direct HD Video & Audio Streaming
   useEffect(() => {
     if (broadcastState.source !== 'webcam') {
       if (rtcSubscriberRef.current) {
@@ -113,10 +139,12 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
     rtcSubscriberRef.current = subscriber;
 
     return () => {
-      subscriber.destroy();
-      rtcSubscriberRef.current = null;
+      if (rtcSubscriberRef.current) {
+        rtcSubscriberRef.current.destroy();
+        rtcSubscriberRef.current = null;
+      }
     };
-  }, [broadcastState.source, isMuted]);
+  }, [broadcastState.source]);
 
   // Candidate HLS URLs for automatic seamless fallback (OBS RTMP)
   const candidateUrls = [
@@ -243,9 +271,9 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
 
   const handleStartWatchingClick = () => {
     setHasStartedUserClick(true);
+    setIsMuted(false);
     if (videoRef.current) {
       videoRef.current.muted = false;
-      setIsMuted(false);
       videoRef.current.play()
         .then(() => setIsPlaying(true))
         .catch(() => setIsPlaying(false));
@@ -264,8 +292,9 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
 
   const toggleMute = () => {
     if (!videoRef.current) return;
-    videoRef.current.muted = !isMuted;
-    setIsMuted(!isMuted);
+    const nextMute = !isMuted;
+    videoRef.current.muted = nextMute;
+    setIsMuted(nextMute);
   };
 
   const toggleFullscreen = () => {
@@ -280,7 +309,7 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
   return (
     <div className="relative w-full aspect-video rounded-3xl overflow-hidden bg-slate-950 border border-amber-500/30 shadow-2xl group select-none">
       
-      {/* MODE 1: Direct WebRTC HD WebCam Stream */}
+      {/* MODE 1: Direct WebRTC HD WebCam Stream (with Instant Realtime Canvas Fallback) */}
       {broadcastState.source === 'webcam' && (
         <>
           <video
@@ -294,7 +323,17 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
             onContextMenu={(e) => e.preventDefault()}
           />
 
-          {!webcamStreamActive && (
+          {/* Fallback Realtime Frame Display */}
+          {!webcamStreamActive && canvasFrame && (
+            <img
+              src={canvasFrame}
+              alt="Live Masterclass Feed"
+              className="w-full h-full object-cover block"
+            />
+          )}
+
+          {/* Connecting State */}
+          {!webcamStreamActive && !canvasFrame && (
             <div className="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center space-y-4 p-6 text-center">
               <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center animate-pulse">
                 <Camera className="w-8 h-8" />
