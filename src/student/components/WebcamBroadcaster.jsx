@@ -1,29 +1,72 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Camera, CameraOff, Mic, MicOff, Monitor, Radio, Square, Play, ShieldCheck, Volume2, Settings } from 'lucide-react';
 import { WebRtcBroadcaster } from '../../services/webRtcEngine';
+import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 
 export default function WebcamBroadcaster({ isOnAir, onToggleOnAir }) {
   const localVideoRef = useRef(null);
   const mediaStreamRef = useRef(null);
   const rtcBroadcasterRef = useRef(null);
+  const canvasRef = useRef(document.createElement('canvas'));
+  const frameIntervalRef = useRef(null);
+  const realtimeChannelRef = useRef(null);
 
   const [cameraActive, setCameraActive] = useState(true);
   const [micActive, setMicActive] = useState(true);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [devicePermissionError, setDevicePermissionError] = useState(null);
 
-  // Initialize WebRTC Broadcaster when stream is ready and on air
+  // Initialize WebRTC Broadcaster & Realtime Canvas Frame Loop when stream is on air
   useEffect(() => {
-    if (isOnAir && mediaStreamRef.current) {
-      if (!rtcBroadcasterRef.current) {
-        rtcBroadcasterRef.current = new WebRtcBroadcaster(mediaStreamRef.current);
-      } else {
-        rtcBroadcasterRef.current.updateStream(mediaStreamRef.current);
+    if (isOnAir) {
+      if (mediaStreamRef.current) {
+        if (!rtcBroadcasterRef.current) {
+          rtcBroadcasterRef.current = new WebRtcBroadcaster(mediaStreamRef.current);
+        } else {
+          rtcBroadcasterRef.current.updateStream(mediaStreamRef.current);
+        }
       }
+
+      // Supabase Realtime Fallback Channel
+      if (isSupabaseConfigured && supabase && !realtimeChannelRef.current) {
+        realtimeChannelRef.current = supabase.channel('th3ory_webcam_stream');
+        realtimeChannelRef.current.subscribe();
+      }
+
+      // Start frame capture loop for fail-safe fallback
+      if (frameIntervalRef.current) clearInterval(frameIntervalRef.current);
+      frameIntervalRef.current = setInterval(() => {
+        if (!localVideoRef.current || !realtimeChannelRef.current) return;
+        const video = localVideoRef.current;
+        if (video.readyState >= 2 && video.videoWidth > 0) {
+          const canvas = canvasRef.current;
+          canvas.width = 640;
+          canvas.height = 360;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const frameData = canvas.toDataURL('image/jpeg', 0.65);
+            realtimeChannelRef.current.send({
+              type: 'broadcast',
+              event: 'webcam_frame',
+              payload: { frame: frameData, timestamp: Date.now() }
+            }).catch(() => {});
+          }
+        }
+      }, 250);
+
     } else {
       if (rtcBroadcasterRef.current) {
         rtcBroadcasterRef.current.destroy();
         rtcBroadcasterRef.current = null;
+      }
+      if (frameIntervalRef.current) {
+        clearInterval(frameIntervalRef.current);
+        frameIntervalRef.current = null;
+      }
+      if (realtimeChannelRef.current && supabase) {
+        try { supabase.removeChannel(realtimeChannelRef.current); } catch (e) {}
+        realtimeChannelRef.current = null;
       }
     }
 
@@ -31,6 +74,14 @@ export default function WebcamBroadcaster({ isOnAir, onToggleOnAir }) {
       if (rtcBroadcasterRef.current) {
         rtcBroadcasterRef.current.destroy();
         rtcBroadcasterRef.current = null;
+      }
+      if (frameIntervalRef.current) {
+        clearInterval(frameIntervalRef.current);
+        frameIntervalRef.current = null;
+      }
+      if (realtimeChannelRef.current && supabase) {
+        try { supabase.removeChannel(realtimeChannelRef.current); } catch (e) {}
+        realtimeChannelRef.current = null;
       }
     };
   }, [isOnAir]);
@@ -151,7 +202,7 @@ export default function WebcamBroadcaster({ isOnAir, onToggleOnAir }) {
           </div>
           <div>
             <h3 className="text-white font-extrabold text-sm tracking-tight">WebRTC HD Camera Broadcaster Studio</h3>
-            <p className="text-slate-400 text-xs">High-definition 720p/1080p 60fps direct WebRTC video streaming engine.</p>
+            <p className="text-slate-400 text-xs">High-definition 720p/1080p 60fps direct WebRTC & Realtime streaming engine.</p>
           </div>
         </div>
 
