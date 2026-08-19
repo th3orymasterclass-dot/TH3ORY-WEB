@@ -1,72 +1,30 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Camera, CameraOff, Mic, MicOff, Monitor, Radio, Square, Play, ShieldCheck, Volume2, Settings } from 'lucide-react';
+import { Camera, CameraOff, Mic, MicOff, Monitor, Radio, Square, Play, ShieldCheck, Volume2, Settings, AlertTriangle } from 'lucide-react';
 import { WebRtcBroadcaster } from '../../services/webRtcEngine';
-import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 
 export default function WebcamBroadcaster({ isOnAir, onToggleOnAir }) {
   const localVideoRef = useRef(null);
   const mediaStreamRef = useRef(null);
   const rtcBroadcasterRef = useRef(null);
-  const canvasRef = useRef(document.createElement('canvas'));
-  const frameIntervalRef = useRef(null);
-  const realtimeChannelRef = useRef(null);
 
   const [cameraActive, setCameraActive] = useState(true);
   const [micActive, setMicActive] = useState(true);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [devicePermissionError, setDevicePermissionError] = useState(null);
+  const [micWarning, setMicWarning] = useState(false);
 
-  // Initialize WebRTC Broadcaster & Realtime Canvas Frame Loop when stream is on air
+  // Initialize WebRTC Broadcaster when stream is on air
   useEffect(() => {
-    if (isOnAir) {
-      if (mediaStreamRef.current) {
-        if (!rtcBroadcasterRef.current) {
-          rtcBroadcasterRef.current = new WebRtcBroadcaster(mediaStreamRef.current);
-        } else {
-          rtcBroadcasterRef.current.updateStream(mediaStreamRef.current);
-        }
+    if (isOnAir && mediaStreamRef.current) {
+      if (!rtcBroadcasterRef.current) {
+        rtcBroadcasterRef.current = new WebRtcBroadcaster(mediaStreamRef.current);
+      } else {
+        rtcBroadcasterRef.current.updateStream(mediaStreamRef.current);
       }
-
-      // Supabase Realtime Fallback Channel
-      if (isSupabaseConfigured && supabase && !realtimeChannelRef.current) {
-        realtimeChannelRef.current = supabase.channel('th3ory_webcam_stream');
-        realtimeChannelRef.current.subscribe();
-      }
-
-      // Start frame capture loop for fail-safe fallback
-      if (frameIntervalRef.current) clearInterval(frameIntervalRef.current);
-      frameIntervalRef.current = setInterval(() => {
-        if (!localVideoRef.current || !realtimeChannelRef.current) return;
-        const video = localVideoRef.current;
-        if (video.readyState >= 2 && video.videoWidth > 0) {
-          const canvas = canvasRef.current;
-          canvas.width = 640;
-          canvas.height = 360;
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const frameData = canvas.toDataURL('image/jpeg', 0.65);
-            realtimeChannelRef.current.send({
-              type: 'broadcast',
-              event: 'webcam_frame',
-              payload: { frame: frameData, timestamp: Date.now() }
-            }).catch(() => {});
-          }
-        }
-      }, 250);
-
     } else {
       if (rtcBroadcasterRef.current) {
         rtcBroadcasterRef.current.destroy();
         rtcBroadcasterRef.current = null;
-      }
-      if (frameIntervalRef.current) {
-        clearInterval(frameIntervalRef.current);
-        frameIntervalRef.current = null;
-      }
-      if (realtimeChannelRef.current && supabase) {
-        try { supabase.removeChannel(realtimeChannelRef.current); } catch (e) {}
-        realtimeChannelRef.current = null;
       }
     }
 
@@ -75,37 +33,49 @@ export default function WebcamBroadcaster({ isOnAir, onToggleOnAir }) {
         rtcBroadcasterRef.current.destroy();
         rtcBroadcasterRef.current = null;
       }
-      if (frameIntervalRef.current) {
-        clearInterval(frameIntervalRef.current);
-        frameIntervalRef.current = null;
-      }
-      if (realtimeChannelRef.current && supabase) {
-        try { supabase.removeChannel(realtimeChannelRef.current); } catch (e) {}
-        realtimeChannelRef.current = null;
-      }
     };
   }, [isOnAir]);
 
-  // Start Camera Stream
+  // Start Camera Stream with Fail-Safe Microphone Fallback
   const startCamera = async () => {
     try {
       setDevicePermissionError(null);
+      setMicWarning(false);
+
       if (mediaStreamRef.current) {
         mediaStreamRef.current.getTracks().forEach(track => track.stop());
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: { ideal: 1280, max: 1920 },
-          height: { ideal: 720, max: 1080 },
-          frameRate: { ideal: 30, max: 60 }
-        },
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        }
-      });
+      let stream = null;
+      try {
+        // Primary Attempt: Camera + HD Microphone Audio
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: { ideal: 1280, max: 1920 },
+            height: { ideal: 720, max: 1080 },
+            frameRate: { ideal: 30, max: 60 }
+          },
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+            channelCount: 2,
+            sampleRate: 48000
+          }
+        });
+      } catch (audioErr) {
+        console.warn('Microphone access warning, falling back to camera video only:', audioErr);
+        setMicWarning(true);
+        // Fallback Attempt: Video Only
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: { ideal: 1280, max: 1920 },
+            height: { ideal: 720, max: 1080 },
+            frameRate: { ideal: 30 }
+          },
+          audio: false
+        });
+      }
 
       mediaStreamRef.current = stream;
       if (localVideoRef.current) {
@@ -114,14 +84,14 @@ export default function WebcamBroadcaster({ isOnAir, onToggleOnAir }) {
 
       setIsScreenSharing(false);
       setCameraActive(true);
-      setMicActive(true);
+      setMicActive(stream.getAudioTracks().length > 0);
 
       if (rtcBroadcasterRef.current) {
         rtcBroadcasterRef.current.updateStream(stream);
       }
     } catch (err) {
-      console.error('Camera Access Error:', err);
-      setDevicePermissionError('Camera/Microphone permission denied. Please allow camera access in browser settings.');
+      console.error('Camera/Mic Access Failure:', err);
+      setDevicePermissionError('Camera/Microphone permission denied. Please allow camera and microphone access in your browser location bar.');
     }
   };
 
@@ -136,7 +106,9 @@ export default function WebcamBroadcaster({ isOnAir, onToggleOnAir }) {
 
       if (mediaStreamRef.current) {
         const audioTrack = mediaStreamRef.current.getAudioTracks()[0];
-        if (audioTrack) screenStream.addTrack(audioTrack);
+        if (audioTrack && screenStream.getAudioTracks().length === 0) {
+          screenStream.addTrack(audioTrack);
+        }
       }
 
       mediaStreamRef.current = screenStream;
@@ -176,6 +148,9 @@ export default function WebcamBroadcaster({ isOnAir, onToggleOnAir }) {
     if (audioTrack) {
       audioTrack.enabled = !audioTrack.enabled;
       setMicActive(audioTrack.enabled);
+    } else {
+      // Retry requesting microphone track
+      startCamera();
     }
   };
 
@@ -202,7 +177,7 @@ export default function WebcamBroadcaster({ isOnAir, onToggleOnAir }) {
           </div>
           <div>
             <h3 className="text-white font-extrabold text-sm tracking-tight">WebRTC HD Camera Broadcaster Studio</h3>
-            <p className="text-slate-400 text-xs">High-definition 720p/1080p 60fps direct WebRTC & Realtime streaming engine.</p>
+            <p className="text-slate-400 text-xs">High-definition 720p/1080p 60fps direct WebRTC video & Opus audio engine.</p>
           </div>
         </div>
 
@@ -219,9 +194,25 @@ export default function WebcamBroadcaster({ isOnAir, onToggleOnAir }) {
           <span>{devicePermissionError}</span>
           <button
             onClick={startCamera}
-            className="px-3 py-1 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-xs uppercase"
+            className="px-3 py-1 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-xs uppercase cursor-pointer"
           >
             Retry Access
+          </button>
+        </div>
+      )}
+
+      {/* Mic Access Warning */}
+      {micWarning && !devicePermissionError && (
+        <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-amber-400" />
+            Microphone muted or locked by another app. Camera video is active.
+          </span>
+          <button
+            onClick={startCamera}
+            className="px-3 py-1 rounded-xl bg-amber-500 text-slate-950 font-black text-[10px] uppercase cursor-pointer"
+          >
+            Enable Mic Access
           </button>
         </div>
       )}
@@ -239,7 +230,7 @@ export default function WebcamBroadcaster({ isOnAir, onToggleOnAir }) {
         {/* Floating Indicator */}
         <div className="absolute top-4 left-4 z-20 flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950/80 border border-slate-800 text-white text-xs font-bold backdrop-blur-md">
           <span className={`w-2.5 h-2.5 rounded-full ${isOnAir ? 'bg-red-500 animate-pulse' : 'bg-emerald-500'}`} />
-          <span>{isScreenSharing ? '🖥️ Screen Sharing' : cameraActive ? '📷 Camera Active (HD)' : '📷 Camera Off'}</span>
+          <span>{isScreenSharing ? '🖥️ Screen Sharing' : cameraActive ? '📷 Camera & Mic Active (HD)' : '📷 Camera Off'}</span>
         </div>
 
         {/* Camera Off Overlay */}

@@ -37,15 +37,12 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
   const retryTimerRef = useRef(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(true); // Default muted to ensure autoplay compliance
+  const [isMuted, setIsMuted] = useState(true);
   const [hasStartedUserClick, setHasStartedUserClick] = useState(false);
   const [isLive, setIsLive] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [activeUrlIndex, setActiveUrlIndex] = useState(0);
-
-  // Fallback Realtime Canvas Frame State
-  const [canvasFrame, setCanvasFrame] = useState(null);
 
   // Global Realtime Broadcast State
   const [broadcastState, setBroadcastState] = useState({
@@ -57,7 +54,7 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
 
   const [webcamStreamActive, setWebcamStreamActive] = useState(false);
 
-  // Subscribe to live broadcast state updates & Supabase Realtime Canvas Frames
+  // Subscribe to live broadcast state updates from Supabase
   useEffect(() => {
     fetchLiveBroadcastStateFromSupabase().then(state => {
       if (state) setBroadcastState(prev => ({ ...prev, ...state }));
@@ -78,29 +75,13 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
     };
     window.addEventListener('th3ory_live_status_change', handleLocalStatus);
 
-    // Subscribe to Realtime Canvas Frames Fallback
-    let frameSub = null;
-    if (isSupabaseConfigured && supabase) {
-      frameSub = supabase.channel('th3ory_webcam_stream')
-        .on('broadcast', { event: 'webcam_frame' }, ({ payload }) => {
-          if (payload && payload.frame) {
-            setCanvasFrame(payload.frame);
-            setIsLive(true);
-          }
-        })
-        .subscribe();
-    }
-
     return () => {
       unsubscribe();
       window.removeEventListener('th3ory_live_status_change', handleLocalStatus);
-      if (frameSub && supabase) {
-        try { supabase.removeChannel(frameSub); } catch (e) {}
-      }
     };
   }, []);
 
-  // WebRTC Subscriber Engine for Direct HD Camera Streaming
+  // WebRTC Subscriber Engine for Smooth Direct HD Video & Audio Streaming
   useEffect(() => {
     if (broadcastState.source !== 'webcam') {
       if (rtcSubscriberRef.current) {
@@ -114,7 +95,7 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
     const subscriber = new WebRtcSubscriber((remoteStream) => {
       if (videoRef.current) {
         videoRef.current.srcObject = remoteStream;
-        videoRef.current.muted = true; // start muted for autoplay policy
+        videoRef.current.muted = isMuted;
         videoRef.current.play()
           .then(() => {
             setIsPlaying(true);
@@ -135,7 +116,7 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
       subscriber.destroy();
       rtcSubscriberRef.current = null;
     };
-  }, [broadcastState.source]);
+  }, [broadcastState.source, isMuted]);
 
   // Candidate HLS URLs for automatic seamless fallback (OBS RTMP)
   const candidateUrls = [
@@ -199,7 +180,7 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
           if (!isMounted) return;
           setIsLive(true);
           setHasError(false);
-          video.muted = true;
+          video.muted = isMuted;
           video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
         });
 
@@ -234,7 +215,7 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
         });
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = currentStreamUrl;
-        video.muted = true;
+        video.muted = isMuted;
         video.addEventListener('loadedmetadata', () => {
           if (isMounted) {
             video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
@@ -299,7 +280,7 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
   return (
     <div className="relative w-full aspect-video rounded-3xl overflow-hidden bg-slate-950 border border-amber-500/30 shadow-2xl group select-none">
       
-      {/* MODE 1: Direct WebRTC HD WebCam Stream (with Canvas Fallback) */}
+      {/* MODE 1: Direct WebRTC HD WebCam Stream */}
       {broadcastState.source === 'webcam' && (
         <>
           <video
@@ -313,25 +294,15 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
             onContextMenu={(e) => e.preventDefault()}
           />
 
-          {/* Fallback Realtime Canvas Frame Image */}
-          {!webcamStreamActive && canvasFrame && (
-            <img
-              src={canvasFrame}
-              alt="Live WebCam Frame Stream"
-              className="w-full h-full object-cover block"
-            />
-          )}
-
-          {/* Waiting Overlay if neither WebRTC nor Canvas Frame is available */}
-          {!webcamStreamActive && !canvasFrame && (
+          {!webcamStreamActive && (
             <div className="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center space-y-4 p-6 text-center">
               <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center animate-pulse">
                 <Camera className="w-8 h-8" />
               </div>
               <div>
-                <h4 className="text-white font-extrabold text-lg">WebRTC HD Camera Stream Connecting...</h4>
+                <h4 className="text-white font-extrabold text-lg">WebRTC HD Camera & Audio Stream Connecting...</h4>
                 <p className="text-slate-400 text-xs mt-1 max-w-sm">
-                  Mentalist Sravan is live in the camera studio. Peer connection auto-connects in HD.
+                  Mentalist Sravan is live in the camera studio. Smooth WebRTC video & microphone audio auto-connects.
                 </p>
               </div>
             </div>
@@ -400,12 +371,12 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
 
       {/* Tap to Start / Unmute Overlay (Bypasses Browser Autoplay Restrictions) */}
       {!hasStartedUserClick && (broadcastState.source === 'webcam' || broadcastState.source === 'obs_rtmp') && (
-        <div className="absolute inset-0 z-30 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center">
+        <div className="absolute inset-0 z-30 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center">
           <button
             onClick={handleStartWatchingClick}
             className="px-8 py-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-widest transition-all shadow-2xl shadow-amber-500/40 flex items-center gap-3 cursor-pointer animate-bounce"
           >
-            <Play className="w-5 h-5 fill-slate-950" /> TAP TO START LIVE STREAM WITH AUDIO
+            <Play className="w-5 h-5 fill-slate-950" /> TAP TO UNMUTE & WATCH LIVE STREAM
           </button>
         </div>
       )}
@@ -442,7 +413,7 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
               onClick={toggleMute}
               className="p-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-300 border border-slate-700 transition-all cursor-pointer"
             >
-              {isMuted ? <VolumeX className="w-5 h-5 text-red-400" /> : <Volume2 className="w-5 h-5" />}
+              {isMuted ? <VolumeX className="w-5 h-5 text-red-400" /> : <Volume2 className="w-5 h-5 text-emerald-400" />}
             </button>
             <button
               onClick={toggleFullscreen}

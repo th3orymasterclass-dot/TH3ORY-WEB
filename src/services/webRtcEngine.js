@@ -6,15 +6,17 @@ const ICE_SERVERS = {
     { urls: 'stun:stun1.l.google.com:19302' },
     { urls: 'stun:stun2.l.google.com:19302' },
     { urls: 'stun:stun3.l.google.com:19302' },
-    { urls: 'stun:stun4.l.google.com:19302' }
-  ]
+    { urls: 'stun:stun4.l.google.com:19302' },
+    { urls: 'stun:global.stun.twilio.com:3478' }
+  ],
+  iceCandidatePoolSize: 10
 };
 
 // ─── WebRTC Broadcaster (Admin Teacher Side) ──────────────────────────────────
 export class WebRtcBroadcaster {
   constructor(localStream) {
     this.localStream = localStream;
-    this.peerConnections = new Map(); // studentId -> RTMPeerConnection
+    this.peerConnections = new Map(); // studentId -> RTCPeerConnection
     this.channel = null;
     this.initChannel();
   }
@@ -49,7 +51,9 @@ export class WebRtcBroadcaster {
         const { studentId, answer } = payload;
         const pc = this.peerConnections.get(studentId);
         if (pc && answer) {
-          await pc.setRemoteDescription(new RTCSessionDescription(answer));
+          try {
+            await pc.setRemoteDescription(new RTCSessionDescription(answer));
+          } catch (e) {}
         }
       })
       .on('broadcast', { event: 'student_ice_candidate' }, async ({ payload }) => {
@@ -63,7 +67,6 @@ export class WebRtcBroadcaster {
       })
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
-          // Announce broadcast available to all waiting students
           this.channel.send({
             type: 'broadcast',
             event: 'broadcaster_online',
@@ -83,14 +86,25 @@ export class WebRtcBroadcaster {
     const pc = new RTCPeerConnection(ICE_SERVERS);
     this.peerConnections.set(studentId, pc);
 
-    // Add local tracks to peer connection
+    // Add local tracks (Video + Mic Audio) to peer connection
     if (this.localStream) {
       this.localStream.getTracks().forEach((track) => {
         pc.addTrack(track, this.localStream);
       });
     }
 
-    // ICE Candidate handler
+    // Set max bitrate & frame rate parameters for smooth video without dropping frames
+    const senders = pc.getSenders();
+    senders.forEach(sender => {
+      if (sender.track && sender.track.kind === 'video') {
+        const parameters = sender.getParameters();
+        if (!parameters.encodings) parameters.encodings = [{}];
+        parameters.encodings[0].maxBitrate = 2500000; // 2.5 Mbps HD
+        parameters.encodings[0].maxFramerate = 30;
+        sender.setParameters(parameters).catch(() => {});
+      }
+    });
+
     pc.onicecandidate = (event) => {
       if (event.candidate && this.channel) {
         this.channel.send({
@@ -101,7 +115,6 @@ export class WebRtcBroadcaster {
       }
     };
 
-    // Create and send WebRTC Offer to student
     const offer = await pc.createOffer({
       offerToReceiveAudio: false,
       offerToReceiveVideo: false
@@ -133,6 +146,7 @@ export class WebRtcSubscriber {
     this.studentId = studentId;
     this.pc = null;
     this.channel = null;
+    this.remoteStream = new MediaStream();
     this.initChannel();
   }
 
@@ -180,11 +194,21 @@ export class WebRtcSubscriber {
     }
 
     this.pc = new RTCPeerConnection(ICE_SERVERS);
+    this.remoteStream = new MediaStream();
 
     this.pc.ontrack = (event) => {
       if (event.streams && event.streams[0]) {
-        this.onRemoteStream(event.streams[0]);
+        event.streams[0].getTracks().forEach((track) => {
+          if (!this.remoteStream.getTracks().some(t => t.id === track.id)) {
+            this.remoteStream.addTrack(track);
+          }
+        });
+      } else if (event.track) {
+        if (!this.remoteStream.getTracks().some(t => t.id === event.track.id)) {
+          this.remoteStream.addTrack(event.track);
+        }
       }
+      this.onRemoteStream(this.remoteStream);
     };
 
     this.pc.onicecandidate = (event) => {
