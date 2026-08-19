@@ -25,12 +25,23 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { couponCode } = req.body || {};
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+    const { couponCode } = body;
 
     const code = (couponCode || '').trim().toUpperCase();
 
     if (!code) {
       return res.status(400).json({ success: false, error: 'Coupon code is required' });
+    }
+
+    // Check Vercel Feature Flag for VIP Discounts
+    const vipFlag = process.env.VERCEL_FLAGS_ENABLE_VIP_DISCOUNT || process.env.ENABLE_VIP_DISCOUNT;
+    const isVipDisabled = vipFlag === 'false' || vipFlag === '0';
+    if ((code === 'VIP50' || code.startsWith('VIP')) && isVipDisabled) {
+      return res.status(400).json({
+        success: false,
+        error: 'VIP discount coupons are currently disabled by administration.'
+      });
     }
 
     // Try database check first

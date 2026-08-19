@@ -24,7 +24,8 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const certIdParam = req.query.certId || req.query.id;
+  const query = req.query || {};
+  const certIdParam = query.certId || query.id;
   const certId = (certIdParam || '').trim().toUpperCase();
 
   if (!certId) {

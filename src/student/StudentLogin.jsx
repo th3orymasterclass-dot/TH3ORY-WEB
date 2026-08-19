@@ -5,11 +5,11 @@ import { verifyStudentCodeWithSupabase, generateEnrollmentCode } from '../servic
 // Default fallback codes for local testing
 const FALLBACK_CODES = ['TH3ORY26', 'TH3ORY2026'];
 
-export default function StudentLogin({ onAuthenticated }) {
+export default function StudentLogin({ onAuthenticated, expiredNotice = false }) {
   const [email, setEmail]   = useState('');
   const [code, setCode]     = useState('');
   const [showCode, setShow] = useState(false);
-  const [error, setError]   = useState('');
+  const [error, setError]   = useState(expiredNotice ? '🔒 Session Expired: For your security, student portals automatically log out after 24 hours of login. Please log in again.' : '');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -45,6 +45,7 @@ export default function StudentLogin({ onAuthenticated }) {
             plan: data.student.plan || 'TH3ORY Masterclass',
           };
           sessionStorage.setItem('th3ory_student_auth', JSON.stringify(profile));
+          localStorage.setItem('th3ory_student_auth_persistent', JSON.stringify(profile));
           setLoading(false);
           onAuthenticated(profile);
           return;
@@ -63,39 +64,13 @@ export default function StudentLogin({ onAuthenticated }) {
         email: sbStudent.email || cleanEmail,
         enrolledAt: sbStudent.enrolledAt || new Date().toISOString(),
         plan: sbStudent.plan || 'TH3ORY Masterclass',
+        loginAt: sbStudent.loginAt || Date.now(),
       };
       sessionStorage.setItem('th3ory_student_auth', JSON.stringify(profile));
+      localStorage.setItem('th3ory_student_auth_persistent', JSON.stringify(profile));
       setLoading(false);
       onAuthenticated(profile);
       return;
-    }
-
-    // 2. Local Storage Fallback Verification
-    try {
-      const localEnrollments = JSON.parse(localStorage.getItem('th3ory_local_enrollments') || '[]');
-      const matchedLocal = localEnrollments.find(item => {
-        const itemEmail = (item.email || item.studentEmail || '').trim().toLowerCase();
-        if (itemEmail !== cleanEmail) return false;
-        const storedCode = (item.code || item.enrollment_code || '').trim().toUpperCase();
-        if (storedCode === inputCode) return true;
-        const computed = generateEnrollmentCode(item.name || item.studentName, item.dob).toUpperCase();
-        return computed === inputCode;
-      });
-
-      if (matchedLocal) {
-        const profile = {
-          name: matchedLocal.name || matchedLocal.studentName || cleanEmail.split('@')[0],
-          email: cleanEmail,
-          enrolledAt: matchedLocal.created_at || new Date().toISOString(),
-          plan: matchedLocal.plan_name || matchedLocal.planName || 'TH3ORY Masterclass',
-        };
-        sessionStorage.setItem('th3ory_student_auth', JSON.stringify(profile));
-        setLoading(false);
-        onAuthenticated(profile);
-        return;
-      }
-    } catch (err) {
-      console.warn('[StudentLogin] Error checking local storage:', err);
     }
 
     // 3. Fallback code check for demo / test accounts
@@ -106,10 +81,12 @@ export default function StudentLogin({ onAuthenticated }) {
         email: cleanEmail,
         enrolledAt: localStorage.getItem('th3ory_student_enrolledAt') || new Date().toISOString(),
         plan: localStorage.getItem('th3ory_student_plan') || 'TH3ORY Masterclass',
+        loginAt: Date.now(),
       };
       localStorage.setItem('th3ory_student_enrolledAt', profile.enrolledAt);
       localStorage.setItem('th3ory_student_plan', profile.plan);
       sessionStorage.setItem('th3ory_student_auth', JSON.stringify(profile));
+      localStorage.setItem('th3ory_student_auth_persistent', JSON.stringify(profile));
       setLoading(false);
       onAuthenticated(profile);
       return;
@@ -196,7 +173,13 @@ export default function StudentLogin({ onAuthenticated }) {
 
         <p className="text-center text-slate-700 text-xs mt-5">
           Not enrolled yet?{' '}
-          <a href="/" className="text-amber-500/80 hover:text-amber-400 underline">View the course →</a>
+          <a
+            href="#"
+            onClick={(e) => { e.preventDefault(); window.location.hash = ''; window.dispatchEvent(new Event('hashchange')); }}
+            className="text-amber-500/80 hover:text-amber-400 underline cursor-pointer"
+          >
+            View the course →
+          </a>
         </p>
       </div>
     </div>

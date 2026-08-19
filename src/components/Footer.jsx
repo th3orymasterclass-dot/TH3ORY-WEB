@@ -17,7 +17,11 @@ export default function Footer({ onOpenCheckout }) {
           
           {/* Brand Info */}
           <div className="space-y-4 md:col-span-2">
-            <a href="#" className="inline-block">
+            <a
+              href="#"
+              onClick={(e) => { e.preventDefault(); window.location.hash = ''; window.dispatchEvent(new Event('hashchange')); }}
+              className="inline-block"
+            >
               <Logo className="h-8 sm:h-9" />
             </a>
 
@@ -36,13 +40,13 @@ export default function Footer({ onOpenCheckout }) {
             <div className="flex flex-wrap items-center gap-4 text-slate-500 pt-2">
               <button 
                 onClick={() => setLegalModalTab('refund')} 
-                className="flex items-center gap-1.5 text-green-400 text-xs font-semibold hover:underline"
+                className="flex items-center gap-1.5 text-green-400 text-xs font-semibold hover:underline cursor-pointer"
               >
                 <ShieldCheck className="w-4 h-4" /> 14-Day 100% Money-Back Guarantee
               </button>
               <button 
                 onClick={() => setLegalModalTab('privacy')} 
-                className="flex items-center gap-1.5 text-amber-400 text-xs font-semibold hover:underline"
+                className="flex items-center gap-1.5 text-amber-400 text-xs font-semibold hover:underline cursor-pointer"
               >
                 <Lock className="w-4 h-4" /> 256-Bit SSL Checkout
               </button>
@@ -51,17 +55,21 @@ export default function Footer({ onOpenCheckout }) {
 
           {/* Navigation Links */}
           <div className="space-y-3">
-            <h4 className="text-xs font-extrabold text-white uppercase tracking-widest">Navigation & Legal</h4>
+            <h4 className="text-xs font-extrabold text-white uppercase tracking-widest">Navigation &amp; Legal</h4>
             <ul className="space-y-2 text-xs">
               <li><a href="#pillars" className="hover:text-amber-400 transition-colors">5 Pillars of Influence</a></li>
               <li><a href="#roadmap" className="hover:text-amber-400 transition-colors">30-Day Level Roadmap</a></li>
-              <li><a href="#outcomes" className="hover:text-amber-400 transition-colors">Outcomes & Bonuses</a></li>
-              <li><a href="#pricing" className="hover:text-amber-400 transition-colors">Pricing & Plans</a></li>
-              <li><button onClick={() => setLegalModalTab('privacy')} className="hover:text-amber-400 transition-colors text-left">Privacy Policy</button></li>
-              <li><button onClick={() => setLegalModalTab('terms')} className="hover:text-amber-400 transition-colors text-left">Terms of Service</button></li>
-              <li><button onClick={() => setLegalModalTab('refund')} className="hover:text-amber-400 transition-colors text-left">Refund Policy</button></li>
+              <li><a href="#outcomes" className="hover:text-amber-400 transition-colors">Outcomes &amp; Bonuses</a></li>
+              <li><a href="#pricing" className="hover:text-amber-400 transition-colors">Pricing &amp; Plans</a></li>
+              <li><button onClick={() => setLegalModalTab('privacy')} className="hover:text-amber-400 transition-colors text-left cursor-pointer">Privacy Policy</button></li>
+              <li><button onClick={() => setLegalModalTab('terms')} className="hover:text-amber-400 transition-colors text-left cursor-pointer">Terms of Service</button></li>
+              <li><button onClick={() => setLegalModalTab('refund')} className="hover:text-amber-400 transition-colors text-left cursor-pointer">Refund Policy</button></li>
               <li className="pt-2 border-t border-slate-900">
-                <a href="/#/student" className="text-amber-400 font-bold hover:underline flex items-center gap-1">
+                <a
+                  href="#student"
+                  onClick={(e) => { e.preventDefault(); window.location.hash = 'student'; window.dispatchEvent(new Event('hashchange')); }}
+                  className="text-amber-400 font-bold hover:underline flex items-center gap-1 cursor-pointer"
+                >
                   <GraduationCap className="w-3.5 h-3.5"/> Student Portal →
                 </a>
               </li>
@@ -70,7 +78,7 @@ export default function Footer({ onOpenCheckout }) {
 
           {/* Payment Gateways & Production Badge */}
           <div className="space-y-3">
-            <h4 className="text-xs font-extrabold text-white uppercase tracking-widest">Production & Checkout</h4>
+            <h4 className="text-xs font-extrabold text-white uppercase tracking-widest">Production &amp; Checkout</h4>
             <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2.5">
               <div className="flex items-center gap-2 text-slate-300 font-bold text-xs">
                 <CreditCard className="w-4 h-4 text-amber-400" /> Stripe, Razorpay, PayPal, UPI
@@ -79,8 +87,8 @@ export default function Footer({ onOpenCheckout }) {
                 Direct cognitive experiment enrollment powered by Mentalist Sravan Production with automated access generation.
               </p>
               <button
-                onClick={() => window.location.hash = '/enroll'}
-                className="w-full py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-extrabold text-xs uppercase tracking-wider transition-all"
+                onClick={() => { window.location.hash = 'enroll'; window.dispatchEvent(new Event('hashchange')); }}
+                className="w-full py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-extrabold text-xs uppercase tracking-wider transition-all cursor-pointer"
               >
                 Enroll Now ($149 / ₹11,999)
               </button>
@@ -95,15 +103,27 @@ export default function Footer({ onOpenCheckout }) {
             &copy; 2026 Mentalist Sravan Production. All rights reserved. TH3ORY Masterclass of Influencing.
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <button onClick={() => setLegalModalTab('privacy')} className="hover:text-amber-400 transition-colors">Privacy</button>
+            <button onClick={() => setLegalModalTab('privacy')} className="hover:text-amber-400 transition-colors cursor-pointer">Privacy</button>
             <span>•</span>
-            <button onClick={() => setLegalModalTab('terms')} className="hover:text-amber-400 transition-colors">Terms</button>
+            <button onClick={() => setLegalModalTab('terms')} className="hover:text-amber-400 transition-colors cursor-pointer">Terms</button>
             <span>•</span>
-            <button onClick={() => setLegalModalTab('refund')} className="hover:text-amber-400 transition-colors">Refunds</button>
+            <button onClick={() => setLegalModalTab('refund')} className="hover:text-amber-400 transition-colors cursor-pointer">Refunds</button>
             <span>•</span>
-            <a href="/#/student" className="hover:text-amber-400 transition-colors">Student Login</a>
+            <a
+              href="#student"
+              onClick={(e) => { e.preventDefault(); window.location.hash = 'student'; window.dispatchEvent(new Event('hashchange')); }}
+              className="hover:text-amber-400 transition-colors cursor-pointer"
+            >
+              Student Login
+            </a>
             <span>•</span>
-            <a href="/#/admin-th3ory-x9k2" className="hover:text-amber-400 transition-colors">Admin Portal</a>
+            <a
+              href="#admin"
+              onClick={(e) => { e.preventDefault(); window.location.hash = 'admin'; window.dispatchEvent(new Event('hashchange')); }}
+              className="hover:text-amber-400 transition-colors cursor-pointer"
+            >
+              Admin Portal
+            </a>
           </div>
         </div>
 

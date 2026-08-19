@@ -3,13 +3,13 @@ import {
   LayoutDashboard, Type, Flame, BookOpen, Tag,
   Star, HelpCircle, User, Gift, Target, Video,
   LogOut, ChevronRight, Menu, X, ExternalLink, Shield,
-  FolderOpen, Layers, ShoppingBag, MessageSquare, Building2, Mail
+  FolderOpen, Layers, ShoppingBag, Mail
 } from 'lucide-react';
 import useAdminData from './useAdminData';
 import { isAdminAuthenticated } from '../data/adminData';
 import OverviewPanel       from './panels/OverviewPanel';
 import EnrollmentsPanel    from './panels/EnrollmentsPanel';
-import QueriesQuotesPanel  from './panels/QueriesQuotesPanel';
+
 import CouponsPanel        from './panels/CouponsPanel';
 import HeroPanel           from './panels/HeroPanel';
 import UrgencyPanel        from './panels/UrgencyPanel';
@@ -33,7 +33,7 @@ const NAV_ITEMS = [
   { id: 'feature_flags', label: 'Vercel Feature Flags', icon: Sliders, badge: 'VERCEL' },
   { id: 'enrollments', label: 'Enrollments & Sales',icon: ShoppingBag, badge: 'LIVE' },
   { id: 'coupons',     label: 'Coupons & Affiliations', icon: Tag, badge: 'OFFERS' },
-  { id: 'requests',    label: 'Queries & Quotes',   icon: MessageSquare, badge: 'DB' },
+
   { id: 'newsletter',  label: 'Newsletter Subscribers', icon: Mail, badge: 'COMM' },
   { id: 'integrations',label: 'Integrations & API', icon: Database, badge: 'DIAG' },
   { id: '__divider1',  divider: true, label: 'SITE CONTENT' },
@@ -57,7 +57,7 @@ export default function AdminApp({ onLogout }) {
   const [active, setActive] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 768 : true));
   const adminState = useAdminData();
-  const { data, save, reset, defaults, lastSaved, enrollments, queries, enterpriseQuotes, contactInquiries, newsletterSubscribers, newsletterBroadcasts, saveBroadcast, updateQueryStatus, updateQuoteStatus, updateInquiryStatus, updateSubscriberStatus, deleteSubscriber } = adminState;
+  const { data, save, reset, defaults, lastSaved, enrollments, newsletterSubscribers, newsletterBroadcasts, saveBroadcast, updateSubscriberStatus, deleteSubscriber } = adminState;
 
   // Enforce session access control
   React.useEffect(() => {
@@ -74,7 +74,7 @@ export default function AdminApp({ onLogout }) {
       case 'feature_flags': return <FeatureFlagsPanel />;
       case 'enrollments':return <EnrollmentsPanel enrollments={enrollments} />;
       case 'coupons':    return <CouponsPanel     save={save} enrollments={enrollments} />;
-      case 'requests':   return <QueriesQuotesPanel queries={queries} enterpriseQuotes={enterpriseQuotes} contactInquiries={contactInquiries} updateQueryStatus={updateQueryStatus} updateQuoteStatus={updateQuoteStatus} updateInquiryStatus={updateInquiryStatus} />;
+
       case 'newsletter': return <NewsletterPanel subscribers={newsletterSubscribers} broadcasts={newsletterBroadcasts} saveBroadcast={saveBroadcast} updateSubscriberStatus={updateSubscriberStatus} deleteSubscriber={deleteSubscriber} save={save} data={data} />;
       case 'integrations':return <IntegrationsPanel />;
       case 'hero':       return <HeroPanel       {...panelProps} />;

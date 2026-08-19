@@ -10,6 +10,7 @@ import CertificateVerification from './components/CertificateVerification.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import NotFoundPage from './components/NotFoundPage.jsx';
 import { FeatureFlagProvider } from './context/FeatureFlagContext.jsx';
+import { Analytics } from '@vercel/analytics/react';
 import './index.css';
 
 function Root() {
@@ -31,10 +32,24 @@ function Root() {
     sessionStorage.getItem('th3ory_admin_auth') === '1' || localStorage.getItem('th3ory_admin_auth') === '1'
   ));
   const [studentProfile, setStudentProfile] = useState(() => {
-    try { return JSON.parse(sessionStorage.getItem('th3ory_student_auth') || 'null'); } catch { return null; }
+    try {
+      return JSON.parse(sessionStorage.getItem('th3ory_student_auth') || localStorage.getItem('th3ory_student_auth_persistent') || 'null');
+    } catch { return null; }
   });
 
   useEffect(() => {
+    // Purge legacy th3ory_local_ localStorage keys to ensure 100% pure Supabase live sync
+    try {
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith('th3ory_local_') || key.startsWith('th3ory_progress_') || key.startsWith('th3ory_notes_') || key.startsWith('th3ory_bookmarks_'))) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+    } catch {}
+
     const handler = () => {
       setView(getInitialView());
     };
@@ -45,6 +60,8 @@ function Root() {
       window.removeEventListener('popstate', handler);
     };
   }, []);
+
+  const [sessionExpiredNotice, setSessionExpiredNotice] = useState(false);
 
   // ── Admin ──────────────────────────────────────────────────────────────────
   if (view === 'admin') {
@@ -61,16 +78,29 @@ function Root() {
   // ── Student ────────────────────────────────────────────────────────────────
   if (view === 'student') {
     if (!studentProfile) {
-      return <StudentLogin onAuthenticated={(profile) => {
-        setStudentProfile(profile);
-      }}/>;
+      return <StudentLogin
+        expiredNotice={sessionExpiredNotice}
+        onAuthenticated={(profile) => {
+          setSessionExpiredNotice(false);
+          setStudentProfile(profile);
+        }}
+      />;
     }
-    return <StudentApp profile={studentProfile} onLogout={() => {
-      sessionStorage.removeItem('th3ory_student_auth');
-      setStudentProfile(null);
-      window.location.hash = '';
-      setView('public');
-    }}/>;
+    return <StudentApp
+      profile={studentProfile}
+      onLogout={(opts = {}) => {
+        sessionStorage.removeItem('th3ory_student_auth');
+        localStorage.removeItem('th3ory_student_auth_persistent');
+        setStudentProfile(null);
+        if (opts?.expired) {
+          setSessionExpiredNotice(true);
+        } else {
+          setSessionExpiredNotice(false);
+          window.location.hash = '';
+          setView('public');
+        }
+      }}
+    />;
   }
 
   // ── Enrollment Page ────────────────────────────────────────────────────────
@@ -100,6 +130,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <ErrorBoundary>
       <FeatureFlagProvider>
         <Root/>
+        <Analytics/>
       </FeatureFlagProvider>
     </ErrorBoundary>
   </React.StrictMode>

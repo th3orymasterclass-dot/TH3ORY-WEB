@@ -44,11 +44,25 @@ CREATE TABLE IF NOT EXISTS public.student_accounts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
+    phone TEXT,
+    profession TEXT,
+    bio TEXT,
+    country TEXT,
+    dob DATE,
+    avatar_url TEXT,
     enrollment_code TEXT DEFAULT 'TH3ORY2026',
     plan_name TEXT DEFAULT 'TH3ORY Masterclass',
     last_login TIMESTAMPTZ DEFAULT NOW(),
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Alter table statements for student_accounts schema migrations
+ALTER TABLE public.student_accounts ADD COLUMN IF NOT EXISTS phone TEXT;
+ALTER TABLE public.student_accounts ADD COLUMN IF NOT EXISTS profession TEXT;
+ALTER TABLE public.student_accounts ADD COLUMN IF NOT EXISTS bio TEXT;
+ALTER TABLE public.student_accounts ADD COLUMN IF NOT EXISTS country TEXT;
+ALTER TABLE public.student_accounts ADD COLUMN IF NOT EXISTS dob DATE;
+ALTER TABLE public.student_accounts ADD COLUMN IF NOT EXISTS avatar_url TEXT;
 
 -- 3. STUDENT QUERIES TABLE (Dedicated Student Portal Support Threads)
 CREATE TABLE IF NOT EXISTS public.queries (
@@ -94,6 +108,7 @@ CREATE TABLE IF NOT EXISTS public.contact_inquiries (
 CREATE TABLE IF NOT EXISTS public.reviews (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
+    email TEXT,
     role TEXT,
     category TEXT DEFAULT 'Learner',
     rating INT DEFAULT 5,
@@ -101,6 +116,9 @@ CREATE TABLE IF NOT EXISTS public.reviews (
     avatar TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Migration alter statements for reviews schema
+ALTER TABLE public.reviews ADD COLUMN IF NOT EXISTS email TEXT;
 
 -- 7. COURSE CONTENTS TABLE (Streaming Video URLs, PDFs & Worksheets)
 CREATE TABLE IF NOT EXISTS public.course_contents (
@@ -149,10 +167,26 @@ CREATE TABLE IF NOT EXISTS public.user_progress (
     email TEXT NOT NULL,
     lesson_id TEXT NOT NULL,
     completed BOOLEAN DEFAULT true,
+    note TEXT,
+    bookmarked BOOLEAN DEFAULT false,
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     UNIQUE(email, lesson_id)
 );
+
+-- Migration alter statements for user_progress schema
+ALTER TABLE public.user_progress ADD COLUMN IF NOT EXISTS note TEXT;
+ALTER TABLE public.user_progress ADD COLUMN IF NOT EXISTS bookmarked BOOLEAN DEFAULT false;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'user_progress_email_lesson_id_key'
+  ) THEN
+    ALTER TABLE public.user_progress ADD CONSTRAINT user_progress_email_lesson_id_key UNIQUE (email, lesson_id);
+  END IF;
+END $$;
+
 
 -- 12. COUPONS TABLE (Official Database Discount Coupon Management)
 CREATE TABLE IF NOT EXISTS public.coupons (
@@ -183,6 +217,8 @@ CREATE INDEX IF NOT EXISTS idx_enrollments_email ON public.enrollments(email);
 CREATE INDEX IF NOT EXISTS idx_enrollments_order_id ON public.enrollments(order_id);
 CREATE INDEX IF NOT EXISTS idx_student_accounts_email ON public.student_accounts(email);
 CREATE INDEX IF NOT EXISTS idx_user_progress_email_lesson ON public.user_progress(email, lesson_id);
+CREATE INDEX IF NOT EXISTS idx_queries_student_email ON public.queries(student_email);
+CREATE INDEX IF NOT EXISTS idx_reviews_email ON public.reviews(email);
 CREATE INDEX IF NOT EXISTS idx_coupons_code ON public.coupons(code);
 CREATE INDEX IF NOT EXISTS idx_certificates_cert_id ON public.certificates(cert_id);
 
@@ -220,6 +256,20 @@ ALTER TABLE public.coupons ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.certificates ENABLE ROW LEVEL SECURITY;
 
 -- Allow Public/Anon Read/Write policies for active client operations
+DROP POLICY IF EXISTS "Allow public read/insert on enrollments" ON public.enrollments;
+DROP POLICY IF EXISTS "Allow public read/insert on student_accounts" ON public.student_accounts;
+DROP POLICY IF EXISTS "Allow public read/insert on queries" ON public.queries;
+DROP POLICY IF EXISTS "Allow public read/insert on enterprise_quotes" ON public.enterprise_quotes;
+DROP POLICY IF EXISTS "Allow public read/insert on contact_inquiries" ON public.contact_inquiries;
+DROP POLICY IF EXISTS "Allow public read/insert on reviews" ON public.reviews;
+DROP POLICY IF EXISTS "Allow public read/insert on course_contents" ON public.course_contents;
+DROP POLICY IF EXISTS "Allow public read/insert on site_settings" ON public.site_settings;
+DROP POLICY IF EXISTS "Allow public read/insert on newsletter_subscribers" ON public.newsletter_subscribers;
+DROP POLICY IF EXISTS "Allow public read/insert on newsletter_broadcasts" ON public.newsletter_broadcasts;
+DROP POLICY IF EXISTS "Allow public read/insert on user_progress" ON public.user_progress;
+DROP POLICY IF EXISTS "Allow public read/insert on coupons" ON public.coupons;
+DROP POLICY IF EXISTS "Allow public read/insert on certificates" ON public.certificates;
+
 CREATE POLICY "Allow public read/insert on enrollments" ON public.enrollments FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public read/insert on student_accounts" ON public.student_accounts FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public read/insert on queries" ON public.queries FOR ALL USING (true) WITH CHECK (true);
@@ -227,6 +277,50 @@ CREATE POLICY "Allow public read/insert on enterprise_quotes" ON public.enterpri
 CREATE POLICY "Allow public read/insert on contact_inquiries" ON public.contact_inquiries FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public read/insert on reviews" ON public.reviews FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public read/insert on course_contents" ON public.course_contents FOR ALL USING (true) WITH CHECK (true);
+-- 12. DEDICATED STUDENT HABIT TRACKERS TABLE (Daily 30-Day Self-Assessment & 5-Pillar Scores)
+CREATE TABLE IF NOT EXISTS public.student_habit_trackers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email TEXT NOT NULL,
+    day_number INT NOT NULL CHECK (day_number >= 1 AND day_number <= 30),
+    scores JSONB NOT NULL DEFAULT '{}'::jsonb,
+    pillar_scores JSONB NOT NULL DEFAULT '{}'::jsonb,
+    total_score INT DEFAULT 0,
+    note TEXT,
+    weekly_reflection JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    CONSTRAINT uq_student_habit_day UNIQUE (email, day_number)
+);
+
+CREATE INDEX IF NOT EXISTS idx_student_habit_trackers_email ON public.student_habit_trackers(email);
+CREATE INDEX IF NOT EXISTS idx_student_habit_trackers_email_day ON public.student_habit_trackers(email, day_number);
+
+ALTER TABLE public.student_habit_trackers ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow public read/insert on student_habit_trackers" ON public.student_habit_trackers FOR ALL USING (true) WITH CHECK (true);
+
+-- 13. STUDENT PROGRESS TABLE (Alternative naming for persistent student course progress)
+CREATE TABLE IF NOT EXISTS public.student_progress (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email TEXT NOT NULL,
+    lesson_id TEXT NOT NULL,
+    completed BOOLEAN DEFAULT true,
+    note TEXT,
+    bookmarked BOOLEAN DEFAULT false,
+    task_steps JSONB DEFAULT '{}'::jsonb,
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(email, lesson_id)
+);
+
+ALTER TABLE public.student_progress ADD COLUMN IF NOT EXISTS task_steps JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE public.user_progress ADD COLUMN IF NOT EXISTS task_steps JSONB DEFAULT '{}'::jsonb;
+
+CREATE INDEX IF NOT EXISTS idx_student_progress_email_lesson ON public.student_progress(email, lesson_id);
+ALTER TABLE public.student_progress ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow public read/insert on student_progress" ON public.student_progress;
+CREATE POLICY "Allow public read/insert on student_progress" ON public.student_progress FOR ALL USING (true) WITH CHECK (true);
+
+-- Enable RLS policies
 CREATE POLICY "Allow public read/insert on site_settings" ON public.site_settings FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public read/insert on newsletter_subscribers" ON public.newsletter_subscribers FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public read/insert on newsletter_broadcasts" ON public.newsletter_broadcasts FOR ALL USING (true) WITH CHECK (true);
@@ -243,6 +337,8 @@ DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
     ALTER PUBLICATION supabase_realtime ADD TABLE 
+      public.enrollments,
+      public.student_accounts,
       public.queries,
       public.enterprise_quotes,
       public.contact_inquiries,
@@ -252,10 +348,21 @@ BEGIN
       public.newsletter_subscribers,
       public.newsletter_broadcasts,
       public.user_progress,
+      public.student_progress,
       public.coupons,
-      public.certificates;
+      public.certificates,
+      public.student_habit_trackers;
   END IF;
 EXCEPTION WHEN OTHERS THEN
   RAISE NOTICE 'Publication table addition skipped or already present.';
 END $$;
+
+-- ==============================================================================
+-- OPTIONAL DATA RESET UTILITY (Run in SQL Editor to manually wipe tracker data)
+-- ==============================================================================
+-- TRUNCATE TABLE public.student_progress CASCADE;
+-- TRUNCATE TABLE public.user_progress CASCADE;
+-- TRUNCATE TABLE public.student_habit_trackers CASCADE;
+
+
 

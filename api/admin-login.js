@@ -22,7 +22,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { password } = req.body || {};
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+    const { password } = body;
 
     if (!password || typeof password !== 'string') {
       return res.status(400).json({ success: false, error: 'Admin password is required' });

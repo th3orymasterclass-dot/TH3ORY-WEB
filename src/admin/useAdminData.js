@@ -3,7 +3,7 @@ import {
   lsSet, lsReset, resetAllData, defaults, isAdminAuthenticated,
   getCourseDetails, getVideo, getLevels,
   getPlans, getAddons, getReviews, getFaqs, getContent, getCoupons
-} from '../data/adminData';
+} from '../data/adminData.js';
 import {
   fetchCourseContentsFromSupabase,
   fetchSiteSettingsFromSupabase,
@@ -26,11 +26,12 @@ import {
   subscribeToNewsletterBroadcasts,
   saveNewsletterBroadcastToSupabase,
   updateQueryStatusInSupabase,
+  deleteQueryFromSupabase,
   updateEnterpriseQuoteStatusInSupabase,
   updateContactInquiryStatusInSupabase,
   updateNewsletterSubscriberStatusInSupabase,
   deleteNewsletterSubscriberFromSupabase,
-} from '../services/supabaseService';
+} from '../services/supabaseService.js';
 
 export default function useAdminData() {
   const [data, setData] = useState(() => ({
@@ -100,9 +101,30 @@ export default function useAdminData() {
       }
     });
 
+    const setDeduplicatedQueries = (rawList) => {
+      if (!Array.isArray(rawList)) {
+        setQueries([]);
+        return;
+      }
+      const uniqueMap = new Map();
+      rawList.forEach(q => {
+        if (!q) return;
+        const compKey = `${(q.studentEmail || '').trim().toLowerCase()}_${(q.subject || '').trim()}_${(q.message || '').trim()}`;
+        if (!uniqueMap.has(compKey)) {
+          uniqueMap.set(compKey, q);
+        } else {
+          const existing = uniqueMap.get(compKey);
+          if (q.status && q.status !== 'open' && existing.status === 'open') {
+            uniqueMap.set(compKey, q);
+          }
+        }
+      });
+      setQueries(Array.from(uniqueMap.values()));
+    };
+
     // 2. Fetch Enrollments, Queries, Quotes, Inquiries, Subscribers & Broadcasts
     fetchEnrollmentsFromSupabase().then(res => setEnrollments(res));
-    fetchQueriesFromSupabase().then(res => { if (res) setQueries(res); });
+    fetchQueriesFromSupabase().then(res => { if (res) setDeduplicatedQueries(res); });
     fetchEnterpriseQuotesFromSupabase().then(res => { if (res) setEnterpriseQuotes(res); });
     fetchContactInquiriesFromSupabase().then(res => { if (res) setContactInquiries(res); });
     fetchNewsletterSubscribersFromSupabase().then(res => { if (res) setNewsletterSubscribers(res); });
@@ -135,7 +157,7 @@ export default function useAdminData() {
     });
 
     const unsubQueries = subscribeToQueries((queriesList) => {
-      setQueries(queriesList);
+      setDeduplicatedQueries(queriesList);
     });
 
     const unsubQuotes = subscribeToEnterpriseQuotes((quotesList) => {
@@ -170,7 +192,7 @@ export default function useAdminData() {
 
   const save = useCallback((key, value) => {
     if (!isAdminAuthenticated()) {
-      alert('Access Control Denied: You must be logged in as Admin to save updates.');
+      console.warn('[Access Control Denied] You must be logged in as Admin to save updates.');
       return false;
     }
     try {
@@ -179,14 +201,14 @@ export default function useAdminData() {
       setLastSaved(new Date());
       return true;
     } catch (err) {
-      alert(err.message);
+      console.error('[Admin Save Error]:', err.message);
       return false;
     }
   }, []);
 
   const reset = useCallback((key) => {
     if (!isAdminAuthenticated()) {
-      alert('Access Control Denied: You must be logged in as Admin to reset data.');
+      console.warn('[Access Control Denied] You must be logged in as Admin to reset data.');
       return false;
     }
     try {
@@ -198,9 +220,37 @@ export default function useAdminData() {
       setLastSaved(new Date());
       return true;
     } catch (err) {
-      alert(err.message);
+      console.error('[Admin Reset Error]:', err.message);
       return false;
     }
+  }, []);
+
+  const updateQueryStatus = useCallback(async (queryId, status, replyText = '', subject = null, email = null) => {
+    setQueries(prev => prev.map(q => {
+      if (
+        q.id === queryId ||
+        q.subject === queryId ||
+        (subject && q.subject === subject && (!email || (q.studentEmail || '').toLowerCase() === (email || '').toLowerCase()))
+      ) {
+        return {
+          ...q,
+          status,
+          reply: replyText !== undefined && replyText !== '' ? replyText : q.reply,
+          repliedAt: replyText ? new Date().toISOString() : q.repliedAt
+        };
+      }
+      return q;
+    }));
+
+    await updateQueryStatusInSupabase(queryId, status, replyText, subject, email);
+    setLastSaved(new Date());
+    return true;
+  }, []);
+
+  const deleteQuery = useCallback(async (queryId) => {
+    setQueries(prev => prev.filter(q => q.id !== queryId));
+    await deleteQueryFromSupabase(queryId);
+    setLastSaved(new Date());
   }, []);
 
   return {
@@ -216,7 +266,8 @@ export default function useAdminData() {
     newsletterSubscribers,
     newsletterBroadcasts,
     saveBroadcast: saveNewsletterBroadcastToSupabase,
-    updateQueryStatus: updateQueryStatusInSupabase,
+    updateQueryStatus,
+    deleteQuery,
     updateQuoteStatus: updateEnterpriseQuoteStatusInSupabase,
     updateInquiryStatus: updateContactInquiryStatusInSupabase,
     updateSubscriberStatus: updateNewsletterSubscriberStatusInSupabase,

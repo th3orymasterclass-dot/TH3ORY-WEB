@@ -126,7 +126,8 @@ export default async function handler(req, res) {
   // POST: Edit/Control feature flags (Admin authenticated)
   if (req.method === 'POST') {
     try {
-      const { flags } = req.body || {};
+      const bodyObj = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+      const { flags } = bodyObj;
 
       if (!flags || typeof flags !== 'object') {
         return res.status(400).json({ success: false, error: 'Invalid feature flags payload' });

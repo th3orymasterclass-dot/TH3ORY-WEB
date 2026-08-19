@@ -10,7 +10,8 @@ import {
   courseAddons as defaultAddons,
   studentReviews as defaultReviews,
   faqList as defaultFaqs,
-} from './courseData';
+  defaultContent,
+} from './courseData.js';
 
 const LS_PREFIX = 'th3ory_admin_';
 
@@ -75,7 +76,7 @@ import {
   subscribeToReviews,
   fetchCourseContentsFromSupabase,
   subscribeToCourseContents,
-} from '../services/supabaseService';
+} from '../services/supabaseService.js';
 
 export const defaultCoupons = [
   {
@@ -148,7 +149,7 @@ export const getPlans         = () => lsGet('plans', defaultPlans);
 export const getAddons        = () => lsGet('addons', defaultAddons);
 export const getReviews       = () => lsGet('reviews', defaultReviews);
 export const getFaqs          = () => lsGet('faqs', defaultFaqs);
-export const getContent       = () => lsGet('content', []);
+export const getContent       = () => lsGet('content', defaultContent);
 export const getCoupons        = () => lsGet('coupons', defaultCoupons);
 export const saveCoupons       = (coupons) => lsSet('coupons', coupons);
 
@@ -360,7 +361,7 @@ export const defaults = {
   addons: defaultAddons,
   reviews: defaultReviews,
   faqs: defaultFaqs,
-  content: [],
+  content: defaultContent,
   coupons: defaultCoupons,
   gdriveConfig: defaultGDriveConfig,
 };

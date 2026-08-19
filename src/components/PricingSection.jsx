@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
-import { Tag, Check, Crown, ShieldCheck, ArrowRight, Building2, Globe2, Users, Sparkles, Send, X } from 'lucide-react';
+import { Tag, Check, Crown, ShieldCheck, ArrowRight, Building2, Globe2, Users, Sparkles, Send, X, Flame } from 'lucide-react';
 import { useTh3oryLive } from '../data/adminData';
+import { useFeatureFlags } from '../context/FeatureFlagContext';
 import { saveEnterpriseQuoteToSupabase } from '../services/supabaseService';
 import { sendEnrollmentEmail } from '../services/emailService';
 
 export default function PricingSection({ onSelectPlan, couponCode, setCouponCode, couponDiscount, setCouponDiscount }) {
   const { plans } = useTh3oryLive();
+  const { isFeatureEnabled } = useFeatureFlags();
+  const isVipDiscountEnabled = isFeatureEnabled('ENABLE_VIP_DISCOUNT', true);
+  const showUrgencyBanner = isFeatureEnabled('SHOW_LIMITED_SEATS_BANNER', true);
+
   const [currency, setCurrency] = useState('USD'); // 'USD' | 'INR'
   const [couponInput, setCouponInput] = useState(couponCode || '');
   const [couponMsg, setCouponMsg] = useState(couponDiscount > 0 ? `${couponCode} applied (${couponDiscount}% OFF)` : '');
@@ -27,8 +32,14 @@ export default function PricingSection({ onSelectPlan, couponCode, setCouponCode
   const applyCoupon = (e) => {
     e.preventDefault();
     const clean = couponInput.trim().toUpperCase();
-    if (clean === 'TH3ORY20' || clean === 'EARLYBIRD20' || clean === 'FUTURE10') {
-      const discountPct = (clean === 'TH3ORY20' || clean === 'EARLYBIRD20') ? 20 : 10;
+    if (clean === 'VIP50' && !isVipDiscountEnabled) {
+      setCouponDiscount(0);
+      setCouponCode('');
+      setCouponMsg('❌ VIP discount coupons are currently disabled by administration.');
+      return;
+    }
+    if (clean === 'TH3ORY20' || clean === 'EARLYBIRD20' || clean === 'FUTURE10' || (clean === 'VIP50' && isVipDiscountEnabled)) {
+      const discountPct = clean === 'VIP50' ? 50 : ((clean === 'TH3ORY20' || clean === 'EARLYBIRD20') ? 20 : 10);
       setCouponDiscount(discountPct);
       setCouponCode(clean);
       setCouponMsg(`🎉 Code ${clean} applied! You get ${discountPct}% OFF.`);

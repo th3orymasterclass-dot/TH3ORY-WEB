@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ success: false, error: 'RESEND_API_KEY missing on Vercel backend' });
   }
 
-  const receipt = req.body;
+  const receipt = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
   if (!receipt || !receipt.email) {
     return res.status(400).json({ success: false, error: 'Missing receipt email in request payload' });
   }

@@ -1,5 +1,6 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase.js';
 import { isAdminAuthenticated } from '../data/adminData.js';
+import { defaultContent } from '../data/courseData.js';
 
 // ─── Unique Credentials Generator ────────────────────────────────────────────────
 export function generateEnrollmentCode(name = '', dob = '') {
@@ -238,9 +239,15 @@ export async function verifyStudentCodeWithSupabase(email, code) {
         return {
           name: matched.name,
           email: matched.email,
+          phone: matched.phone || '',
+          profession: matched.profession || '',
+          bio: matched.bio || '',
+          country: matched.country || '',
+          avatar: matched.avatar_url || '',
           plan: matched.plan_name || 'TH3ORY Masterclass',
           enrolledAt: matched.created_at,
           dob: matched.dob,
+          loginAt: Date.now(),
         };
       }
     }
@@ -261,12 +268,23 @@ export async function verifyStudentCodeWithSupabase(email, code) {
       });
 
       if (matched) {
+        await supabase
+          .from('student_accounts')
+          .update({ last_login: new Date().toISOString() })
+          .eq('email', matched.email);
+
         return {
           name: matched.name,
           email: matched.email,
+          phone: matched.phone || '',
+          profession: matched.profession || '',
+          bio: matched.bio || '',
+          country: matched.country || '',
+          avatar: matched.avatar_url || '',
           plan: matched.plan_name || 'TH3ORY Masterclass',
           enrolledAt: matched.created_at,
           dob: matched.dob,
+          loginAt: Date.now(),
         };
       }
     }
@@ -276,6 +294,157 @@ export async function verifyStudentCodeWithSupabase(email, code) {
     console.error('[Supabase] Error verifying student:', err);
     return null;
   }
+}
+
+export async function fetchStudentProfileFromSupabase(email) {
+  if (!email) return null;
+  const cleanEmail = email.trim().toLowerCase();
+
+  if (!isSupabaseConfigured || !supabase) return null;
+
+  try {
+    const { data: sData } = await supabase
+      .from('student_accounts')
+      .select('*')
+      .ilike('email', cleanEmail)
+      .limit(1);
+
+    if (sData && sData.length > 0) {
+      const s = sData[0];
+      const profile = {
+        name: s.name || cleanEmail.split('@')[0],
+        email: cleanEmail,
+        phone: s.phone || '',
+        profession: s.profession || '',
+        bio: s.bio || '',
+        country: s.country || '',
+        avatar: s.avatar_url || '',
+        plan: s.plan_name || 'TH3ORY Masterclass',
+        dob: s.dob,
+        enrolledAt: s.created_at || new Date().toISOString()
+      };
+      try {
+        sessionStorage.setItem('th3ory_student_auth', JSON.stringify(profile));
+      } catch {}
+      return profile;
+    }
+
+    const { data: eData } = await supabase
+      .from('enrollments')
+      .select('*')
+      .ilike('email', cleanEmail)
+      .limit(1);
+
+    if (eData && eData.length > 0) {
+      const e = eData[0];
+      const profile = {
+        name: e.name || cleanEmail.split('@')[0],
+        email: cleanEmail,
+        phone: e.phone || '',
+        profession: e.profession || '',
+        bio: e.bio || '',
+        country: e.country || '',
+        avatar: e.avatar_url || '',
+        plan: e.plan_name || 'TH3ORY Masterclass',
+        dob: e.dob,
+        enrolledAt: e.created_at || new Date().toISOString()
+      };
+      try {
+        sessionStorage.setItem('th3ory_student_auth', JSON.stringify(profile));
+      } catch {}
+      return profile;
+    }
+
+    return null;
+  } catch (err) {
+    console.warn('[Supabase] Error fetching student profile:', err);
+    return null;
+  }
+}
+
+// ─── Student Profile Update & Real-Time Sync ─────────────────────────────────
+export async function updateStudentProfileInSupabase(profileData) {
+  if (!profileData || !profileData.email) return { success: false, error: 'Student email is required' };
+
+  const cleanEmail = profileData.email.trim().toLowerCase();
+  const updatedProfile = {
+    name: profileData.name || 'Student',
+    email: cleanEmail,
+    phone: profileData.phone || '',
+    profession: profileData.profession || '',
+    bio: profileData.bio || '',
+    country: profileData.country || '',
+    dob: profileData.dob || null,
+    avatar: profileData.avatar || '',
+    plan: profileData.plan || 'TH3ORY Masterclass',
+    enrolledAt: profileData.enrolledAt || new Date().toISOString()
+  };
+
+  // 1. Session & Local Storage persistence & cross-component broadcast
+  try {
+    sessionStorage.setItem('th3ory_student_auth', JSON.stringify(updatedProfile));
+    localStorage.setItem(`th3ory_student_profile_${cleanEmail}`, JSON.stringify(updatedProfile));
+    localStorage.setItem('th3ory_student_auth_persistent', JSON.stringify(updatedProfile));
+    window.dispatchEvent(new CustomEvent('th3ory_student_profile_update', { detail: updatedProfile }));
+  } catch {}
+
+  // 2. Try Serverless API update endpoint first
+  try {
+    const res = await fetch('/api/update-student-profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ profile: updatedProfile })
+    });
+    if (res.ok) {
+      const apiRes = await res.json();
+      if (apiRes.success && apiRes.profile) {
+        return { success: true, profile: apiRes.profile };
+      }
+    }
+  } catch {}
+
+  // 3. Supabase DB direct update fallback
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const payload = {
+        name: updatedProfile.name,
+        phone: updatedProfile.phone,
+        profession: updatedProfile.profession,
+        bio: updatedProfile.bio,
+        country: updatedProfile.country,
+        dob: updatedProfile.dob || null,
+        avatar_url: updatedProfile.avatar,
+      };
+
+      const { error: e1 } = await supabase
+        .from('student_accounts')
+        .update(payload)
+        .eq('email', cleanEmail);
+
+      if (e1) {
+        await supabase
+          .from('student_accounts')
+          .upsert([{ ...payload, email: cleanEmail }], { onConflict: 'email' });
+      }
+
+      await supabase
+        .from('enrollments')
+        .update({
+          name: updatedProfile.name,
+          phone: updatedProfile.phone,
+          profession: updatedProfile.profession,
+          country: updatedProfile.country,
+          dob: updatedProfile.dob || null
+        })
+        .eq('email', cleanEmail);
+
+      return { success: true, profile: updatedProfile };
+    } catch (err) {
+      console.error('[Supabase] Exception updating student profile:', err);
+    }
+  }
+
+  return { success: true, profile: updatedProfile, isLocal: true };
 }
 
 // ─── Site Settings (Real-time Site Configuration Sync) ──────────────────────
@@ -332,100 +501,210 @@ export function subscribeToSiteSettings(onSettingChange) {
 }
 
 // ─── Student Queries (Dedicated Table: queries) ────────────────────────────────
-export async function saveQueryToSupabase(queryData) {
-  const payload = {
-    id: `q_${Date.now()}`,
-    student_name: queryData.studentName,
-    student_email: queryData.studentEmail || '',
-    student_plan: queryData.studentPlan || '',
-    subject: queryData.subject,
-    type: queryData.type,
-    message: queryData.message,
-    status: 'open',
-    created_at: new Date().toISOString()
-  };
+const inFlightQuerySaves = new Map();
 
+export async function saveQueryToSupabase(queryData) {
+  const cleanEmail = (queryData.studentEmail || '').trim().toLowerCase();
+  const cleanSubject = (queryData.subject || '').trim();
+  const cleanMessage = (queryData.message || '').trim();
+  const lockKey = `${cleanEmail}::${cleanSubject}::${cleanMessage}`;
+
+  if (inFlightQuerySaves.has(lockKey)) {
+    return await inFlightQuerySaves.get(lockKey);
+  }
+
+  const savePromise = (async () => {
+    const newQuery = {
+      id: queryData.id || `q_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      studentName: queryData.studentName || 'Student',
+      studentEmail: cleanEmail,
+      studentPlan: queryData.studentPlan || '',
+      subject: cleanSubject,
+      type: queryData.type || 'General Question',
+      message: cleanMessage,
+      status: 'open',
+      reply: '',
+      createdAt: new Date().toISOString()
+    };
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        // 1. Pre-insert check: Look for existing record matching email, subject, and message
+        const { data: existingRecords } = await supabase
+          .from('queries')
+          .select('*')
+          .ilike('student_email', cleanEmail)
+          .eq('subject', cleanSubject)
+          .eq('message', cleanMessage)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (existingRecords && existingRecords.length > 0) {
+          const found = existingRecords[0];
+          newQuery.id = found.id;
+          newQuery.createdAt = found.created_at || newQuery.createdAt;
+          newQuery.status = found.status || newQuery.status;
+          newQuery.reply = found.reply || newQuery.reply;
+          newQuery.repliedAt = found.replied_at || newQuery.repliedAt;
+        } else {
+          const { data, error } = await supabase.from('queries').insert([{
+            student_name: newQuery.studentName,
+            student_email: cleanEmail,
+            student_plan: newQuery.studentPlan,
+            subject: cleanSubject,
+            type: newQuery.type,
+            message: cleanMessage,
+            status: 'open',
+          }]).select().single();
+
+          if (!error && data && data.id) {
+            newQuery.id = data.id;
+            newQuery.createdAt = data.created_at || newQuery.createdAt;
+          }
+        }
+      } catch (err) {
+        console.warn('[Supabase] Exception inserting query:', err);
+      }
+    }
+
+    // PURGE any legacy localStorage query items — NO query data in localStorage!
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.removeItem('th3ory_queries_store');
+        Object.keys(localStorage).forEach(k => {
+          if (k.includes('_queries')) {
+            localStorage.removeItem(k);
+          }
+        });
+      } catch {}
+    }
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('th3ory_queries_change'));
+    }
+
+    return newQuery;
+  })();
+
+  inFlightQuerySaves.set(lockKey, savePromise);
   try {
-    const local = JSON.parse(localStorage.getItem('th3ory_local_queries') || '[]');
-    local.unshift(payload);
-    localStorage.setItem('th3ory_local_queries', JSON.stringify(local));
-  } catch {}
+    return await savePromise;
+  } finally {
+    inFlightQuerySaves.delete(lockKey);
+  }
+}
+
+export async function fetchQueriesFromSupabase(email = null) {
+  const cleanEmail = email ? email.trim().toLowerCase() : null;
+
+  // Always purge legacy localStorage query keys to prevent local pollution
+  if (typeof localStorage !== 'undefined') {
+    try {
+      localStorage.removeItem('th3ory_queries_store');
+      Object.keys(localStorage).forEach(k => {
+        if (k.includes('_queries')) {
+          localStorage.removeItem(k);
+        }
+      });
+    } catch {}
+  }
 
   if (isSupabaseConfigured && supabase) {
     try {
-      await supabase.from('queries').insert([{
-        student_name: queryData.studentName,
-        student_email: queryData.studentEmail || '',
-        student_plan: queryData.studentPlan || '',
-        subject: queryData.subject,
-        type: queryData.type,
-        message: queryData.message,
-        status: 'open',
-      }]);
-    } catch {}
+      let queryBuilder = supabase.from('queries').select('*').order('created_at', { ascending: false });
+      if (cleanEmail) {
+        queryBuilder = queryBuilder.ilike('student_email', cleanEmail);
+      }
+      const { data, error } = await queryBuilder;
+      if (!error && data) {
+        // Exclude internal fallbacks (Enterprise Quotes, Contact Forms, Newsletters)
+        const studentOnly = data.filter(q => !['Enterprise Quote', 'Contact Form', 'Newsletter'].includes(q.type));
+
+        const remoteMapped = studentOnly.map(q => ({
+          id: q.id,
+          studentName: q.student_name,
+          studentEmail: q.student_email,
+          studentPlan: q.student_plan,
+          subject: q.subject,
+          type: q.type,
+          message: q.message,
+          status: q.status || 'open',
+          reply: q.reply || '',
+          createdAt: q.created_at,
+          repliedAt: q.replied_at,
+        }));
+
+        // Deduplicate remote rows rigorously by (studentEmail, subject, message)
+        const uniqueMap = new Map();
+        remoteMapped.forEach(q => {
+          const compKey = `${(q.studentEmail || '').trim().toLowerCase()}_${(q.subject || '').trim()}_${(q.message || '').trim()}`;
+          if (!uniqueMap.has(compKey)) {
+            uniqueMap.set(compKey, q);
+          } else {
+            const existing = uniqueMap.get(compKey);
+            if (q.status && q.status !== 'open' && existing.status === 'open') {
+              uniqueMap.set(compKey, q);
+            }
+          }
+        });
+
+        const finalQueries = Array.from(uniqueMap.values()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        return finalQueries;
+      }
+    } catch (err) {
+      console.warn('[Supabase] Exception fetching queries:', err);
+    }
   }
-  return true;
+
+  return [];
 }
 
-export async function fetchQueriesFromSupabase() {
-  let local = [];
-  try {
-    local = (JSON.parse(localStorage.getItem('th3ory_local_queries') || '[]')).map(q => ({
-      id: q.id,
-      studentName: q.student_name || q.studentName,
-      studentEmail: q.student_email || q.studentEmail,
-      studentPlan: q.student_plan || q.studentPlan,
-      subject: q.subject,
-      type: q.type,
-      message: q.message,
-      status: q.status,
-      reply: q.reply,
-      createdAt: q.created_at || q.createdAt,
-      repliedAt: q.replied_at || q.repliedAt,
-    }));
-  } catch {}
+export function subscribeToQueries(emailOrCallback, optionalCallback) {
+  const email = typeof emailOrCallback === 'string' ? emailOrCallback : null;
+  const callback = typeof emailOrCallback === 'function' ? emailOrCallback : optionalCallback;
+  if (!callback) return () => {};
 
-  if (!isSupabaseConfigured || !supabase) return local;
+  const cleanEmail = email ? email.trim().toLowerCase() : null;
 
-  try {
-    const { data, error } = await supabase.from('queries').select('*').order('created_at', { ascending: false });
-    if (error || !data) return local;
-    const sbQueries = data.map(q => ({
-      id: q.id,
-      studentName: q.student_name,
-      studentEmail: q.student_email,
-      studentPlan: q.student_plan,
-      subject: q.subject,
-      type: q.type,
-      message: q.message,
-      status: q.status,
-      reply: q.reply,
-      createdAt: q.created_at,
-      repliedAt: q.replied_at,
-    }));
-
-    const map = new Map();
-    local.forEach(q => map.set(q.id || `${q.studentName}_${q.subject}`, q));
-    sbQueries.forEach(q => map.set(q.id || `${q.studentName}_${q.subject}`, q));
-
-    return Array.from(map.values());
-  } catch {
-    return local;
+  const localHandler = () => {
+    fetchQueriesFromSupabase(cleanEmail).then(res => { if (res) callback(res); });
+  };
+  if (typeof window !== 'undefined') {
+    window.addEventListener('th3ory_queries_change', localHandler);
   }
-}
 
-export function subscribeToQueries(onQueryChange) {
-  if (!isSupabaseConfigured || !supabase) return () => {};
+  if (!isSupabaseConfigured || !supabase) {
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('th3ory_queries_change', localHandler);
+      }
+    };
+  }
+
   try {
+    const channelName = `queries_${cleanEmail ? cleanEmail.replace(/[^a-zA-Z0-9]/g, '_') : 'all'}_${Date.now()}`;
+    const filterObj = cleanEmail
+      ? { event: '*', schema: 'public', table: 'queries', filter: `student_email=eq.${cleanEmail}` }
+      : { event: '*', schema: 'public', table: 'queries' };
+
     const sub = supabase
-      .channel(`queries_${Date.now()}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'queries' }, () => {
-        fetchQueriesFromSupabase().then(res => { if (res) onQueryChange(res); });
+      .channel(channelName)
+      .on('postgres_changes', filterObj, () => {
+        fetchQueriesFromSupabase(cleanEmail).then(res => { if (res) callback(res); });
       })
       .subscribe();
-    return () => { try { supabase.removeChannel(sub); } catch {} };
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('th3ory_queries_change', localHandler);
+      }
+      try { supabase.removeChannel(sub); } catch {}
+    };
   } catch {
-    return () => {};
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('th3ory_queries_change', localHandler);
+      }
+    };
   }
 }
 
@@ -444,24 +723,17 @@ export async function saveEnterpriseQuoteToSupabase(quoteData) {
     created_at: new Date().toISOString()
   };
 
-  try {
-    const local = JSON.parse(localStorage.getItem('th3ory_local_quotes') || '[]');
-    local.unshift(payload);
-    localStorage.setItem('th3ory_local_quotes', JSON.stringify(local));
-    window.dispatchEvent(new CustomEvent('th3ory_quote_change', { detail: payload }));
-  } catch {}
-
   if (isSupabaseConfigured && supabase) {
     try {
       const { error } = await supabase.from('enterprise_quotes').insert([{
-        org_name: payload.org_name,
-        contact_name: payload.contact_name,
-        email: payload.email,
-        phone: payload.phone,
-        audience_type: payload.audience_type,
-        pupil_count: payload.pupil_count,
-        notes: payload.notes,
-        status: payload.status
+        org_name: quoteData.orgName,
+        contact_name: quoteData.contactName,
+        email: quoteData.email,
+        phone: quoteData.phone,
+        audience_type: quoteData.audienceType,
+        pupil_count: quoteData.pupilCount,
+        notes: quoteData.notes,
+        status: 'pending'
       }]);
 
       if (error) {
@@ -484,24 +756,14 @@ export async function saveEnterpriseQuoteToSupabase(quoteData) {
 }
 
 export async function fetchEnterpriseQuotesFromSupabase() {
-  let local = [];
-  try {
-    local = JSON.parse(localStorage.getItem('th3ory_local_quotes') || '[]');
-  } catch {}
-
-  if (!isSupabaseConfigured || !supabase) return local;
+  if (!isSupabaseConfigured || !supabase) return [];
 
   try {
     const { data, error } = await supabase.from('enterprise_quotes').select('*').order('created_at', { ascending: false });
-    if (error || !data) return local;
-
-    const map = new Map();
-    local.forEach(item => map.set(item.id || `${item.email}_${item.org_name}`, item));
-    data.forEach(item => map.set(item.id || `${item.email}_${item.org_name}`, item));
-
-    return Array.from(map.values());
+    if (error || !data) return [];
+    return data;
   } catch {
-    return local;
+    return [];
   }
 }
 
@@ -522,30 +784,14 @@ export function subscribeToEnterpriseQuotes(onQuoteChange) {
 
 // ─── Contact Us Form Inquiries (Dedicated Table: contact_inquiries) ───────────
 export async function saveContactInquiryToSupabase(contactData) {
-  const payload = {
-    id: `ci_${Date.now()}`,
-    name: contactData.name || '',
-    email: contactData.email || '',
-    subject: contactData.subject || 'General Inquiry',
-    message: contactData.message || '',
-    status: 'new',
-    created_at: new Date().toISOString()
-  };
-
-  try {
-    const local = JSON.parse(localStorage.getItem('th3ory_local_inquiries') || '[]');
-    local.unshift(payload);
-    localStorage.setItem('th3ory_local_inquiries', JSON.stringify(local));
-  } catch {}
-
   if (isSupabaseConfigured && supabase) {
     try {
       const { error } = await supabase.from('contact_inquiries').insert([{
-        name: payload.name,
-        email: payload.email,
-        subject: payload.subject,
-        message: payload.message,
-        status: payload.status
+        name: contactData.name || '',
+        email: contactData.email || '',
+        subject: contactData.subject || 'General Inquiry',
+        message: contactData.message || '',
+        status: 'new'
       }]);
 
       if (error) {
@@ -567,53 +813,125 @@ export async function saveContactInquiryToSupabase(contactData) {
   return true;
 }
 
-export async function updateQueryStatusInSupabase(queryId, status, replyText = '') {
-  try {
-    const local = JSON.parse(localStorage.getItem('th3ory_local_queries') || '[]');
-    const updatedLocal = local.map(q => q.id === queryId ? { ...q, status, reply: replyText || q.reply } : q);
-    localStorage.setItem('th3ory_local_queries', JSON.stringify(updatedLocal));
-  } catch {}
+export async function updateQueryStatusInSupabase(queryId, status, replyText = '', subject = null, email = null) {
+  const nowIso = new Date().toISOString();
+
+  // Always purge legacy localStorage query keys to prevent local storage pollution
+  if (typeof localStorage !== 'undefined') {
+    try {
+      localStorage.removeItem('th3ory_queries_store');
+      Object.keys(localStorage).forEach(k => {
+        if (k.includes('_queries')) {
+          localStorage.removeItem(k);
+        }
+      });
+    } catch {}
+  }
+
+  // 1. Update Supabase PostgreSQL database FIRST
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const payload = { status };
+      if (replyText) {
+        payload.reply = replyText;
+        payload.replied_at = nowIso;
+      }
+
+      let updatedRows = null;
+      // Step A: Try update by primary key ID (UUID)
+      if (queryId && !String(queryId).startsWith('q_')) {
+        const { data, error } = await supabase.from('queries').update(payload).eq('id', queryId).select();
+        if (error) console.warn('[Supabase] Update by ID error:', error.message);
+        if (data && data.length > 0) updatedRows = data;
+      }
+
+      // Step B: If queryId was local ID or didn't match UUID, try subject + student_email match
+      if (!updatedRows && (subject || queryId)) {
+        const matchSubject = subject || queryId;
+        let queryBuilder = supabase.from('queries').update(payload).eq('subject', matchSubject);
+        if (email) {
+          queryBuilder = queryBuilder.ilike('student_email', email.trim().toLowerCase());
+        }
+        const { data, error } = await queryBuilder.select();
+        if (error) console.warn('[Supabase] Update by subject error:', error.message);
+        if (data && data.length > 0) updatedRows = data;
+      }
+
+      // Step C: Fallback update by subject only if still unmatched
+      if (!updatedRows && subject) {
+        const { data, error } = await supabase.from('queries').update(payload).eq('subject', subject).select();
+        if (error) console.warn('[Supabase] Update fallback error:', error.message);
+        if (data && data.length > 0) updatedRows = data;
+      }
+    } catch (err) {
+      console.warn('[Supabase] Error in updateQueryStatusInSupabase:', err);
+    }
+  }
+
+  // 2. Dispatch change event to notify in-memory subscribers
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('th3ory_queries_change'));
+  }
+
+  return true;
+}
+
+export async function deleteQueryFromSupabase(queryId) {
+  if (!queryId) return false;
+
+  if (typeof localStorage !== 'undefined') {
+    try {
+      localStorage.removeItem('th3ory_queries_store');
+      Object.keys(localStorage).forEach(k => {
+        if (k.includes('_queries')) {
+          localStorage.removeItem(k);
+        }
+      });
+    } catch {}
+  }
 
   if (isSupabaseConfigured && supabase) {
     try {
-      const payload = { status, updated_at: new Date().toISOString() };
-      if (replyText) {
-        payload.reply = replyText;
-        payload.replied_at = new Date().toISOString();
+      const { error } = await supabase.from('queries').delete().eq('id', queryId);
+      if (error) {
+        console.warn('[Supabase] Error deleting query:', error.message);
+        return false;
       }
-      await supabase.from('queries').update(payload).eq('id', queryId);
-    } catch {}
+    } catch (err) {
+      console.warn('[Supabase] Exception in deleteQueryFromSupabase:', err);
+      return false;
+    }
+  }
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('th3ory_queries_change'));
   }
   return true;
 }
 
 export async function updateEnterpriseQuoteStatusInSupabase(quoteId, status) {
-  try {
-    const local = JSON.parse(localStorage.getItem('th3ory_local_quotes') || '[]');
-    const updatedLocal = local.map(q => q.id === quoteId ? { ...q, status } : q);
-    localStorage.setItem('th3ory_local_quotes', JSON.stringify(updatedLocal));
-    window.dispatchEvent(new CustomEvent('th3ory_quote_change', { detail: { quoteId, status } }));
-  } catch {}
-
   if (isSupabaseConfigured && supabase) {
     try {
-      await supabase.from('enterprise_quotes').update({ status, updated_at: new Date().toISOString() }).eq('id', quoteId);
-    } catch {}
+      const { error } = await supabase.from('enterprise_quotes').update({ status }).eq('id', quoteId);
+      if (error) {
+        console.warn('[Supabase] error updating enterprise_quote:', error.message);
+      }
+    } catch (err) {
+      console.error('[Supabase] Exception in updateEnterpriseQuoteStatusInSupabase:', err);
+    }
   }
   return true;
 }
 
 export async function updateContactInquiryStatusInSupabase(inquiryId, status) {
-  try {
-    const local = JSON.parse(localStorage.getItem('th3ory_local_inquiries') || '[]');
-    const updatedLocal = local.map(i => i.id === inquiryId ? { ...i, status } : i);
-    localStorage.setItem('th3ory_local_inquiries', JSON.stringify(updatedLocal));
-  } catch {}
-
   if (isSupabaseConfigured && supabase) {
     try {
-      await supabase.from('contact_inquiries').update({ status, updated_at: new Date().toISOString() }).eq('id', inquiryId);
-    } catch {}
+      const { error } = await supabase.from('contact_inquiries').update({ status }).eq('id', inquiryId);
+      if (error) {
+        console.warn('[Supabase] error updating contact_inquiry:', error.message);
+      }
+    } catch (err) {
+      console.error('[Supabase] Exception in updateContactInquiryStatusInSupabase:', err);
+    }
   }
   return true;
 }
@@ -621,7 +939,7 @@ export async function updateContactInquiryStatusInSupabase(inquiryId, status) {
 export async function fetchContactInquiriesFromSupabase() {
   let local = [];
   try {
-    local = JSON.parse(localStorage.getItem('th3ory_local_inquiries') || '[]');
+    local = JSON.parse(localStorage.getItem('th3ory_local_contact_inquiries') || '[]');
   } catch {}
 
   if (!isSupabaseConfigured || !supabase) return local;
@@ -661,6 +979,7 @@ export async function saveReviewToSupabase(reviewData) {
   try {
     const { error } = await supabase.from('reviews').insert([{
       name: reviewData.name,
+      email: reviewData.email || reviewData.studentEmail || '',
       role: reviewData.role || '',
       category: reviewData.category || 'Learner',
       rating: reviewData.rating || 5,
@@ -672,6 +991,68 @@ export async function saveReviewToSupabase(reviewData) {
   }
 }
 
+export async function fetchStudentReviewFromSupabase(email) {
+  if (!email) return null;
+  const cleanEmail = email.trim().toLowerCase();
+  let local = null;
+  try {
+    const raw = localStorage.getItem(`th3ory_student_${cleanEmail}_myReview`);
+    if (raw) local = JSON.parse(raw);
+  } catch {}
+
+  if (!isSupabaseConfigured || !supabase) return local;
+
+  try {
+    const { data, error } = await supabase
+      .from('reviews')
+      .select('*')
+      .ilike('email', cleanEmail)
+      .limit(1);
+
+    if (!error && data && data.length > 0) {
+      const r = data[0];
+      const rev = {
+        id: r.id,
+        name: r.name,
+        email: r.email,
+        role: r.role,
+        category: r.category,
+        rating: r.rating,
+        comment: r.comment,
+        submittedAt: r.created_at
+      };
+      try {
+        localStorage.setItem(`th3ory_student_${cleanEmail}_myReview`, JSON.stringify(rev));
+      } catch {}
+      return rev;
+    }
+    return local;
+  } catch {
+    return local;
+  }
+}
+
+export function subscribeToStudentReview(email, onReviewChange) {
+  if (!email || !isSupabaseConfigured || !supabase) return () => {};
+  const cleanEmail = email.trim().toLowerCase();
+  try {
+    const channelName = `reviews_${cleanEmail.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}`;
+    const sub = supabase
+      .channel(channelName)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'reviews', filter: `email=eq.${cleanEmail}` },
+        () => {
+          fetchStudentReviewFromSupabase(cleanEmail).then(res => { if (res) onReviewChange(res); });
+        }
+      )
+      .subscribe();
+    return () => { try { supabase.removeChannel(sub); } catch {} };
+  } catch {
+    return () => {};
+  }
+}
+
 export async function fetchReviewsFromSupabase() {
   if (!isSupabaseConfigured || !supabase) return null;
   try {
@@ -680,6 +1061,7 @@ export async function fetchReviewsFromSupabase() {
     return data.map(r => ({
       id: r.id,
       name: r.name,
+      email: r.email,
       role: r.role,
       category: r.category,
       rating: r.rating,
@@ -722,6 +1104,39 @@ export function subscribeToCourseContents(onContentChange) {
 }
 
 // ─── Course Contents (Streaming URLs) ─────────────────────────────────────────
+export async function seedDefaultCourseContentsToSupabase() {
+  if (!isSupabaseConfigured || !supabase) return false;
+  try {
+    const { data: existing } = await supabase.from('course_contents').select('lesson_id, type');
+    const existingKeys = new Set((existing || []).map(row => `${row.lesson_id}_${row.type}`));
+
+    const missingItems = (defaultContent || []).filter(item => !existingKeys.has(`${item.lessonId}_${item.type}`));
+    if (missingItems.length === 0) return true;
+
+    const rowsToInsert = missingItems.map(item => ({
+      content_key: item.id || `cnt_${item.lessonId}_${item.type}`,
+      title: item.title,
+      type: item.type || 'video',
+      url: item.url || 'https://drive.google.com/file/d/1JeRMqXExi9T8DjF1t7PpPhNrhGhfTh5g/preview',
+      platform: item.url?.includes('drive.google.com') ? 'gdrive' : 'url',
+      level_id: item.levelId || null,
+      lesson_id: item.lessonId || null,
+      duration: item.duration || '',
+      access_level: item.access || item.accessLevel || 'enrolled',
+      description: item.description || '',
+      tags: item.tags || [],
+      published: item.published !== false,
+      created_at: new Date().toISOString()
+    }));
+
+    await supabase.from('course_contents').insert(rowsToInsert);
+    return true;
+  } catch (err) {
+    console.warn('[Supabase] Exception seeding course_contents:', err);
+    return false;
+  }
+}
+
 export async function fetchCourseContentsFromSupabase() {
   if (!isSupabaseConfigured || !supabase) return null;
   try {
@@ -732,7 +1147,12 @@ export async function fetchCourseContentsFromSupabase() {
       .order('created_at', { ascending: false });
 
     if (error) return null;
-    return data.map(item => ({
+
+    if (!data || data.length === 0) {
+      await seedDefaultCourseContentsToSupabase();
+    }
+
+    return (data || []).map(item => ({
       id: item.id,
       contentKey: item.content_key,
       title: item.title,
@@ -1031,7 +1451,59 @@ export function subscribeToNewsletterBroadcasts(onBroadcastsChange) {
   }
 }
 
-// ─── Student Course Progress Syncing (Dedicated Table: user_progress) ──────────
+// Helper to perform dual-table operations against student_progress or user_progress
+async function syncStudentProgressRow(cleanEmail, lessonId, payload) {
+  if (!isSupabaseConfigured || !supabase) return false;
+  try {
+    // 1. Try table 'student_progress' (column 'student_name')
+    const { data: spExisting } = await supabase
+      .from('student_progress')
+      .select('id')
+      .ilike('student_name', cleanEmail)
+      .eq('lesson_id', lessonId)
+      .limit(1);
+
+    if (spExisting && spExisting.length > 0) {
+      await supabase
+        .from('student_progress')
+        .update({ ...payload, completed_at: new Date().toISOString() })
+        .eq('id', spExisting[0].id);
+      return true;
+    }
+
+    const { error: spErr } = await supabase
+      .from('student_progress')
+      .insert([{ student_name: cleanEmail, lesson_id: lessonId, ...payload, completed_at: new Date().toISOString() }]);
+
+    if (!spErr) return true;
+
+    // 2. Fallback to table 'user_progress' (column 'email')
+    const { data: upExisting } = await supabase
+      .from('user_progress')
+      .select('id')
+      .ilike('email', cleanEmail)
+      .eq('lesson_id', lessonId)
+      .limit(1);
+
+    if (upExisting && upExisting.length > 0) {
+      await supabase
+        .from('user_progress')
+        .update({ ...payload, updated_at: new Date().toISOString() })
+        .eq('id', upExisting[0].id);
+      return true;
+    }
+
+    await supabase
+      .from('user_progress')
+      .insert([{ email: cleanEmail, lesson_id: lessonId, ...payload, updated_at: new Date().toISOString() }]);
+    return true;
+  } catch (err) {
+    console.warn('[Supabase] Exception syncing student progress:', err);
+    return false;
+  }
+}
+
+// ─── Student Course Progress, Notes & Bookmarks Syncing ─────────────────────────
 export async function saveStudentProgressToSupabase(email, lessonId, completed = true) {
   if (!email || !lessonId) return false;
   const cleanEmail = email.trim().toLowerCase();
@@ -1043,25 +1515,124 @@ export async function saveStudentProgressToSupabase(email, lessonId, completed =
     localStorage.setItem(`th3ory_progress_${cleanEmail}`, JSON.stringify(local));
   } catch {}
 
-  if (isSupabaseConfigured && supabase) {
-    try {
-      if (completed) {
-        await supabase.from('user_progress').upsert([{
-          email: cleanEmail,
-          lesson_id: lessonId,
-          completed: true,
-          updated_at: new Date().toISOString()
-        }], { onConflict: 'email,lesson_id' });
-      } else {
-        await supabase.from('user_progress').delete()
-          .eq('email', cleanEmail)
-          .eq('lesson_id', lessonId);
-      }
-    } catch (err) {
-      console.warn('[Supabase] Exception syncing student user_progress:', err);
+  return await syncStudentProgressRow(cleanEmail, lessonId, { completed: Boolean(completed) });
+}
+
+export async function saveStudentNoteToSupabase(email, lessonId, noteText) {
+  if (!email || !lessonId) return false;
+  const cleanEmail = email.trim().toLowerCase();
+
+  try {
+    const local = JSON.parse(localStorage.getItem(`th3ory_notes_${cleanEmail}`) || '{}');
+    local[lessonId] = noteText;
+    localStorage.setItem(`th3ory_notes_${cleanEmail}`, JSON.stringify(local));
+  } catch {}
+
+  return await syncStudentProgressRow(cleanEmail, lessonId, { note: noteText });
+}
+
+export async function saveStudentBookmarkToSupabase(email, lessonId, bookmarked = true) {
+  if (!email || !lessonId) return false;
+  const cleanEmail = email.trim().toLowerCase();
+
+  try {
+    const local = JSON.parse(localStorage.getItem(`th3ory_bookmarks_${cleanEmail}`) || '[]');
+    let updated;
+    if (bookmarked) {
+      updated = Array.from(new Set([...local, lessonId]));
+    } else {
+      updated = local.filter(x => x !== lessonId);
     }
+    localStorage.setItem(`th3ory_bookmarks_${cleanEmail}`, JSON.stringify(updated));
+  } catch {}
+
+  return await syncStudentProgressRow(cleanEmail, lessonId, { bookmarked: Boolean(bookmarked) });
+}
+
+// ─── 30-Day Interactive Course Task Tracker Live Database Persistence ──────
+export async function saveTaskStepsToSupabase(email, lessonId, taskStepsObj) {
+  if (!email || !lessonId) return false;
+  const cleanEmail = email.trim().toLowerCase();
+
+  try {
+    const local = JSON.parse(localStorage.getItem(`th3ory_tasks_${cleanEmail}`) || '{}');
+    const merged = { ...local, ...taskStepsObj };
+    localStorage.setItem(`th3ory_tasks_${cleanEmail}`, JSON.stringify(merged));
+  } catch {}
+
+  return await syncStudentProgressRow(cleanEmail, lessonId, { task_steps: taskStepsObj });
+}
+
+export async function fetchTaskStepsFromSupabase(email) {
+  if (!email) return {};
+  const cleanEmail = email.trim().toLowerCase();
+
+  let local = {};
+  try {
+    local = JSON.parse(localStorage.getItem(`th3ory_tasks_${cleanEmail}`) || '{}');
+  } catch {}
+
+  if (!isSupabaseConfigured || !supabase) return local;
+
+  try {
+    let { data, error } = await supabase
+      .from('student_progress')
+      .select('lesson_id, task_steps')
+      .ilike('email', cleanEmail);
+
+    if (error || !data || data.length === 0) {
+      const { data: upData, error: upErr } = await supabase
+        .from('user_progress')
+        .select('lesson_id, task_steps')
+        .ilike('email', cleanEmail);
+      if (!upErr && upData) data = upData;
+    }
+
+    if (!data) return local;
+
+    const mergedTaskSteps = { ...local };
+    data.forEach(item => {
+      if (item.task_steps && typeof item.task_steps === 'object') {
+        Object.assign(mergedTaskSteps, item.task_steps);
+      }
+    });
+
+    try {
+      localStorage.setItem(`th3ory_tasks_${cleanEmail}`, JSON.stringify(mergedTaskSteps));
+    } catch {}
+
+    return mergedTaskSteps;
+  } catch {
+    return local;
   }
-  return true;
+}
+
+export function subscribeToTaskSteps(email, onTaskStepsChange) {
+  if (!email || !isSupabaseConfigured || !supabase) return () => {};
+  const cleanEmail = email.trim().toLowerCase();
+  try {
+    const channelName = `task_steps_${cleanEmail.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}`;
+    const sub = supabase
+      .channel(channelName)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'student_progress', filter: `email=eq.${cleanEmail}` },
+        () => {
+          fetchTaskStepsFromSupabase(cleanEmail).then(res => { if (res) onTaskStepsChange(res); });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'user_progress', filter: `email=eq.${cleanEmail}` },
+        () => {
+          fetchTaskStepsFromSupabase(cleanEmail).then(res => { if (res) onTaskStepsChange(res); });
+        }
+      )
+      .subscribe();
+    return () => { try { supabase.removeChannel(sub); } catch {} };
+  } catch {
+    return () => {};
+  }
 }
 
 export async function fetchStudentProgressFromSupabase(email) {
@@ -1075,17 +1646,170 @@ export async function fetchStudentProgressFromSupabase(email) {
   if (!isSupabaseConfigured || !supabase) return local;
 
   try {
-    const { data, error } = await supabase.from('user_progress').select('lesson_id, completed').eq('email', cleanEmail);
-    if (error || !data) return local;
+    let { data, error } = await supabase.from('student_progress').select('lesson_id, completed').ilike('student_name', cleanEmail);
+    if (error || !data || data.length === 0) {
+      const { data: upData, error: upErr } = await supabase.from('user_progress').select('lesson_id, completed').ilike('email', cleanEmail);
+      if (!upErr && upData) data = upData;
+    }
+
+    if (!data) return local;
 
     const progressObj = { ...local };
     data.forEach(item => {
       if (item.completed) progressObj[item.lesson_id] = true;
+      else delete progressObj[item.lesson_id];
     });
 
     return progressObj;
   } catch {
     return local;
+  }
+}
+
+export async function fetchStudentDataFromSupabase(email) {
+  if (!email || !isSupabaseConfigured || !supabase) return { progress: {}, notes: {}, bookmarks: [] };
+  const cleanEmail = email.trim().toLowerCase();
+
+  try {
+    let { data, error } = await supabase
+      .from('student_progress')
+      .select('lesson_id, completed, completed_at')
+      .ilike('student_name', cleanEmail);
+
+    if (error || !data || data.length === 0) {
+      const { data: spFull } = await supabase
+        .from('student_progress')
+        .select('*')
+        .ilike('student_name', cleanEmail);
+
+      if (spFull && spFull.length > 0) {
+        data = spFull;
+      } else {
+        const { data: upData, error: upErr } = await supabase
+          .from('user_progress')
+          .select('lesson_id, completed')
+          .ilike('email', cleanEmail);
+
+        if (!upErr && upData) data = upData;
+      }
+    }
+
+    if (!data) {
+      return { progress: {}, notes: {}, bookmarks: [] };
+    }
+
+    const progress = {};
+    const notes = {};
+    const bookmarkSet = new Set();
+
+    data.forEach(item => {
+      if (item.completed !== null && item.completed !== undefined) {
+        if (item.completed) progress[item.lesson_id] = { done: true };
+        else delete progress[item.lesson_id];
+      }
+      if (item.note !== null && item.note !== undefined && item.note.trim() !== '') {
+        notes[item.lesson_id] = item.note;
+      }
+      if (item.bookmarked !== null && item.bookmarked !== undefined) {
+        if (item.bookmarked) bookmarkSet.add(item.lesson_id);
+        else bookmarkSet.delete(item.lesson_id);
+      }
+    });
+
+    const bookmarks = Array.from(bookmarkSet);
+
+    try {
+      localStorage.setItem(`th3ory_active_${cleanEmail}_progress`, JSON.stringify(progress));
+      localStorage.setItem(`th3ory_active_${cleanEmail}_notes`, JSON.stringify(notes));
+      localStorage.setItem(`th3ory_active_${cleanEmail}_bookmarks`, JSON.stringify(bookmarks));
+    } catch {}
+
+    return { progress, notes, bookmarks };
+  } catch {
+    return { progress: {}, notes: {}, bookmarks: [] };
+  }
+}
+
+export function subscribeToStudentProgress(email, onDataChange) {
+  if (!email || !isSupabaseConfigured || !supabase) return () => {};
+  const cleanEmail = email.trim().toLowerCase();
+  try {
+    const channelName = `student_progress_${cleanEmail.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}`;
+    const sub = supabase
+      .channel(channelName)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'student_progress', filter: `student_name=eq.${cleanEmail}` },
+        () => {
+          fetchStudentDataFromSupabase(cleanEmail).then(data => {
+            if (data) onDataChange(data);
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'user_progress', filter: `email=eq.${cleanEmail}` },
+        () => {
+          fetchStudentDataFromSupabase(cleanEmail).then(data => {
+            if (data) onDataChange(data);
+          });
+        }
+      )
+      .subscribe();
+
+    // 15-second background sync timer for multi-device resilience
+    const pollInterval = setInterval(() => {
+      fetchStudentDataFromSupabase(cleanEmail).then(data => {
+        if (data) onDataChange(data);
+      });
+    }, 15000);
+
+    return () => {
+      clearInterval(pollInterval);
+      try { supabase.removeChannel(sub); } catch {}
+    };
+  } catch {
+    return () => {};
+  }
+}
+
+export function subscribeToStudentProfile(email, onProfileChange) {
+  if (!email || !isSupabaseConfigured || !supabase) return () => {};
+  const cleanEmail = email.trim().toLowerCase();
+  try {
+    const channelName = `student_accounts_${cleanEmail.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}`;
+    const sub = supabase
+      .channel(channelName)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'student_accounts', filter: `email=eq.${cleanEmail}` },
+        (payload) => {
+          if (payload.new) {
+            const updatedProfile = {
+              name: payload.new.name || 'Student',
+              email: cleanEmail,
+              phone: payload.new.phone || '',
+              profession: payload.new.profession || '',
+              bio: payload.new.bio || '',
+              country: payload.new.country || '',
+              dob: payload.new.dob || null,
+              avatar: payload.new.avatar_url || '',
+              plan: payload.new.plan_name || 'TH3ORY Masterclass',
+            };
+            try {
+              sessionStorage.setItem('th3ory_student_auth', JSON.stringify(updatedProfile));
+              localStorage.setItem(`th3ory_student_profile_${cleanEmail}`, JSON.stringify(updatedProfile));
+            } catch {}
+            onProfileChange(updatedProfile);
+          }
+        }
+      )
+      .subscribe();
+    return () => {
+      try { supabase.removeChannel(sub); } catch {}
+    };
+  } catch {
+    return () => {};
   }
 }
 
@@ -1156,4 +1880,221 @@ export async function fetchCertificateById(certId) {
 
   return null;
 }
+
+// ─── Daily Habit & 5-Pillar Self-Assessment Tracker Sync (Dedicated Table + Per-Day Rows) ────
+export async function saveHabitTrackerDayToSupabase(email, dayNumber, dayPayload) {
+  if (!email || !email.trim() || !dayNumber) return false;
+  const cleanEmail = email.trim().toLowerCase();
+
+  try {
+    const localRaw = localStorage.getItem(`th3ory_trackers_${cleanEmail}`);
+    const local = localRaw ? JSON.parse(localRaw) : {};
+    local[`day_${dayNumber}`] = dayPayload;
+    localStorage.setItem(`th3ory_trackers_${cleanEmail}`, JSON.stringify(local));
+  } catch {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const habitScores = dayPayload.scores || {};
+      const totalScore = Object.values(habitScores).reduce((a, b) => a + b, 0);
+
+      const payload = {
+        email: cleanEmail,
+        day_number: Number(dayNumber),
+        scores: dayPayload.scores || {},
+        pillar_scores: dayPayload.pillarScores || {},
+        total_score: totalScore,
+        note: dayPayload.note || '',
+        weekly_reflection: dayPayload.weeklyReflection || {},
+        updated_at: new Date().toISOString()
+      };
+
+      // 1. Write to dedicated student_habit_trackers table
+      const { error: e1 } = await supabase.from('student_habit_trackers').upsert([payload], { onConflict: 'email,day_number' });
+      if (e1) {
+        console.warn('[Supabase] student_habit_trackers notice:', e1.message);
+      }
+
+      // 2. Write dedicated per-day row in user_progress / student_progress tables (lesson_id: student_habit_day_X)
+      const rowPayload = {
+        email: cleanEmail,
+        lesson_id: `student_habit_day_${dayNumber}`,
+        notes: JSON.stringify(dayPayload),
+        completed_at: new Date().toISOString()
+      };
+
+      const { error: e2 } = await supabase.from('user_progress').upsert([rowPayload], { onConflict: 'email,lesson_id' });
+      const { error: e3 } = await supabase.from('student_progress').upsert([rowPayload], { onConflict: 'email,lesson_id' });
+
+      if (e2 && e3) {
+        // Fallback for full grid
+        const fullLocal = JSON.parse(localStorage.getItem(`th3ory_trackers_${cleanEmail}`) || '{}');
+        const gridPayload = {
+          email: cleanEmail,
+          lesson_id: 'daily_habit_tracker_grid',
+          notes: JSON.stringify(fullLocal),
+          completed_at: new Date().toISOString()
+        };
+        await supabase.from('user_progress').upsert([gridPayload], { onConflict: 'email,lesson_id' });
+        await supabase.from('student_progress').upsert([gridPayload], { onConflict: 'email,lesson_id' });
+      }
+
+      return true;
+    } catch (err) {
+      console.warn('[Supabase] Error persisting dedicated habit tracker:', err);
+    }
+  }
+  return true;
+}
+
+export async function saveDailyTrackerToSupabase(email, trackerData) {
+  if (!email || !email.trim()) return false;
+  const cleanEmail = email.trim().toLowerCase();
+
+  try {
+    localStorage.setItem(`th3ory_trackers_${cleanEmail}`, JSON.stringify(trackerData));
+  } catch {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      for (const [dayKey, dayPayload] of Object.entries(trackerData)) {
+        const dayNumber = Number(dayKey.replace('day_', ''));
+        if (dayNumber >= 1 && dayNumber <= 30) {
+          await saveHabitTrackerDayToSupabase(cleanEmail, dayNumber, dayPayload);
+        }
+      }
+      return true;
+    } catch (err) {
+      console.warn('[Supabase] Error persisting full habit tracker data:', err);
+    }
+  }
+  return true;
+}
+
+export async function fetchAllHabitTrackersFromSupabase(email) {
+  if (!email || !email.trim()) return null;
+  const cleanEmail = email.trim().toLowerCase();
+
+  let combined = {};
+  try {
+    const raw = localStorage.getItem(`th3ory_trackers_${cleanEmail}`);
+    if (raw) combined = JSON.parse(raw);
+  } catch {}
+
+  if (!isSupabaseConfigured || !supabase) return combined;
+
+  // 1. Fetch from dedicated student_habit_trackers table
+  try {
+    const { data: trackerRows } = await supabase
+      .from('student_habit_trackers')
+      .select('*')
+      .eq('email', cleanEmail);
+
+    if (trackerRows && trackerRows.length > 0) {
+      trackerRows.forEach(row => {
+        combined[`day_${row.day_number}`] = {
+          scores: row.scores || {},
+          pillarScores: row.pillar_scores || {},
+          note: row.note || '',
+          weeklyReflection: row.weekly_reflection || {},
+          updatedAt: row.updated_at || row.created_at
+        };
+      });
+    }
+  } catch {}
+
+  // 2. Fetch per-day records from user_progress & student_progress tables (lesson_id LIKE student_habit_day_%)
+  for (const tableName of ['user_progress', 'student_progress']) {
+    try {
+      const { data: progressRows } = await supabase
+        .from(tableName)
+        .select('*')
+        .eq('email', cleanEmail)
+        .like('lesson_id', 'student_habit_day_%');
+
+      if (progressRows && progressRows.length > 0) {
+        progressRows.forEach(row => {
+          const dayNumber = row.lesson_id.replace('student_habit_day_', '');
+          if (dayNumber && row.notes) {
+            try {
+              const parsed = JSON.parse(row.notes);
+              if (!combined[`day_${dayNumber}`] || new Date(row.completed_at || 0) > new Date(combined[`day_${dayNumber}`].updatedAt || 0)) {
+                combined[`day_${dayNumber}`] = parsed;
+              }
+            } catch {}
+          }
+        });
+      }
+    } catch {}
+  }
+
+  // 3. Fallback to full grid record in user_progress
+  if (Object.keys(combined).length === 0) {
+    const fallbackGrid = await fetchDailyTrackerFromSupabase(cleanEmail);
+    if (fallbackGrid) combined = fallbackGrid;
+  }
+
+  localStorage.setItem(`th3ory_trackers_${cleanEmail}`, JSON.stringify(combined));
+  return combined;
+}
+
+export async function fetchDailyTrackerFromSupabase(email) {
+  if (!email || !email.trim()) return null;
+  const cleanEmail = email.trim().toLowerCase();
+
+  let local = null;
+  try {
+    const raw = localStorage.getItem(`th3ory_trackers_${cleanEmail}`);
+    if (raw) local = JSON.parse(raw);
+  } catch {}
+
+  if (!isSupabaseConfigured || !supabase) return local;
+
+  try {
+    const { data } = await supabase
+      .from('user_progress')
+      .select('notes')
+      .eq('email', cleanEmail)
+      .eq('lesson_id', 'daily_habit_tracker_grid')
+      .single();
+
+    if (data && data.notes) {
+      const parsed = JSON.parse(data.notes);
+      return parsed;
+    }
+  } catch {}
+
+  return local;
+}
+
+export function subscribeToStudentHabitTrackers(email, onTrackerChange) {
+  if (!email || !isSupabaseConfigured || !supabase) return () => {};
+  const cleanEmail = email.trim().toLowerCase();
+  try {
+    const channelName = `habits_${cleanEmail.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}`;
+    const sub = supabase
+      .channel(channelName)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'student_habit_trackers', filter: `email=eq.${cleanEmail}` },
+        () => {
+          fetchAllHabitTrackersFromSupabase(cleanEmail).then(res => { if (res) onTrackerChange(res); });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'user_progress', filter: `email=eq.${cleanEmail}` },
+        () => {
+          fetchAllHabitTrackersFromSupabase(cleanEmail).then(res => { if (res) onTrackerChange(res); });
+        }
+      )
+      .subscribe();
+    return () => { try { supabase.removeChannel(sub); } catch {} };
+  } catch {
+    return () => {};
+  }
+}
+
+
+
 

@@ -8,6 +8,7 @@ import {
 import { getCourseDetails, getPlans, validateCoupon, incrementCouponUsage } from '../data/adminData';
 import { saveEnrollmentToSupabase, generateUniqueStudentCredentials } from '../services/supabaseService';
 import { sendEnrollmentEmail } from '../services/emailService';
+import { useFeatureFlags } from '../context/FeatureFlagContext';
 
 // ─── Country codes ─────────────────────────────────────────────────────────────
 const COUNTRY_CODES = [
@@ -773,6 +774,12 @@ function Step4({ form }) {
 // ─── Main Enrollment Page ─────────────────────────────────────────────────────
 export default function EnrollmentPage({ initialPlan, onBack }) {
   const plans = getPlans();
+  const { isFeatureEnabled } = useFeatureFlags();
+  const isMaintenanceMode = isFeatureEnabled('MAINTENANCE_MODE', false);
+  const isVipDiscountEnabled = isFeatureEnabled('ENABLE_VIP_DISCOUNT', true);
+  const isSandboxEnabled = isFeatureEnabled('ENABLE_RAZORPAY_SANDBOX', false);
+  const showUrgencyBanner = isFeatureEnabled('SHOW_LIMITED_SEATS_BANNER', true);
+
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
     name: '', email: '', phone: '',
@@ -798,6 +805,14 @@ export default function EnrollmentPage({ initialPlan, onBack }) {
     <div className="min-h-screen bg-[#05080f] text-slate-100"
       style={{backgroundImage:'radial-gradient(ellipse at 50% 0%, rgba(245,158,11,0.07) 0%, transparent 50%)', fontFamily:"'Plus Jakarta Sans', system-ui, sans-serif"}}>
 
+      {/* System Maintenance Banner */}
+      {isMaintenanceMode && (
+        <div className="bg-amber-500 text-slate-950 px-4 py-2.5 text-center text-xs font-bold font-sans flex items-center justify-center gap-2 z-30 sticky top-0 border-b border-amber-600 shadow-md">
+          <AlertCircle className="w-4 h-4 text-slate-950" />
+          <span>SYSTEM MAINTENANCE: Checkouts and live payment processing are temporarily paused.</span>
+        </div>
+      )}
+
       {/* Top bar */}
       <div className="sticky top-0 z-20 bg-slate-950/80 backdrop-blur-sm border-b border-slate-800/60 px-4 py-3 flex items-center gap-4">
         <button onClick={onBack}
@@ -805,6 +820,11 @@ export default function EnrollmentPage({ initialPlan, onBack }) {
           <ArrowLeft className="w-4 h-4"/> Back to Course
         </button>
         <div className="flex-1"/>
+        {isSandboxEnabled && (
+          <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
+            TEST / SANDBOX GATEWAY
+          </span>
+        )}
         <div className="flex items-center gap-2">
           <Lock className="w-3.5 h-3.5 text-green-400"/>
           <span className="text-green-400 text-xs font-medium">SSL Secured Checkout</span>

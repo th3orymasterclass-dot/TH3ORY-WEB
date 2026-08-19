@@ -21,7 +21,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { email, code } = req.body || {};
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+    const { email, code } = body;
 
     const cleanEmail = (email || '').trim().toLowerCase();
     const cleanCode = (code || '').trim().toUpperCase();
@@ -34,6 +35,30 @@ export default async function handler(req, res) {
       return res.status(400).json({ success: false, error: 'Enrollment code is required' });
     }
 
+    // Helper to generate enrollment code from Name + DOB
+    function generateEnrollmentCode(name = '', dob = '') {
+      const lettersOnly = (name || '').replace(/[^A-Za-z]/g, '').toUpperCase();
+      let namePart = lettersOnly.slice(0, 4);
+      if (namePart.length < 4) namePart = namePart.padEnd(4, 'X');
+      if (!namePart || namePart === 'XXXX') namePart = 'TH3O';
+
+      let dobPart = '';
+      const dobStr = String(dob || '').trim();
+      if (dobStr) {
+        const matchISO = dobStr.match(/\b(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})\b/);
+        if (matchISO) {
+          dobPart = String(matchISO[3]).padStart(2, '0') + String(matchISO[2]).padStart(2, '0');
+        } else {
+          const matchDMY = dobStr.match(/\b(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})\b/);
+          if (matchDMY) {
+            dobPart = String(matchDMY[1]).padStart(2, '0') + String(matchDMY[2]).padStart(2, '0');
+          }
+        }
+      }
+      if (!dobPart || dobPart.length !== 4) dobPart = '2026';
+      return (namePart + dobPart).toUpperCase().slice(0, 8);
+    }
+
     // 1. Check Supabase DB
     const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
@@ -42,44 +67,68 @@ export default async function handler(req, res) {
       const supabase = createClient(supabaseUrl, supabaseKey);
 
       // Check student_accounts table
-      const { data: student } = await supabase
+      const { data: students } = await supabase
         .from('student_accounts')
         .select('*')
-        .eq('email', cleanEmail)
-        .single();
+        .ilike('email', cleanEmail)
+        .limit(10);
 
-      if (student) {
-        const storedCode = (student.enrollment_code || '').trim().toUpperCase();
-        if (storedCode === cleanCode || FALLBACK_CODES.includes(cleanCode)) {
+      if (students && students.length > 0) {
+        const matched = students.find(s => {
+          const storedCode = (s.enrollment_code || '').trim().toUpperCase();
+          if (storedCode === cleanCode || FALLBACK_CODES.includes(cleanCode)) return true;
+          const computed = generateEnrollmentCode(s.name, s.dob).toUpperCase();
+          return computed === cleanCode;
+        });
+
+        if (matched) {
           return res.status(200).json({
             success: true,
             student: {
-              name: student.name || cleanEmail.split('@')[0],
+              name: matched.name || cleanEmail.split('@')[0],
               email: cleanEmail,
-              plan: student.plan_name || 'TH3ORY Masterclass',
-              enrolledAt: student.created_at || new Date().toISOString()
+              phone: matched.phone || '',
+              profession: matched.profession || '',
+              bio: matched.bio || '',
+              country: matched.country || '',
+              avatar: matched.avatar_url || '',
+              plan: matched.plan_name || 'TH3ORY Masterclass',
+              enrolledAt: matched.created_at || new Date().toISOString(),
+              loginAt: Date.now()
             }
           });
         }
       }
 
       // Check enrollments table
-      const { data: enrollment } = await supabase
+      const { data: enrollments } = await supabase
         .from('enrollments')
         .select('*')
-        .eq('email', cleanEmail)
-        .single();
+        .ilike('email', cleanEmail)
+        .limit(10);
 
-      if (enrollment) {
-        const storedCode = (enrollment.enrollment_code || '').trim().toUpperCase();
-        if (storedCode === cleanCode || FALLBACK_CODES.includes(cleanCode)) {
+      if (enrollments && enrollments.length > 0) {
+        const matched = enrollments.find(e => {
+          const storedCode = (e.enrollment_code || '').trim().toUpperCase();
+          if (storedCode === cleanCode || FALLBACK_CODES.includes(cleanCode)) return true;
+          const computed = generateEnrollmentCode(e.name, e.dob).toUpperCase();
+          return computed === cleanCode;
+        });
+
+        if (matched) {
           return res.status(200).json({
             success: true,
             student: {
-              name: enrollment.name || cleanEmail.split('@')[0],
+              name: matched.name || cleanEmail.split('@')[0],
               email: cleanEmail,
-              plan: enrollment.plan_name || 'TH3ORY Masterclass',
-              enrolledAt: enrollment.created_at || new Date().toISOString()
+              phone: matched.phone || '',
+              profession: matched.profession || '',
+              bio: matched.bio || '',
+              country: matched.country || '',
+              avatar: matched.avatar_url || '',
+              plan: matched.plan_name || 'TH3ORY Masterclass',
+              enrolledAt: matched.created_at || new Date().toISOString(),
+              loginAt: Date.now()
             }
           });
         }

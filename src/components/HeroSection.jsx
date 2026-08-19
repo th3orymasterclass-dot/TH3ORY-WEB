@@ -7,6 +7,7 @@ export default function HeroSection({ onOpenVideo, onOpenCheckout }) {
   const { courseDetails } = useTh3oryLive();
   const { isFeatureEnabled } = useFeatureFlags();
   const showTrailerButton = isFeatureEnabled('ENABLE_TRAILER_VIDEO', false);
+  const showUrgencyBanner = isFeatureEnabled('SHOW_LIMITED_SEATS_BANNER', true);
 
   const [timeLeft, setTimeLeft] = useState({ hours: 14, minutes: 32, seconds: 45 });
 
@@ -74,20 +75,22 @@ export default function HeroSection({ onOpenVideo, onOpenCheckout }) {
           </p>
 
           {/* Urgency Seat Counter */}
-          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-2xl glass-card border border-[#E9E4FF]/20 text-xs sm:text-sm text-[#FAFAF7]/80">
-            <span className="flex items-center gap-1.5 font-bold text-[#FFC857]">
-              <Flame className="w-4 h-4 fill-[#FFC857]" /> Cohort #{courseDetails.urgency.cohortNumber}
-            </span>
-            <span className="h-3 w-px bg-[#555A66]/40" />
-            <span>
-              <strong className="text-[#FFC857]">{courseDetails.urgency.seatsLeft} Seats Remaining</strong> • Registration closes in
-            </span>
-            <div className="flex items-center gap-1 font-mono font-bold text-[#FAFAF7] bg-[#15171A] px-2 py-0.5 rounded border border-[#7C5CFC]/30">
-              <span>{String(timeLeft.hours).padStart(2, '0')}h</span>:
-              <span>{String(timeLeft.minutes).padStart(2, '0')}m</span>:
-              <span>{String(timeLeft.seconds).padStart(2, '0')}s</span>
+          {showUrgencyBanner && (
+            <div className="inline-flex items-center gap-3 px-4 py-2 rounded-2xl glass-card border border-[#E9E4FF]/20 text-xs sm:text-sm text-[#FAFAF7]/80">
+              <span className="flex items-center gap-1.5 font-bold text-[#FFC857]">
+                <Flame className="w-4 h-4 fill-[#FFC857]" /> Cohort #{courseDetails.urgency.cohortNumber}
+              </span>
+              <span className="h-3 w-px bg-[#555A66]/40" />
+              <span>
+                <strong className="text-[#FFC857]">{courseDetails.urgency.seatsLeft} Seats Remaining</strong> • Registration closes in
+              </span>
+              <div className="flex items-center gap-1 font-mono font-bold text-[#FAFAF7] bg-[#15171A] px-2 py-0.5 rounded border border-[#7C5CFC]/30">
+                <span>{String(timeLeft.hours).padStart(2, '0')}h</span>:
+                <span>{String(timeLeft.minutes).padStart(2, '0')}m</span>:
+                <span>{String(timeLeft.seconds).padStart(2, '0')}s</span>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Action CTAs */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">

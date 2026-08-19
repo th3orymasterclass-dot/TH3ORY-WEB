@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { BookOpen, ChevronDown, PlayCircle, Lock, HelpCircle, CheckCircle2, XCircle, FileText, Calendar, Mountain, Clock, Award, Crown, Sparkles } from 'lucide-react';
 import { useTh3oryLive } from '../data/adminData';
+import { useFeatureFlags } from '../context/FeatureFlagContext';
 
 export default function CurriculumExplorer({ onOpenVideo }) {
   const { courseDetails, levels } = useTh3oryLive();
+  const { isFeatureEnabled } = useFeatureFlags();
+  const showTrailerButton = isFeatureEnabled('ENABLE_TRAILER_VIDEO', false);
   const [activeLevelId, setActiveLevelId] = useState((levels && levels[0]) ? levels[0].id : 'level-1');
   const [showSyllabusModal, setShowSyllabusModal] = useState(false);
 
@@ -120,7 +123,7 @@ export default function CurriculumExplorer({ onOpenVideo }) {
                             }`}
                           >
                             <div className="flex items-center gap-3">
-                              {lesson.preview ? (
+                              {lesson.preview && showTrailerButton ? (
                                 <button
                                   onClick={onOpenVideo}
                                   className="p-1.5 rounded-lg bg-amber-500/20 text-amber-400 hover:scale-110 transition-transform"
@@ -133,14 +136,14 @@ export default function CurriculumExplorer({ onOpenVideo }) {
                                   <Lock className="w-4 h-4" />
                                 </div>
                               )}
-                              <span className={`font-medium ${lesson.preview ? 'text-amber-200' : 'text-slate-200'}`}>
+                              <span className={`font-medium ${lesson.preview && showTrailerButton ? 'text-amber-200' : 'text-slate-200'}`}>
                                 {lesson.title}
                               </span>
                             </div>
 
                             <div className="flex items-center gap-3">
                               <span className="text-xs text-slate-500">{lesson.duration}</span>
-                              {lesson.preview ? (
+                              {lesson.preview && showTrailerButton ? (
                                 <button
                                   onClick={onOpenVideo}
                                   className="text-xs px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 font-bold hover:bg-amber-500/30 transition-colors"

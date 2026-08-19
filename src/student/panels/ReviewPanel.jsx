@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Star, Send, Check, Sparkles, AlertCircle } from 'lucide-react';
 import { getMyReview, saveMyReview } from '../studentData';
 import { lsSet, getCourseDetails } from '../../data/adminData';
-import { saveReviewToSupabase } from '../../services/supabaseService';
+import { saveReviewToSupabase, fetchStudentReviewFromSupabase, subscribeToStudentReview } from '../../services/supabaseService';
+import { useFeatureFlags } from '../../context/FeatureFlagContext';
 
 function StarPicker({ value, onChange, size = 7 }) {
   const [hover, setHover] = useState(0);
@@ -22,13 +23,38 @@ function StarPicker({ value, onChange, size = 7 }) {
 
 const LABELS = ['','Terrible','Poor','Okay','Great','Excellent — 5 Stars!'];
 
-export default function ReviewPanel({ profile }) {
-  const existing = getMyReview();
+export default function ReviewPanel({ profile, themeMode = 'dark' }) {
+  const isLight = themeMode === 'light';
+  const { isFeatureEnabled } = useFeatureFlags();
+  const isReviewsEnabled = isFeatureEnabled('ENABLE_LIVE_REVIEWS', true);
+
+  const existing = getMyReview(profile?.email);
   const [submitted, setSubmitted] = useState(!!existing);
   const [form, setForm] = useState(existing || {
     rating: 5, comment: '', role: '', category: 'Learner',
   });
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const email = profile?.email;
+    if (email) {
+      fetchStudentReviewFromSupabase(email).then(rev => {
+        if (rev) {
+          setForm(rev);
+          setSubmitted(true);
+        }
+      });
+    }
+
+    const unsub = subscribeToStudentReview(email, (rev) => {
+      if (rev) {
+        setForm(rev);
+        setSubmitted(true);
+      }
+    });
+
+    return () => unsub();
+  }, [profile?.email]);
 
   const up = (k, v) => setForm(f => ({...f, [k]: v}));
 
@@ -36,13 +62,14 @@ export default function ReviewPanel({ profile }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!isReviewsEnabled) return;
     if (!form.comment.trim() || form.comment.length < 20) return;
     setLoading(true);
-    await new Promise(r => setTimeout(r, 800));
+    await new Promise(r => setTimeout(r, 600));
 
-    // Save to student store
-    const review = { ...form, name: profile.name, id: `r_${Date.now()}` };
-    saveMyReview(review);
+    // Save to student store & Supabase
+    const review = { ...form, name: profile.name, email: profile.email, id: `r_${Date.now()}` };
+    saveMyReview(review, profile?.email);
     await saveReviewToSupabase(review);
 
     // Also push into the public reviews array (admin can see it)
@@ -63,20 +90,22 @@ export default function ReviewPanel({ profile }) {
     return (
       <div className="space-y-8">
         <div>
-          <h2 className="text-2xl font-black text-white">Leave a Review</h2>
-          <p className="text-slate-500 text-sm mt-1">Your feedback helps other students</p>
+          <h2 className={`text-2xl font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>Leave a Review</h2>
+          <p className={`text-sm mt-1 ${isLight ? 'text-slate-600' : 'text-slate-500'}`}>Your feedback helps other students</p>
         </div>
-        <div className="max-w-lg mx-auto text-center py-14 bg-slate-900 border border-green-500/30 rounded-2xl">
+        <div className={`max-w-lg mx-auto text-center py-14 border rounded-2xl ${
+          isLight ? 'bg-white border-green-500/40 shadow-sm' : 'bg-slate-900 border-green-500/30'
+        }`}>
           <div className="w-16 h-16 rounded-full bg-green-500/20 border-2 border-green-500/40 flex items-center justify-center mx-auto mb-5">
-            <Check className="w-8 h-8 text-green-400"/>
+            <Check className="w-8 h-8 text-green-500"/>
           </div>
-          <h3 className="text-white font-black text-xl mb-2">Review Submitted!</h3>
+          <h3 className={`font-black text-xl mb-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>Review Submitted!</h3>
           <div className="flex justify-center mb-4">
             <StarPicker value={form.rating} onChange={() => {}} size={6}/>
           </div>
-          <p className="text-slate-400 text-sm italic max-w-xs mx-auto">"{form.comment}"</p>
-          <p className="text-slate-500 text-xs mt-3">— {profile.name}</p>
-          <button onClick={() => setSubmitted(false)} className="mt-6 text-amber-400 text-sm hover:underline">Edit Review</button>
+          <p className={`text-sm italic max-w-xs mx-auto ${isLight ? 'text-slate-700' : 'text-slate-400'}`}>"{form.comment}"</p>
+          <p className={`text-xs mt-3 ${isLight ? 'text-slate-600' : 'text-slate-500'}`}>— {profile.name}</p>
+          <button onClick={() => setSubmitted(false)} className="mt-6 text-amber-600 text-sm hover:underline font-bold">Edit Review</button>
         </div>
       </div>
     );
@@ -84,29 +113,40 @@ export default function ReviewPanel({ profile }) {
 
   return (
     <div className="space-y-8">
+      {!isReviewsEnabled && (
+        <div className="flex items-center gap-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 text-amber-600 text-xs font-bold">
+          <AlertCircle className="w-5 h-5 shrink-0" />
+          <span>Graduate review submissions are currently paused by system administration.</span>
+        </div>
+      )}
+
       <div>
-        <h2 className="text-2xl font-black text-white">Leave a Review</h2>
-        <p className="text-slate-500 text-sm mt-1">Share your TH3ORY experience to inspire others</p>
+        <h2 className={`text-2xl font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>Leave a Review</h2>
+        <p className={`text-sm mt-1 ${isLight ? 'text-slate-600' : 'text-slate-500'}`}>Share your TH3ORY experience to inspire others</p>
       </div>
 
       <div className="max-w-2xl">
-        <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-5 flex items-start gap-3 mb-6">
-          <Sparkles className="w-4 h-4 text-amber-400 mt-0.5 shrink-0"/>
-          <p className="text-amber-300 text-sm">Your review will appear on the public course page and help future students make the right decision.</p>
+        <div className={`border rounded-2xl p-5 flex items-start gap-3 mb-6 ${
+          isLight ? 'bg-amber-50 border-amber-200' : 'bg-amber-500/10 border-amber-500/20'
+        }`}>
+          <Sparkles className="w-4 h-4 text-amber-500 mt-0.5 shrink-0"/>
+          <p className={`text-sm ${isLight ? 'text-slate-800' : 'text-amber-300'}`}>Your review will appear on the public course page and help future students make the right decision.</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-7 space-y-6">
+        <form onSubmit={handleSubmit} className={`border rounded-2xl p-5 sm:p-7 space-y-6 ${
+          isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-900 border-slate-800'
+        }`}>
           {/* Course being reviewed */}
-          <div className="pb-4 border-b border-slate-800">
-            <p className="text-slate-500 text-xs uppercase tracking-wider mb-1">Reviewing</p>
-            <p className="text-white font-bold">{details?.title || 'MASTERCLASS OF INFLUENCING'}</p>
+          <div className={`pb-4 border-b ${isLight ? 'border-slate-200' : 'border-slate-800'}`}>
+            <p className={`text-xs uppercase tracking-wider mb-1 ${isLight ? 'text-slate-600' : 'text-slate-500'}`}>Reviewing</p>
+            <p className={`font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{details?.title || 'MASTERCLASS OF INFLUENCING'}</p>
           </div>
 
           {/* Star rating */}
           <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Your Rating</label>
+            <label className={`block text-xs font-bold uppercase tracking-widest mb-3 ${isLight ? 'text-slate-700' : 'text-slate-400'}`}>Your Rating</label>
             <StarPicker value={form.rating} onChange={v => up('rating', v)} size={9}/>
-            <p className={`text-sm mt-2 font-semibold ${form.rating >= 4 ? 'text-amber-400' : form.rating >= 3 ? 'text-yellow-500' : 'text-red-400'}`}>
+            <p className={`text-sm mt-2 font-semibold ${form.rating >= 4 ? 'text-amber-500' : form.rating >= 3 ? 'text-yellow-600' : 'text-red-500'}`}>
               {LABELS[form.rating]}
             </p>
           </div>
@@ -114,15 +154,23 @@ export default function ReviewPanel({ profile }) {
           {/* Role & Category */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Your Role / Title</label>
+              <label className={`block text-xs font-bold uppercase tracking-widest mb-1.5 ${isLight ? 'text-slate-700' : 'text-slate-400'}`}>Your Role / Title</label>
               <input value={form.role} onChange={e => up('role', e.target.value)}
                 placeholder="e.g. Marketing Manager, Student, Founder"
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500/60"/>
+                className={`w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-amber-500/60 ${
+                  isLight
+                    ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder:text-slate-400'
+                    : 'bg-slate-950 border-slate-700 text-white placeholder-slate-600'
+                }`}/>
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Category</label>
+              <label className={`block text-xs font-bold uppercase tracking-widest mb-1.5 ${isLight ? 'text-slate-700' : 'text-slate-400'}`}>Category</label>
               <select value={form.category} onChange={e => up('category', e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500/60">
+                className={`w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-amber-500/60 ${
+                  isLight
+                    ? 'bg-slate-50 border-slate-300 text-slate-900'
+                    : 'bg-slate-950 border-slate-700 text-white'
+                }`}>
                 {CATEGORIES.map(c => <option key={c}>{c}</option>)}
               </select>
             </div>
@@ -130,17 +178,21 @@ export default function ReviewPanel({ profile }) {
 
           {/* Review text */}
           <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Your Review</label>
+            <label className={`block text-xs font-bold uppercase tracking-widest mb-1.5 ${isLight ? 'text-slate-700' : 'text-slate-400'}`}>Your Review</label>
             <textarea rows={5} required value={form.comment} onChange={e => up('comment', e.target.value)}
               placeholder="What was your experience? What did you learn? How has it impacted you? (min. 20 characters)"
-              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-amber-500/60 resize-none placeholder-slate-600"/>
-            <p className={`text-xs mt-1 ${form.comment.length < 20 ? 'text-slate-600' : 'text-green-400'}`}>
+              className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500/60 resize-none ${
+                isLight
+                  ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder:text-slate-400'
+                  : 'bg-slate-950 border-slate-700 text-white placeholder-slate-600'
+              }`}/>
+            <p className={`text-xs mt-1 ${form.comment.length < 20 ? (isLight ? 'text-slate-500' : 'text-slate-600') : 'text-green-500 font-bold'}`}>
               {form.comment.length} chars {form.comment.length < 20 && `(need ${20 - form.comment.length} more)`}
             </p>
           </div>
 
           <button type="submit" disabled={loading || form.comment.length < 20}
-            className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 font-extrabold text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2">
+            className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 font-extrabold text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-md">
             {loading
               ? <span className="w-4 h-4 border-2 border-slate-950/40 border-t-slate-950 rounded-full animate-spin"/>
               : <Send className="w-4 h-4"/>}

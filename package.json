@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/blob": "^2.8.0",
     "canvas-confetti": "^1.9.4",
     "lucide-react": "^0.469.0",
     "razorpay": "^2.9.8",
@@ -22,6 +24,7 @@
     "@tailwindcss/vite": "^4.0.0",
     "@vitejs/plugin-react": "^4.3.4",
     "tailwindcss": "^4.0.0",
+    "vercel": "^59.1.3",
     "vite": "^6.0.0"
   }
 }

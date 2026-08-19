@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { X, Lock, CreditCard, ShieldCheck, CheckCircle2, QrCode, Sparkles, Loader2, Download, ArrowRight, ArrowLeft, Mail, Tag, Percent } from 'lucide-react';
+import { X, Lock, CreditCard, ShieldCheck, CheckCircle2, QrCode, Sparkles, Loader2, Download, ArrowRight, ArrowLeft, Mail, Tag, Percent, ShieldAlert, TestTube } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { validateCoupon, incrementCouponUsage, getAddons } from '../data/adminData';
 import { saveEnrollmentToSupabase, generateUniqueStudentCredentials } from '../services/supabaseService';
 import { sendEnrollmentEmail } from '../services/emailService';
+import { useFeatureFlags } from '../context/FeatureFlagContext';
 
 export default function CheckoutModal({
   isOpen,
@@ -15,6 +16,12 @@ export default function CheckoutModal({
   onEnrollmentSuccess
 }) {
   if (!isOpen || !selectedPlan) return null;
+
+  const { isFeatureEnabled } = useFeatureFlags();
+  const isMaintenanceMode = isFeatureEnabled('MAINTENANCE_MODE', false);
+  const isVipDiscountEnabled = isFeatureEnabled('ENABLE_VIP_DISCOUNT', true);
+  const isSandboxEnabled = isFeatureEnabled('ENABLE_RAZORPAY_SANDBOX', false);
+  const showUrgencyBanner = isFeatureEnabled('SHOW_LIMITED_SEATS_BANNER', true);
 
   // Live add-ons from admin (reactive to admin changes)
   const courseAddons = getAddons();
@@ -59,9 +66,14 @@ export default function CheckoutModal({
 
   // Dynamic Coupon Validation
   const currentCoupon = (couponCodeInput || couponCode || '').trim().toUpperCase();
-  const couponResult = currentCoupon
+  const rawCouponResult = currentCoupon
     ? validateCoupon(currentCoupon, selectedPlan.id, basePriceUSD, basePriceINR)
     : { isValid: false, discountPercentage: couponDiscount || 0 };
+
+  const isVipBlocked = (currentCoupon === 'VIP50' || (rawCouponResult.discountPercentage >= 50)) && !isVipDiscountEnabled;
+  const couponResult = isVipBlocked
+    ? { isValid: false, message: 'VIP discount coupons are currently disabled by administration.', discountPercentage: 0 }
+    : rawCouponResult;
 
   const effectiveDiscountPct = couponResult.isValid ? couponResult.discountPercentage : (couponDiscount || 0);
 

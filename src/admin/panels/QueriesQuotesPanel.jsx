@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { HelpCircle, Building2, Mail, CheckCircle2, Clock, MessageSquare, Search, Send, User, ChevronRight, PlusCircle } from 'lucide-react';
+import { HelpCircle, Building2, Mail, CheckCircle2, Clock, MessageSquare, Search, Send, User, ChevronRight, PlusCircle, Trash2 } from 'lucide-react';
 import { saveEnterpriseQuoteToSupabase } from '../../services/supabaseService';
 
 export default function QueriesQuotesPanel({
@@ -8,12 +8,15 @@ export default function QueriesQuotesPanel({
   contactInquiries = [],
   updateQueryStatus,
   updateQuoteStatus,
-  updateInquiryStatus
+  updateInquiryStatus,
+  deleteQuery
 }) {
   const [activeTab, setActiveTab] = useState('queries'); // 'queries' | 'quotes' | 'contact'
   const [search, setSearch] = useState('');
   const [replyText, setReplyText] = useState({});
+  const [actionStatus, setActionStatus] = useState({});
   const [isSubmittingSample, setIsSubmittingSample] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   const handleAddSampleQuote = async () => {
     setIsSubmittingSample(true);
@@ -28,26 +31,39 @@ export default function QueriesQuotesPanel({
     };
     await saveEnterpriseQuoteToSupabase(sampleQuote);
     setIsSubmittingSample(false);
-    alert('✅ Sample Enterprise Quote submitted & saved to database!');
   };
 
-  const handleToggleQueryStatus = async (qId, currentStatus) => {
-    const nextStatus = currentStatus === 'resolved' ? 'open' : 'resolved';
-    const reply = replyText[qId] || '';
-    await updateQueryStatus(qId, nextStatus, reply);
-    alert(`Query status updated to '${nextStatus.toUpperCase()}' in Supabase Realtime!`);
+  const handleSendQueryResponse = async (qItem, status = 'answered') => {
+    const qId = typeof qItem === 'object' ? qItem.id : qItem;
+    const subject = typeof qItem === 'object' ? qItem.subject : null;
+    const email = typeof qItem === 'object' ? qItem.studentEmail : null;
+    const existingReply = typeof qItem === 'object' ? qItem.reply : '';
+
+    const text = replyText[qId] !== undefined ? replyText[qId] : (existingReply || '');
+    if (status === 'answered' && !text.trim()) {
+      setActionStatus(prev => ({ ...prev, [qId]: { msg: '⚠️ Type a response first', err: true } }));
+      setTimeout(() => setActionStatus(prev => ({ ...prev, [qId]: null })), 3000);
+      return;
+    }
+    await updateQueryStatus(qId, status, text, subject, email);
+    setActionStatus(prev => ({ ...prev, [qId]: { msg: `✓ Saved & Streamed (${status.toUpperCase()})`, err: false } }));
+    setTimeout(() => setActionStatus(prev => ({ ...prev, [qId]: null })), 3000);
+  };
+
+  const handleDeleteQuery = async (qId) => {
+    if (!deleteQuery) return;
+    setConfirmDeleteId(null);
+    await deleteQuery(qId);
   };
 
   const handleToggleQuoteStatus = async (qId, currentStatus) => {
     const nextStatus = currentStatus === 'contacted' ? 'pending' : 'contacted';
     await updateQuoteStatus(qId, nextStatus);
-    alert(`Enterprise quote status updated to '${nextStatus.toUpperCase()}' in Supabase Realtime!`);
   };
 
   const handleToggleInquiryStatus = async (iId, currentStatus) => {
     const nextStatus = currentStatus === 'resolved' ? 'new' : 'resolved';
     await updateInquiryStatus(iId, nextStatus);
-    alert(`Contact inquiry status updated to '${nextStatus.toUpperCase()}' in Supabase Realtime!`);
   };
 
   return (
@@ -56,7 +72,7 @@ export default function QueriesQuotesPanel({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-2xl font-black text-white">Database Forms, Queries & Quotes</h2>
+            <h2 className="text-2xl font-black text-white">Database Forms, Queries &amp; Quotes</h2>
             <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-mono font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> REALTIME SYNC
             </span>
@@ -136,44 +152,124 @@ export default function QueriesQuotesPanel({
             queries
               .filter(q => (q.studentName || '').toLowerCase().includes(search.toLowerCase()) || (q.subject || '').toLowerCase().includes(search.toLowerCase()))
               .map((item) => (
-                <div key={item.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                <div key={item.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-md">
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="text-white font-bold text-base">{item.studentName}</span>
-                        <span className="text-xs text-slate-400 font-mono">({item.studentPlan || 'Student'})</span>
+                        <span className="text-xs text-slate-400 font-mono">({item.studentEmail || 'student@th3ory.online'})</span>
+                        <span className="text-[10px] bg-amber-500/10 border border-amber-500/30 text-amber-400 font-extrabold px-2 py-0.5 rounded-full font-mono">
+                          {item.studentPlan || 'Enrolled Student'}
+                        </span>
                       </div>
-                      <p className="text-amber-400 font-semibold text-xs mt-0.5">{item.subject}</p>
+                      <p className="text-amber-400 font-semibold text-xs mt-1">Subject: {item.subject}</p>
                     </div>
-                    <span className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border uppercase ${
-                      item.status === 'resolved' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                    <span className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border uppercase shrink-0 ${
+                      item.status === 'answered' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
+                      item.status === 'inprogress' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
+                      item.status === 'resolved' ? 'bg-slate-800 text-slate-300 border-slate-700' :
+                      'bg-amber-500/20 text-amber-400 border-amber-500/30'
                     }`}>
                       {item.status || 'OPEN'}
                     </span>
                   </div>
 
-                  <p className="text-slate-300 text-xs bg-slate-950 border border-slate-800/80 rounded-xl p-3.5 leading-relaxed">
-                    "{item.message}"
-                  </p>
+                  {/* Student Question Box */}
+                  <div className="bg-slate-950 border border-slate-800 rounded-xl p-3.5 space-y-1">
+                    <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Student Message:</span>
+                    <p className="text-slate-300 text-xs leading-relaxed font-sans">
+                      "{item.message}"
+                    </p>
+                  </div>
 
-                  {item.reply && (
-                    <div className="bg-emerald-950/30 border border-emerald-500/20 rounded-xl p-3 text-xs text-emerald-300">
-                      <strong>Admin Response:</strong> {item.reply}
+                  {/* Admin Reply Workspace */}
+                  <div className="space-y-2 pt-1">
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-400">
+                      <span className="flex items-center gap-1.5 text-amber-400">
+                        <MessageSquare className="w-3.5 h-3.5" />
+                        <span>Instructor Response / Answer:</span>
+                      </span>
+                      {item.repliedAt && (
+                        <span className="text-[10px] text-slate-500 font-mono">
+                          Last answered: {new Date(item.repliedAt).toLocaleString()}
+                        </span>
+                      )}
                     </div>
-                  )}
+                    <textarea
+                      value={replyText[item.id] !== undefined ? replyText[item.id] : (item.reply || '')}
+                      onChange={(e) => setReplyText({ ...replyText, [item.id]: e.target.value })}
+                      placeholder="Type instructor response / solution for student query here..."
+                      rows={3}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-sans"
+                    />
 
-                  <div className="pt-2 flex items-center justify-between gap-3">
-                    <span className="text-[11px] text-slate-500">
-                      Submitted: {item.createdAt ? new Date(item.createdAt).toLocaleString() : 'Recent'}
-                    </span>
+                    {/* Action Controls */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-slate-500">
+                          Submitted: {item.createdAt ? new Date(item.createdAt).toLocaleString() : 'Recent'}
+                        </span>
+                        {actionStatus[item.id] && (
+                          <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border animate-pulse ${
+                            actionStatus[item.id].err
+                              ? 'bg-red-500/20 text-red-400 border-red-500/30'
+                              : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                          }`}>
+                            {actionStatus[item.id].msg}
+                          </span>
+                        )}
+                      </div>
 
-                    <button
-                      onClick={() => handleToggleQueryStatus(item.id, item.status)}
-                      className="px-3.5 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold hover:bg-amber-500/30 transition-all flex items-center gap-1.5"
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>Mark as {item.status === 'resolved' ? 'Open' : 'Resolved'}</span>
-                    </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleSendQueryResponse(item, 'inprogress')}
+                          className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all border border-slate-700 flex items-center gap-1"
+                        >
+                          <Clock className="w-3.5 h-3.5" />
+                          <span>In Progress</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleSendQueryResponse(item, 'resolved')}
+                          className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all border border-slate-700 flex items-center gap-1"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Resolve</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleSendQueryResponse(item, 'answered')}
+                          className="px-4 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition-all shadow-md flex items-center gap-1.5"
+                        >
+                          <Send className="w-3.5 h-3.5" />
+                          <span>Send Reply &amp; Mark Answered</span>
+                        </button>
+
+                        {deleteQuery && (
+                          confirmDeleteId === item.id ? (
+                            <div className="flex items-center gap-1.5 ml-1">
+                              <span className="text-[11px] text-slate-400">Delete?</span>
+                              <button
+                                onClick={() => handleDeleteQuery(item.id)}
+                                className="px-2.5 py-1 rounded-lg bg-red-500 hover:bg-red-400 text-white text-xs font-bold transition-all"
+                              >Yes</button>
+                              <button
+                                onClick={() => setConfirmDeleteId(null)}
+                                className="px-2.5 py-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs font-bold transition-all"
+                              >No</button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setConfirmDeleteId(item.id)}
+                              className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all"
+                              title="Delete query"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))

@@ -106,7 +106,7 @@ export const videoPreviewData = {
   title: "TH3ORY Masterclass Teaser & 30-Day Roadmap",
   duration: "4:15",
   thumbnail: "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=1200&q=80",
-  videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
+  videoUrl: "https://drive.google.com/file/d/1JeRMqXExi9T8DjF1t7PpPhNrhGhfTh5g/preview"
 };
 
 export const roadmapLevels = [
@@ -316,5 +316,87 @@ export const faqList = [
     category: "Enrollment & Payment",
     question: "Which payment gateways are supported?",
     answer: "We support Credit/Debit Cards (Stripe), PayPal, Apple Pay, Google Pay, and UPI / Instant Bank Transfer. 3-month interest-free split payment plans are also available at checkout."
+  }
+];
+
+export const defaultContent = [
+  {
+    id: 'cnt_l1_1_vid',
+    title: 'Day 01: Neuroscience of First Impressions & Body Language (HD Stream)',
+    type: 'video',
+    description: 'Master non-verbal presence, posture micro-signals, and the 7-second rule in human interaction.',
+    url: 'https://drive.google.com/file/d/1JeRMqXExi9T8DjF1t7PpPhNrhGhfTh5g/preview',
+    duration: '20 mins',
+    access: 'free',
+    levelId: 'l1',
+    lessonId: 'l1-1',
+    published: true,
+    storageType: 'url'
+  },
+  {
+    id: 'cnt_l1_1_pdf',
+    title: 'Day 01 Workbook: Body Language Micro-Signals Cheatsheet (PDF)',
+    type: 'pdf',
+    description: 'Actionable PDF reference card listing high-power posture and eye contact cues.',
+    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    duration: 'PDF Document',
+    fileSize: '1.2 MB',
+    access: 'free',
+    levelId: 'l1',
+    lessonId: 'l1-1',
+    published: true,
+    storageType: 'url'
+  },
+  {
+    id: 'cnt_l1_2_vid',
+    title: 'Day 02: Vocal Tonality, Pauses & Executive Gravitas (HD Stream)',
+    type: 'video',
+    description: 'Calibrate vocal depth, pace, strategic silence, and commanding speech resonance.',
+    url: 'https://drive.google.com/file/d/1JeRMqXExi9T8DjF1t7PpPhNrhGhfTh5g/preview',
+    duration: '18 mins',
+    access: 'free',
+    levelId: 'l1',
+    lessonId: 'l1-2',
+    published: true,
+    storageType: 'url'
+  },
+  {
+    id: 'cnt_l1_3_vid',
+    title: 'Day 03: Eye Contact & Non-Verbal Dominance Signals (HD Stream)',
+    type: 'video',
+    description: 'Learn non-verbal dominance control, eye gaze triangulation, and spatial awareness.',
+    url: 'https://drive.google.com/file/d/1JeRMqXExi9T8DjF1t7PpPhNrhGhfTh5g/preview',
+    duration: '22 mins',
+    access: 'enrolled',
+    levelId: 'l1',
+    lessonId: 'l1-3',
+    published: true,
+    storageType: 'url'
+  },
+  {
+    id: 'cnt_l2_1_vid',
+    title: 'Day 07: The 6 Laws of Human Persuasion & Ethical Framing (HD Stream)',
+    type: 'video',
+    description: 'Deconstruct psychological persuasion frameworks, ethical framing, and cognitive buy-in.',
+    url: 'https://drive.google.com/file/d/1JeRMqXExi9T8DjF1t7PpPhNrhGhfTh5g/preview',
+    duration: '25 mins',
+    access: 'free',
+    levelId: 'l2',
+    lessonId: 'l2-1',
+    published: true,
+    storageType: 'url'
+  },
+  {
+    id: 'cnt_l2_2_vid',
+    title: 'Day 08: High-Stakes Negotiation & Anchor Setting (HD Stream)',
+    type: 'video',
+    description: 'Strategic negotiation principles, setting psychological anchors, and value exchange.',
+    url: 'https://drive.google.com/file/d/1JeRMqXExi9T8DjF1t7PpPhNrhGhfTh5g/preview',
+    duration: '22 mins',
+    access: 'enrolled',
+    levelId: 'l2',
+    lessonId: 'l2-2',
+    published: true,
+    storageType: 'url'
   }
 ];

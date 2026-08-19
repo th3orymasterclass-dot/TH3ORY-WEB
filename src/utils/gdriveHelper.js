@@ -127,3 +127,18 @@ export function getEmbeddableMediaUrl(url) {
 
   return url;
 }
+
+/**
+ * Extract direct video stream URL for mobile native video elements
+ */
+export function getDirectVideoStreamUrl(url) {
+  if (!url) return '';
+  const gdrive = parseGoogleDriveUrl(url);
+  if (gdrive.isGDrive && gdrive.fileId) {
+    return `https://drive.google.com/uc?export=download&id=${gdrive.fileId}`;
+  }
+  if (url.endsWith('.mp4') || url.endsWith('.webm') || url.includes('lh3.googleusercontent.com')) {
+    return url;
+  }
+  return '';
+}

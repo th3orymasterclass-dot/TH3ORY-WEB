@@ -22,7 +22,11 @@ export default function Navbar({ onOpenCheckout, onOpenDashboard, isEnrolled }) 
         <div className="flex items-center justify-between">
           
           {/* Official TH3ORY Logo Brand */}
-          <a href="#" className="flex items-center gap-3 group">
+          <a
+            href="#"
+            onClick={(e) => { e.preventDefault(); window.location.hash = ''; window.dispatchEvent(new Event('hashchange')); }}
+            className="flex items-center gap-3 group"
+          >
             <Logo className="h-7 sm:h-9" />
           </a>
 
@@ -32,7 +36,7 @@ export default function Navbar({ onOpenCheckout, onOpenDashboard, isEnrolled }) 
             <a href="#instructor" className="hover:text-[#7C5CFC] transition-colors">Instructor</a>
             <a href="#roadmap" className="hover:text-[#7C5CFC] transition-colors">30-Day Roadmap</a>
             <a href="#structure" className="hover:text-[#7C5CFC] transition-colors">Structure</a>
-            <a href="#outcomes" className="hover:text-[#7C5CFC] transition-colors">Outcomes & Bonuses</a>
+            <a href="#outcomes" className="hover:text-[#7C5CFC] transition-colors">Outcomes &amp; Bonuses</a>
             <a href="#pricing" className="hover:text-[#7C5CFC] transition-colors">Pricing</a>
             <a href="#contact" className="hover:text-[#7C5CFC] transition-colors flex items-center gap-1">
               <Mail className="w-3 h-3 text-[#FFC857]" /> Contact
@@ -43,8 +47,9 @@ export default function Navbar({ onOpenCheckout, onOpenDashboard, isEnrolled }) 
           <div className="hidden sm:flex items-center gap-3">
             {/* Sign In Button */}
             <a
-              href="/#/student"
-              className="px-4 py-2.5 rounded-xl bg-[#15171A] hover:bg-[#1a1d22] text-[#E9E4FF] border border-[#7C5CFC]/40 text-xs font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-md"
+              href="#student"
+              onClick={(e) => { e.preventDefault(); window.location.hash = 'student'; window.dispatchEvent(new Event('hashchange')); }}
+              className="px-4 py-2.5 rounded-xl bg-[#15171A] hover:bg-[#1a1d22] text-[#E9E4FF] border border-[#7C5CFC]/40 text-xs font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-md cursor-pointer"
             >
               <LogIn className="w-3.5 h-3.5 text-[#FFC857]" />
               <span>Sign In</span>
@@ -53,7 +58,7 @@ export default function Navbar({ onOpenCheckout, onOpenDashboard, isEnrolled }) 
             {isEnrolled ? (
               <button
                 onClick={onOpenDashboard}
-                className="px-4 py-2.5 rounded-xl bg-[#7C5CFC]/15 text-[#E9E4FF] border border-[#7C5CFC]/30 font-semibold text-xs uppercase tracking-wider hover:bg-[#7C5CFC]/25 transition-all flex items-center gap-2"
+                className="px-4 py-2.5 rounded-xl bg-[#7C5CFC]/15 text-[#E9E4FF] border border-[#7C5CFC]/30 font-semibold text-xs uppercase tracking-wider hover:bg-[#7C5CFC]/25 transition-all flex items-center gap-2 cursor-pointer"
               >
                 <ShieldCheck className="w-4 h-4 text-[#FFC857]" />
                 My Dashboard
@@ -62,7 +67,7 @@ export default function Navbar({ onOpenCheckout, onOpenDashboard, isEnrolled }) 
 
             <button
               onClick={() => onOpenCheckout()}
-              className="relative group overflow-hidden px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFC] via-[#9277FF] to-[#7C5CFC] text-[#FAFAF7] font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-[#7C5CFC]/25 hover:shadow-[#7C5CFC]/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2"
+              className="relative group overflow-hidden px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFC] via-[#9277FF] to-[#7C5CFC] text-[#FAFAF7] font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-[#7C5CFC]/25 hover:shadow-[#7C5CFC]/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2 cursor-pointer"
             >
               <ShoppingBag className="w-4 h-4" />
               <span>{isEnrolled ? 'View Receipt' : 'Start Your Journey'}</span>
@@ -73,8 +78,9 @@ export default function Navbar({ onOpenCheckout, onOpenDashboard, isEnrolled }) 
           {/* Mobile Hamburger */}
           <div className="flex md:hidden items-center gap-2">
             <a
-              href="/#/student"
-              className="px-3 py-1.5 rounded-lg bg-[#15171A] text-[#FFC857] border border-[#7C5CFC]/30 text-xs font-bold uppercase tracking-wider flex items-center gap-1"
+              href="#student"
+              onClick={(e) => { e.preventDefault(); window.location.hash = 'student'; window.dispatchEvent(new Event('hashchange')); }}
+              className="px-3 py-1.5 rounded-lg bg-[#15171A] text-[#FFC857] border border-[#7C5CFC]/30 text-xs font-bold uppercase tracking-wider flex items-center gap-1 cursor-pointer"
             >
               <LogIn className="w-3.5 h-3.5" /> Sign In
             </a>
@@ -94,15 +100,15 @@ export default function Navbar({ onOpenCheckout, onOpenDashboard, isEnrolled }) 
             <a href="#instructor" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#7C5CFC]">Instructor</a>
             <a href="#roadmap" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#7C5CFC]">30-Day Roadmap</a>
             <a href="#structure" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#7C5CFC]">Structure</a>
-            <a href="#outcomes" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#7C5CFC]">Outcomes & Bonuses</a>
+            <a href="#outcomes" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#7C5CFC]">Outcomes &amp; Bonuses</a>
             <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#7C5CFC]">Pricing</a>
             <a href="#contact" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#7C5CFC]">Contact Us</a>
             
             <div className="pt-2 border-t border-[#555A66]/30 flex flex-col gap-3">
               <a
-                href="/#/student"
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full py-3 rounded-xl bg-[#15171A] text-[#E9E4FF] border border-[#7C5CFC]/40 text-center font-extrabold flex items-center justify-center gap-2"
+                href="#student"
+                onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); window.location.hash = 'student'; window.dispatchEvent(new Event('hashchange')); }}
+                className="w-full py-3 rounded-xl bg-[#15171A] text-[#E9E4FF] border border-[#7C5CFC]/40 text-center font-extrabold flex items-center justify-center gap-2 cursor-pointer"
               >
                 <LogIn className="w-4 h-4 text-[#FFC857]" /> Student Sign In / Portal
               </a>
