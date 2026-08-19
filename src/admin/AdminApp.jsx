@@ -9,7 +9,7 @@ import useAdminData from './useAdminData';
 import { isAdminAuthenticated } from '../data/adminData';
 import OverviewPanel       from './panels/OverviewPanel';
 import EnrollmentsPanel    from './panels/EnrollmentsPanel';
-
+import QueriesQuotesPanel  from './panels/QueriesQuotesPanel';
 import CouponsPanel        from './panels/CouponsPanel';
 import HeroPanel           from './panels/HeroPanel';
 import UrgencyPanel        from './panels/UrgencyPanel';
@@ -32,6 +32,7 @@ const NAV_ITEMS = [
   { id: '__divider_db', divider: true, label: 'DATABASE & SALES' },
   { id: 'feature_flags', label: 'Vercel Feature Flags', icon: Sliders, badge: 'VERCEL' },
   { id: 'enrollments', label: 'Enrollments & Sales',icon: ShoppingBag, badge: 'LIVE' },
+  { id: 'queries_quotes', label: 'Forms & Quotes',  icon: HelpCircle, badge: 'FORMS' },
   { id: 'coupons',     label: 'Coupons & Affiliations', icon: Tag, badge: 'OFFERS' },
 
   { id: 'newsletter',  label: 'Newsletter Subscribers', icon: Mail, badge: 'COMM' },
@@ -57,7 +58,13 @@ export default function AdminApp({ onLogout }) {
   const [active, setActive] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 768 : true));
   const adminState = useAdminData();
-  const { data, save, reset, defaults, lastSaved, enrollments, newsletterSubscribers, newsletterBroadcasts, saveBroadcast, updateSubscriberStatus, deleteSubscriber } = adminState;
+  const {
+    data, save, reset, defaults, lastSaved,
+    enrollments, queries = [], enterpriseQuotes = [], contactInquiries = [],
+    newsletterSubscribers, newsletterBroadcasts, saveBroadcast,
+    updateQueryStatus, deleteQuery, updateQuoteStatus, updateInquiryStatus,
+    updateSubscriberStatus, deleteSubscriber
+  } = adminState;
 
   // Enforce session access control
   React.useEffect(() => {
@@ -73,6 +80,7 @@ export default function AdminApp({ onLogout }) {
       case 'overview':   return <OverviewPanel   {...panelProps} />;
       case 'feature_flags': return <FeatureFlagsPanel />;
       case 'enrollments':return <EnrollmentsPanel enrollments={enrollments} />;
+      case 'queries_quotes': return <QueriesQuotesPanel queries={queries} enterpriseQuotes={enterpriseQuotes} contactInquiries={contactInquiries} updateQueryStatus={updateQueryStatus} updateQuoteStatus={updateQuoteStatus} updateInquiryStatus={updateInquiryStatus} deleteQuery={deleteQuery} />;
       case 'coupons':    return <CouponsPanel     save={save} enrollments={enrollments} />;
 
       case 'newsletter': return <NewsletterPanel subscribers={newsletterSubscribers} broadcasts={newsletterBroadcasts} saveBroadcast={saveBroadcast} updateSubscriberStatus={updateSubscriberStatus} deleteSubscriber={deleteSubscriber} save={save} data={data} />;
