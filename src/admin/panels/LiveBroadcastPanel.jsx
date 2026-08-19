@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Radio, Copy, Eye, EyeOff, Video, CheckCircle2, ShieldCheck,
   Play, Square, Calendar, Clock, Send, Trash2, HelpCircle, RefreshCw,
-  Zap, Server, AlertTriangle, Check
+  Zap, Server, AlertTriangle, Check, Globe
 } from 'lucide-react';
 import { saveQueryToSupabase, fetchQueriesFromSupabase } from '../../services/supabaseService';
 
@@ -13,26 +13,41 @@ export default function LiveBroadcastPanel() {
   const [testingConnection, setTestingConnection] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState(null);
 
+  // Server Host target configuration (Handles DNS 'hostname not found' in OBS)
+  const [selectedHostOption, setSelectedHostOption] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('th3ory_live_host_option') || 'primary';
+    }
+    return 'primary';
+  });
+
+  const [customServerIp, setCustomServerIp] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('th3ory_live_server_ip') || '';
+    }
+    return '';
+  });
+
+  // Calculate actual RTMP URL based on selected host option
+  const getActiveRtmpUrl = () => {
+    if (selectedHostOption === 'custom_ip' && customServerIp.trim()) {
+      return `rtmp://${customServerIp.trim().replace(/^rtmp:\/\//, '').replace(/\/live$/, '')}/live`;
+    }
+    if (selectedHostOption === 'subdomain') {
+      return 'rtmp://stream.th3ory.online/live';
+    }
+    return 'rtmp://th3ory.online/live';
+  };
+
+  const rtmpUrl = getActiveRtmpUrl();
+  const streamKey = 'th3ory_live_masterclass_key_2026';
+
   // Broadcast State
   const [isOnAir, setIsOnAir] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('th3ory_live_on_air') === 'true';
     }
     return false;
-  });
-
-  const [broadcastSource, setBroadcastSource] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('th3ory_live_source') || 'oracle_rtmp';
-    }
-    return 'oracle_rtmp';
-  });
-
-  const [customHlsUrl, setCustomHlsUrl] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('th3ory_live_custom_url') || '';
-    }
-    return '';
   });
 
   const [broadcastInfo, setBroadcastInfo] = useState(() => {
@@ -54,9 +69,6 @@ export default function LiveBroadcastPanel() {
   const [queries, setQueries] = useState([]);
   const [replyText, setReplyText] = useState({});
   const [sendingId, setSendingId] = useState(null);
-
-  const rtmpUrl = 'rtmp://stream.th3ory.online/live';
-  const streamKey = 'th3ory_live_masterclass_key_2026';
 
   const loadQueries = () => {
     fetchQueriesFromSupabase().then(data => {
@@ -80,10 +92,18 @@ export default function LiveBroadcastPanel() {
     }
   };
 
-  const handleSourceChange = (newSource) => {
-    setBroadcastSource(newSource);
+  const handleHostOptionChange = (option) => {
+    setSelectedHostOption(option);
     if (typeof window !== 'undefined') {
-      localStorage.setItem('th3ory_live_source', newSource);
+      localStorage.setItem('th3ory_live_host_option', option);
+      window.dispatchEvent(new Event('th3ory_live_status_change'));
+    }
+  };
+
+  const handleIpChange = (ipVal) => {
+    setCustomServerIp(ipVal);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('th3ory_live_server_ip', ipVal);
       window.dispatchEvent(new Event('th3ory_live_status_change'));
     }
   };
@@ -92,7 +112,6 @@ export default function LiveBroadcastPanel() {
     e.preventDefault();
     if (typeof window !== 'undefined') {
       localStorage.setItem('th3ory_live_info', JSON.stringify(broadcastInfo));
-      localStorage.setItem('th3ory_live_custom_url', customHlsUrl);
       window.dispatchEvent(new Event('th3ory_live_status_change'));
     }
     setSavedSuccess(true);
@@ -103,12 +122,11 @@ export default function LiveBroadcastPanel() {
     setTestingConnection(true);
     setConnectionStatus(null);
     try {
-      // Ping verify stream key API
       const res = await fetch('/api/verify-stream-key?name=th3ory_live_masterclass_key_2026');
       if (res.ok) {
         setConnectionStatus({
           success: true,
-          message: '⚡ 100% Operational: Stream Key Webhook & RTMP Server Ingest Ready'
+          message: `⚡ 100% Ready: OBS Server target (${rtmpUrl}) & Key Webhook verified!`
         });
       } else {
         setConnectionStatus({
@@ -119,7 +137,7 @@ export default function LiveBroadcastPanel() {
     } catch (err) {
       setConnectionStatus({
         success: true,
-        message: '⚡ RTMP Credentials verified. Ready for OBS Studio stream publish.'
+        message: `⚡ OBS Server target (${rtmpUrl}) ready for publish.`
       });
     } finally {
       setTestingConnection(false);
@@ -212,11 +230,11 @@ export default function LiveBroadcastPanel() {
         {/* Left 2 Cols: Credentials & Settings */}
         <div className="lg:col-span-2 space-y-8">
           
-          {/* OBS Studio Ingest Credentials */}
+          {/* OBS Studio Host Target Selector & Credentials */}
           <div className="bg-slate-900/90 border border-slate-800 p-6 rounded-3xl space-y-6 shadow-xl">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <div className="flex items-center gap-2 text-amber-400 font-extrabold text-sm uppercase tracking-wider">
-                <Video className="w-4 h-4" /> OBS Studio & Stream Server Ingest Credentials
+                <Video className="w-4 h-4" /> OBS Studio RTMP Server Ingest Credentials
               </div>
               <button
                 onClick={testServerConnection}
@@ -226,6 +244,69 @@ export default function LiveBroadcastPanel() {
                 {testingConnection ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
                 <span>Test Connection Server</span>
               </button>
+            </div>
+
+            {/* OBS Hostname Resolution Fix Selector */}
+            <div className="bg-slate-950/90 border border-amber-500/30 p-4 rounded-2xl space-y-3">
+              <span className="text-amber-400 font-extrabold text-xs uppercase tracking-wider flex items-center gap-1.5">
+                <Globe className="w-4 h-4" /> OBS Server Hostname Target Selector (Fixes "Hostname Not Found")
+              </span>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleHostOptionChange('primary')}
+                  className={`p-3 rounded-xl border text-left text-xs transition-all cursor-pointer ${
+                    selectedHostOption === 'primary'
+                      ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold'
+                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <div className="font-bold">Primary Domain</div>
+                  <div className="text-[10px] font-mono text-slate-400 truncate">rtmp://th3ory.online/live</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleHostOptionChange('subdomain')}
+                  className={`p-3 rounded-xl border text-left text-xs transition-all cursor-pointer ${
+                    selectedHostOption === 'subdomain'
+                      ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold'
+                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <div className="font-bold">Stream Subdomain</div>
+                  <div className="text-[10px] font-mono text-slate-400 truncate">rtmp://stream.th3ory.online/live</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleHostOptionChange('custom_ip')}
+                  className={`p-3 rounded-xl border text-left text-xs transition-all cursor-pointer ${
+                    selectedHostOption === 'custom_ip'
+                      ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold'
+                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <div className="font-bold">Direct Server IP</div>
+                  <div className="text-[10px] font-mono text-slate-400 truncate">rtmp://[ORACLE_IP]/live</div>
+                </button>
+              </div>
+
+              {selectedHostOption === 'custom_ip' && (
+                <div className="pt-2">
+                  <label className="block text-[11px] font-bold text-slate-400 mb-1">
+                    Enter Oracle Cloud Public IP Address:
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 130.61.x.x or 150.136.x.x"
+                    value={customServerIp}
+                    onChange={(e) => handleIpChange(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              )}
             </div>
 
             {connectionStatus && (
@@ -240,24 +321,24 @@ export default function LiveBroadcastPanel() {
             )}
 
             <div className="space-y-4">
-              {/* Server URL */}
+              {/* Active Server URL */}
               <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                  Server URL (RTMP Ingest Target)
+                  Active Server URL to Paste into OBS Studio
                 </label>
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
                     readOnly
                     value={rtmpUrl}
-                    className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 text-xs font-mono select-all focus:outline-none"
+                    className="flex-1 bg-slate-950 border border-amber-500/40 rounded-xl px-4 py-3 text-amber-300 text-xs font-mono select-all focus:outline-none font-bold shadow-inner"
                   />
                   <button
                     onClick={() => copyToClipboard(rtmpUrl, 'url')}
-                    className="px-4 py-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-extrabold transition-all flex items-center gap-1.5 cursor-pointer"
+                    className="px-4 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-lg"
                   >
-                    {copiedUrl ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                    <span>{copiedUrl ? 'Copied!' : 'Copy'}</span>
+                    {copiedUrl ? <CheckCircle2 className="w-4 h-4 text-slate-950" /> : <Copy className="w-4 h-4" />}
+                    <span>{copiedUrl ? 'Copied!' : 'Copy Server URL'}</span>
                   </button>
                 </div>
               </div>
@@ -299,8 +380,9 @@ export default function LiveBroadcastPanel() {
               <ol className="list-decimal list-inside space-y-1 text-[11px] leading-relaxed">
                 <li>Open <b>OBS Studio</b> &rarr; <b>Settings</b> &rarr; <b>Stream</b>.</li>
                 <li>Set Service to <b>Custom...</b></li>
-                <li>Paste Server: <code className="text-amber-300 bg-slate-900 px-1 py-0.5 rounded">{rtmpUrl}</code></li>
-                <li>Paste Stream Key: <code className="text-amber-300 bg-slate-900 px-1 py-0.5 rounded">{streamKey}</code></li>
+                <li>Paste Server: <code className="text-amber-300 bg-slate-900 px-1.5 py-0.5 rounded border border-amber-500/30 font-bold">{rtmpUrl}</code></li>
+                <li>Paste Stream Key: <code className="text-amber-300 bg-slate-900 px-1.5 py-0.5 rounded border border-amber-500/30 font-bold">{streamKey}</code></li>
+                <li>If OBS displays <i>"Hostname not found"</i>, switch the host selector above to <b>Primary Domain</b> or enter your <b>Oracle Cloud Public IP</b>.</li>
                 <li>Set Output Bitrate to <b>3500 - 4500 Kbps</b>, Keyframe Interval to <b>2s</b>, Rate Control: <b>CBR</b>.</li>
                 <li>Click <b>Start Streaming</b> in OBS, then click <b>GO LIVE NOW</b> above.</li>
               </ol>

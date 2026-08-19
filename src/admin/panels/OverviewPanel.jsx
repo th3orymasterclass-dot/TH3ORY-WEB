@@ -12,7 +12,20 @@ export default function OverviewPanel({ data, reset, lastSaved, enrollments = []
   });
 
   const [copiedUrl, setCopiedUrl] = useState(false);
-  const rtmpUrl = 'rtmp://stream.th3ory.online/live';
+  const getActiveRtmpUrl = () => {
+    if (typeof window !== 'undefined') {
+      const opt = localStorage.getItem('th3ory_live_host_option');
+      const ip = localStorage.getItem('th3ory_live_server_ip');
+      if (opt === 'custom_ip' && ip) {
+        return `rtmp://${ip.trim().replace(/^rtmp:\/\//, '').replace(/\/live$/, '')}/live`;
+      }
+      if (opt === 'subdomain') {
+        return 'rtmp://stream.th3ory.online/live';
+      }
+    }
+    return 'rtmp://th3ory.online/live';
+  };
+  const rtmpUrl = getActiveRtmpUrl();
 
   const handleToggleOnAir = (status) => {
     setIsOnAir(status);
