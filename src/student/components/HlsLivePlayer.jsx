@@ -1,6 +1,31 @@
 import React, { useEffect, useRef, useState } from 'react';
-import Hls from 'hls.js';
 import { Play, Pause, Volume2, VolumeX, Maximize, Radio, ShieldCheck, RefreshCw } from 'lucide-react';
+
+// Helper to dynamically load Hls.js script from CDN
+const loadHlsScript = () => {
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined') {
+      resolve(null);
+      return;
+    }
+    if (window.Hls) {
+      resolve(window.Hls);
+      return;
+    }
+    const existingScript = document.getElementById('hls-js-cdn-script');
+    if (existingScript) {
+      existingScript.addEventListener('load', () => resolve(window.Hls));
+      return;
+    }
+    const script = document.createElement('script');
+    script.id = 'hls-js-cdn-script';
+    script.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest';
+    script.async = true;
+    script.onload = () => resolve(window.Hls);
+    script.onerror = () => resolve(null);
+    document.head.appendChild(script);
+  });
+};
 
 export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
   const videoRef = useRef(null);
@@ -25,59 +50,74 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
     return () => clearInterval(interval);
   }, []);
 
-  // Initialize HLS.js Stream Engine
+  // Initialize HLS.js Stream Engine dynamically
   useEffect(() => {
+    let isMounted = true;
     const video = videoRef.current;
     if (!video || !streamUrl) return;
 
     setHasError(false);
 
-    if (Hls.isSupported()) {
-      const hls = new Hls({
-        enableWorker: true,
-        lowLatencyMode: true,
-        liveSyncDurationCount: 3,
-        liveMaxLatencyDurationCount: 6,
-        maxBufferLength: 10,
-      });
+    loadHlsScript().then(HlsClass => {
+      if (!isMounted) return;
 
-      hlsRef.current = hls;
-      hls.loadSource(streamUrl);
-      hls.attachMedia(video);
+      if (HlsClass && HlsClass.isSupported()) {
+        const hls = new HlsClass({
+          enableWorker: true,
+          lowLatencyMode: true,
+          liveSyncDurationCount: 3,
+          liveMaxLatencyDurationCount: 6,
+          maxBufferLength: 10,
+        });
 
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        setIsLive(true);
-        video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
-      });
+        hlsRef.current = hls;
+        hls.loadSource(streamUrl);
+        hls.attachMedia(video);
 
-      hls.on(Hls.Events.ERROR, (event, data) => {
-        if (data.fatal) {
-          switch (data.type) {
-            case Hls.ErrorTypes.NETWORK_ERROR:
-              setHasError(true);
-              setErrorMessage('Live stream connection offline or waiting for broadcast to start.');
-              hls.startLoad();
-              break;
-            case Hls.ErrorTypes.MEDIA_ERROR:
-              hls.recoverMediaError();
-              break;
-            default:
-              hls.destroy();
-              break;
+        hls.on(HlsClass.Events.MANIFEST_PARSED, () => {
+          if (!isMounted) return;
+          setIsLive(true);
+          video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+        });
+
+        hls.on(HlsClass.Events.ERROR, (event, data) => {
+          if (!isMounted) return;
+          if (data.fatal) {
+            switch (data.type) {
+              case HlsClass.ErrorTypes.NETWORK_ERROR:
+                setHasError(true);
+                setErrorMessage('Live stream connection offline or waiting for broadcast to start.');
+                hls.startLoad();
+                break;
+              case HlsClass.ErrorTypes.MEDIA_ERROR:
+                hls.recoverMediaError();
+                break;
+              default:
+                hls.destroy();
+                break;
+            }
           }
-        }
-      });
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        // Mobile Safari Native HLS Support
+        video.src = streamUrl;
+        video.addEventListener('loadedmetadata', () => {
+          if (isMounted) {
+            video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+          }
+        });
+      } else {
+        setHasError(true);
+        setErrorMessage('HLS Live streaming is not supported on this browser.');
+      }
+    });
 
-      return () => {
-        hls.destroy();
-      };
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      // Mobile Safari Native HLS Support
-      video.src = streamUrl;
-      video.addEventListener('loadedmetadata', () => {
-        video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
-      });
-    }
+    return () => {
+      isMounted = false;
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+      }
+    };
   }, [streamUrl]);
 
   const togglePlay = () => {
