@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   LayoutDashboard, Type, Flame, BookOpen, Tag,
-  Star, HelpCircle, User, Gift, Target, Video,
+  Star, HelpCircle, User, Gift, Target, Video, Radio,
   LogOut, ChevronRight, Menu, X, ExternalLink, Shield,
   FolderOpen, Layers, ShoppingBag, Mail
 } from 'lucide-react';
@@ -10,6 +10,7 @@ import { isAdminAuthenticated } from '../data/adminData';
 import OverviewPanel       from './panels/OverviewPanel';
 import EnrollmentsPanel    from './panels/EnrollmentsPanel';
 import QueriesQuotesPanel  from './panels/QueriesQuotesPanel';
+import LiveBroadcastPanel  from './panels/LiveBroadcastPanel';
 import CouponsPanel        from './panels/CouponsPanel';
 import HeroPanel           from './panels/HeroPanel';
 import UrgencyPanel        from './panels/UrgencyPanel';
@@ -30,6 +31,7 @@ import { Database, Sliders } from 'lucide-react';
 const NAV_ITEMS = [
   { id: 'overview',    label: 'Overview',           icon: LayoutDashboard },
   { id: '__divider_db', divider: true, label: 'DATABASE & SALES' },
+  { id: 'live_broadcast', label: 'Live Stream & Broadcast', icon: Radio, badge: 'OBS LIVE' },
   { id: 'feature_flags', label: 'Vercel Feature Flags', icon: Sliders, badge: 'VERCEL' },
   { id: 'enrollments', label: 'Enrollments & Sales',icon: ShoppingBag, badge: 'LIVE' },
   { id: 'queries_quotes', label: 'Forms & Quotes',  icon: HelpCircle, badge: 'FORMS' },
@@ -78,6 +80,7 @@ export default function AdminApp({ onLogout }) {
   const renderPanel = () => {
     switch (active) {
       case 'overview':   return <OverviewPanel   {...panelProps} />;
+      case 'live_broadcast': return <LiveBroadcastPanel />;
       case 'feature_flags': return <FeatureFlagsPanel />;
       case 'enrollments':return <EnrollmentsPanel enrollments={enrollments} />;
       case 'queries_quotes': return <QueriesQuotesPanel queries={queries} enterpriseQuotes={enterpriseQuotes} contactInquiries={contactInquiries} updateQueryStatus={updateQueryStatus} updateQuoteStatus={updateQuoteStatus} updateInquiryStatus={updateInquiryStatus} deleteQuery={deleteQuery} />;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Award, BookOpen, CheckCircle2, Clock, Flame, Target, TrendingUp, Play, Star, Zap, Mail } from 'lucide-react';
+import { Award, BookOpen, CheckCircle2, Clock, Flame, Target, TrendingUp, Play, Star, Zap, Mail, Radio } from 'lucide-react';
 import { getProgress } from '../studentData';
 import { getLevels, getCourseDetails } from '../../data/adminData';
 import { fetchStudentDataFromSupabase, subscribeToStudentProgress } from '../../services/supabaseService';
@@ -32,6 +32,32 @@ export default function DashboardHome({ profile, onNavigate, themeMode = 'dark' 
   const [progress, setProgress] = useState(() => getProgress(profile?.email));
   const [levels, setLevels]     = useState(getLevels());
   const [details, setDetails]   = useState(getCourseDetails());
+
+  const [isOnAir, setIsOnAir]   = useState(() => typeof window !== 'undefined' ? localStorage.getItem('th3ory_live_on_air') === 'true' : false);
+  const [liveInfo, setLiveInfo] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('th3ory_live_info');
+      if (saved) return JSON.parse(saved);
+    }
+    return {
+      title: 'Mentalism & Behavioral Influence Live Experiment',
+      scheduledDate: '2026-08-25',
+      scheduledTime: '20:00',
+      description: 'Live interactive breakdown of non-verbal cues and real-time student Q&A.'
+    };
+  });
+
+  useEffect(() => {
+    const handleLiveChange = () => {
+      if (typeof window !== 'undefined') {
+        setIsOnAir(localStorage.getItem('th3ory_live_on_air') === 'true');
+        const saved = localStorage.getItem('th3ory_live_info');
+        if (saved) setLiveInfo(JSON.parse(saved));
+      }
+    };
+    window.addEventListener('th3ory_live_status_change', handleLiveChange);
+    return () => window.removeEventListener('th3ory_live_status_change', handleLiveChange);
+  }, []);
 
   useEffect(() => {
     const email = profile?.email;
@@ -105,6 +131,51 @@ export default function DashboardHome({ profile, onNavigate, themeMode = 'dark' 
             <span className={`text-xs ${isLight ? 'text-slate-600' : 'text-slate-500'}`}>Enrolled {daysSince === 0 ? 'today' : `${daysSince} day${daysSince!==1?'s':''} ago`}</span>
           </div>
         </div>
+      </div>
+
+      {/* LIVE BROADCAST ANNOUNCEMENT CARD */}
+      <div className={`p-6 rounded-3xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 transition-all ${
+        isOnAir
+          ? 'bg-gradient-to-r from-red-950/60 via-slate-900 to-slate-950 border-red-500/40 shadow-xl shadow-red-950/20'
+          : isLight
+          ? 'bg-amber-500/10 border-amber-300 text-slate-900'
+          : 'bg-slate-900/90 border-amber-500/30 text-white'
+      }`}>
+        <div className="flex items-start gap-4">
+          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black shrink-0 shadow-lg ${
+            isOnAir ? 'bg-red-600 text-white animate-pulse' : 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+          }`}>
+            <Radio className="w-6 h-6" />
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full ${
+                isOnAir ? 'bg-red-600 text-white animate-pulse' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+              }`}>
+                {isOnAir ? '🔴 LIVE ON AIR NOW' : 'SCHEDULED LIVE BROADCAST'}
+              </span>
+              {!isOnAir && liveInfo.scheduledDate && (
+                <span className="text-[10px] font-bold text-slate-400">
+                  {liveInfo.scheduledDate} @ {liveInfo.scheduledTime}
+                </span>
+              )}
+            </div>
+            <h3 className={`text-lg font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>{liveInfo.title}</h3>
+            <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>{liveInfo.description}</p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => onNavigate('live_session')}
+          className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-wider transition-all shrink-0 cursor-pointer flex items-center gap-2 shadow-lg ${
+            isOnAir
+              ? 'bg-red-600 hover:bg-red-500 text-white shadow-red-600/30 animate-pulse'
+              : 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20'
+          }`}
+        >
+          <Play className="w-4 h-4 fill-current" />
+          <span>{isOnAir ? 'JOIN LIVE STREAM' : 'VIEW LIVE HUB'}</span>
+        </button>
       </div>
 
       {/* THE CHARACTER CODE™ Assessment Quick Launch Banner */}
