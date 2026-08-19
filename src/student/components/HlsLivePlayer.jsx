@@ -39,6 +39,41 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
   const [errorMessage, setErrorMessage] = useState('');
   const [activeUrlIndex, setActiveUrlIndex] = useState(0);
 
+  // Live Stream Source Configuration (Oracle RTMP HLS / YouTube Live / Twitch / Custom HLS)
+  const [liveSource, setLiveSource] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('th3ory_live_source') || 'oracle_rtmp';
+    }
+    return 'oracle_rtmp';
+  });
+
+  const [youtubeId, setYoutubeId] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('th3ory_live_youtube_id') || '';
+    }
+    return '';
+  });
+
+  const [twitchChannel, setTwitchChannel] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('th3ory_live_twitch_channel') || '';
+    }
+    return '';
+  });
+
+  // Listen for broadcast source changes from admin panel
+  useEffect(() => {
+    const handleStatusChange = () => {
+      if (typeof window !== 'undefined') {
+        setLiveSource(localStorage.getItem('th3ory_live_source') || 'oracle_rtmp');
+        setYoutubeId(localStorage.getItem('th3ory_live_youtube_id') || '');
+        setTwitchChannel(localStorage.getItem('th3ory_live_twitch_channel') || '');
+      }
+    };
+    window.addEventListener('th3ory_live_status_change', handleStatusChange);
+    return () => window.removeEventListener('th3ory_live_status_change', handleStatusChange);
+  }, []);
+
   // Candidate HLS URLs for automatic seamless fallback
   const candidateUrls = [
     streamUrl || 'https://stream.th3ory.online/live/th3ory_live_masterclass_key_2026.m3u8',
@@ -63,6 +98,8 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
 
   // Initialize HLS.js Stream Engine dynamically with auto-recovery
   useEffect(() => {
+    if (liveSource !== 'oracle_rtmp' && liveSource !== 'custom_hls') return;
+
     let isMounted = true;
     const video = videoRef.current;
     if (!video || !currentStreamUrl) return;
@@ -107,13 +144,11 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
           if (data.fatal) {
             switch (data.type) {
               case HlsClass.ErrorTypes.NETWORK_ERROR:
-                // Try fallback stream candidate URL if available
                 if (activeUrlIndex < candidateUrls.length - 1) {
                   setActiveUrlIndex(prev => prev + 1);
                 } else {
                   setHasError(true);
                   setErrorMessage('Broadcast waiting or reconnecting to OBS server...');
-                  // Auto-retry connection every 5s until stream comes online
                   retryTimerRef.current = setTimeout(() => {
                     if (isMounted) {
                       setActiveUrlIndex(0);
@@ -134,7 +169,6 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
           }
         });
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        // Mobile Safari Native HLS Support
         video.src = currentStreamUrl;
         video.addEventListener('loadedmetadata', () => {
           if (isMounted) {
@@ -159,7 +193,7 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
         hlsRef.current.destroy();
       }
     };
-  }, [currentStreamUrl, activeUrlIndex]);
+  }, [currentStreamUrl, activeUrlIndex, liveSource]);
 
   const togglePlay = () => {
     if (!videoRef.current) return;
@@ -198,15 +232,33 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
   return (
     <div className="relative w-full aspect-video rounded-3xl overflow-hidden bg-slate-950 border border-amber-500/30 shadow-2xl group select-none">
       
-      {/* HTML5 Video Element */}
-      <video
-        ref={videoRef}
-        playsInline
-        className="w-full h-full object-cover"
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
-        onContextMenu={(e) => e.preventDefault()}
-      />
+      {/* YouTube Live Embed Fallback Protocol */}
+      {liveSource === 'youtube' && youtubeId ? (
+        <iframe
+          src={`https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&live=1&modestbranding=1&rel=0`}
+          title="TH3ORY Live Masterclass Stream"
+          className="w-full h-full border-0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+        />
+      ) : liveSource === 'twitch' && twitchChannel ? (
+        <iframe
+          src={`https://player.twitch.tv/?channel=${twitchChannel}&parent=${typeof window !== 'undefined' ? window.location.hostname : 'th3ory.online'}&autoplay=true`}
+          title="TH3ORY Twitch Live Stream"
+          className="w-full h-full border-0"
+          allowFullScreen
+        />
+      ) : (
+        /* Native Low-Latency HLS Video Engine */
+        <video
+          ref={videoRef}
+          playsInline
+          className="w-full h-full object-cover"
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+          onContextMenu={(e) => e.preventDefault()}
+        />
+      )}
 
       {/* Floating Student Email Watermark (Anti-Piracy Guard) */}
       <div
@@ -226,7 +278,7 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
       </div>
 
       {/* Stream Error / Offline Overlay with Auto-Reconnect Heartbeat */}
-      {hasError && (
+      {hasError && liveSource === 'oracle_rtmp' && (
         <div className="absolute inset-0 z-30 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center space-y-4">
           <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center justify-center animate-pulse">
             <Radio className="w-7 h-7" />
@@ -248,34 +300,32 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
         </div>
       )}
 
-      {/* Bottom Glassmorphism Control Bar */}
-      <div className="absolute bottom-0 inset-x-0 z-20 p-4 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-between gap-4">
-        
-        {/* Play/Pause Button */}
-        <button
-          onClick={togglePlay}
-          className="p-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 border border-amber-500/40 transition-all cursor-pointer"
-        >
-          {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 fill-amber-300" />}
-        </button>
+      {/* Bottom Glassmorphism Control Bar (For Native Video Engine) */}
+      {liveSource === 'oracle_rtmp' && (
+        <div className="absolute bottom-0 inset-x-0 z-20 p-4 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-between gap-4">
+          <button
+            onClick={togglePlay}
+            className="p-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 border border-amber-500/40 transition-all cursor-pointer"
+          >
+            {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 fill-amber-300" />}
+          </button>
 
-        {/* Volume & Fullscreen */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={toggleMute}
-            className="p-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-300 border border-slate-700 transition-all cursor-pointer"
-          >
-            {isMuted ? <VolumeX className="w-5 h-5 text-red-400" /> : <Volume2 className="w-5 h-5" />}
-          </button>
-          <button
-            onClick={toggleFullscreen}
-            className="p-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-300 border border-slate-700 transition-all cursor-pointer"
-          >
-            <Maximize className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleMute}
+              className="p-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-300 border border-slate-700 transition-all cursor-pointer"
+            >
+              {isMuted ? <VolumeX className="w-5 h-5 text-red-400" /> : <Volume2 className="w-5 h-5" />}
+            </button>
+            <button
+              onClick={toggleFullscreen}
+              className="p-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-300 border border-slate-700 transition-all cursor-pointer"
+            >
+              <Maximize className="w-5 h-5" />
+            </button>
+          </div>
         </div>
-
-      </div>
+      )}
 
     </div>
   );
