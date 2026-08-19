@@ -280,7 +280,15 @@ export default function StudentApp({ profile: initialProfile, onLogout }) {
             const Icon = item.icon;
             const isActive = active === item.id;
             return (
-              <button key={item.id} onClick={() => { setActive(item.id); setNavExtra({}); if (window.innerWidth < 768) setSidebar(false); }}
+              <button key={item.id} onClick={() => {
+                if (item.id === 'queries') {
+                  window.location.href = "mailto:team@th3ory.online?subject=Student%20Query%20-%20TH3ORY%20Masterclass";
+                } else {
+                  setActive(item.id);
+                  setNavExtra({});
+                }
+                if (window.innerWidth < 768) setSidebar(false);
+              }}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group ${
                   isActive
                     ? isLight
