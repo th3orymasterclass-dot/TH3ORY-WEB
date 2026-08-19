@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Play, Pause, Volume2, VolumeX, Maximize, Radio, ShieldCheck, RefreshCw, AlertCircle, Settings, Camera, Video, ExternalLink } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { subscribeToLiveBroadcastState, fetchLiveBroadcastStateFromSupabase } from '../../services/supabaseService';
+import { WebRtcSubscriber } from '../../services/webRtcEngine';
 
 // Helper to dynamically load Hls.js script from CDN
 const loadHlsScript = () => {
@@ -31,9 +32,9 @@ const loadHlsScript = () => {
 
 export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
   const videoRef = useRef(null);
+  const rtcSubscriberRef = useRef(null);
   const hlsRef = useRef(null);
   const retryTimerRef = useRef(null);
-  const webcamImgRef = useRef(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -50,7 +51,7 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
     youtubeId: ''
   });
 
-  const [currentWebcamFrame, setCurrentWebcamFrame] = useState(null);
+  const [webcamStreamActive, setWebcamStreamActive] = useState(false);
 
   // Subscribe to live broadcast state updates from Supabase
   useEffect(() => {
@@ -79,25 +80,36 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
     };
   }, []);
 
-  // Subscribe to Realtime WebCam Frame Stream
+  // WebRTC Subscriber Engine for Direct HD Camera Streaming
   useEffect(() => {
-    if (isSupabaseConfigured && supabase) {
-      const channel = supabase.channel('th3ory_webcam_stream');
-      channel.on('broadcast', { event: 'webcam_frame' }, ({ payload }) => {
-        if (payload && payload.frame) {
-          setCurrentWebcamFrame(payload.frame);
-          setIsLive(true);
-          setHasError(false);
-        }
-      }).subscribe();
-
-      return () => {
-        try { supabase.removeChannel(channel); } catch {}
-      };
+    if (broadcastState.source !== 'webcam') {
+      if (rtcSubscriberRef.current) {
+        rtcSubscriberRef.current.destroy();
+        rtcSubscriberRef.current = null;
+      }
+      setWebcamStreamActive(false);
+      return;
     }
-  }, []);
 
-  // Candidate HLS URLs for automatic seamless fallback
+    const subscriber = new WebRtcSubscriber((remoteStream) => {
+      if (videoRef.current) {
+        videoRef.current.srcObject = remoteStream;
+        videoRef.current.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+        setWebcamStreamActive(true);
+        setIsLive(true);
+        setHasError(false);
+      }
+    });
+
+    rtcSubscriberRef.current = subscriber;
+
+    return () => {
+      subscriber.destroy();
+      rtcSubscriberRef.current = null;
+    };
+  }, [broadcastState.source]);
+
+  // Candidate HLS URLs for automatic seamless fallback (OBS RTMP)
   const candidateUrls = [
     streamUrl || 'https://stream.th3ory.online/live/th3ory_live_masterclass_key_2026.m3u8',
     'https://stream.th3ory.online/live/live.m3u8',
@@ -119,7 +131,7 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
     return () => clearInterval(interval);
   }, []);
 
-  // Initialize HLS.js Stream Engine dynamically with auto-recovery for OBS RTMP
+  // Initialize HLS.js Stream Engine dynamically for OBS RTMP Mode
   useEffect(() => {
     if (broadcastState.source !== 'obs_rtmp') return;
 
@@ -246,28 +258,32 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
   return (
     <div className="relative w-full aspect-video rounded-3xl overflow-hidden bg-slate-950 border border-amber-500/30 shadow-2xl group select-none">
       
-      {/* MODE 1: Direct WebCam Live Camera Feed */}
+      {/* MODE 1: Direct WebRTC HD WebCam Stream (Or Waiting Screen) */}
       {broadcastState.source === 'webcam' && (
-        currentWebcamFrame ? (
-          <img
-            ref={webcamImgRef}
-            src={currentWebcamFrame}
-            alt="TH3ORY Live WebCam Broadcast"
-            className="w-full h-full object-cover"
+        <>
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            className={`w-full h-full object-cover ${webcamStreamActive ? 'block' : 'hidden'}`}
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
+            onContextMenu={(e) => e.preventDefault()}
           />
-        ) : (
-          <div className="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center space-y-4 p-6 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center animate-pulse">
-              <Camera className="w-8 h-8" />
+          {!webcamStreamActive && (
+            <div className="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center space-y-4 p-6 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center animate-pulse">
+                <Camera className="w-8 h-8" />
+              </div>
+              <div>
+                <h4 className="text-white font-extrabold text-lg">WebRTC HD Camera Stream Connecting...</h4>
+                <p className="text-slate-400 text-xs mt-1 max-w-sm">
+                  Mentalist Sravan is live in the camera studio. Peer connection auto-connects in HD.
+                </p>
+              </div>
             </div>
-            <div>
-              <h4 className="text-white font-extrabold text-lg">WebCam Stream Launching</h4>
-              <p className="text-slate-400 text-xs mt-1 max-w-sm">
-                Mentalist Sravan is preparing the live webcam camera feed. Stream auto-displays upon camera launch.
-              </p>
-            </div>
-          </div>
-        )
+          )}
+        </>
       )}
 
       {/* MODE 2: Zoom / Google Meet Call Card */}
@@ -342,11 +358,11 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
       {/* Live Badge Overlay */}
       <div className="absolute top-4 left-4 z-20 flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-600/90 text-white text-xs font-black uppercase tracking-widest backdrop-blur-md shadow-lg border border-red-400/40 animate-pulse">
         <Radio className="w-4 h-4 animate-spin" />
-        <span>🔴 LIVE BROADCAST</span>
+        <span>🔴 LIVE BROADCAST ({broadcastState.source.toUpperCase()})</span>
       </div>
 
-      {/* Bottom Glassmorphism Control Bar (For Native Video Engine) */}
-      {broadcastState.source === 'obs_rtmp' && (
+      {/* Bottom Glassmorphism Control Bar */}
+      {(broadcastState.source === 'webcam' || broadcastState.source === 'obs_rtmp') && (
         <div className="absolute bottom-0 inset-x-0 z-20 p-4 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-between gap-4">
           <button
             onClick={togglePlay}
