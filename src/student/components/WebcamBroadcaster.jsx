@@ -1,15 +1,68 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Camera, CameraOff, Mic, MicOff, Monitor, Radio, Square, Play, ShieldCheck, Volume2, Settings } from 'lucide-react';
+import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 
 export default function WebcamBroadcaster({ isOnAir, onToggleOnAir }) {
   const localVideoRef = useRef(null);
+  const hiddenCanvasRef = useRef(null);
   const mediaStreamRef = useRef(null);
+  const frameIntervalRef = useRef(null);
+  const realtimeChannelRef = useRef(null);
 
   const [cameraActive, setCameraActive] = useState(true);
   const [micActive, setMicActive] = useState(true);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [devicePermissionError, setDevicePermissionError] = useState(null);
   const [streamStarted, setStreamStarted] = useState(false);
+
+  // Initialize Realtime Transmission Channel
+  useEffect(() => {
+    if (isSupabaseConfigured && supabase) {
+      realtimeChannelRef.current = supabase.channel('th3ory_webcam_stream');
+      realtimeChannelRef.current.subscribe();
+    }
+    return () => {
+      if (realtimeChannelRef.current) {
+        try { supabase.removeChannel(realtimeChannelRef.current); } catch {}
+      }
+    };
+  }, []);
+
+  // Frame Transmitter Loop (Transmits Live Camera Frames to All Student Dashboards)
+  useEffect(() => {
+    if (isOnAir) {
+      frameIntervalRef.current = setInterval(() => {
+        const video = localVideoRef.current;
+        const canvas = hiddenCanvasRef.current;
+        if (!video || !canvas || !cameraActive) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        // Draw current video frame to canvas at 640x360 resolution for fast bandwidth transmission
+        canvas.width = 640;
+        canvas.height = 360;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        const frameDataUrl = canvas.toDataURL('image/jpeg', 0.6);
+
+        // Transmit frame payload over Supabase Realtime channel
+        if (realtimeChannelRef.current) {
+          realtimeChannelRef.current.send({
+            type: 'broadcast',
+            event: 'webcam_frame',
+            payload: { frame: frameDataUrl, timestamp: Date.now() }
+          }).catch(() => {});
+        }
+      }, 350);
+    } else {
+      if (frameIntervalRef.current) clearInterval(frameIntervalRef.current);
+    }
+
+    return () => {
+      if (frameIntervalRef.current) clearInterval(frameIntervalRef.current);
+    };
+  }, [isOnAir, cameraActive]);
 
   // Start Camera Stream
   const startCamera = async () => {
@@ -47,7 +100,6 @@ export default function WebcamBroadcaster({ isOnAir, onToggleOnAir }) {
         audio: true
       });
 
-      // Keep audio track from microphone if available
       if (mediaStreamRef.current) {
         const audioTrack = mediaStreamRef.current.getAudioTracks()[0];
         if (audioTrack) screenStream.addTrack(audioTrack);
@@ -61,7 +113,6 @@ export default function WebcamBroadcaster({ isOnAir, onToggleOnAir }) {
       setIsScreenSharing(true);
       setCameraActive(true);
 
-      // Handle screen share stop from browser UI
       screenStream.getVideoTracks()[0].onended = () => {
         startCamera();
       };
@@ -102,6 +153,7 @@ export default function WebcamBroadcaster({ isOnAir, onToggleOnAir }) {
 
   return (
     <div className="bg-slate-900/90 border border-slate-800 p-6 rounded-3xl space-y-6 shadow-xl">
+      <canvas ref={hiddenCanvasRef} className="hidden" />
       
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-800 pb-4">

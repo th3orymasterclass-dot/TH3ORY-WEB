@@ -2095,6 +2095,86 @@ export function subscribeToStudentHabitTrackers(email, onTrackerChange) {
   }
 }
 
+// ─── Live Broadcast Global Realtime State Engine ────────────────────────────────
+export async function saveLiveBroadcastStateToSupabase(statePayload) {
+  if (!statePayload) return;
+  
+  // 1. Save to local storage for local tab sync
+  if (typeof window !== 'undefined') {
+    if (statePayload.isOnAir !== undefined) localStorage.setItem('th3ory_live_on_air', statePayload.isOnAir.toString());
+    if (statePayload.source) localStorage.setItem('th3ory_live_source', statePayload.source);
+    if (statePayload.zoomUrl !== undefined) localStorage.setItem('th3ory_live_zoom_url', statePayload.zoomUrl);
+    if (statePayload.youtubeId !== undefined) localStorage.setItem('th3ory_live_youtube_id', statePayload.youtubeId);
+    if (statePayload.info) localStorage.setItem('th3ory_live_info', JSON.stringify(statePayload.info));
+    window.dispatchEvent(new Event('th3ory_live_status_change'));
+  }
+
+  if (!isSupabaseConfigured || !supabase) return;
+
+  try {
+    const payloadString = JSON.stringify(statePayload);
+    await supabase.from('user_progress').upsert({
+      email: 'system_live_broadcast_state@th3ory.online',
+      lesson_id: 'live_broadcast_state',
+      notes: payloadString,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'email,lesson_id' });
+
+    // Broadcast live event over Supabase Realtime Channel
+    const channel = supabase.channel('th3ory_live_global_channel');
+    await channel.send({
+      type: 'broadcast',
+      event: 'th3ory_live_state_update',
+      payload: statePayload
+    });
+  } catch (err) {
+    console.error('Error saving live broadcast state:', err);
+  }
+}
+
+export async function fetchLiveBroadcastStateFromSupabase() {
+  if (!isSupabaseConfigured || !supabase) return null;
+  try {
+    const { data } = await supabase
+      .from('user_progress')
+      .select('notes')
+      .eq('email', 'system_live_broadcast_state@th3ory.online')
+      .eq('lesson_id', 'live_broadcast_state')
+      .single();
+
+    if (data && data.notes) {
+      return JSON.parse(data.notes);
+    }
+  } catch {}
+  return null;
+}
+
+export function subscribeToLiveBroadcastState(onStateChange) {
+  if (!isSupabaseConfigured || !supabase) return () => {};
+  try {
+    const channel = supabase.channel('th3ory_live_global_channel');
+    channel
+      .on('broadcast', { event: 'th3ory_live_state_update' }, ({ payload }) => {
+        if (payload && onStateChange) onStateChange(payload);
+      })
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'user_progress', filter: 'lesson_id=eq.live_broadcast_state' },
+        () => {
+          fetchLiveBroadcastStateFromSupabase().then(res => { if (res && onStateChange) onStateChange(res); });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      try { supabase.removeChannel(channel); } catch {}
+    };
+  } catch {
+    return () => {};
+  }
+}
+
+
 
 
 

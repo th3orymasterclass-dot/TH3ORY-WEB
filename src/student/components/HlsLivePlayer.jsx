@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Play, Pause, Volume2, VolumeX, Maximize, Radio, ShieldCheck, RefreshCw, AlertCircle, Settings } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Maximize, Radio, ShieldCheck, RefreshCw, AlertCircle, Settings, Camera, Video, ExternalLink } from 'lucide-react';
+import { supabase, isSupabaseConfigured } from '../../lib/supabase';
+import { subscribeToLiveBroadcastState, fetchLiveBroadcastStateFromSupabase } from '../../services/supabaseService';
 
 // Helper to dynamically load Hls.js script from CDN
 const loadHlsScript = () => {
@@ -31,6 +33,7 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
   const retryTimerRef = useRef(null);
+  const webcamImgRef = useRef(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -39,39 +42,59 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
   const [errorMessage, setErrorMessage] = useState('');
   const [activeUrlIndex, setActiveUrlIndex] = useState(0);
 
-  // Live Stream Source Configuration (Oracle RTMP HLS / YouTube Live / Twitch / Custom HLS)
-  const [liveSource, setLiveSource] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('th3ory_live_source') || 'oracle_rtmp';
-    }
-    return 'oracle_rtmp';
+  // Global Realtime Broadcast State
+  const [broadcastState, setBroadcastState] = useState({
+    isOnAir: false,
+    source: 'webcam',
+    zoomUrl: '',
+    youtubeId: ''
   });
 
-  const [youtubeId, setYoutubeId] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('th3ory_live_youtube_id') || '';
-    }
-    return '';
-  });
+  const [currentWebcamFrame, setCurrentWebcamFrame] = useState(null);
 
-  const [twitchChannel, setTwitchChannel] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('th3ory_live_twitch_channel') || '';
-    }
-    return '';
-  });
-
-  // Listen for broadcast source changes from admin panel
+  // Subscribe to live broadcast state updates from Supabase
   useEffect(() => {
-    const handleStatusChange = () => {
+    fetchLiveBroadcastStateFromSupabase().then(state => {
+      if (state) setBroadcastState(prev => ({ ...prev, ...state }));
+    });
+
+    const unsubscribe = subscribeToLiveBroadcastState(newState => {
+      if (newState) setBroadcastState(prev => ({ ...prev, ...newState }));
+    });
+
+    const handleLocalStatus = () => {
       if (typeof window !== 'undefined') {
-        setLiveSource(localStorage.getItem('th3ory_live_source') || 'oracle_rtmp');
-        setYoutubeId(localStorage.getItem('th3ory_live_youtube_id') || '');
-        setTwitchChannel(localStorage.getItem('th3ory_live_twitch_channel') || '');
+        const isOnAir = localStorage.getItem('th3ory_live_on_air') === 'true';
+        const source = localStorage.getItem('th3ory_live_source') || 'webcam';
+        const zoomUrl = localStorage.getItem('th3ory_live_zoom_url') || '';
+        const youtubeId = localStorage.getItem('th3ory_live_youtube_id') || '';
+        setBroadcastState(prev => ({ ...prev, isOnAir, source, zoomUrl, youtubeId }));
       }
     };
-    window.addEventListener('th3ory_live_status_change', handleStatusChange);
-    return () => window.removeEventListener('th3ory_live_status_change', handleStatusChange);
+    window.addEventListener('th3ory_live_status_change', handleLocalStatus);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener('th3ory_live_status_change', handleLocalStatus);
+    };
+  }, []);
+
+  // Subscribe to Realtime WebCam Frame Stream
+  useEffect(() => {
+    if (isSupabaseConfigured && supabase) {
+      const channel = supabase.channel('th3ory_webcam_stream');
+      channel.on('broadcast', { event: 'webcam_frame' }, ({ payload }) => {
+        if (payload && payload.frame) {
+          setCurrentWebcamFrame(payload.frame);
+          setIsLive(true);
+          setHasError(false);
+        }
+      }).subscribe();
+
+      return () => {
+        try { supabase.removeChannel(channel); } catch {}
+      };
+    }
   }, []);
 
   // Candidate HLS URLs for automatic seamless fallback
@@ -96,9 +119,9 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
     return () => clearInterval(interval);
   }, []);
 
-  // Initialize HLS.js Stream Engine dynamically with auto-recovery
+  // Initialize HLS.js Stream Engine dynamically with auto-recovery for OBS RTMP
   useEffect(() => {
-    if (liveSource !== 'oracle_rtmp' && liveSource !== 'custom_hls') return;
+    if (broadcastState.source !== 'obs_rtmp') return;
 
     let isMounted = true;
     const video = videoRef.current;
@@ -193,7 +216,7 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
         hlsRef.current.destroy();
       }
     };
-  }, [currentStreamUrl, activeUrlIndex, liveSource]);
+  }, [currentStreamUrl, activeUrlIndex, broadcastState.source]);
 
   const togglePlay = () => {
     if (!videoRef.current) return;
@@ -220,36 +243,81 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
     }
   };
 
-  const reloadStream = () => {
-    setHasError(false);
-    setActiveUrlIndex(0);
-    if (hlsRef.current && candidateUrls[0]) {
-      hlsRef.current.loadSource(candidateUrls[0]);
-      if (videoRef.current) videoRef.current.play().catch(() => {});
-    }
-  };
-
   return (
     <div className="relative w-full aspect-video rounded-3xl overflow-hidden bg-slate-950 border border-amber-500/30 shadow-2xl group select-none">
       
-      {/* YouTube Live Embed Fallback Protocol */}
-      {liveSource === 'youtube' && youtubeId ? (
+      {/* MODE 1: Direct WebCam Live Camera Feed */}
+      {broadcastState.source === 'webcam' && (
+        currentWebcamFrame ? (
+          <img
+            ref={webcamImgRef}
+            src={currentWebcamFrame}
+            alt="TH3ORY Live WebCam Broadcast"
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center space-y-4 p-6 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center animate-pulse">
+              <Camera className="w-8 h-8" />
+            </div>
+            <div>
+              <h4 className="text-white font-extrabold text-lg">WebCam Stream Launching</h4>
+              <p className="text-slate-400 text-xs mt-1 max-w-sm">
+                Mentalist Sravan is preparing the live webcam camera feed. Stream auto-displays upon camera launch.
+              </p>
+            </div>
+          </div>
+        )
+      )}
+
+      {/* MODE 2: Zoom / Google Meet Call Card */}
+      {broadcastState.source === 'zoom' && (
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-950 via-slate-950 to-slate-900 flex flex-col items-center justify-center p-6 text-center space-y-5">
+          <div className="w-16 h-16 rounded-2xl bg-blue-600/20 border border-blue-500/40 text-blue-400 flex items-center justify-center shadow-lg shadow-blue-500/20 animate-pulse">
+            <Video className="w-8 h-8" />
+          </div>
+          <div className="space-y-1">
+            <span className="px-3 py-1 rounded-full bg-blue-600 text-white font-black text-[10px] uppercase tracking-widest animate-pulse">
+              🔴 LIVE ZOOM MASTERCLASS ON AIR
+            </span>
+            <h3 className="text-white font-black text-xl sm:text-2xl tracking-tight pt-2">
+              Interactive Zoom Video Meeting Active
+            </h3>
+            <p className="text-slate-400 text-xs max-w-md mx-auto">
+              Mentalist Sravan has launched an interactive Zoom / Google Meet session for real-time cognitive demonstrations and student Q&A.
+            </p>
+          </div>
+
+          {broadcastState.zoomUrl ? (
+            <a
+              href={broadcastState.zoomUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="px-8 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-xl shadow-blue-600/30 flex items-center gap-2 cursor-pointer"
+            >
+              <ExternalLink className="w-4 h-4" /> JOIN LIVE ZOOM MASTERCLASS NOW
+            </a>
+          ) : (
+            <div className="text-xs text-blue-400 font-bold bg-blue-500/10 border border-blue-500/30 px-4 py-2 rounded-xl">
+              Zoom Meeting Link Initializing...
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* MODE 3: YouTube Live Embed */}
+      {broadcastState.source === 'youtube' && broadcastState.youtubeId && (
         <iframe
-          src={`https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&live=1&modestbranding=1&rel=0`}
+          src={`https://www.youtube-nocookie.com/embed/${broadcastState.youtubeId}?autoplay=1&live=1&modestbranding=1&rel=0`}
           title="TH3ORY Live Masterclass Stream"
           className="w-full h-full border-0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowFullScreen
         />
-      ) : liveSource === 'twitch' && twitchChannel ? (
-        <iframe
-          src={`https://player.twitch.tv/?channel=${twitchChannel}&parent=${typeof window !== 'undefined' ? window.location.hostname : 'th3ory.online'}&autoplay=true`}
-          title="TH3ORY Twitch Live Stream"
-          className="w-full h-full border-0"
-          allowFullScreen
-        />
-      ) : (
-        /* Native Low-Latency HLS Video Engine */
+      )}
+
+      {/* MODE 4: OBS RTMP HLS Player */}
+      {broadcastState.source === 'obs_rtmp' && (
         <video
           ref={videoRef}
           playsInline
@@ -277,31 +345,8 @@ export default function HlsLivePlayer({ streamUrl, profile, isLight }) {
         <span>🔴 LIVE BROADCAST</span>
       </div>
 
-      {/* Stream Error / Offline Overlay with Auto-Reconnect Heartbeat */}
-      {hasError && liveSource === 'oracle_rtmp' && (
-        <div className="absolute inset-0 z-30 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center space-y-4">
-          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center justify-center animate-pulse">
-            <Radio className="w-7 h-7" />
-          </div>
-          <div>
-            <h4 className="text-white font-extrabold text-lg">Broadcast Waiting or Reconnecting</h4>
-            <p className="text-slate-400 text-xs mt-1 max-w-sm">
-              {errorMessage || 'Mentalist Sravan is preparing the live broadcast in OBS Studio. Stream auto-connects upon launch.'}
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={reloadStream}
-              className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-lg cursor-pointer"
-            >
-              <RefreshCw className="w-4 h-4" /> Manual Reconnect
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Bottom Glassmorphism Control Bar (For Native Video Engine) */}
-      {liveSource === 'oracle_rtmp' && (
+      {broadcastState.source === 'obs_rtmp' && (
         <div className="absolute bottom-0 inset-x-0 z-20 p-4 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-between gap-4">
           <button
             onClick={togglePlay}

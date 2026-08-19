@@ -4,7 +4,7 @@ import {
   Play, Square, Calendar, Clock, Send, Trash2, HelpCircle, RefreshCw,
   Zap, Server, AlertTriangle, Check, Globe, Wifi, Lock, Camera, ExternalLink, Link as LinkIcon
 } from 'lucide-react';
-import { saveQueryToSupabase, fetchQueriesFromSupabase } from '../../services/supabaseService';
+import { saveQueryToSupabase, fetchQueriesFromSupabase, saveLiveBroadcastStateToSupabase } from '../../services/supabaseService';
 import WebcamBroadcaster from '../../student/components/WebcamBroadcaster';
 
 export default function LiveBroadcastPanel() {
@@ -71,6 +71,17 @@ export default function LiveBroadcastPanel() {
   const [replyText, setReplyText] = useState({});
   const [sendingId, setSendingId] = useState(null);
 
+  const syncLiveState = (overrides = {}) => {
+    const state = {
+      isOnAir: overrides.isOnAir !== undefined ? overrides.isOnAir : isOnAir,
+      source: overrides.source || broadcastSource,
+      zoomUrl: overrides.zoomUrl !== undefined ? overrides.zoomUrl : zoomUrl,
+      youtubeId: overrides.youtubeId !== undefined ? overrides.youtubeId : youtubeId,
+      info: overrides.info || broadcastInfo
+    };
+    saveLiveBroadcastStateToSupabase(state);
+  };
+
   const loadQueries = () => {
     fetchQueriesFromSupabase().then(data => {
       if (Array.isArray(data)) {
@@ -87,34 +98,22 @@ export default function LiveBroadcastPanel() {
 
   const handleToggleOnAir = (status) => {
     setIsOnAir(status);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('th3ory_live_on_air', status.toString());
-      window.dispatchEvent(new Event('th3ory_live_status_change'));
-    }
+    syncLiveState({ isOnAir: status });
   };
 
   const handleSourceChange = (newSource) => {
     setBroadcastSource(newSource);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('th3ory_live_source', newSource);
-      window.dispatchEvent(new Event('th3ory_live_status_change'));
-    }
+    syncLiveState({ source: newSource });
   };
 
   const handleZoomUrlChange = (val) => {
     setZoomUrl(val);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('th3ory_live_zoom_url', val);
-      window.dispatchEvent(new Event('th3ory_live_status_change'));
-    }
+    syncLiveState({ zoomUrl: val });
   };
 
   const handleYoutubeIdChange = (ytVal) => {
     setYoutubeId(ytVal);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('th3ory_live_youtube_id', ytVal);
-      window.dispatchEvent(new Event('th3ory_live_status_change'));
-    }
+    syncLiveState({ youtubeId: ytVal });
   };
 
   const handleSaveInfo = (e) => {
