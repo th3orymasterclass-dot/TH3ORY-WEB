@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  LayoutDashboard, BookOpen, ShoppingBag, Star, HelpCircle, Mail,
+  LayoutDashboard, BookOpen, ShoppingBag, Star, HelpCircle, Mail, Radio,
   LogOut, ChevronRight, Menu, X, GraduationCap, Award, ExternalLink, Bookmark, ShieldAlert,
   Sun, Moon, Zap
 } from 'lucide-react';
@@ -9,6 +9,7 @@ import CoursePanel   from './panels/CoursePanel';
 import ShopPanel     from './panels/ShopPanel';
 import ReviewPanel   from './panels/ReviewPanel';
 import QueryPanel    from './panels/QueryPanel';
+import LiveSessionPanel from './panels/LiveSessionPanel';
 
 import CertificatePanel from './panels/CertificatePanel';
 import CharacterCodePortal from './components/CharacterCodePortal';
@@ -25,6 +26,7 @@ import {
 const NAV = [
   { id: 'home',           label: 'Dashboard',         icon: LayoutDashboard },
   { id: 'course',         label: 'My Course',         icon: BookOpen },
+  { id: 'live_session',   label: 'Live Masterclasses', icon: Radio },
   { id: 'character_code', label: 'Character Code™',   icon: Zap },
   { id: 'queries',        label: 'Query Sessions',    icon: HelpCircle, flagKey: 'ENABLE_STUDENT_COMMUNITY' },
   { id: 'certificate',    label: 'Certificate',       icon: Award },
@@ -191,6 +193,7 @@ export default function StudentApp({ profile: initialProfile, onLogout }) {
     switch (active) {
       case 'home':        return <DashboardHome profile={activeProfile} onNavigate={navigate} themeMode={themeMode}/>;
       case 'course':      return <CoursePanel profile={activeProfile} initialLevelId={navExtra.levelId} initialLessonId={navExtra.lessonId} onNavigate={navigate} themeMode={themeMode}/>;
+      case 'live_session': return <LiveSessionPanel profile={activeProfile} themeMode={themeMode}/>;
       case 'character_code': return <CharacterCodePortal profile={activeProfile} themeMode={themeMode} completedLevelsCount={completedLevelsCount} onNavigate={navigate} onClose={() => setActive('home')} />;
       case 'queries':     return <QueryPanel profile={activeProfile} themeMode={themeMode}/>;
       case 'certificate': return <CertificatePanel profile={activeProfile} completedCount={done} totalLessons={totalLessons} onNavigate={navigate} themeMode={themeMode}/>;
