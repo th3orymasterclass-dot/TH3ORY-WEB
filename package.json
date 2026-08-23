@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "deploy": "vercel deploy --prod",
+    "deploy": "vercel deploy --yes --prod",
     "test": "node scripts/test-all-systems.js"
   },
   "dependencies": {

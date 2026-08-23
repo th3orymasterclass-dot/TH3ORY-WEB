@@ -1,4 +1,8 @@
 {
+  "alias": [
+    "th3ory.online",
+    "www.th3ory.online"
+  ],
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
