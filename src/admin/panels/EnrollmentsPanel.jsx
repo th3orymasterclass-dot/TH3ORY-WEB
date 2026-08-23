@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { ShoppingBag, Search, Filter, Calendar, CreditCard, User, Mail, Phone, MapPin, CheckCircle, Clock, FileText, X, DollarSign } from 'lucide-react';
 
-export default function EnrollmentsPanel({ enrollments = [] }) {
+export default function EnrollmentsPanel({ enrollments = [], themeMode = 'dark' }) {
   const [search, setSearch] = useState('');
   const [gatewayFilter, setGatewayFilter] = useState('ALL');
   const [selectedEnrollment, setSelectedEnrollment] = useState(null);
+
+  const isDark = themeMode === 'dark';
 
   // Financial calculations
   const totalCount = enrollments.length;
@@ -40,190 +42,176 @@ export default function EnrollmentsPanel({ enrollments = [] }) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-2xl font-black text-white">Student Enrollments & Sales</h2>
-            <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-mono font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
+            <h2 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Student Enrollments & Sales</h2>
+            <span className={`text-xs font-mono font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1.5 border ${
+              isDark ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+            }`}>
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> LIVE REALTIME DB
             </span>
           </div>
-          <p className="text-slate-500 text-sm mt-1">Real-time student transactions synced directly from Supabase</p>
+          <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Real-time student transactions synced directly from Supabase</p>
         </div>
       </div>
 
-      {/* Metrics Row */}
+      {/* Stats Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-          <div className="flex items-center justify-between text-slate-400 text-xs uppercase font-bold tracking-wider mb-2">
-            <span>Total Revenue (INR)</span>
-            <span className="text-amber-400 font-bold">₹</span>
-          </div>
-          <div className="text-3xl font-black text-amber-400">
-            ₹{totalRevenueINR.toLocaleString('en-IN')}
-          </div>
-          <p className="text-[11px] text-slate-500 mt-1">From INR transactions</p>
+        <div className={`border rounded-2xl p-5 shadow-xs ${
+          isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200'
+        }`}>
+          <p className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total Verified Enrollments</p>
+          <p className={`text-3xl font-black font-mono mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>{totalCount}</p>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-          <div className="flex items-center justify-between text-slate-400 text-xs uppercase font-bold tracking-wider mb-2">
-            <span>Total Revenue (USD)</span>
-            <DollarSign className="w-4 h-4 text-emerald-400" />
-          </div>
-          <div className="text-3xl font-black text-emerald-400">
-            ${totalRevenueUSD.toLocaleString()} USD
-          </div>
-          <p className="text-[11px] text-slate-500 mt-1">From USD transactions</p>
+        <div className={`border rounded-2xl p-5 shadow-xs ${
+          isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200'
+        }`}>
+          <p className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>INR Revenue (Razorpay)</p>
+          <p className="text-3xl font-black font-mono mt-1 text-emerald-600">₹{totalRevenueINR.toLocaleString('en-IN')}</p>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-          <div className="flex items-center justify-between text-slate-400 text-xs uppercase font-bold tracking-wider mb-2">
-            <span>Enrolled Students</span>
-            <User className="w-4 h-4 text-purple-400" />
-          </div>
-          <div className="text-3xl font-black text-purple-400">
-            {totalCount}
-          </div>
-          <p className="text-[11px] text-slate-500 mt-1">Confirmed course purchases</p>
+        <div className={`border rounded-2xl p-5 shadow-xs ${
+          isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200'
+        }`}>
+          <p className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>USD Revenue (Stripe/PayPal)</p>
+          <p className="text-3xl font-black font-mono mt-1 text-emerald-600">${totalRevenueUSD.toLocaleString()} USD</p>
         </div>
       </div>
 
-      {/* Filter & Search Bar */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+      {/* Filters & Search */}
+      <div className={`border rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs ${
+        isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200'
+      }`}>
+        <div className="relative w-full sm:w-80">
+          <Search className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
           <input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by student name, email, order ID, or code..."
-            className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search by name, email, order ID..."
+            className={`w-full border rounded-xl pl-9 pr-4 py-2 text-xs transition-all ${
+              isDark ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-500' : 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400'
+            }`}
           />
         </div>
 
-        <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2">
-          <Filter className="w-4 h-4 text-slate-400" />
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Filter className={`w-4 h-4 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
           <select
             value={gatewayFilter}
-            onChange={(e) => setGatewayFilter(e.target.value)}
-            className="bg-transparent text-xs text-white font-semibold focus:outline-none cursor-pointer"
+            onChange={e => setGatewayFilter(e.target.value)}
+            className={`border rounded-xl px-3 py-2 text-xs transition-all ${
+              isDark ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+            }`}
           >
-            <option value="ALL" className="bg-slate-900 text-white">All Gateways</option>
-            <option value="RAZORPAY" className="bg-slate-900 text-white">Razorpay</option>
-            <option value="STRIPE" className="bg-slate-900 text-white">Stripe</option>
-            <option value="PAYPAL" className="bg-slate-900 text-white">PayPal</option>
+            <option value="ALL">All Gateways</option>
+            <option value="RAZORPAY">Razorpay</option>
+            <option value="STRIPE">Stripe</option>
+            <option value="PAYPAL">PayPal</option>
           </select>
         </div>
       </div>
 
-      {/* Enrollments Table */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-950 border-b border-slate-800 text-slate-400 text-xs uppercase font-bold tracking-wider">
-              <tr>
-                <th className="py-3.5 px-4">Order ID & Date</th>
-                <th className="py-3.5 px-4">Student Details</th>
-                <th className="py-3.5 px-4">Plan Name</th>
-                <th className="py-3.5 px-4">Amount Paid</th>
-                <th className="py-3.5 px-4">Gateway</th>
-                <th className="py-3.5 px-4 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/60">
-              {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-8 text-center text-slate-500 text-sm">
-                    No enrollments found matching search filters.
-                  </td>
+      {/* Table */}
+      <div className={`border rounded-2xl p-5 shadow-xs ${
+        isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200'
+      }`}>
+        {filtered.length === 0 ? (
+          <div className="text-center py-12 text-slate-400 text-xs font-mono">
+            No enrollment records match your search query.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className={`border-b uppercase font-mono text-[10px] ${
+                  isDark ? 'border-slate-800 text-slate-400' : 'border-slate-200 text-slate-500'
+                }`}>
+                  <th className="p-3">Student</th>
+                  <th className="p-3">Email</th>
+                  <th className="p-3">Enrollment Code</th>
+                  <th className="p-3">Amount</th>
+                  <th className="p-3">Gateway</th>
+                  <th className="p-3">Date</th>
+                  <th className="p-3 text-right">Details</th>
                 </tr>
-              ) : (
-                filtered.map((item, idx) => (
-                  <tr key={item.id || idx} className="hover:bg-slate-800/40 transition-colors">
-                    <td className="py-3.5 px-4">
-                      <div className="font-mono text-xs font-bold text-amber-400">{item.order_id || 'ORD-LIVE'}</div>
-                      <div className="text-[11px] text-slate-500">
-                        {item.created_at ? new Date(item.created_at).toLocaleString() : 'Recent'}
-                      </div>
+              </thead>
+              <tbody className={`divide-y ${isDark ? 'divide-slate-800/60 text-slate-300' : 'divide-slate-200 text-slate-700'}`}>
+                {filtered.map((item) => (
+                  <tr key={item.id || item.order_id} className={isDark ? 'hover:bg-slate-800/30 transition-colors' : 'hover:bg-slate-50 transition-colors'}>
+                    <td className={`p-3 font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{item.name || 'Anonymous Student'}</td>
+                    <td className="p-3 font-mono text-indigo-600 font-semibold">{item.email}</td>
+                    <td className="p-3 font-mono text-amber-500 font-bold">{item.enrollment_code || item.order_id?.slice(0, 8) || 'N/A'}</td>
+                    <td className="p-3 font-mono font-bold text-emerald-600">
+                      {item.currency === 'INR' ? `₹${item.amount_paid}` : `$${item.amount_paid} USD`}
                     </td>
-                    <td className="py-3.5 px-4">
-                      <div className="font-bold text-white text-sm">{item.name || 'Anonymous Student'}</div>
-                      <div className="text-xs text-slate-400">{item.email}</div>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <span className="text-slate-300 font-medium text-xs bg-slate-950 border border-slate-800 px-2.5 py-1 rounded-lg">
-                        {item.plan_name || 'TH3ORY Masterclass'}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 font-bold text-emerald-400 font-mono">
-                      {item.currency === 'INR' ? '₹' : '$'}{Number(item.amount_paid || 0).toLocaleString('en-IN')} {item.currency || 'USD'}
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border uppercase ${
-                        (item.gateway || '').toLowerCase() === 'razorpay'
-                          ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
-                          : 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30'
+                    <td className="p-3">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase border ${
+                        item.gateway === 'Razorpay' || item.gateway === 'RAZORPAY'
+                          ? 'bg-blue-500/20 text-blue-600 border-blue-500/30'
+                          : 'bg-purple-500/20 text-purple-600 border-purple-500/30'
                       }`}>
                         {item.gateway || 'Razorpay'}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 text-right">
+                    <td className="p-3 font-mono text-slate-500">
+                      {new Date(item.enrolled_at || item.created_at || Date.now()).toLocaleDateString()}
+                    </td>
+                    <td className="p-3 text-right">
                       <button
                         onClick={() => setSelectedEnrollment(item)}
-                        className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold border border-slate-700 transition-all"
+                        className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] rounded-lg transition-colors cursor-pointer"
                       >
-                        Details
+                        View Full
                       </button>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
-      {/* Enrollment Details Popup Modal */}
+      {/* Details Modal */}
       {selectedEnrollment && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-6 space-y-5 shadow-2xl relative">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-              <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-amber-400" />
-                <h3 className="text-lg font-bold text-white">Enrollment Record Details</h3>
-              </div>
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className={`border rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl ${
+            isDark ? 'bg-slate-900 border-indigo-500/40' : 'bg-white border-indigo-200'
+          }`}>
+            <div className="flex items-center justify-between border-b pb-3 border-slate-700/50">
+              <h3 className={`text-sm font-bold flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                <FileText className="w-4 h-4 text-indigo-500" />
+                Student Enrollment Receipt
+              </h3>
               <button
                 onClick={() => setSelectedEnrollment(null)}
-                className="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white"
+                className={`p-1 rounded-lg ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="space-y-3 text-xs font-mono">
-              {[
-                ['Order ID', selectedEnrollment.order_id],
-                ['Student Name', selectedEnrollment.name],
-                ['Email', selectedEnrollment.email],
-                ['Phone', selectedEnrollment.phone || 'N/A'],
-                ['Country', selectedEnrollment.country || 'N/A'],
-                ['Profession', selectedEnrollment.profession || 'N/A'],
-                ['Plan', selectedEnrollment.plan_name],
-                ['Amount Paid', `${selectedEnrollment.currency === 'INR' ? '₹' : '$'}${selectedEnrollment.amount_paid} ${selectedEnrollment.currency}`],
-                ['Gateway', selectedEnrollment.gateway],
-                ['Unique Code', selectedEnrollment.enrollment_code],
-                ['Date Enrolled', selectedEnrollment.created_at ? new Date(selectedEnrollment.created_at).toLocaleString() : 'N/A'],
-              ].map(([k, v]) => (
-                <div key={k} className="flex justify-between py-2 border-b border-slate-800/60 last:border-0">
-                  <span className="text-slate-500">{k}:</span>
-                  <span className="text-white font-semibold text-right truncate max-w-[240px]">{v}</span>
-                </div>
-              ))}
+            <div className={`p-4 rounded-xl border font-mono text-xs space-y-2 ${
+              isDark ? 'bg-slate-950 border-slate-800 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-800'
+            }`}>
+              <p><strong className="text-slate-500">Student Name:</strong> {selectedEnrollment.name}</p>
+              <p><strong className="text-slate-500">Student Email:</strong> {selectedEnrollment.email}</p>
+              <p><strong className="text-slate-500">Phone:</strong> {selectedEnrollment.phone || 'N/A'}</p>
+              <p><strong className="text-slate-500">Profession:</strong> {selectedEnrollment.profession || 'N/A'}</p>
+              <p><strong className="text-slate-500">Order ID:</strong> {selectedEnrollment.order_id || 'N/A'}</p>
+              <p><strong className="text-slate-500">Payment Gateway:</strong> {selectedEnrollment.gateway || 'Razorpay'}</p>
+              <p><strong className="text-slate-500">Amount Paid:</strong> {selectedEnrollment.currency === 'INR' ? `₹${selectedEnrollment.amount_paid}` : `$${selectedEnrollment.amount_paid} USD`}</p>
+              <p><strong className="text-slate-500">Enrollment Date:</strong> {new Date(selectedEnrollment.enrolled_at || selectedEnrollment.created_at || Date.now()).toLocaleString()}</p>
             </div>
 
-            <button
-              onClick={() => setSelectedEnrollment(null)}
-              className="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs uppercase"
-            >
-              Close
-            </button>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setSelectedEnrollment(null)}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl cursor-pointer"
+              >
+                Close Receipt
+              </button>
+            </div>
           </div>
         </div>
       )}

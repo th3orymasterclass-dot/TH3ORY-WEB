@@ -3,13 +3,20 @@ import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import AdminApp   from './admin/AdminApp.jsx';
 import AdminLogin from './admin/AdminLogin.jsx';
+import TeamApp    from './team/TeamApp.jsx';
+import TeamLogin  from './team/TeamLogin.jsx';
 import StudentApp   from './student/StudentApp.jsx';
 import StudentLogin from './student/StudentLogin.jsx';
 import EnrollmentPage from './components/EnrollmentPage.jsx';
+import EnterprisePage from './components/EnterprisePage.jsx';
+import PrivacyPolicyPage from './components/PrivacyPolicyPage.jsx';
+import AmbassadorLandingPage from './components/AmbassadorLandingPage.jsx';
+import AmbassadorPortal from './components/AmbassadorPortal.jsx';
 import CertificateVerification from './components/CertificateVerification.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import NotFoundPage from './components/NotFoundPage.jsx';
 import { FeatureFlagProvider } from './context/FeatureFlagContext.jsx';
+import { UIStatusProvider } from './context/UIStatusContext.jsx';
 import { Analytics } from '@vercel/analytics/react';
 import './index.css';
 
@@ -19,9 +26,14 @@ function Root() {
     const p = (window.location.pathname || '').toLowerCase();
 
     if (h.includes('admin') || p.includes('admin')) return 'admin';
+    if (h.includes('team') || p.includes('team')) return 'team';
     if (h.includes('student') || p.includes('student')) return 'student';
     if (h.includes('enroll') || p.includes('enroll')) return 'enroll';
     if (h.includes('verify') || p.includes('verify')) return 'verify';
+    if (h.includes('enterprise') || p.includes('enterprise')) return 'enterprise';
+    if (h.includes('privacy') || p.includes('privacy')) return 'privacy';
+    if (h.includes('ambassador-portal') || p.includes('ambassador-portal') || h.includes('ambassador-dashboard')) return 'ambassador-portal';
+    if (h.includes('ambassador') || p.includes('ambassador')) return 'ambassador';
     if (h.includes('404')) return '404';
     return 'public';
   };
@@ -30,6 +42,9 @@ function Root() {
 
   const [adminAuthed,   setAdminAuthed]   = useState(() => (
     sessionStorage.getItem('th3ory_admin_auth') === '1' || localStorage.getItem('th3ory_admin_auth') === '1'
+  ));
+  const [teamAuthed,    setTeamAuthed]    = useState(() => (
+    sessionStorage.getItem('th3ory_team_auth') === '1' || localStorage.getItem('th3ory_team_auth') === '1'
   ));
   const [studentProfile, setStudentProfile] = useState(() => {
     try {
@@ -75,6 +90,18 @@ function Root() {
     }}/>;
   }
 
+  // ── Team Portal ────────────────────────────────────────────────────────────
+  if (view === 'team') {
+    if (!teamAuthed) return <TeamLogin onAuthenticated={() => setTeamAuthed(true)}/>;
+    return <TeamApp onLogout={() => {
+      sessionStorage.removeItem('th3ory_team_auth');
+      localStorage.removeItem('th3ory_team_auth');
+      setTeamAuthed(false);
+      window.location.hash = '';
+      setView('public');
+    }}/>;
+  }
+
   // ── Student ────────────────────────────────────────────────────────────────
   if (view === 'student') {
     if (!studentProfile) {
@@ -108,6 +135,26 @@ function Root() {
     return <EnrollmentPage onBack={() => { window.location.hash = ''; setView('public'); }} />;
   }
 
+  // ── Enterprise Page ────────────────────────────────────────────────────────
+  if (view === 'enterprise') {
+    return <EnterprisePage onBack={() => { window.location.hash = ''; setView('public'); }} />;
+  }
+
+  // ── Privacy Policy Page ──────────────────────────────────────────────────
+  if (view === 'privacy') {
+    return <PrivacyPolicyPage onBack={() => { window.location.hash = ''; setView('public'); }} />;
+  }
+
+  // ── Campus Ambassador Public Recruitment Page ──────────────────────────────
+  if (view === 'ambassador') {
+    return <AmbassadorLandingPage />;
+  }
+
+  // ── Dedicated Campus Ambassador Portal Dashboard ────────────────────────────
+  if (view === 'ambassador-portal') {
+    return <AmbassadorPortal />;
+  }
+
   // ── Certificate Verification ────────────────────────────────────────────────
   if (view === 'verify') {
     const hash = window.location.hash || '';
@@ -129,8 +176,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>
       <FeatureFlagProvider>
-        <Root/>
-        <Analytics/>
+        <UIStatusProvider>
+          <Root/>
+          <Analytics/>
+        </UIStatusProvider>
       </FeatureFlagProvider>
     </ErrorBoundary>
   </React.StrictMode>

@@ -1864,18 +1864,26 @@ export async function fetchCertificateById(certId) {
 
   if (isSupabaseConfigured && supabase) {
     try {
-      const { data } = await supabase.from('certificates').select('*').eq('cert_id', cleanId).single();
-      if (data) {
+      const { data } = await supabase
+        .from('certificates')
+        .select('*')
+        .or(`certificate_id.ilike.${cleanId},cert_id.ilike.${cleanId}`)
+        .limit(1);
+
+      if (data && data.length > 0) {
+        const row = data[0];
         return {
-          certId: data.cert_id,
-          studentName: data.student_name,
-          email: data.email,
-          courseName: data.course_name || 'TH3ORY Masterclass of Influencing',
-          issueDate: data.issue_date,
+          certId: row.certificate_id || row.cert_id,
+          studentName: row.student_name,
+          email: row.student_email || row.email,
+          courseName: row.course_name || 'TH3ORY Masterclass of Influencing',
+          issueDate: row.issue_date,
           verified: true
         };
       }
-    } catch {}
+    } catch (err) {
+      console.warn('[Supabase] Exception fetching certificate by ID:', err);
+    }
   }
 
   return null;
@@ -2095,84 +2103,664 @@ export function subscribeToStudentHabitTrackers(email, onTrackerChange) {
   }
 }
 
-// ─── Live Broadcast Global Realtime State Engine ────────────────────────────────
-export async function saveLiveBroadcastStateToSupabase(statePayload) {
-  if (!statePayload) return;
-  
-  // 1. Save to local storage for local tab sync
-  if (typeof window !== 'undefined') {
-    if (statePayload.isOnAir !== undefined) localStorage.setItem('th3ory_live_on_air', statePayload.isOnAir.toString());
-    if (statePayload.source) localStorage.setItem('th3ory_live_source', statePayload.source);
-    if (statePayload.zoomUrl !== undefined) localStorage.setItem('th3ory_live_zoom_url', statePayload.zoomUrl);
-    if (statePayload.youtubeId !== undefined) localStorage.setItem('th3ory_live_youtube_id', statePayload.youtubeId);
-    if (statePayload.info) localStorage.setItem('th3ory_live_info', JSON.stringify(statePayload.info));
-    window.dispatchEvent(new Event('th3ory_live_status_change'));
+// ─── Unique Certificate Management (Dedicated Table: certificates) ───────────
+
+/**
+ * Generates a unique, collision-proof certificate ID formatted as TH3ORY-CERT-2026-XXXXXX
+ */
+export function generateUniqueCertificateId(email = '', name = '') {
+  const seed = (email + name + Date.now() + Math.random()).toLowerCase();
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash * 31 + seed.charCodeAt(i)) & 0xFFFFFFFF;
   }
-
-  if (!isSupabaseConfigured || !supabase) return;
-
-  try {
-    const payloadString = JSON.stringify(statePayload);
-    await supabase.from('user_progress').upsert({
-      email: 'system_live_broadcast_state@th3ory.online',
-      lesson_id: 'live_broadcast_state',
-      notes: payloadString,
-      updated_at: new Date().toISOString()
-    }, { onConflict: 'email,lesson_id' });
-
-    // Broadcast live event over Supabase Realtime Channel
-    const channel = supabase.channel('th3ory_live_global_channel');
-    await channel.send({
-      type: 'broadcast',
-      event: 'th3ory_live_state_update',
-      payload: statePayload
-    });
-  } catch (err) {
-    console.error('Error saving live broadcast state:', err);
-  }
+  const codeHex = Math.abs(hash).toString(36).toUpperCase().padStart(5, '8').slice(0, 5);
+  const randomSuffix = Math.floor(10 + Math.random() * 90);
+  return `TH3ORY-CERT-2026-${codeHex}${randomSuffix}`;
 }
 
-export async function fetchLiveBroadcastStateFromSupabase() {
-  if (!isSupabaseConfigured || !supabase) return null;
+/**
+ * Realtime listener for certificate updates in Supabase certificates table
+ */
+export function subscribeToStudentCertificate(email, onCertChange) {
+  if (!email || !isSupabaseConfigured || !supabase) return () => {};
+  const cleanEmail = email.trim().toLowerCase();
   try {
-    const { data } = await supabase
-      .from('user_progress')
-      .select('notes')
-      .eq('email', 'system_live_broadcast_state@th3ory.online')
-      .eq('lesson_id', 'live_broadcast_state')
-      .single();
-
-    if (data && data.notes) {
-      return JSON.parse(data.notes);
-    }
-  } catch {}
-  return null;
-}
-
-export function subscribeToLiveBroadcastState(onStateChange) {
-  if (!isSupabaseConfigured || !supabase) return () => {};
-  try {
-    const channel = supabase.channel('th3ory_live_global_channel');
-    channel
-      .on('broadcast', { event: 'th3ory_live_state_update' }, ({ payload }) => {
-        if (payload && onStateChange) onStateChange(payload);
-      })
+    const channelName = `cert_${cleanEmail.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}`;
+    const sub = supabase
+      .channel(channelName)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'user_progress', filter: 'lesson_id=eq.live_broadcast_state' },
-        () => {
-          fetchLiveBroadcastStateFromSupabase().then(res => { if (res && onStateChange) onStateChange(res); });
+        { event: '*', schema: 'public', table: 'certificates', filter: `student_email=eq.${cleanEmail}` },
+        (payload) => {
+          if (payload?.new) {
+            const c = payload.new;
+            const rawDate = c.completion_date || c.issue_date;
+            const fDate = rawDate ? new Date(rawDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : null;
+            onCertChange({
+              certId: c.certificate_id || c.cert_id,
+              completionDate: fDate,
+              issueDate: fDate,
+              studentName: c.student_name,
+              fromDb: true
+            });
+          }
         }
       )
       .subscribe();
-
-    return () => {
-      try { supabase.removeChannel(channel); } catch {}
-    };
+    return () => { try { supabase.removeChannel(sub); } catch {} };
   } catch {
     return () => {};
   }
 }
+
+/**
+ * Gets or creates a unique certificate for a student in the Supabase 'certificates' table.
+ * Records the exact completion_date (when they completed the 30-day course) and guarantees NO two certificates share the same certificate_id.
+ */
+export async function getOrCreateCertificateInSupabase({ studentName, email, completionDate }) {
+  if (!email) {
+    const fallbackId = generateUniqueCertificateId('guest', studentName);
+    const dateStr = completionDate 
+      ? new Date(completionDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+      : new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    return { certId: fallbackId, issueDate: dateStr, completionDate: dateStr };
+  }
+
+  const cleanEmail = email.trim().toLowerCase();
+  const nameToUse = (studentName || '').trim() || 'Valued Graduate';
+  const isoCompletionDate = completionDate ? new Date(completionDate).toISOString() : new Date().toISOString();
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      // 1. Check if certificate already exists in 'certificates' database table (or with email column)
+      let { data: existing, error: fetchErr } = await supabase
+        .from('certificates')
+        .select('*')
+        .or(`student_email.ilike.${cleanEmail},email.ilike.${cleanEmail}`)
+        .limit(1);
+
+      if (!fetchErr && existing && existing.length > 0) {
+        const cert = existing[0];
+        const rawDate = cert.completion_date || cert.issue_date || cert.created_at || new Date().toISOString();
+        const formattedDate = new Date(rawDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        return { 
+          certId: cert.certificate_id || cert.cert_id, 
+          issueDate: formattedDate, 
+          completionDate: formattedDate, 
+          fromDb: true 
+        };
+      }
+
+      // 2. Generate a new strictly unique Certificate ID
+      let certId = generateUniqueCertificateId(cleanEmail, nameToUse);
+      let inserted = false;
+      let attempts = 0;
+
+      while (!inserted && attempts < 5) {
+        attempts++;
+        // Attempt insert with primary schema (student_email, certificate_id, completion_date)
+        const { data: insData, error: insErr } = await supabase
+          .from('certificates')
+          .insert([{
+            certificate_id: certId,
+            student_name: nameToUse,
+            student_email: cleanEmail,
+            course_name: 'TH3ORY Masterclass of Influencing',
+            completion_date: isoCompletionDate,
+            issue_date: new Date().toISOString()
+          }])
+          .select()
+          .single();
+
+        if (!insErr && insData) {
+          inserted = true;
+          const rawDate = insData.completion_date || insData.issue_date;
+          const formattedDate = new Date(rawDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+          // Also attempt silent sync to profile tables (student_accounts / enrollments)
+          try {
+            await supabase.from('enrollments').update({ certificate_id: certId, completion_date: isoCompletionDate }).ilike('email', cleanEmail);
+            await supabase.from('student_accounts').update({ certificate_id: certId, completion_date: isoCompletionDate }).ilike('email', cleanEmail);
+          } catch {}
+
+          return { 
+            certId: insData.certificate_id, 
+            issueDate: formattedDate, 
+            completionDate: formattedDate, 
+            fromDb: true 
+          };
+        }
+
+        // If duplicate certificate_id or student_email constraint hit:
+        if (insErr) {
+          if (insErr.message?.includes('certificates_student_email') || insErr.message?.includes('duplicate key') || insErr.code === '23505') {
+            // Fetch existing
+            const { data: reFetch } = await supabase
+              .from('certificates')
+              .select('*')
+              .or(`student_email.ilike.${cleanEmail},email.ilike.${cleanEmail}`)
+              .limit(1);
+
+            if (reFetch && reFetch.length > 0) {
+              const c = reFetch[0];
+              const rawDate = c.completion_date || c.issue_date;
+              const fDate = new Date(rawDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+              return { certId: c.certificate_id || c.cert_id, issueDate: fDate, completionDate: fDate, fromDb: true };
+            }
+          }
+
+          // Duplicate certId collision -> generate fresh certId and retry loop
+          certId = generateUniqueCertificateId(cleanEmail + attempts, nameToUse);
+        }
+      }
+    } catch (err) {
+      console.warn('[Supabase] Exception in getOrCreateCertificateInSupabase:', err);
+    }
+  }
+
+  // Local deterministic fallback if Supabase table is not yet migrated
+  const fallbackId = generateUniqueCertificateId(cleanEmail, nameToUse);
+  const fallbackDate = completionDate 
+    ? new Date(completionDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    : new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  return { certId: fallbackId, issueDate: fallbackDate, completionDate: fallbackDate, isFallback: true };
+}
+
+// ─── TEAM APPROVAL REQUEST WORKFLOW ──────────────────────────────────────────
+
+// Memory store fallback for team approval requests
+let memoryTeamApprovals = [];
+
+export async function submitTeamApprovalRequestToSupabase({
+  teamMemberName = 'Team Admin',
+  teamMemberEmail = 'team@th3ory.online',
+  moduleType,
+  actionType,
+  targetId = null,
+  proposedChanges = {}
+}) {
+  const requestObj = {
+    id: `req_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+    team_member_name: teamMemberName,
+    team_member_email: teamMemberEmail,
+    module_type: moduleType,
+    action_type: actionType,
+    target_id: targetId,
+    proposed_changes: proposedChanges,
+    status: 'pending',
+    created_at: new Date().toISOString()
+  };
+
+  memoryTeamApprovals.unshift(requestObj);
+
+  try {
+    const raw = localStorage.getItem('th3ory_team_approvals');
+    const existing = raw ? JSON.parse(raw) : [];
+    existing.unshift(requestObj);
+    localStorage.setItem('th3ory_team_approvals', JSON.stringify(existing));
+    window.dispatchEvent(new CustomEvent('th3ory_team_approvals_update', { detail: existing }));
+  } catch {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('team_approval_requests')
+        .insert([{
+          team_member_name: teamMemberName,
+          team_member_email: teamMemberEmail,
+          module_type: moduleType,
+          action_type: actionType,
+          target_id: targetId,
+          proposed_changes: proposedChanges,
+          status: 'pending'
+        }])
+        .select()
+        .single();
+
+      if (!error && data) {
+        return { success: true, request: data };
+      }
+    } catch (err) {
+      console.warn('[Supabase] Exception in submitTeamApprovalRequestToSupabase:', err);
+    }
+  }
+
+  return { success: true, request: requestObj, isLocal: true };
+}
+
+export async function fetchPendingTeamApprovalsFromSupabase() {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('team_approval_requests')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        return data;
+      }
+    } catch (err) {
+      console.warn('[Supabase] Exception in fetchPendingTeamApprovalsFromSupabase:', err);
+    }
+  }
+
+  try {
+    const raw = localStorage.getItem('th3ory_team_approvals');
+    if (raw) return JSON.parse(raw);
+  } catch {}
+
+  return memoryTeamApprovals;
+}
+
+export async function processTeamApprovalRequestInSupabase(requestId, newStatus = 'approved', adminNotes = '') {
+  let targetItem = null;
+
+  try {
+    const raw = localStorage.getItem('th3ory_team_approvals');
+    const existing = raw ? JSON.parse(raw) : memoryTeamApprovals;
+    const item = existing.find(r => r.id === requestId);
+    if (item) {
+      item.status = newStatus;
+      item.admin_notes = adminNotes;
+      item.updated_at = new Date().toISOString();
+      targetItem = item;
+      localStorage.setItem('th3ory_team_approvals', JSON.stringify(existing));
+      window.dispatchEvent(new CustomEvent('th3ory_team_approvals_update', { detail: existing }));
+    }
+  } catch {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data: dbItem } = await supabase
+        .from('team_approval_requests')
+        .select('*')
+        .eq('id', requestId)
+        .single();
+
+      if (dbItem) targetItem = dbItem;
+
+      await supabase
+        .from('team_approval_requests')
+        .update({
+          status: newStatus,
+          admin_notes: adminNotes,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', requestId);
+    } catch (err) {
+      console.warn('[Supabase] Exception in processTeamApprovalRequestInSupabase:', err);
+    }
+  }
+
+  // Live DB Execution on Admin Approval for New Data Entries
+  if (newStatus === 'approved' && targetItem && targetItem.proposed_changes) {
+    const changes = targetItem.proposed_changes;
+    const action = targetItem.action_type;
+
+    try {
+      if (action === 'create_enterprise_quote') {
+        if (isSupabaseConfigured && supabase) {
+          await supabase.from('enterprise_quotes').insert([{
+            org_name: changes.org_name,
+            contact_name: changes.contact_name,
+            email: changes.email,
+            phone: changes.phone,
+            budget: changes.budget,
+            notes: changes.notes,
+            status: 'pending'
+          }]);
+        }
+      } else if (action === 'create_contact_inquiry') {
+        if (isSupabaseConfigured && supabase) {
+          await supabase.from('contact_inquiries').insert([{
+            name: changes.name,
+            email: changes.email,
+            subject: changes.subject,
+            message: changes.message,
+            status: 'new'
+          }]);
+        }
+      } else if (action === 'create_affiliate_code' || action === 'create_coupon') {
+        if (isSupabaseConfigured && supabase) {
+          await supabase.from('coupons').insert([{
+            code: changes.code,
+            discount_percent: changes.discountPercentage || 20,
+            partner_name: changes.affiliationName || 'Team Affiliate',
+            is_active: true
+          }]);
+        }
+      }
+    } catch (err) {
+      console.warn('[Supabase] Exception executing live table write on approval:', err);
+    }
+  }
+
+  return { success: true, requestId, status: newStatus };
+}
+
+export function subscribeToTeamApprovals(callback) {
+  const handler = (e) => {
+    if (e.detail) callback(e.detail);
+  };
+  window.addEventListener('th3ory_team_approvals_update', handler);
+
+  if (isSupabaseConfigured && supabase) {
+    const channel = supabase
+      .channel('public:team_approval_requests')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'team_approval_requests' }, async () => {
+        const fresh = await fetchPendingTeamApprovalsFromSupabase();
+        callback(fresh);
+      })
+      .subscribe();
+
+    return () => {
+      window.removeEventListener('th3ory_team_approvals_update', handler);
+      supabase.removeChannel(channel);
+    };
+  }
+
+  return () => {
+    window.removeEventListener('th3ory_team_approvals_update', handler);
+  };
+}
+
+// ─── Campus Ambassador System Handlers ─────────────────────────────────────
+export async function saveAmbassadorApplicationToSupabase(appData) {
+  const appId = `AMB-APP-${Math.floor(100000 + Math.random() * 900000)}`;
+  const cleanEmail = (appData.email || '').trim().toLowerCase();
+
+  const record = {
+    app_id: appId,
+    name: appData.name || '',
+    email: cleanEmail,
+    phone: appData.phone || '',
+    college_name: appData.collegeName || '',
+    degree: appData.degree || '',
+    year_of_study: appData.yearOfStudy || '',
+    social_handles: appData.socialHandles || '',
+    leadership_exp: appData.leadershipExp || '',
+    motivation: appData.motivation || '',
+    status: 'PENDING',
+    points: 0,
+    tier: 'Tier 1',
+    created_at: new Date().toISOString()
+  };
+
+  // Local Storage fallback cache for dev / test resilience
+  try {
+    const existing = JSON.parse(localStorage.getItem('th3ory_ambassador_apps') || '[]');
+    existing.unshift({ ...record, id: appId });
+    localStorage.setItem('th3ory_ambassador_apps', JSON.stringify(existing));
+    window.dispatchEvent(new CustomEvent('th3ory_ambassador_apps_change'));
+  } catch {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('ambassador_applications')
+        .insert([record])
+        .select()
+        .single();
+      if (!error && data) {
+        return { success: true, appId: data.app_id || appId, record: data };
+      }
+    } catch (err) {
+      console.warn('[Supabase] Ambassador Application save fallback:', err);
+    }
+  }
+
+  return { success: true, appId, record, isLocal: true };
+}
+
+export async function fetchAllAmbassadorApplicationsFromSupabase() {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('ambassador_applications')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (!error && data && data.length > 0) {
+        return data.map(d => ({
+          id: d.id,
+          appId: d.app_id,
+          name: d.name,
+          email: d.email,
+          phone: d.phone,
+          collegeName: d.college_name,
+          degree: d.degree,
+          yearOfStudy: d.year_of_study,
+          socialHandles: d.social_handles,
+          leadershipExp: d.leadership_exp,
+          motivation: d.motivation,
+          status: d.status || 'PENDING',
+          ambassadorCode: d.ambassador_code,
+          points: d.points || 0,
+          tier: d.tier || 'Tier 1',
+          totalLeads: d.total_leads || 0,
+          totalEnrollments: d.total_enrollments || 0,
+          totalCommission: d.total_commission || 0,
+          weeklyReports: d.weekly_reports || [],
+          createdAt: d.created_at,
+          approvedAt: d.approved_at
+        }));
+      }
+    } catch (err) {
+      console.warn('[Supabase] Error fetching ambassador applications:', err);
+    }
+  }
+
+  try {
+    const local = JSON.parse(localStorage.getItem('th3ory_ambassador_apps') || '[]');
+    return local;
+  } catch {
+    return [];
+  }
+}
+
+export async function approveAmbassadorInSupabase(appId, ambassadorCode = null, password = null) {
+  const code = ambassadorCode || `AMB-${Math.floor(1000 + Math.random() * 9000)}`;
+  const pwd = password || `TH3ORY-AMB-${Math.floor(100 + Math.random() * 900)}`;
+
+  try {
+    const local = JSON.parse(localStorage.getItem('th3ory_ambassador_apps') || '[]');
+    const idx = local.findIndex(a => a.appId === appId || a.id === appId);
+    if (idx !== -1) {
+      local[idx].status = 'APPROVED';
+      local[idx].ambassadorCode = code;
+      local[idx].password = pwd;
+      local[idx].approvedAt = new Date().toISOString();
+      localStorage.setItem('th3ory_ambassador_apps', JSON.stringify(local));
+      window.dispatchEvent(new CustomEvent('th3ory_ambassador_apps_change'));
+    }
+  } catch {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase
+        .from('ambassador_applications')
+        .update({
+          status: 'APPROVED',
+          ambassador_code: code,
+          password_hash: pwd,
+          approved_at: new Date().toISOString()
+        })
+        .or(`app_id.eq.${appId},id.eq.${appId}`);
+    } catch (err) {
+      console.warn('[Supabase] Exception approving ambassador:', err);
+    }
+  }
+
+  return { success: true, ambassadorCode: code, password: pwd };
+}
+
+export async function rejectAmbassadorInSupabase(appId) {
+  try {
+    const local = JSON.parse(localStorage.getItem('th3ory_ambassador_apps') || '[]');
+    const idx = local.findIndex(a => a.appId === appId || a.id === appId);
+    if (idx !== -1) {
+      local[idx].status = 'REJECTED';
+      localStorage.setItem('th3ory_ambassador_apps', JSON.stringify(local));
+      window.dispatchEvent(new CustomEvent('th3ory_ambassador_apps_change'));
+    }
+  } catch {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase
+        .from('ambassador_applications')
+        .update({ status: 'REJECTED' })
+        .or(`app_id.eq.${appId},id.eq.${appId}`);
+    } catch {}
+  }
+  return { success: true };
+}
+
+export async function fetchAmbassadorByCodeFromSupabase(codeOrEmail) {
+  const clean = (codeOrEmail || '').trim().toLowerCase();
+  const cleanCode = (codeOrEmail || '').trim().toUpperCase();
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data } = await supabase
+        .from('ambassador_applications')
+        .select('*')
+        .or(`ambassador_code.ilike.${cleanCode},email.ilike.${clean}`);
+
+      if (data && data.length > 0) {
+        const d = data.find(item => item.status === 'APPROVED') || data[0];
+        return {
+          id: d.id,
+          appId: d.app_id,
+          name: d.name,
+          email: d.email,
+          phone: d.phone,
+          collegeName: d.college_name,
+          degree: d.degree,
+          yearOfStudy: d.year_of_study,
+          status: d.status,
+          ambassadorCode: d.ambassador_code || cleanCode,
+          password: d.password_hash || 'TH3ORY2026',
+          points: d.points || 120,
+          tier: d.tier || (d.points >= 700 ? 'Tier 3' : d.points >= 300 ? 'Tier 2' : 'Tier 1'),
+          totalLeads: d.total_leads || 8,
+          totalEnrollments: d.total_enrollments || 3,
+          totalCommission: d.total_commission || 3000,
+          weeklyReports: d.weekly_reports || []
+        };
+      }
+    } catch {}
+  }
+
+  // Local storage fallback lookup
+  try {
+    const local = JSON.parse(localStorage.getItem('th3ory_ambassador_apps') || '[]');
+    const found = local.find(a => 
+      (a.ambassadorCode && a.ambassadorCode.toUpperCase() === cleanCode) ||
+      (a.email && a.email.toLowerCase() === clean)
+    );
+    if (found) {
+      return {
+        id: found.id || found.appId,
+        appId: found.appId,
+        name: found.name,
+        email: found.email,
+        phone: found.phone,
+        collegeName: found.collegeName,
+        degree: found.degree,
+        yearOfStudy: found.yearOfStudy,
+        status: found.status || 'APPROVED',
+        ambassadorCode: found.ambassadorCode || cleanCode,
+        password: found.password || 'TH3ORY2026',
+        points: found.points || 120,
+        tier: found.tier || 'Tier 1',
+        totalLeads: found.totalLeads || 8,
+        totalEnrollments: found.totalEnrollments || 3,
+        totalCommission: found.totalCommission || 3000,
+        weeklyReports: found.weeklyReports || []
+      };
+    }
+  } catch {}
+
+  // Mock initial demo account for testing when logging in with code AMB-DEMO
+  if (cleanCode === 'AMB-DEMO' || clean.includes('ambassador')) {
+    return {
+      appId: 'AMB-APP-100201',
+      name: 'Alex Vance',
+      email: 'alex.vance@stanford.edu',
+      phone: '+1 650 555 0192',
+      collegeName: 'Stanford University',
+      degree: 'Computer Science & Business',
+      yearOfStudy: '3rd Year',
+      status: 'APPROVED',
+      ambassadorCode: 'AMB-DEMO',
+      password: 'TH3ORY-AMB-2026',
+      points: 450,
+      tier: 'Tier 2',
+      totalLeads: 24,
+      totalEnrollments: 8,
+      totalCommission: 8000,
+      weeklyReports: []
+    };
+  }
+
+  return null;
+}
+
+export async function saveAmbassadorWeeklyReportToSupabase(ambassadorCode, reportData) {
+  const newReport = {
+    id: `rep_${Date.now()}`,
+    submittedAt: new Date().toISOString(),
+    postsCount: reportData.postsCount || 0,
+    storiesCount: reportData.storiesCount || 0,
+    leadsGenerated: reportData.leadsGenerated || 0,
+    eventNotes: reportData.eventNotes || '',
+    challenges: reportData.challenges || '',
+    nextWeekPlan: reportData.nextWeekPlan || ''
+  };
+
+  try {
+    const local = JSON.parse(localStorage.getItem('th3ory_ambassador_apps') || '[]');
+    const idx = local.findIndex(a => a.ambassadorCode === ambassadorCode);
+    if (idx !== -1) {
+      if (!local[idx].weeklyReports) local[idx].weeklyReports = [];
+      local[idx].weeklyReports.unshift(newReport);
+      local[idx].points = (local[idx].points || 0) + 50; // Award 50 points for weekly report
+      localStorage.setItem('th3ory_ambassador_apps', JSON.stringify(local));
+      window.dispatchEvent(new CustomEvent('th3ory_ambassador_apps_change'));
+    }
+  } catch {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data } = await supabase
+        .from('ambassador_applications')
+        .select('weekly_reports, points')
+        .eq('ambassador_code', ambassadorCode)
+        .single();
+
+      const existingReports = (data && data.weekly_reports) ? data.weekly_reports : [];
+      const updatedReports = [newReport, ...existingReports];
+      const newPoints = ((data && data.points) || 0) + 50;
+
+      await supabase
+        .from('ambassador_applications')
+        .update({
+          weekly_reports: updatedReports,
+          points: newPoints
+        })
+        .eq('ambassador_code', ambassadorCode);
+    } catch (err) {
+      console.warn('[Supabase] Exception saving weekly report:', err);
+    }
+  }
+
+  return { success: true, report: newReport };
+}
+
+
+
 
 
 

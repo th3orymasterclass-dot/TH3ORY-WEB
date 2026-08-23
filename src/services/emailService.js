@@ -123,3 +123,77 @@ export async function sendEnrollmentEmail(receipt) {
     return { success: false, error: err };
   }
 }
+
+/**
+ * Send Automated Campus Ambassador Approval Email with Credentials & Dashboard Access
+ */
+export async function sendAmbassadorApprovalEmail(ambassadorData) {
+  try {
+    const portalUrl = typeof window !== 'undefined' ? `${window.location.origin}/#/ambassador-portal` : 'https://th3ory.online/#/ambassador-portal';
+
+    const apiKey = getApiKey();
+    if (!apiKey) {
+      console.log('[Ambassador Email] No API key present. Simulated email logged for:', ambassadorData.email);
+      return { success: true, simulated: true };
+    }
+
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: 'TH3ORY Ambassador Desk <ambassador@th3ory.online>',
+        to: [ambassadorData.email, 'th3orymasterclass@gmail.com'],
+        subject: `🌟 Welcome to TH3ORY Campus Ambassador Program - Application Approved!`,
+        html: `
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #05080f; color: #ffffff; padding: 40px 20px; text-align: center;">
+            <div style="max-width: 550px; margin: 0 auto; background-color: #0b1120; border: 1px solid #1e293b; border-radius: 20px; padding: 30px; text-align: left; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);">
+              <div style="text-align: center; margin-bottom: 25px;">
+                <h1 style="color: #f59e0b; font-size: 24px; font-weight: 900; margin: 0; letter-spacing: 2px;">TH3ORY</h1>
+                <p style="color: #64748b; font-size: 12px; font-weight: 700; text-transform: uppercase; margin-top: 4px;">Campus Ambassador Network</p>
+              </div>
+              <div style="background-color: #1e293b33; border: 1px solid #f59e0b40; border-radius: 14px; padding: 20px; margin-bottom: 25px;">
+                <h2 style="color: #ffffff; font-size: 18px; font-weight: 800; margin-top: 0; margin-bottom: 8px;">Congratulations, ${ambassadorData.name}! 🎉</h2>
+                <p style="color: #cbd5e1; font-size: 14px; margin: 0;">Your application for the <strong>TH3ORY 12-Week Campus Ambassador Program</strong> representing <strong>${ambassadorData.collegeName}</strong> has been officially approved by administration.</p>
+              </div>
+              
+              <div style="background-color: #0f172a; border: 1px solid #334155; border-radius: 14px; padding: 20px; margin-bottom: 25px;">
+                <h3 style="color: #f59e0b; font-size: 16px; font-weight: 800; margin-top: 0; margin-bottom: 12px;">🔑 Your Ambassador Portal Credentials</h3>
+                <p style="color: #cbd5e1; font-size: 13px; margin-bottom: 16px;">Log in to your private Ambassador Dashboard to view your referral code, track student leads, claim rewards, and download marketing kits.</p>
+                
+                <div style="background: #1e293b; border-radius: 10px; padding: 14px; margin-bottom: 12px;">
+                  <div style="color: #64748b; font-size: 11px; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Unique Ambassador Code</div>
+                  <div style="font-family: monospace; color: #f59e0b; font-weight: 800; font-size: 18px; letter-spacing: 1px;">${ambassadorData.ambassadorCode}</div>
+                </div>
+
+                <div style="background: #1e293b; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+                  <div style="color: #64748b; font-size: 11px; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Default Portal Password</div>
+                  <div style="font-family: monospace; color: #ffffff; font-weight: 700; font-size: 15px;">${ambassadorData.password || 'TH3ORY2026'}</div>
+                </div>
+
+                <div style="text-align: center; margin-top: 20px;">
+                  <a href="${portalUrl}" style="background: linear-gradient(to right, #f59e0b, #d97706); color: #05080f; font-weight: 800; font-size: 14px; text-decoration: none; padding: 12px 28px; border-radius: 10px; display: inline-block; text-transform: uppercase; letter-spacing: 1px;">
+                    Access Ambassador Dashboard &rarr;
+                  </a>
+                </div>
+              </div>
+
+              <div style="text-align: center; border-top: 1px solid #1e293b; padding-top: 20px;">
+                <p style="color: #64748b; font-size: 12px; margin: 0;">Mentalist Sravan Production &copy; 2026. All rights reserved.</p>
+              </div>
+            </div>
+          </div>
+        `
+      })
+    });
+
+    const data = await response.json();
+    return { success: response.ok, data };
+  } catch (err) {
+    console.error('[Ambassador Email Exception]:', err);
+    return { success: false, error: err };
+  }
+}
+

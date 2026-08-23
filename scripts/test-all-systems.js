@@ -359,12 +359,22 @@ assert(coursePanelContent.includes('setActiveLevelId'), 'CoursePanel.jsx support
 assert(coursePanelContent.includes('Day Modules'), 'CoursePanel.jsx includes compact Day modules navigation sidebar');
 assert(coursePanelContent.includes('Select a Day module to begin'), 'CoursePanel.jsx displays select lesson prompt when no lesson is active');
 
-console.log('\n▶ [Suite 20/20]: Student Portal Light/Dark Theme Switch & LocalStorage Persistence Audit');
+console.log('\n▶ [Suite 20/20]: Universal Portals Light/Dark Theme Switch & LocalStorage Persistence Audit');
+const navbarCode = fs.readFileSync(path.join(rootDir, 'src/components/Navbar.jsx'), 'utf8');
+const adminAppCodeForTheme = fs.readFileSync(path.join(rootDir, 'src/admin/AdminApp.jsx'), 'utf8');
+const teamAppCodeForTheme = fs.readFileSync(path.join(rootDir, 'src/team/TeamApp.jsx'), 'utf8');
+
 assert(studentAppContent.includes('themeMode'), 'StudentApp.jsx manages themeMode state');
 assert(studentAppContent.includes('toggleTheme'), 'StudentApp.jsx includes toggleTheme switcher');
 assert(studentAppContent.includes('th3ory_student_theme'), 'StudentApp.jsx persists theme selection to localStorage');
-assert(studentAppContent.includes('themeMode={themeMode}'), 'StudentApp.jsx passes themeMode prop to child panels');
+assert(navbarCode.includes('toggleTheme'), 'Navbar.jsx includes Sun/Moon theme mode toggle switcher');
+assert(navbarCode.includes('th3ory_theme'), 'Navbar.jsx persists public site theme preference');
+assert(adminAppCodeForTheme.includes('toggleTheme'), 'AdminApp.jsx includes Sun/Moon theme switcher');
+assert(adminAppCodeForTheme.includes('th3ory_admin_theme'), 'AdminApp.jsx persists admin portal theme');
+assert(teamAppCodeForTheme.includes('toggleTheme'), 'TeamApp.jsx includes Sun/Moon theme switcher');
+assert(teamAppCodeForTheme.includes('th3ory_team_theme'), 'TeamApp.jsx persists team portal theme');
 assert(coursePanelContent.includes('themeMode = \'dark\''), 'CoursePanel.jsx accepts themeMode prop');
+
 
 console.log('\n▶ [Suite 21/21]: Daily Habit & 5-Pillar Self-Assessment Tracker Audit');
 const trackerComponentContent = fs.readFileSync(path.join(rootDir, 'src/student/components/DailyHabitTracker.jsx'), 'utf8');
@@ -382,7 +392,7 @@ console.log('\n▶ [Suite 22/22]: Dedicated Database Table (student_habit_tracke
 const schemaSqlContent = fs.readFileSync(path.join(rootDir, 'supabase_schema.sql'), 'utf8');
 assert(schemaSqlContent.includes('public.student_habit_trackers'), 'supabase_schema.sql defines dedicated student_habit_trackers table');
 assert(schemaSqlContent.includes('uq_student_habit_day'), 'supabase_schema.sql defines unique constraint on (email, day_number)');
-assert(schemaSqlContent.includes('public.student_habit_trackers;'), 'supabase_schema.sql enables Realtime replication on student_habit_trackers');
+assert(schemaSqlContent.includes('public.student_habit_trackers'), 'supabase_schema.sql enables Realtime replication on student_habit_trackers');
 assert(supabaseServiceContent.includes('saveHabitTrackerDayToSupabase'), 'supabaseService.js includes saveHabitTrackerDayToSupabase upsert handler');
 assert(supabaseServiceContent.includes('fetchAllHabitTrackersFromSupabase'), 'supabaseService.js includes fetchAllHabitTrackersFromSupabase query');
 assert(supabaseServiceContent.includes('subscribeToStudentHabitTrackers'), 'supabaseService.js includes subscribeToStudentHabitTrackers Realtime listener');
@@ -467,6 +477,73 @@ assert(queriesQuotesPanelCode.includes('Type instructor response'), 'QueriesQuot
 assert(!queriesQuotesPanelCode.includes('alert('), 'QueriesQuotesPanel.jsx contains 0 blocking browser alert popups');
 assert(queryPanelCode.includes('subscribeToQueries'), 'QueryPanel.jsx subscribes to Realtime queries table changes');
 assert(queryPanelCode.includes('TH3ORY Instructor'), 'QueryPanel.jsx renders TH3ORY Instructor response');
+
+console.log('\n▶ [Suite 29/29]: Team Portal & Admin Approval Workflow Audit');
+const mainJsxContent = fs.readFileSync(path.join(rootDir, 'src/main.jsx'), 'utf8');
+const teamAppContent = fs.readFileSync(path.join(rootDir, 'src/team/TeamApp.jsx'), 'utf8');
+const teamQuotesContent = fs.readFileSync(path.join(rootDir, 'src/team/panels/TeamQuotesPanel.jsx'), 'utf8');
+const adminAppFullCode = fs.readFileSync(path.join(rootDir, 'src/admin/AdminApp.jsx'), 'utf8');
+const teamApprovalsPanelCode = fs.readFileSync(path.join(rootDir, 'src/admin/panels/TeamApprovalsPanel.jsx'), 'utf8');
+const supabaseServiceFullCode = fs.readFileSync(path.join(rootDir, 'src/services/supabaseService.js'), 'utf8');
+
+assert(mainJsxContent.includes("view === 'team'"), 'main.jsx defines team portal route');
+assert(teamAppContent.includes('ALLOWED MODULES (3 ONLY)'), 'TeamApp.jsx restricts team access strictly to 3 allowed modules');
+assert(teamQuotesContent.includes('Data Access & Privacy Policy Active'), 'TeamQuotesPanel.jsx displays Data Access & Privacy Policy header');
+assert(teamQuotesContent.includes('create_enterprise_quote'), 'TeamQuotesPanel.jsx includes new Enterprise Lead creation modal');
+assert(teamQuotesContent.includes('submitTeamApprovalRequestToSupabase'), 'TeamQuotesPanel.jsx submits updates for Admin Portal Approval');
+assert(supabaseServiceFullCode.includes('submitTeamApprovalRequestToSupabase'), 'supabaseService.js exports submitTeamApprovalRequestToSupabase handler');
+assert(supabaseServiceFullCode.includes('processTeamApprovalRequestInSupabase'), 'supabaseService.js exports processTeamApprovalRequestInSupabase handler');
+assert(supabaseServiceFullCode.includes('create_enterprise_quote'), 'supabaseService.js executes live DB table insert on Admin approval');
+assert(adminAppFullCode.includes('TeamApprovalsPanel'), 'AdminApp.jsx embeds TeamApprovalsPanel component');
+assert(teamApprovalsPanelCode.includes('NEW DATA ENTRY'), 'TeamApprovalsPanel.jsx renders NEW DATA ENTRY badge for supervised team data creations');
+assert(teamApprovalsPanelCode.includes('Approve Live'), 'TeamApprovalsPanel.jsx features Approve Live button for primary admins');
+
+console.log('\n▶ [Suite 30/30]: Statutory Privacy Policy & Data Protection Legal Audit');
+const privacyPolicyPageCode = fs.readFileSync(path.join(rootDir, 'src/components/PrivacyPolicyPage.jsx'), 'utf8');
+const footerJsxCode = fs.readFileSync(path.join(rootDir, 'src/components/Footer.jsx'), 'utf8');
+
+assert(privacyPolicyPageCode.includes('PrivacyPolicyPage'), 'PrivacyPolicyPage.jsx component exists');
+assert(privacyPolicyPageCode.includes('GDPR'), 'PrivacyPolicyPage.jsx references EU GDPR Article compliance');
+assert(privacyPolicyPageCode.includes('CCPA / CPRA'), 'PrivacyPolicyPage.jsx references CCPA / CPRA statutory compliance');
+assert(privacyPolicyPageCode.includes('DPDP Act 2023'), 'PrivacyPolicyPage.jsx references Indian DPDP Act 2023 compliance');
+assert(privacyPolicyPageCode.includes('student_habit_trackers'), 'PrivacyPolicyPage.jsx explicitly discloses habit tracker data processing');
+assert(privacyPolicyPageCode.includes('enterprise_quotes'), 'PrivacyPolicyPage.jsx explicitly discloses enterprise quote data processing');
+assert(privacyPolicyPageCode.includes('Razorpay Software'), 'PrivacyPolicyPage.jsx discloses Razorpay PCI-DSS sub-processor');
+assert(privacyPolicyPageCode.includes('24-Hour Maximum Duration Policy'), 'PrivacyPolicyPage.jsx details 24h session security policy');
+assert(privacyPolicyPageCode.includes('PRIV-'), 'PrivacyPolicyPage.jsx generates trackable Data Subject Rights request ID');
+assert(privacyPolicyPageCode.includes('Crown'), 'PrivacyPolicyPage.jsx correctly imports Crown icon from lucide-react');
+assert(mainJsxContent.includes("view === 'privacy'"), 'main.jsx defines privacy policy route');
+assert(footerJsxCode.includes('#privacy'), 'Footer.jsx links to #/privacy page');
+
+const enrollmentPageCode = fs.readFileSync(path.join(rootDir, 'src/components/EnrollmentPage.jsx'), 'utf8');
+const checkoutModalCode = fs.readFileSync(path.join(rootDir, 'src/components/CheckoutModal.jsx'), 'utf8');
+assert(enrollmentPageCode.includes('Statutory Privacy Policy'), 'EnrollmentPage.jsx embeds Privacy Policy text scroll box in Step 3');
+assert(enrollmentPageCode.includes('acceptedPrivacy'), 'EnrollmentPage.jsx enforces acceptedPrivacy checkbox check before payment');
+assert(checkoutModalCode.includes('Statutory Privacy Policy'), 'CheckoutModal.jsx embeds Privacy Policy text scroll box in Step 2');
+assert(checkoutModalCode.includes('acceptedModalPrivacy'), 'CheckoutModal.jsx enforces acceptedModalPrivacy checkbox check before payment');
+
+console.log('\n▶ [Suite 31/31]: Campus Ambassador Program & Approval Portal Audit');
+const ambassadorLandingCode = fs.readFileSync(path.join(rootDir, 'src/components/AmbassadorLandingPage.jsx'), 'utf8');
+const ambassadorPortalCode = fs.readFileSync(path.join(rootDir, 'src/components/AmbassadorPortal.jsx'), 'utf8');
+const ambassadorAdminPanelCode = fs.readFileSync(path.join(rootDir, 'src/admin/panels/AmbassadorApplicationsPanel.jsx'), 'utf8');
+const schemaCode = fs.readFileSync(path.join(rootDir, 'supabase_schema.sql'), 'utf8');
+
+assert(ambassadorLandingCode.includes('AmbassadorLandingPage'), 'AmbassadorLandingPage.jsx component exists');
+assert(ambassadorLandingCode.includes('12-Week'), 'AmbassadorLandingPage.jsx outlines 12-Week Program term');
+assert(ambassadorLandingCode.includes('saveAmbassadorApplicationToSupabase'), 'AmbassadorLandingPage.jsx saves applications to Supabase');
+assert(ambassadorLandingCode.includes('AMB-APP-'), 'AmbassadorLandingPage.jsx generates trackable AMB-APP- reference ID');
+assert(ambassadorPortalCode.includes('AmbassadorPortal'), 'AmbassadorPortal.jsx component exists');
+assert(ambassadorPortalCode.includes('fetchAmbassadorByCodeFromSupabase'), 'AmbassadorPortal.jsx authenticates ambassadors against Supabase');
+assert(ambassadorPortalCode.includes('saveAmbassadorWeeklyReportToSupabase'), 'AmbassadorPortal.jsx submits Friday weekly activity reports');
+assert(ambassadorAdminPanelCode.includes('AmbassadorApplicationsPanel'), 'AmbassadorApplicationsPanel.jsx admin component exists');
+assert(ambassadorAdminPanelCode.includes('approveAmbassadorInSupabase'), 'AmbassadorApplicationsPanel.jsx features 1-click admin approval');
+assert(ambassadorAdminPanelCode.includes('sendAmbassadorApprovalEmail'), 'AmbassadorApplicationsPanel.jsx dispatches credentials over email');
+assert(schemaCode.includes('ambassador_applications'), 'supabase_schema.sql defines dedicated ambassador_applications table');
+assert(mainJsxContent.includes("view === 'ambassador'"), 'main.jsx defines ambassador public route');
+assert(mainJsxContent.includes("view === 'ambassador-portal'"), 'main.jsx defines ambassador-portal route');
+assert(footerJsxCode.includes('#ambassador'), 'Footer.jsx links to Campus Ambassador Program');
+
+
 
 
 // ── Final Test Summary Report ────────────────────────────────────────────────

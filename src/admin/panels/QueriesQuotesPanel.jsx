@@ -9,7 +9,8 @@ export default function QueriesQuotesPanel({
   updateQueryStatus,
   updateQuoteStatus,
   updateInquiryStatus,
-  deleteQuery
+  deleteQuery,
+  themeMode = 'dark'
 }) {
   const [activeTab, setActiveTab] = useState('queries'); // 'queries' | 'quotes' | 'contact'
   const [search, setSearch] = useState('');
@@ -17,6 +18,8 @@ export default function QueriesQuotesPanel({
   const [actionStatus, setActionStatus] = useState({});
   const [isSubmittingSample, setIsSubmittingSample] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+
+  const isDark = themeMode === 'dark';
 
   const handleAddSampleQuote = async () => {
     setIsSubmittingSample(true);
@@ -61,43 +64,64 @@ export default function QueriesQuotesPanel({
     await updateQuoteStatus(qId, nextStatus);
   };
 
-  const handleToggleInquiryStatus = async (iId, currentStatus) => {
+  const handleToggleInquiryStatus = async (inqId, currentStatus) => {
     const nextStatus = currentStatus === 'resolved' ? 'new' : 'resolved';
-    await updateInquiryStatus(iId, nextStatus);
+    await updateInquiryStatus(inqId, nextStatus);
   };
 
+  // Filter lists
+  const filteredQueries = queries.filter(q =>
+    (q.subject || '').toLowerCase().includes(search.toLowerCase()) ||
+    (q.question || '').toLowerCase().includes(search.toLowerCase()) ||
+    (q.studentName || q.studentEmail || '').toLowerCase().includes(search.toLowerCase())
+  );
+
+  const filteredQuotes = enterpriseQuotes.filter(q =>
+    (q.org_name || '').toLowerCase().includes(search.toLowerCase()) ||
+    (q.contact_name || q.email || '').toLowerCase().includes(search.toLowerCase())
+  );
+
+  const filteredInquiries = contactInquiries.filter(c =>
+    (c.name || c.email || '').toLowerCase().includes(search.toLowerCase()) ||
+    (c.subject || c.message || '').toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
-    <div className="space-y-8 animate-fade-in">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-6">
+      {/* Header Tabs & Search */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-2xl font-black text-white">Database Forms, Queries &amp; Quotes</h2>
-            <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-mono font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> REALTIME SYNC
-            </span>
-          </div>
-          <p className="text-slate-500 text-sm mt-1">Manage incoming student queries, enterprise quotes, and contact inquiries from dedicated Supabase tables</p>
+          <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Form Submissions & Student Communications</h2>
+          <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+            Manage student query tickets, B2B enterprise license requests, and public contact form messages.
+          </p>
         </div>
 
-        <button
-          onClick={handleAddSampleQuote}
-          disabled={isSubmittingSample}
-          className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg transition-all flex items-center gap-2 self-start sm:self-auto"
-        >
-          <PlusCircle className="w-4 h-4" />
-          <span>{isSubmittingSample ? 'Submitting...' : 'Generate Test Quote'}</span>
-        </button>
+        {/* Search */}
+        <div className="relative w-full md:w-64">
+          <Search className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search all submissions..."
+            className={`w-full border rounded-xl pl-9 pr-4 py-2 text-xs transition-all ${
+              isDark ? 'bg-slate-900 border-slate-700 text-white placeholder-slate-500 focus:border-indigo-500' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:border-indigo-500'
+            }`}
+          />
+        </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-slate-800 pb-3 overflow-x-auto">
+      <div className={`flex items-center gap-2 p-1.5 border rounded-2xl ${
+        isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-slate-100 border-slate-200'
+      }`}>
         <button
           onClick={() => setActiveTab('queries')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+          className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
             activeTab === 'queries'
-              ? 'bg-amber-500 text-slate-950 shadow-lg'
-              : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+              ? isDark ? 'bg-indigo-600 text-white shadow-md' : 'bg-white text-indigo-900 shadow-sm border border-slate-200'
+              : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           <HelpCircle className="w-4 h-4" />
@@ -106,10 +130,10 @@ export default function QueriesQuotesPanel({
 
         <button
           onClick={() => setActiveTab('quotes')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+          className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
             activeTab === 'quotes'
-              ? 'bg-purple-600 text-white shadow-lg'
-              : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+              ? isDark ? 'bg-indigo-600 text-white shadow-md' : 'bg-white text-indigo-900 shadow-sm border border-slate-200'
+              : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           <Building2 className="w-4 h-4" />
@@ -118,263 +142,259 @@ export default function QueriesQuotesPanel({
 
         <button
           onClick={() => setActiveTab('contact')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+          className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
             activeTab === 'contact'
-              ? 'bg-indigo-600 text-white shadow-lg'
-              : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+              ? isDark ? 'bg-indigo-600 text-white shadow-md' : 'bg-white text-indigo-900 shadow-sm border border-slate-200'
+              : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           <Mail className="w-4 h-4" />
-          <span>Contact Us Inquiries ({contactInquiries.length})</span>
+          <span>Contact Us ({contactInquiries.length})</span>
         </button>
       </div>
 
-      {/* Search Input */}
-      <div className="relative">
-        <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Filter by student name, email, subject, or organization..."
-          className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
-        />
-      </div>
-
-      {/* TAB 1: Student Queries */}
+      {/* ── TAB 1: STUDENT QUERIES ────────────────────────────────────────── */}
       {activeTab === 'queries' && (
         <div className="space-y-4">
-          {queries.length === 0 ? (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center text-slate-500 text-sm">
-              No student queries found in database.
+          {filteredQueries.length === 0 ? (
+            <div className={`p-8 text-center border rounded-2xl text-xs font-mono ${
+              isDark ? 'bg-slate-900/60 border-slate-800 text-slate-500' : 'bg-white border-slate-200 text-slate-400'
+            }`}>
+              No student query submissions found matching search filter.
             </div>
           ) : (
-            queries
-              .filter(q => (q.studentName || '').toLowerCase().includes(search.toLowerCase()) || (q.subject || '').toLowerCase().includes(search.toLowerCase()))
-              .map((item) => (
-                <div key={item.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-md">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-white font-bold text-base">{item.studentName}</span>
-                        <span className="text-xs text-slate-400 font-mono">({item.studentEmail || 'student@th3ory.online'})</span>
-                        <span className="text-[10px] bg-amber-500/10 border border-amber-500/30 text-amber-400 font-extrabold px-2 py-0.5 rounded-full font-mono">
-                          {item.studentPlan || 'Enrolled Student'}
-                        </span>
-                      </div>
-                      <p className="text-amber-400 font-semibold text-xs mt-1">Subject: {item.subject}</p>
+            filteredQueries.map(q => (
+              <div key={q.id} className={`p-5 rounded-2xl border space-y-4 shadow-xs transition-all ${
+                isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200'
+              }`}>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase border ${
+                        q.status === 'answered' || q.status === 'resolved'
+                          ? isDark ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : isDark ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' : 'bg-amber-50 text-amber-700 border-amber-200'
+                      }`}>
+                        {q.status || 'pending'}
+                      </span>
+                      <span className={`text-xs font-mono ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                        {new Date(q.created_at || Date.now()).toLocaleString()}
+                      </span>
                     </div>
-                    <span className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border uppercase shrink-0 ${
-                      item.status === 'answered' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
-                      item.status === 'inprogress' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
-                      item.status === 'resolved' ? 'bg-slate-800 text-slate-300 border-slate-700' :
-                      'bg-amber-500/20 text-amber-400 border-amber-500/30'
-                    }`}>
-                      {item.status || 'OPEN'}
-                    </span>
-                  </div>
 
-                  {/* Student Question Box */}
-                  <div className="bg-slate-950 border border-slate-800 rounded-xl p-3.5 space-y-1">
-                    <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Student Message:</span>
-                    <p className="text-slate-300 text-xs leading-relaxed font-sans">
-                      "{item.message}"
+                    <h3 className={`text-sm font-bold mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>{q.subject || 'Student Query Ticket'}</h3>
+                    <p className={`text-xs font-mono ${isDark ? 'text-indigo-300' : 'text-indigo-600'}`}>
+                      From: <strong>{q.studentName || 'Student'}</strong> ({q.studentEmail})
                     </p>
                   </div>
 
-                  {/* Admin Reply Workspace */}
-                  <div className="space-y-2 pt-1">
-                    <div className="flex items-center justify-between text-xs font-bold text-slate-400">
-                      <span className="flex items-center gap-1.5 text-amber-400">
-                        <MessageSquare className="w-3.5 h-3.5" />
-                        <span>Instructor Response / Answer:</span>
+                  <div className="flex items-center gap-2">
+                    {confirmDeleteId === q.id ? (
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => handleDeleteQuery(q.id)}
+                          className="px-2.5 py-1 bg-rose-600 text-white text-[10px] font-bold rounded-lg cursor-pointer"
+                        >
+                          Confirm Delete
+                        </button>
+                        <button
+                          onClick={() => setConfirmDeleteId(null)}
+                          className={`px-2 py-1 text-[10px] font-bold rounded-lg ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-200 text-slate-700'}`}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmDeleteId(q.id)}
+                        className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                          isDark ? 'text-slate-500 hover:text-rose-400 hover:bg-rose-950/30' : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50'
+                        }`}
+                        title="Delete Ticket"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Question text box */}
+                <div className={`p-3.5 rounded-xl border text-xs font-mono ${
+                  isDark ? 'bg-slate-950/80 border-slate-800 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-800'
+                }`}>
+                  <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Question / Ticket Payload:</p>
+                  <p className="leading-relaxed">{q.question}</p>
+                </div>
+
+                {/* Reply Form / Response Area */}
+                <div className="space-y-2 pt-1">
+                  <label className={`block text-[11px] font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Instructor Answer / Response</label>
+                  <textarea
+                    value={replyText[q.id] !== undefined ? replyText[q.id] : (q.reply || '')}
+                    onChange={e => setReplyText({ ...replyText, [q.id]: e.target.value })}
+                    rows={3}
+                    placeholder="Type instructor response to stream to student portal..."
+                    className={`w-full border rounded-xl p-3 text-xs transition-all ${
+                      isDark ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-600 focus:border-indigo-500' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:border-indigo-500 shadow-xs'
+                    }`}
+                  />
+
+                  <div className="flex items-center justify-between gap-4 pt-1">
+                    {actionStatus[q.id] ? (
+                      <span className={`text-xs font-mono font-bold ${actionStatus[q.id].err ? 'text-rose-500' : 'text-emerald-500'}`}>
+                        {actionStatus[q.id].msg}
                       </span>
-                      {item.repliedAt && (
-                        <span className="text-[10px] text-slate-500 font-mono">
-                          Last answered: {new Date(item.repliedAt).toLocaleString()}
-                        </span>
-                      )}
-                    </div>
-                    <textarea
-                      value={replyText[item.id] !== undefined ? replyText[item.id] : (item.reply || '')}
-                      onChange={(e) => setReplyText({ ...replyText, [item.id]: e.target.value })}
-                      placeholder="Type instructor response / solution for student query here..."
-                      rows={3}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-sans"
-                    />
+                    ) : <div />}
 
-                    {/* Action Controls */}
-                    <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] text-slate-500">
-                          Submitted: {item.createdAt ? new Date(item.createdAt).toLocaleString() : 'Recent'}
-                        </span>
-                        {actionStatus[item.id] && (
-                          <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border animate-pulse ${
-                            actionStatus[item.id].err
-                              ? 'bg-red-500/20 text-red-400 border-red-500/30'
-                              : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                          }`}>
-                            {actionStatus[item.id].msg}
-                          </span>
-                        )}
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleSendQueryResponse(q, 'resolved')}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                          isDark ? 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700' : 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200'
+                        }`}
+                      >
+                        Mark Resolved
+                      </button>
 
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleSendQueryResponse(item, 'inprogress')}
-                          className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all border border-slate-700 flex items-center gap-1"
-                        >
-                          <Clock className="w-3.5 h-3.5" />
-                          <span>In Progress</span>
-                        </button>
-
-                        <button
-                          onClick={() => handleSendQueryResponse(item, 'resolved')}
-                          className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all border border-slate-700 flex items-center gap-1"
-                        >
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>Resolve</span>
-                        </button>
-
-                        <button
-                          onClick={() => handleSendQueryResponse(item, 'answered')}
-                          className="px-4 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition-all shadow-md flex items-center gap-1.5"
-                        >
-                          <Send className="w-3.5 h-3.5" />
-                          <span>Send Reply &amp; Mark Answered</span>
-                        </button>
-
-                        {deleteQuery && (
-                          confirmDeleteId === item.id ? (
-                            <div className="flex items-center gap-1.5 ml-1">
-                              <span className="text-[11px] text-slate-400">Delete?</span>
-                              <button
-                                onClick={() => handleDeleteQuery(item.id)}
-                                className="px-2.5 py-1 rounded-lg bg-red-500 hover:bg-red-400 text-white text-xs font-bold transition-all"
-                              >Yes</button>
-                              <button
-                                onClick={() => setConfirmDeleteId(null)}
-                                className="px-2.5 py-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs font-bold transition-all"
-                              >No</button>
-                            </div>
-                          ) : (
-                            <button
-                              onClick={() => setConfirmDeleteId(item.id)}
-                              className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all"
-                              title="Delete query"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )
-                        )}
-                      </div>
+                      <button
+                        onClick={() => handleSendQueryResponse(q, 'answered')}
+                        className="px-4 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-md cursor-pointer transition-all"
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                        <span>Send Reply & Mark Answered</span>
+                      </button>
                     </div>
                   </div>
                 </div>
-              ))
+              </div>
+            ))
           )}
         </div>
       )}
 
-      {/* TAB 2: Enterprise Quotes */}
+      {/* ── TAB 2: ENTERPRISE QUOTES ─────────────────────────────────────── */}
       {activeTab === 'quotes' && (
         <div className="space-y-4">
-          {enterpriseQuotes.length === 0 ? (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center text-slate-500 text-sm">
-              No enterprise quotes found in database.
-            </div>
-          ) : (
-            enterpriseQuotes
-              .filter(q => (q.org_name || '').toLowerCase().includes(search.toLowerCase()) || (q.contact_name || '').toLowerCase().includes(search.toLowerCase()))
-              .map((item) => (
-                <div key={item.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h4 className="text-white font-bold text-base">{item.org_name}</h4>
-                      <p className="text-xs text-slate-400">Contact: <strong>{item.contact_name}</strong> ({item.email} • {item.phone})</p>
-                    </div>
-                    <span className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border uppercase ${
-                      item.status === 'contacted' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-purple-500/20 text-purple-400 border-purple-500/30'
+          <div className="flex justify-end">
+            <button
+              onClick={handleAddSampleQuote}
+              disabled={isSubmittingSample}
+              className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-md cursor-pointer"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>{isSubmittingSample ? 'Generating...' : '+ Generate Sample Lead'}</span>
+            </button>
+          </div>
+
+          <div className={`border rounded-2xl p-5 shadow-xs space-y-4 ${
+            isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200'
+          }`}>
+            {filteredQuotes.length === 0 ? (
+              <div className="text-center py-10 text-slate-400 text-xs font-mono">
+                No enterprise quote submissions found matching search.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className={`border-b uppercase font-mono text-[10px] ${
+                      isDark ? 'border-slate-800 text-slate-400' : 'border-slate-200 text-slate-500'
                     }`}>
-                      {item.status || 'PENDING'}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 text-xs font-mono bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-300">
-                    <div><span className="text-slate-500">Audience:</span> {item.audience_type}</div>
-                    <div><span className="text-slate-500">Pupils:</span> {item.pupil_count}</div>
-                  </div>
-
-                  {item.notes && (
-                    <p className="text-slate-400 text-xs italic">
-                      Notes: "{item.notes}"
-                    </p>
-                  )}
-
-                  <div className="pt-2 flex items-center justify-between gap-3">
-                    <span className="text-[11px] text-slate-500">
-                      Requested: {item.created_at ? new Date(item.created_at).toLocaleString() : 'Recent'}
-                    </span>
-
-                    <button
-                      onClick={() => handleToggleQuoteStatus(item.id, item.status)}
-                      className="px-3.5 py-1.5 rounded-xl bg-purple-600/20 border border-purple-500/30 text-purple-300 text-xs font-bold hover:bg-purple-600/30 transition-all flex items-center gap-1.5"
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>Mark as {item.status === 'contacted' ? 'Pending' : 'Contacted'}</span>
-                    </button>
-                  </div>
-                </div>
-              ))
-          )}
+                      <th className="p-3">Organization</th>
+                      <th className="p-3">Contact Person</th>
+                      <th className="p-3">Email</th>
+                      <th className="p-3">Phone</th>
+                      <th className="p-3">Status</th>
+                      <th className="p-3 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className={`divide-y ${isDark ? 'divide-slate-800/60 text-slate-300' : 'divide-slate-200 text-slate-700'}`}>
+                    {filteredQuotes.map((q) => (
+                      <tr key={q.id} className={isDark ? 'hover:bg-slate-800/30' : 'hover:bg-slate-50'}>
+                        <td className={`p-3 font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{q.org_name}</td>
+                        <td className="p-3">{q.contact_name || 'N/A'}</td>
+                        <td className="p-3 font-mono text-indigo-600 font-semibold">{q.email}</td>
+                        <td className="p-3 font-mono">{q.phone || 'N/A'}</td>
+                        <td className="p-3">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${
+                            q.status === 'contacted'
+                              ? 'bg-emerald-500/20 text-emerald-600 border-emerald-500/30'
+                              : 'bg-amber-500/20 text-amber-600 border-amber-500/30'
+                          }`}>
+                            {q.status || 'pending'}
+                          </span>
+                        </td>
+                        <td className="p-3 text-right">
+                          <button
+                            onClick={() => handleToggleQuoteStatus(q.id, q.status)}
+                            className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] rounded-lg cursor-pointer"
+                          >
+                            {q.status === 'contacted' ? 'Mark Pending' : 'Mark Contacted'}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
-      {/* TAB 3: Contact Us Inquiries */}
+      {/* ── TAB 3: CONTACT INQUIRIES ──────────────────────────────────────── */}
       {activeTab === 'contact' && (
-        <div className="space-y-4">
-          {contactInquiries.length === 0 ? (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center text-slate-500 text-sm">
-              No contact inquiries found in database.
+        <div className={`border rounded-2xl p-5 shadow-xs space-y-4 ${
+          isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200'
+        }`}>
+          {filteredInquiries.length === 0 ? (
+            <div className="text-center py-10 text-slate-400 text-xs font-mono">
+              No public contact inquiries found matching search.
             </div>
           ) : (
-            contactInquiries
-              .filter(c => (c.name || '').toLowerCase().includes(search.toLowerCase()) || (c.subject || '').toLowerCase().includes(search.toLowerCase()))
-              .map((item) => (
-                <div key={item.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h4 className="text-white font-bold text-base">{item.name}</h4>
-                      <p className="text-xs text-slate-400">{item.email}</p>
-                    </div>
-                    <span className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border uppercase ${
-                      item.status === 'resolved' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30'
-                    }`}>
-                      {item.status || 'NEW'}
-                    </span>
-                  </div>
-
-                  <div className="text-xs text-amber-400 font-bold">Subject: {item.subject}</div>
-                  <p className="text-slate-300 text-xs bg-slate-950 border border-slate-800/80 rounded-xl p-3.5 leading-relaxed">
-                    "{item.message}"
-                  </p>
-
-                  <div className="pt-2 flex items-center justify-between gap-3">
-                    <span className="text-[11px] text-slate-500">
-                      Received: {item.created_at ? new Date(item.created_at).toLocaleString() : 'Recent'}
-                    </span>
-
-                    <button
-                      onClick={() => handleToggleInquiryStatus(item.id, item.status)}
-                      className="px-3.5 py-1.5 rounded-xl bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 text-xs font-bold hover:bg-indigo-500/30 transition-all flex items-center gap-1.5"
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>Mark as {item.status === 'resolved' ? 'New' : 'Resolved'}</span>
-                    </button>
-                  </div>
-                </div>
-              ))
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className={`border-b uppercase font-mono text-[10px] ${
+                    isDark ? 'border-slate-800 text-slate-400' : 'border-slate-200 text-slate-500'
+                  }`}>
+                    <th className="p-3">Sender Name</th>
+                    <th className="p-3">Email Address</th>
+                    <th className="p-3">Subject Header</th>
+                    <th className="p-3">Message Snippet</th>
+                    <th className="p-3">Status</th>
+                    <th className="p-3 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className={`divide-y ${isDark ? 'divide-slate-800/60 text-slate-300' : 'divide-slate-200 text-slate-700'}`}>
+                  {filteredInquiries.map((inq) => (
+                    <tr key={inq.id} className={isDark ? 'hover:bg-slate-800/30' : 'hover:bg-slate-50'}>
+                      <td className={`p-3 font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{inq.name}</td>
+                      <td className="p-3 font-mono text-indigo-600 font-semibold">{inq.email}</td>
+                      <td className="p-3 font-semibold">{inq.subject || 'General Inquiry'}</td>
+                      <td className="p-3 truncate max-w-xs">{inq.message}</td>
+                      <td className="p-3">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${
+                          inq.status === 'resolved'
+                            ? 'bg-emerald-500/20 text-emerald-600 border-emerald-500/30'
+                            : 'bg-amber-500/20 text-amber-600 border-amber-500/30'
+                        }`}>
+                          {inq.status || 'new'}
+                        </span>
+                      </td>
+                      <td className="p-3 text-right">
+                        <button
+                          onClick={() => handleToggleInquiryStatus(inq.id, inq.status)}
+                          className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] rounded-lg cursor-pointer"
+                        >
+                          {inq.status === 'resolved' ? 'Mark New' : 'Mark Resolved'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}

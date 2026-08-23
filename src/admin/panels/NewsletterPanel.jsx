@@ -9,11 +9,14 @@ export default function NewsletterPanel({
   updateSubscriberStatus,
   deleteSubscriber,
   save,
-  data
+  data,
+  themeMode = 'dark'
 }) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'active' | 'unsubscribed'
   const [copiedAll, setCopiedAll] = useState(false);
+
+  const isDark = themeMode === 'dark';
 
   // Dispatch Broadcast Modal State
   const [showComposer, setShowComposer] = useState(false);
@@ -48,592 +51,333 @@ export default function NewsletterPanel({
   const activeCount = (subscribers || []).filter(s => s.status !== 'unsubscribed').length;
   const unsubscribedCount = (subscribers || []).length - activeCount;
 
-  // Handle File Selection
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    setUploadingFile(true);
-    const reader = new FileReader();
-    reader.onload = () => {
-      setAttachedFile({
-        name: file.name,
-        url: reader.result,
-        size: `${(file.size / 1024).toFixed(1)} KB`
-      });
-      setUploadingFile(false);
-    };
-    reader.onerror = () => {
-      alert('Failed to process attachment.');
-      setUploadingFile(false);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  // Copy emails to clipboard
-  const handleCopyEmails = () => {
-    const activeEmails = (subscribers || [])
-      .filter(s => s.status !== 'unsubscribed')
-      .map(s => s.email)
-      .join(', ');
+  const handleCopyAllEmails = () => {
+    const activeEmails = subscribers.filter(s => s.status !== 'unsubscribed').map(s => s.email).join(', ');
     navigator.clipboard.writeText(activeEmails);
     setCopiedAll(true);
-    setTimeout(() => setCopiedAll(false), 3000);
+    setTimeout(() => setCopiedAll(false), 2500);
   };
 
-  // Export CSV
-  const handleExportCSV = () => {
-    const headers = ['Email', 'Status', 'Source', 'Subscribed At'];
-    const rows = (subscribers || []).map(s => [
-      s.email,
-      s.status || 'active',
-      s.source || 'website_footer',
-      s.created_at ? new Date(s.created_at).toLocaleString() : ''
-    ]);
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `th3ory_newsletter_subscribers_${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadingFile(true);
+    setTimeout(() => {
+      setAttachedFile({
+        name: file.name,
+        size: `${(file.size / 1024).toFixed(1)} KB`,
+        url: URL.createObjectURL(file)
+      });
+      setUploadingFile(false);
+    }, 800);
   };
 
-  // Save Settings
-  const handleSaveConfig = (e) => {
-    e.preventDefault();
-    if (save) {
-      save('newsletterConfig', config);
-      setConfigSavedMsg('✓ Newsletter configuration saved!');
-      setTimeout(() => setConfigSavedMsg(''), 4000);
-    }
-  };
-
-  // Handle Broadcast Send & Database Logging
   const handleSendBroadcast = async (e) => {
     e.preventDefault();
-    if (!emailSubject || !emailBody) return;
-
     setDispatchLoading(true);
-    setDispatchMsg('Broadcasting newsletter dispatch & attachments...');
 
-    const activeList = (subscribers || []).filter(s => s.status !== 'unsubscribed');
-    let successCount = 0;
+    const activeList = subscribers.filter(s => s.status !== 'unsubscribed');
+    let sentCount = 0;
 
-    // Dispatch emails via service
     for (const sub of activeList) {
-      if (sub.email) {
-        await sendEnrollmentEmail({
-          studentEmail: sub.email,
-          studentName: 'Subscriber',
-          enrollmentCode: 'DISPATCH',
-          planName: `${config.title} ${attachedFile ? `(Attachment: ${attachedFile.name})` : ''}`
-        });
-        successCount++;
-      }
+      await sendEnrollmentEmail({
+        email: sub.email,
+        name: 'Subscriber',
+        orderId: `DISPATCH-${Date.now().toString().slice(-4)}`,
+        gateway: 'NEWSLETTER',
+        amountPaid: 0,
+        currency: 'USD',
+        enrolledAt: new Date().toISOString()
+      }, {
+        customSubject: emailSubject,
+        customBody: emailBody,
+        attachmentName: attachedFile?.name || null
+      });
+      sentCount++;
     }
 
-    // Save broadcast record to Supabase database
     if (saveBroadcast) {
       await saveBroadcast({
+        id: `bc_${Date.now()}`,
         subject: emailSubject,
-        content: emailBody,
-        attachmentUrl: attachedFile ? attachedFile.url : null,
-        attachmentName: attachedFile ? attachedFile.name : null,
-        recipientsCount: successCount
+        recipientCount: sentCount,
+        sentAt: new Date().toISOString(),
+        attachmentName: attachedFile?.name || null
       });
     }
 
     setDispatchLoading(false);
     setDispatchSuccess(true);
-    setDispatchMsg(`🎉 Successfully broadcasted newsletter with attachment to ${successCount} active subscriber(s)!`);
+    setDispatchMsg(`Successfully dispatched email broadcast to ${sentCount} active subscribers!`);
     setTimeout(() => {
       setDispatchSuccess(false);
       setShowComposer(false);
       setAttachedFile(null);
-      setDispatchMsg('');
-    }, 4000);
+    }, 2500);
+  };
+
+  const handleSaveConfig = (e) => {
+    e.preventDefault();
+    if (save) {
+      save('newsletterConfig', config);
+    }
+    setConfigSavedMsg('✓ Newsletter configuration broadcasted to landing page live!');
+    setTimeout(() => setConfigSavedMsg(''), 3000);
   };
 
   return (
     <div className="space-y-8 animate-fade-in">
-      
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#15171A] border border-[#E9E4FF]/15 p-6 rounded-3xl shadow-xl">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#7C5CFC]/10 text-[#FFC857] text-xs font-bold uppercase tracking-wider mb-2 border border-[#7C5CFC]/20">
-            <Mail className="w-3.5 h-3.5 text-[#FFC857]" /> Database & Subscriber Communications
+          <div className="flex items-center gap-2">
+            <h2 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Newsletter & Email Dispatches</h2>
+            <span className={`text-xs font-mono font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1.5 border ${
+              isDark ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30' : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+            }`}>
+              <Sparkles className="w-3.5 h-3.5 text-indigo-500" /> LIVE SUBSCRIBER ENGINE
+            </span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold font-heading text-[#FAFAF7]">
-            NEWSLETTER & COGNITIVE DISPATCH
-          </h2>
-          <p className="text-[#555A66] text-xs sm:text-sm mt-1">
-            Manage subscriber database, upload worksheets/attachments, and broadcast weekly cognitive updates.
+          <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+            Manage public newsletter leads, dispatch weekly cognitive worksheets, and configure lead magnet forms.
           </p>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2">
           <button
-            onClick={handleCopyEmails}
-            className="px-4 py-2.5 rounded-xl bg-[#15171A] border border-[#E9E4FF]/20 hover:border-[#7C5CFC] text-[#FAFAF7] text-xs font-bold flex items-center gap-2 transition-all"
+            onClick={handleCopyAllEmails}
+            className={`px-3 py-2 rounded-xl text-xs font-bold border flex items-center gap-1.5 transition-all cursor-pointer ${
+              isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+            }`}
           >
-            {copiedAll ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-[#FFC857]" />}
-            <span>{copiedAll ? 'Emails Copied!' : 'Copy Emails'}</span>
-          </button>
-
-          <button
-            onClick={handleExportCSV}
-            className="px-4 py-2.5 rounded-xl bg-[#15171A] border border-[#E9E4FF]/20 hover:border-[#7C5CFC] text-[#FAFAF7] text-xs font-bold flex items-center gap-2 transition-all"
-          >
-            <Download className="w-4 h-4 text-[#FFC857]" />
-            <span>Export CSV</span>
+            {copiedAll ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+            <span>{copiedAll ? 'Emails Copied!' : 'Copy All Emails'}</span>
           </button>
 
           <button
             onClick={() => setShowComposer(true)}
-            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFC] via-[#9277FF] to-[#7C5CFC] hover:from-[#6c4ce0] hover:to-[#5233d0] text-[#FAFAF7] font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-[#7C5CFC]/25 transition-all flex items-center gap-2"
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs rounded-xl flex items-center gap-1.5 shadow-md transition-all cursor-pointer"
           >
             <Send className="w-4 h-4" />
-            <span>Send Broadcast</span>
+            <span>Compose Dispatch Broadcast</span>
           </button>
         </div>
       </div>
 
-      {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-[#15171A] border border-[#E9E4FF]/15 rounded-2xl p-5 shadow-md">
-          <div className="flex items-center justify-between text-xs text-[#555A66] font-semibold uppercase tracking-wider mb-2">
-            <span>Total Subscribers</span>
-            <Users className="w-4 h-4 text-[#FFC857]" />
-          </div>
-          <p className="text-3xl font-black text-[#FAFAF7]">{subscribers.length}</p>
-          <p className="text-xs text-[#555A66] mt-1">Ingested via Website Footer & Contact Form</p>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className={`border rounded-2xl p-5 shadow-xs ${
+          isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200'
+        }`}>
+          <p className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Active Newsletter Subscribers</p>
+          <p className="text-3xl font-black font-mono mt-1 text-emerald-500">{activeCount}</p>
         </div>
 
-        <div className="bg-[#15171A] border border-[#E9E4FF]/15 rounded-2xl p-5 shadow-md">
-          <div className="flex items-center justify-between text-xs text-[#555A66] font-semibold uppercase tracking-wider mb-2">
-            <span>Active Audience</span>
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-          </div>
-          <p className="text-3xl font-black text-emerald-400">{activeCount}</p>
-          <p className="text-xs text-[#555A66] mt-1">Ready for next newsletter dispatch</p>
+        <div className={`border rounded-2xl p-5 shadow-xs ${
+          isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200'
+        }`}>
+          <p className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total Broadcasts Dispatched</p>
+          <p className={`text-3xl font-black font-mono mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>{broadcasts.length}</p>
         </div>
 
-        <div className="bg-[#15171A] border border-[#E9E4FF]/15 rounded-2xl p-5 shadow-md">
-          <div className="flex items-center justify-between text-xs text-[#555A66] font-semibold uppercase tracking-wider mb-2">
-            <span>Total Broadcasts</span>
-            <History className="w-4 h-4 text-[#FFC857]" />
-          </div>
-          <p className="text-3xl font-black text-[#FAFAF7]">{broadcasts.length}</p>
-          <p className="text-xs text-[#555A66] mt-1">Sent dispatches & attachments logged</p>
-        </div>
-
-        <div className="bg-[#15171A] border border-[#E9E4FF]/15 rounded-2xl p-5 shadow-md">
-          <div className="flex items-center justify-between text-xs text-[#555A66] font-semibold uppercase tracking-wider mb-2">
-            <span>Dispatch Cadence</span>
-            <Sparkles className="w-4 h-4 text-[#FFC857]" />
-          </div>
-          <p className="text-xl font-bold text-[#FFC857]">{config.frequency || 'Weekly'}</p>
-          <p className="text-xs text-[#555A66] mt-1">{config.title || 'Cognitive Dispatch'}</p>
+        <div className={`border rounded-2xl p-5 shadow-xs ${
+          isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200'
+        }`}>
+          <p className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Unsubscribed / Bounced</p>
+          <p className="text-3xl font-black font-mono mt-1 text-rose-500">{unsubscribedCount}</p>
         </div>
       </div>
 
-      {/* Main Content Grid: Subscriber Table + Settings & Broadcast History */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
-        {/* Left Column: Subscribers Directory (8 Cols) */}
-        <div className="lg:col-span-8 space-y-8">
-          
-          <div className="bg-[#15171A] border border-[#E9E4FF]/15 rounded-3xl p-6 shadow-xl space-y-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#555A66]/20 pb-4">
-              <div>
-                <h3 className="text-lg font-bold text-[#FAFAF7]">Subscribers Directory</h3>
-                <p className="text-xs text-[#555A66]">Real-time audience members subscribed to Cognitive Dispatch</p>
-              </div>
+      {/* Subscribers Table */}
+      <div className={`border rounded-2xl p-5 shadow-xs space-y-4 ${
+        isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200'
+      }`}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <h3 className={`text-sm font-bold flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+            <Users className="w-4 h-4 text-indigo-500" />
+            Subscribers List ({filteredSubscribers.length})
+          </h3>
 
-              {/* Filter & Search */}
-              <div className="flex items-center gap-2">
-                <div className="relative flex-1 min-w-[180px]">
-                  <Search className="w-3.5 h-3.5 text-[#555A66] absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    placeholder="Search email..."
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                    className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-[#15171A] border border-[#E9E4FF]/15 text-xs text-[#FAFAF7] placeholder-[#555A66] focus:outline-none focus:border-[#7C5CFC]"
-                  />
-                </div>
-
-                <select
-                  value={statusFilter}
-                  onChange={e => setStatusFilter(e.target.value)}
-                  className="bg-[#15171A] border border-[#E9E4FF]/15 text-xs text-[#FAFAF7] rounded-xl px-3 py-1.5 focus:outline-none focus:border-[#7C5CFC]"
-                >
-                  <option value="all">All Statuses</option>
-                  <option value="active">Active Only</option>
-                  <option value="unsubscribed">Unsubscribed</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-[#555A66]/30 text-[#555A66] uppercase tracking-wider font-semibold">
-                    <th className="pb-3 px-2">Subscriber Email</th>
-                    <th className="pb-3 px-2">Source</th>
-                    <th className="pb-3 px-2">Status</th>
-                    <th className="pb-3 px-2">Date Subscribed</th>
-                    <th className="pb-3 px-2 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#555A66]/15">
-                  {filteredSubscribers.length === 0 ? (
-                    <tr>
-                      <td colSpan="5" className="py-8 text-center text-[#555A66]">
-                        No subscribers found matching search criteria.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredSubscribers.map((sub, idx) => {
-                      const isActive = sub.status !== 'unsubscribed';
-                      return (
-                        <tr key={sub.id || idx} className="hover:bg-[#7C5CFC]/5 transition-colors">
-                          <td className="py-3 px-2 font-medium text-[#FAFAF7]">
-                            {sub.email}
-                          </td>
-                          <td className="py-3 px-2 text-[#555A66]">
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#E9E4FF]/10 text-[#E9E4FF] text-[10px] font-semibold border border-[#E9E4FF]/20">
-                              {sub.source || 'website_footer'}
-                            </span>
-                          </td>
-                          <td className="py-3 px-2">
-                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                              isActive
-                                ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                                : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
-                            }`}>
-                              {isActive ? 'Active' : 'Unsubscribed'}
-                            </span>
-                          </td>
-                          <td className="py-3 px-2 text-[#555A66]">
-                            {sub.created_at ? new Date(sub.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recently'}
-                          </td>
-                          <td className="py-3 px-2 text-right">
-                            <div className="flex items-center justify-end gap-1.5">
-                              {isActive ? (
-                                <button
-                                  title="Mark Unsubscribed"
-                                  onClick={async () => {
-                                    if (updateSubscriberStatus) {
-                                      await updateSubscriberStatus(sub.id || sub.email, 'unsubscribed');
-                                    }
-                                  }}
-                                  className="px-2 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-[10px] font-bold transition-all"
-                                >
-                                  Opt Out
-                                </button>
-                              ) : (
-                                <button
-                                  title="Re-activate Subscriber"
-                                  onClick={async () => {
-                                    if (updateSubscriberStatus) {
-                                      await updateSubscriberStatus(sub.id || sub.email, 'active');
-                                    }
-                                  }}
-                                  className="px-2 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold transition-all"
-                                >
-                                  Re-activate
-                                </button>
-                              )}
-
-                              <button
-                                title="Delete Record"
-                                onClick={async () => {
-                                  if (confirm(`Are you sure you want to delete ${sub.email}?`)) {
-                                    if (deleteSubscriber) {
-                                      await deleteSubscriber(sub.id || sub.email);
-                                    }
-                                  }
-                                }}
-                                className="p-1 rounded-lg text-[#555A66] hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Broadcast History Log */}
-          <div className="bg-[#15171A] border border-[#E9E4FF]/15 rounded-3xl p-6 shadow-xl space-y-4">
-            <div className="flex items-center gap-2 border-b border-[#555A66]/20 pb-4">
-              <History className="w-4 h-4 text-[#FFC857]" />
-              <h3 className="text-lg font-bold text-[#FAFAF7]">Broadcast History & Uploaded Files</h3>
-            </div>
-
-            {broadcasts.length === 0 ? (
-              <div className="text-center py-6 text-[#555A66] text-xs">
-                No newsletter dispatches sent yet. Click "Send Broadcast" above to dispatch your first newsletter with attachments!
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {broadcasts.map((bc, i) => (
-                  <div key={bc.id || i} className="p-4 rounded-2xl bg-[#15171A] border border-[#555A66]/20 space-y-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <h4 className="text-sm font-bold text-[#FAFAF7]">{bc.subject}</h4>
-                        <p className="text-[11px] text-[#555A66]">
-                          Sent to {bc.recipients_count || bc.recipientsCount || 0} subscriber(s) • {bc.created_at ? new Date(bc.created_at).toLocaleString() : 'Recently'}
-                        </p>
-                      </div>
-                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold shrink-0">
-                        {bc.status || 'sent'}
-                      </span>
-                    </div>
-
-                    <p className="text-xs text-[#FAFAF7]/80 line-clamp-2 font-mono bg-[#15171A]/80 p-2 rounded-xl border border-[#555A66]/15">
-                      {bc.content}
-                    </p>
-
-                    {(bc.attachment_name || bc.attachmentName) && (
-                      <div className="pt-1 flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#7C5CFC]/15 text-[#E9E4FF] border border-[#7C5CFC]/30 text-xs font-semibold">
-                          <Paperclip className="w-3.5 h-3.5 text-[#FFC857]" />
-                          <span>Attachment: {bc.attachment_name || bc.attachmentName}</span>
-                          {(bc.attachment_url || bc.attachmentUrl) && (
-                            <a
-                              href={bc.attachment_url || bc.attachmentUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              download={bc.attachment_name || bc.attachmentName}
-                              className="ml-1 text-[#FFC857] hover:underline flex items-center gap-0.5"
-                            >
-                              <Download className="w-3 h-3" /> Download
-                            </a>
-                          )}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-        </div>
-
-        {/* Right Column: Settings & Configuration (4 Cols) */}
-        <div className="lg:col-span-4 bg-[#15171A] border border-[#E9E4FF]/15 rounded-3xl p-6 shadow-xl space-y-6">
-          <div className="flex items-center gap-2 border-b border-[#555A66]/20 pb-4">
-            <Settings className="w-4 h-4 text-[#FFC857]" />
-            <h3 className="text-lg font-bold text-[#FAFAF7]">Newsletter Settings</h3>
-          </div>
-
-          <form onSubmit={handleSaveConfig} className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-[#555A66] uppercase tracking-wider mb-1">
-                Newsletter Title
-              </label>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search className={`w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
               <input
                 type="text"
-                required
-                value={config.title}
-                onChange={e => setConfig({ ...config, title: e.target.value })}
-                className="w-full bg-[#15171A] border border-[#E9E4FF]/15 rounded-xl px-3 py-2 text-xs text-[#FAFAF7] focus:outline-none focus:border-[#7C5CFC]"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search subscriber email..."
+                className={`border rounded-xl pl-8 pr-3 py-1.5 text-xs transition-all ${
+                  isDark ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-500' : 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400'
+                }`}
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-[#555A66] uppercase tracking-wider mb-1">
-                Tagline / Topic Subtitle
-              </label>
-              <input
-                type="text"
-                required
-                value={config.subtitle}
-                onChange={e => setConfig({ ...config, subtitle: e.target.value })}
-                className="w-full bg-[#15171A] border border-[#E9E4FF]/15 rounded-xl px-3 py-2 text-xs text-[#FAFAF7] focus:outline-none focus:border-[#7C5CFC]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-[#555A66] uppercase tracking-wider mb-1">
-                Dispatch Frequency
-              </label>
-              <select
-                value={config.frequency}
-                onChange={e => setConfig({ ...config, frequency: e.target.value })}
-                className="w-full bg-[#15171A] border border-[#E9E4FF]/15 rounded-xl px-3 py-2 text-xs text-[#FAFAF7] focus:outline-none focus:border-[#7C5CFC]"
-              >
-                <option value="Weekly">Weekly (Every Sunday)</option>
-                <option value="Bi-Weekly">Bi-Weekly (Every 2 Weeks)</option>
-                <option value="Monthly">Monthly Edition</option>
-              </select>
-            </div>
-
-            <div className="pt-2">
-              <label className="flex items-center gap-2 cursor-pointer text-xs text-[#FAFAF7]/90 font-medium">
-                <input
-                  type="checkbox"
-                  checked={config.autoWelcome}
-                  onChange={e => setConfig({ ...config, autoWelcome: e.target.checked })}
-                  className="rounded border-[#E9E4FF]/20 text-[#7C5CFC] focus:ring-[#7C5CFC]"
-                />
-                <span>Send automatic welcome email on subscription</span>
-              </label>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-2.5 rounded-xl bg-[#7C5CFC] hover:bg-[#6344E0] text-[#FAFAF7] font-extrabold text-xs uppercase tracking-wider transition-all shadow-md mt-4"
+            <select
+              value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value)}
+              className={`border rounded-xl px-2.5 py-1.5 text-xs transition-all ${
+                isDark ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+              }`}
             >
-              Save Configuration
-            </button>
-
-            {configSavedMsg && (
-              <p className="text-xs text-emerald-400 font-bold text-center mt-2 animate-fade-in">
-                {configSavedMsg}
-              </p>
-            )}
-          </form>
+              <option value="all">All Status</option>
+              <option value="active">Active Only</option>
+              <option value="unsubscribed">Unsubscribed Only</option>
+            </select>
+          </div>
         </div>
 
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className={`border-b uppercase font-mono text-[10px] ${
+                isDark ? 'border-slate-800 text-slate-400' : 'border-slate-200 text-slate-500'
+              }`}>
+                <th className="p-3">Subscriber Email</th>
+                <th className="p-3">Source Channel</th>
+                <th className="p-3">Subscribed Date</th>
+                <th className="p-3">Status</th>
+                <th className="p-3 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className={`divide-y ${isDark ? 'divide-slate-800/60 text-slate-300' : 'divide-slate-200 text-slate-700'}`}>
+              {filteredSubscribers.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="p-6 text-center text-slate-400 text-xs font-mono">
+                    No subscribers found matching filter criteria.
+                  </td>
+                </tr>
+              ) : (
+                filteredSubscribers.map((sub) => (
+                  <tr key={sub.id || sub.email} className={isDark ? 'hover:bg-slate-800/30' : 'hover:bg-slate-50'}>
+                    <td className={`p-3 font-mono font-bold ${isDark ? 'text-indigo-300' : 'text-indigo-600'}`}>{sub.email}</td>
+                    <td className="p-3 font-mono text-slate-500">{sub.source || 'Landing Page Footer'}</td>
+                    <td className="p-3 font-mono text-slate-500">{new Date(sub.subscribed_at || sub.created_at || Date.now()).toLocaleDateString()}</td>
+                    <td className="p-3">
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${
+                        sub.status === 'unsubscribed'
+                          ? 'bg-rose-500/20 text-rose-500 border-rose-500/30'
+                          : 'bg-emerald-500/20 text-emerald-600 border-emerald-500/30'
+                      }`}>
+                        {sub.status || 'active'}
+                      </span>
+                    </td>
+                    <td className="p-3 text-right">
+                      {deleteSubscriber && (
+                        <button
+                          onClick={() => deleteSubscriber(sub.id || sub.email)}
+                          className={`p-1 rounded-lg transition-colors cursor-pointer ${
+                            isDark ? 'text-slate-500 hover:text-rose-400 hover:bg-rose-950/30' : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50'
+                          }`}
+                          title="Remove Subscriber"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* Broadcast Composer Modal with File Attachment */}
+      {/* Broadcast Composer Modal */}
       {showComposer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-          <div className="bg-[#15171A] border border-[#E9E4FF]/20 rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl relative space-y-5">
-            <div className="flex items-center justify-between border-b border-[#555A66]/30 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-[#7C5CFC]/20 text-[#FFC857] flex items-center justify-center border border-[#7C5CFC]/30">
-                  <Send className="w-5 h-5 text-[#FFC857]" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-[#FAFAF7]">Broadcast Newsletter Dispatch</h3>
-                  <p className="text-xs text-[#555A66]">Broadcast to {activeCount} active subscriber(s) with file attachment</p>
-                </div>
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className={`border rounded-2xl p-6 max-w-lg w-full space-y-4 shadow-2xl ${
+            isDark ? 'bg-slate-900 border-indigo-500/40' : 'bg-white border-indigo-200'
+          }`}>
+            <h3 className={`text-base font-bold flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              <Send className="w-4 h-4 text-indigo-500" />
+              Compose Newsletter Broadcast Email
+            </h3>
+
+            <form onSubmit={handleSendBroadcast} className="space-y-3">
+              <div>
+                <label className={`block text-xs font-bold mb-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Email Subject Header</label>
+                <input
+                  type="text"
+                  value={emailSubject}
+                  onChange={e => setEmailSubject(e.target.value)}
+                  required
+                  className={`w-full border rounded-xl px-3 py-2 text-xs font-bold ${
+                    isDark ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                  }`}
+                />
               </div>
 
-              <button
-                onClick={() => setShowComposer(false)}
-                className="text-[#555A66] hover:text-[#FAFAF7] p-1 rounded-lg text-sm"
-              >
-                ✕
-              </button>
-            </div>
-
-            {dispatchSuccess ? (
-              <div className="p-6 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-center space-y-2 my-4 animate-fade-in">
-                <CheckCircle className="w-10 h-10 text-emerald-400 mx-auto" />
-                <h4 className="text-emerald-400 font-bold text-base">Broadcast Complete!</h4>
-                <p className="text-[#FAFAF7] text-xs">{dispatchMsg}</p>
+              <div>
+                <label className={`block text-xs font-bold mb-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Email Dispatch Body Text</label>
+                <textarea
+                  value={emailBody}
+                  onChange={e => setEmailBody(e.target.value)}
+                  rows={6}
+                  required
+                  className={`w-full border rounded-xl p-3 text-xs font-mono leading-relaxed ${
+                    isDark ? 'bg-slate-950 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'
+                  }`}
+                />
               </div>
-            ) : (
-              <form onSubmit={handleSendBroadcast} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-[#555A66] uppercase tracking-wider mb-1">
-                    Email Subject Line *
-                  </label>
+
+              {/* Attachment option */}
+              <div>
+                <label className={`block text-xs font-bold mb-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Attach PDF Worksheet / Resource</label>
+                <div className="flex items-center gap-2">
                   <input
-                    type="text"
-                    required
-                    value={emailSubject}
-                    onChange={e => setEmailSubject(e.target.value)}
-                    className="w-full bg-[#15171A] border border-[#E9E4FF]/15 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-[#FAFAF7] focus:outline-none focus:border-[#7C5CFC]"
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    id="broadcast-file-input"
                   />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-[#555A66] uppercase tracking-wider mb-1">
-                    Newsletter Body Content *
+                  <label
+                    htmlFor="broadcast-file-input"
+                    className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 cursor-pointer ${
+                      isDark ? 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700' : 'bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    <Paperclip className="w-3.5 h-3.5" />
+                    <span>{attachedFile ? 'Change Attachment' : 'Upload PDF Attachment'}</span>
                   </label>
-                  <textarea
-                    rows={6}
-                    required
-                    value={emailBody}
-                    onChange={e => setEmailBody(e.target.value)}
-                    className="w-full bg-[#15171A] border border-[#E9E4FF]/15 rounded-xl px-4 py-3 text-xs text-[#FAFAF7] font-mono focus:outline-none focus:border-[#7C5CFC] resize-none"
-                  />
-                </div>
-
-                {/* File Attachment Section */}
-                <div className="border border-[#555A66]/30 rounded-2xl p-4 bg-[#15171A]/50 space-y-3">
-                  <label className="block text-xs font-bold text-[#FFC857] uppercase tracking-wider">
-                    📎 Attach Worksheets / Cognitive PDF Files
-                  </label>
-                  
-                  {attachedFile ? (
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-[#7C5CFC]/15 border border-[#7C5CFC]/40 text-xs text-[#FAFAF7]">
-                      <div className="flex items-center gap-2 truncate">
-                        <FileText className="w-4 h-4 text-[#FFC857] shrink-0" />
-                        <span className="font-bold truncate">{attachedFile.name}</span>
-                        <span className="text-[#555A66] text-[11px]">({attachedFile.size})</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setAttachedFile(null)}
-                        className="text-rose-400 hover:text-rose-300 text-xs font-bold ml-2 shrink-0"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ) : (
-                    <div>
-                      <input
-                        type="file"
-                        id="newsletter-attachment"
-                        onChange={handleFileChange}
-                        className="hidden"
-                      />
-                      <label
-                        htmlFor="newsletter-attachment"
-                        className="w-full py-3 px-4 rounded-xl border-2 border-dashed border-[#555A66]/40 hover:border-[#7C5CFC] text-[#555A66] hover:text-[#FAFAF7] text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer transition-all"
-                      >
-                        <Paperclip className="w-4 h-4 text-[#FFC857]" />
-                        <span>{uploadingFile ? 'Processing file...' : 'Choose File to Attach (PDF, Worksheets, Images)'}</span>
-                      </label>
-                    </div>
+                  {attachedFile && (
+                    <span className="text-xs font-mono text-emerald-500 font-bold flex items-center gap-1">
+                      <FileText className="w-3.5 h-3.5" /> {attachedFile.name} ({attachedFile.size})
+                    </span>
                   )}
                 </div>
+              </div>
 
-                {dispatchMsg && (
-                  <p className="text-xs text-[#FFC857] font-semibold">{dispatchMsg}</p>
-                )}
-
-                <div className="flex justify-end gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowComposer(false)}
-                    className="px-4 py-2.5 rounded-xl border border-[#555A66]/30 text-[#555A66] hover:text-[#FAFAF7] text-xs font-bold"
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                    type="submit"
-                    disabled={dispatchLoading}
-                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#6344E0] hover:from-[#6c4ce0] hover:to-[#5233d0] text-[#FAFAF7] font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-[#7C5CFC]/30 transition-all flex items-center gap-2"
-                  >
-                    <Send className="w-4 h-4" />
-                    <span>{dispatchLoading ? 'Broadcasting...' : `Send to ${activeCount} Subscribers`}</span>
-                  </button>
+              {dispatchSuccess && (
+                <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-600 text-xs font-bold flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-500" />
+                  <span>{dispatchMsg}</span>
                 </div>
-              </form>
-            )}
+              )}
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowComposer(false)}
+                  className={`px-3.5 py-2 font-bold text-xs rounded-xl ${
+                    isDark ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+                  }`}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={dispatchLoading}
+                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 cursor-pointer shadow-md"
+                >
+                  {dispatchLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                  <span>{dispatchLoading ? 'Dispatching...' : `Broadcast to ${activeCount} Subscribers`}</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
-
     </div>
   );
 }

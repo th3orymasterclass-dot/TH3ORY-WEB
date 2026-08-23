@@ -630,15 +630,11 @@ function GoogleDriveFolderManager({ data, save }) {
                 <button onClick={() => setShowFolderModal(false)} className="text-slate-500 hover:text-white p-1 ml-2"><X className="w-5 h-5"/></button>
               </div>
             </div>
-            {/* Permission Guide Helper Banner */}
             <div className="px-6 py-2.5 bg-blue-950/40 border-b border-blue-500/20 flex items-center justify-between text-xs text-blue-300">
               <span className="flex items-center gap-1.5">
                 <AlertCircle className="w-4 h-4 text-amber-400 shrink-0"/> 
                 <span>Ensure folder permission in <strong>th3orymasterclass@gmail.com</strong> is set to <strong>"Anyone with the link can view"</strong> for live embedded streaming.</span>
               </span>
-              <a href={parsed.viewUrl || folderUrlInput} target="_blank" rel="noreferrer" className="text-amber-400 hover:underline font-bold shrink-0">
-                Fix Drive Sharing →
-              </a>
             </div>
             <div className="flex-1 bg-slate-950 p-2">
               <iframe
@@ -656,7 +652,7 @@ function GoogleDriveFolderManager({ data, save }) {
 }
 
 // ─── Main Panel ────────────────────────────────────────────────────────────────
-export default function ContentPanel({ data, save, reset }) {
+export default function ContentPanel({ data, save, reset, themeMode = 'dark' }) {
   const content = data.content ?? [];
   const levels  = data.levels  ?? [];
 
@@ -665,6 +661,8 @@ export default function ContentPanel({ data, save, reset }) {
   const [viewMode, setViewMode] = useState('grid');
   const [modal, setModal]       = useState(null);
   const [filterAccess, setFilterAccess] = useState('all');
+
+  const isDark = themeMode === 'dark';
 
   const saveContent = (updated) => save('content', updated);
 
@@ -679,24 +677,39 @@ export default function ContentPanel({ data, save, reset }) {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this content item?')) return;
-    saveContent(content.filter(c => c.id !== id));
+    if (!confirm('Are you sure you want to delete this content item?')) return;
+    const updated = content.filter(c => c.id !== id);
+    saveContent(updated);
     await deleteCourseContentFromSupabase(id);
   };
 
   const handleTogglePublish = async (id) => {
-    const target = content.find(c => c.id === id);
-    if (!target) return;
-    const updatedItem = { ...target, published: !target.published };
-    saveContent(content.map(c => c.id === id ? updatedItem : c));
-    await saveCourseContentToSupabase(updatedItem);
+    const updated = content.map(c => c.id === id ? { ...c, published: !c.published } : c);
+    saveContent(updated);
+    const target = updated.find(c => c.id === id);
+    if (target) await saveCourseContentToSupabase(target);
   };
 
-  const filtered = content.filter(c => {
-    const matchSearch = !search || c.title.toLowerCase().includes(search.toLowerCase()) || (c.description || '').toLowerCase().includes(search.toLowerCase());
-    const matchType   = filterType === 'all' || c.type === filterType || (filterType === 'gdrive' && parseGoogleDriveUrl(c.url).isGDrive);
-    const matchAccess = filterAccess === 'all' || c.access === filterAccess;
-    return matchSearch && matchType && matchAccess;
+  // Filter content
+  const filtered = content.filter(item => {
+    const q = search.toLowerCase();
+    const matchesSearch = (item.title || '').toLowerCase().includes(q) ||
+                          (item.description || '').toLowerCase().includes(q) ||
+                          (item.tags || []).some(t => t.toLowerCase().includes(q));
+
+    const gdrive = parseGoogleDriveUrl(item.url);
+    const isDrive = gdrive.isGDrive || item.storageType === 'gdrive';
+
+    const matchesType =
+      filterType === 'all'    ? true :
+      filterType === 'gdrive' ? isDrive :
+      item.type === filterType;
+
+    const matchesAccess =
+      filterAccess === 'all'  ? true :
+      item.access === filterAccess;
+
+    return matchesSearch && matchesType && matchesAccess;
   });
 
   const stats = {
@@ -708,33 +721,37 @@ export default function ContentPanel({ data, save, reset }) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black text-white flex items-center gap-2">
-            Course Content Library <span className="text-xs font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded-full flex items-center gap-1"><HardDrive className="w-3 h-3"/> GDrive Storage Ready</span>
+          <h2 className={`text-2xl font-black flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+            Course Content Library <span className={`text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border ${
+              isDark ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' : 'bg-blue-50 text-blue-700 border-blue-200'
+            }`}><HardDrive className="w-3 h-3 text-blue-500"/> GDrive Storage Ready</span>
           </h2>
-          <p className="text-slate-500 text-sm mt-1">Manage course materials, videos, PDFs, and digital workbooks backed by Google Drive</p>
+          <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Manage course materials, videos, PDFs, and digital workbooks backed by Google Drive</p>
         </div>
         <button
           onClick={() => setModal({ ...BLANK_ITEM })}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition-all shrink-0"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition-all shrink-0 cursor-pointer shadow-md"
         >
           <Plus className="w-4 h-4" /> Add Content
         </button>
       </div>
 
       {/* Stats bar */}
-      <div className="grid grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {[
-          { label: 'Total Items',   value: stats.total,     color: 'text-white' },
-          { label: 'Published',     value: stats.published,  color: 'text-green-400' },
-          { label: 'Videos',        value: stats.videos,     color: 'text-blue-400' },
-          { label: 'Google Drive',  value: stats.gdrive,     color: 'text-blue-400' },
-          { label: 'Free Preview',  value: stats.free,       color: 'text-amber-400' },
+          { label: 'Total Items',   value: stats.total,     color: isDark ? 'text-white' : 'text-slate-900' },
+          { label: 'Published',     value: stats.published,  color: 'text-emerald-500' },
+          { label: 'Videos',        value: stats.videos,     color: 'text-blue-500' },
+          { label: 'Google Drive',  value: stats.gdrive,     color: 'text-indigo-500' },
+          { label: 'Free Preview',  value: stats.free,       color: 'text-amber-500' },
         ].map((s, i) => (
-          <div key={i} className="bg-slate-900 border border-slate-800 rounded-xl p-3 text-center">
+          <div key={i} className={`border rounded-xl p-3 text-center shadow-xs ${
+            isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200'
+          }`}>
             <div className={`text-2xl font-black ${s.color}`}>{s.value}</div>
             <div className="text-slate-500 text-xs mt-0.5 uppercase tracking-wide">{s.label}</div>
           </div>

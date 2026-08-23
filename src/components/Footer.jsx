@@ -61,7 +61,33 @@ export default function Footer({ onOpenCheckout }) {
               <li><a href="#roadmap" className="hover:text-amber-400 transition-colors">30-Day Level Roadmap</a></li>
               <li><a href="#outcomes" className="hover:text-amber-400 transition-colors">Outcomes &amp; Bonuses</a></li>
               <li><a href="#pricing" className="hover:text-amber-400 transition-colors">Pricing &amp; Plans</a></li>
-              <li><button onClick={() => setLegalModalTab('privacy')} className="hover:text-amber-400 transition-colors text-left cursor-pointer">Privacy Policy</button></li>
+              <li>
+                <a 
+                  href="#enterprise" 
+                  onClick={(e) => { e.preventDefault(); window.location.hash = 'enterprise'; window.dispatchEvent(new Event('hashchange')); }} 
+                  className="hover:text-amber-400 transition-colors text-amber-300 font-semibold cursor-pointer"
+                >
+                  Enterprise Programs →
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="#ambassador" 
+                  onClick={(e) => { e.preventDefault(); window.location.hash = 'ambassador'; window.dispatchEvent(new Event('hashchange')); }} 
+                  className="hover:text-amber-400 transition-colors text-amber-300 font-semibold cursor-pointer"
+                >
+                  Campus Ambassador Program →
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="#privacy" 
+                  onClick={(e) => { e.preventDefault(); window.location.hash = 'privacy'; window.dispatchEvent(new Event('hashchange')); }} 
+                  className="hover:text-amber-400 transition-colors text-left cursor-pointer font-semibold text-emerald-400"
+                >
+                  Privacy Policy &amp; Data Rights →
+                </a>
+              </li>
               <li><button onClick={() => setLegalModalTab('terms')} className="hover:text-amber-400 transition-colors text-left cursor-pointer">Terms of Service</button></li>
               <li><button onClick={() => setLegalModalTab('refund')} className="hover:text-amber-400 transition-colors text-left cursor-pointer">Refund Policy</button></li>
               <li className="pt-2 border-t border-slate-900">
@@ -103,7 +129,13 @@ export default function Footer({ onOpenCheckout }) {
             &copy; 2026 Mentalist Sravan Production. All rights reserved. TH3ORY Masterclass of Influencing.
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <button onClick={() => setLegalModalTab('privacy')} className="hover:text-amber-400 transition-colors cursor-pointer">Privacy</button>
+            <a
+              href="#privacy"
+              onClick={(e) => { e.preventDefault(); window.location.hash = 'privacy'; window.dispatchEvent(new Event('hashchange')); }}
+              className="hover:text-amber-400 transition-colors cursor-pointer text-slate-300 font-semibold"
+            >
+              Privacy Policy
+            </a>
             <span>•</span>
             <button onClick={() => setLegalModalTab('terms')} className="hover:text-amber-400 transition-colors cursor-pointer">Terms</button>
             <span>•</span>

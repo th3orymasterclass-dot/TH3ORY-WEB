@@ -298,6 +298,29 @@ CREATE INDEX IF NOT EXISTS idx_student_habit_trackers_email_day ON public.studen
 ALTER TABLE public.student_habit_trackers ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow public read/insert on student_habit_trackers" ON public.student_habit_trackers FOR ALL USING (true) WITH CHECK (true);
 
+-- 13. TEAM APPROVAL REQUESTS TABLE (Two-Step Admin Approval Workflow for Team Portal Actions)
+CREATE TABLE IF NOT EXISTS public.team_approval_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    team_member_name TEXT NOT NULL DEFAULT 'Team Admin',
+    team_member_email TEXT,
+    module_type TEXT NOT NULL, -- 'enterprise_quotes', 'contact_inquiries', 'affiliate_program'
+    action_type TEXT NOT NULL, -- 'update_status', 'reply_inquiry', 'create_coupon', 'update_coupon'
+    target_id TEXT,
+    proposed_changes JSONB NOT NULL DEFAULT '{}'::jsonb,
+    status TEXT DEFAULT 'pending', -- 'pending', 'approved', 'rejected'
+    admin_notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_team_approval_requests_status ON public.team_approval_requests(status);
+CREATE INDEX IF NOT EXISTS idx_team_approval_requests_module ON public.team_approval_requests(module_type);
+
+ALTER TABLE public.team_approval_requests ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow public read/insert on team_approval_requests" ON public.team_approval_requests;
+CREATE POLICY "Allow public read/insert on team_approval_requests" ON public.team_approval_requests FOR ALL USING (true) WITH CHECK (true);
+
+
 -- 13. STUDENT PROGRESS TABLE (Alternative naming for persistent student course progress)
 CREATE TABLE IF NOT EXISTS public.student_progress (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -328,6 +351,35 @@ CREATE POLICY "Allow public read/insert on user_progress" ON public.user_progres
 CREATE POLICY "Allow public read/insert on coupons" ON public.coupons FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public read/insert on certificates" ON public.certificates FOR ALL USING (true) WITH CHECK (true);
 
+-- 16. AMBASSADOR APPLICATIONS TABLE (Campus Ambassador Recruitment & Performance)
+CREATE TABLE IF NOT EXISTS public.ambassador_applications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    app_id TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    phone TEXT,
+    college_name TEXT NOT NULL,
+    degree TEXT,
+    year_of_study TEXT,
+    social_handles TEXT,
+    leadership_exp TEXT,
+    motivation TEXT,
+    status TEXT DEFAULT 'PENDING', -- PENDING, INTERVIEW_SCHEDULED, APPROVED, REJECTED
+    ambassador_code TEXT,
+    password_hash TEXT,
+    points INT DEFAULT 0,
+    tier TEXT DEFAULT 'Tier 1',
+    total_leads INT DEFAULT 0,
+    total_enrollments INT DEFAULT 0,
+    total_commission NUMERIC(10, 2) DEFAULT 0.00,
+    weekly_reports JSONB DEFAULT '[]'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    approved_at TIMESTAMPTZ
+);
+
+ALTER TABLE public.ambassador_applications ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow public read/insert on ambassador_applications" ON public.ambassador_applications FOR ALL USING (true) WITH CHECK (true);
+
 -- ==============================================================================
 -- SUPABASE REALTIME REPLICATION ENABLEMENT
 -- Enables instant WebSocket streaming for live updates across all open browsers
@@ -351,7 +403,8 @@ BEGIN
       public.student_progress,
       public.coupons,
       public.certificates,
-      public.student_habit_trackers;
+      public.student_habit_trackers,
+      public.ambassador_applications;
   END IF;
 EXCEPTION WHEN OTHERS THEN
   RAISE NOTICE 'Publication table addition skipped or already present.';

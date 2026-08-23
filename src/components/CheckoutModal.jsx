@@ -49,6 +49,9 @@ export default function CheckoutModal({
   const [orderCompleted, setOrderCompleted] = useState(false);
   const [receiptData, setReceiptData] = useState(null);
 
+  const [acceptedModalPrivacy, setAcceptedModalPrivacy] = useState(false);
+  const [modalPrivacyErr, setModalPrivacyErr] = useState(false);
+
   // Auto-detect coupon from URL parameter
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -119,6 +122,11 @@ export default function CheckoutModal({
 
   const handleProcessPayment = async (e) => {
     e.preventDefault();
+    if (!acceptedModalPrivacy) {
+      setModalPrivacyErr(true);
+      alert('Please read and agree to the Privacy Policy & Terms before authorizing payment.');
+      return;
+    }
     setStep(3);
     setIsProcessing(true);
     setProcessingMsg('Connecting to Razorpay SSL 256-Bit Payment Gateway...');
@@ -545,6 +553,68 @@ export default function CheckoutModal({
                     <span key={b} className="px-2 py-0.5 bg-slate-900 border border-slate-800 rounded-md text-slate-300">{b}</span>
                   ))}
                 </div>
+              </div>
+
+              {/* Privacy Policy & Terms Scrollable Box */}
+              <div className="space-y-3 bg-slate-900 border border-slate-800 rounded-2xl p-4 text-left">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-amber-400 uppercase tracking-widest flex items-center gap-1.5 font-brand">
+                    <ShieldCheck className="w-4 h-4 text-amber-400" /> Statutory Privacy Policy &amp; Terms
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-mono bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
+                    Scroll box below
+                  </span>
+                </div>
+
+                {/* Scrollable Privacy Text Box */}
+                <div className="max-h-36 overflow-y-auto pr-2 space-y-2.5 text-xs text-slate-300 leading-relaxed bg-slate-950 p-3.5 rounded-xl border border-slate-800 custom-scrollbar font-sans">
+                  <p className="font-semibold text-white">
+                    Privacy Policy &amp; Enrollment Terms (Effective Date: August 2026)
+                  </p>
+                  <p>
+                    By finalizing your enrollment in <strong>TH3ORY Masterclass</strong> ("Mentalist Sravan Production"), you explicitly consent to our processing of your personal information in accordance with global data protection standards including EU GDPR (Article 6), CCPA/CPRA, Indian DPDP Act 2023, IT Act 2000 (SPDI Rules), and COPPA.
+                  </p>
+
+                  <p className="font-semibold text-amber-400 pt-1">1. Data Collection &amp; Purpose</p>
+                  <p>
+                    We collect student profile details (name, email, phone, DOB), learning progress data, habit tracker entries stored in <code className="text-purple-300">student_habit_trackers</code>, task checklist progress stored in <code className="text-emerald-300">task_steps</code>, and enterprise enquiry submissions. Payments are processed securely via PCI-DSS Level 1 compliant gateway Razorpay Software Private Limited. We never store raw credit card numbers or PINs.
+                  </p>
+
+                  <p className="font-semibold text-amber-400 pt-1">2. 24-Hour Active Session Lifetime Policy</p>
+                  <p>
+                    Student Portal login sessions are strictly limited to a maximum 24-hour continuous duration. Automatic signout is enforced after 24 hours to preserve student account security on public or shared devices.
+                  </p>
+
+                  <p className="font-semibold text-amber-400 pt-1">3. Data Subject Rights &amp; Requests</p>
+                  <p>
+                    You retain full rights to request Data Export (SAR), Account Erasure (Right to be Forgotten), Data Rectification, or Opt-Out by visiting <a href="#privacy" target="_blank" rel="noopener noreferrer" className="text-amber-400 underline font-bold">th3ory.online/#/privacy</a> or contacting our Data Protection Officer at <code className="text-slate-200">privacy@th3ory.online</code>.
+                  </p>
+
+                  <p className="font-semibold text-amber-400 pt-1">4. 14-Day Guarantee &amp; Content License</p>
+                  <p>
+                    All video lessons, workbooks, PDFs, frameworks, and masterclass resources are the exclusive intellectual property of Mentalist Sravan Production. Single-user non-transferable access license is granted upon payment. 14-day 100% money-back guarantee applies under support policy guidelines.
+                  </p>
+                </div>
+
+                {/* Mandatory Agreement Checkbox */}
+                <label className={`flex items-start gap-2.5 p-3 rounded-xl border transition-all cursor-pointer ${
+                  modalPrivacyErr && !acceptedModalPrivacy 
+                    ? 'bg-red-950/40 border-red-500/60 text-red-300' 
+                    : 'bg-slate-950/50 border-slate-800 text-slate-300 hover:border-slate-700'
+                }`}>
+                  <input
+                    type="checkbox"
+                    checked={acceptedModalPrivacy}
+                    onChange={(e) => {
+                      setAcceptedModalPrivacy(e.target.checked);
+                      if (e.target.checked) setModalPrivacyErr(false);
+                    }}
+                    className="mt-0.5 w-4 h-4 rounded border-slate-700 bg-slate-900 text-amber-500 focus:ring-amber-500 focus:ring-offset-slate-950 shrink-0 cursor-pointer"
+                  />
+                  <span className="text-[11px] leading-relaxed">
+                    I have read, scrolled through, and agree to the <strong>TH3ORY Privacy Policy &amp; Terms of Service</strong> above. I consent to processing of my course data per GDPR, CCPA, and DPDP Act 2023. <span className="text-amber-400 font-bold">*</span>
+                  </span>
+                </label>
               </div>
 
               {/* Submit Payment Button */}

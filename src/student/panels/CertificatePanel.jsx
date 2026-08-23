@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Award, Sparkles, CheckCircle2, Lock, Eye, Download, Share2, Linkedin } from 'lucide-react';
 import CertificateViewer from '../components/CertificateViewer';
+import { getOrCreateCertificateInSupabase, generateUniqueCertificateId, subscribeToStudentCertificate } from '../../services/supabaseService.js';
 
 export default function CertificatePanel({
   profile,
@@ -14,6 +15,50 @@ export default function CertificatePanel({
 
   const [showCertificateModal, setShowCertificateModal] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
+
+  const studentName = profile?.name || 'Valued Graduate';
+  const email = profile?.email || '';
+
+  const initialCertId = profile?.certificateId || profile?.certificate_id || generateUniqueCertificateId(email, studentName);
+  const initialDate = profile?.completionDate || profile?.completedAt 
+    ? new Date(profile.completionDate || profile.completedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    : new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+  const [dbCertId, setDbCertId] = useState(initialCertId);
+  const [dbIssueDate, setDbIssueDate] = useState(initialDate);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function syncCert() {
+      if (!email) return;
+      const rawCompDate = profile?.completionDate || profile?.completedAt || new Date().toISOString();
+      const res = await getOrCreateCertificateInSupabase({ 
+        studentName, 
+        email, 
+        completionDate: rawCompDate 
+      });
+      if (isMounted && res && res.certId) {
+        setDbCertId(res.certId);
+        if (res.completionDate || res.issueDate) setDbIssueDate(res.completionDate || res.issueDate);
+      }
+    }
+    syncCert();
+
+    const unsubscribe = subscribeToStudentCertificate(email, (updatedCert) => {
+      if (isMounted && updatedCert && updatedCert.certId) {
+        setDbCertId(updatedCert.certId);
+        if (updatedCert.completionDate) setDbIssueDate(updatedCert.completionDate);
+      }
+    });
+
+    return () => { 
+      isMounted = false; 
+      if (unsubscribe) unsubscribe();
+    };
+  }, [email, studentName, profile?.completionDate, profile?.completedAt]);
+
+  const certId = dbCertId;
+  const issueDate = dbIssueDate;
 
   const openCertificate = (preview = false) => {
     setIsPreviewMode(preview);
@@ -46,7 +91,7 @@ export default function CertificatePanel({
         </div>
 
         <p className={`text-sm leading-relaxed max-w-2xl ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
-          Earn your official gold-embossed <strong>Certificate of Mastery in Influencing &amp; Executive Embodiment</strong> upon completing all 30 course modules. Showcase your accomplishment on LinkedIn, print a high-resolution version, or share your verifiable QR credential.
+          Earn your official gold-embossed <strong>Certificate of Mastery in Influencing &amp; Executive Embodiment</strong> upon completing all 30 course modules. Print a high-resolution version or download your official PDF / PNG credential.
         </p>
 
         {/* Course Completion Status Card */}
@@ -121,18 +166,48 @@ export default function CertificatePanel({
           </button>
         </div>
 
-        {/* Small Embedded Preview Box */}
-        <div className={`border rounded-2xl p-6 text-center space-y-4 cursor-pointer hover:border-amber-500/60 transition-all ${
-          isLight ? 'bg-white border-slate-200' : 'bg-slate-950 border-slate-800'
-        }`} onClick={() => openCertificate(true)}>
-          <div className="w-16 h-16 rounded-2xl bg-amber-500/20 border border-amber-500/40 mx-auto flex items-center justify-center text-amber-500">
-            <Award className="w-8 h-8" />
+        {/* Embedded Certificate Template Preview */}
+        <div className="relative w-full aspect-[1024/723] max-w-2xl mx-auto rounded-2xl overflow-hidden border border-amber-500/40 shadow-xl group cursor-pointer" onClick={() => openCertificate(true)}>
+          <img
+            src="/certificate_template.png"
+            alt="TH3ORY Masterclass Certificate Template Preview"
+            className="w-full h-full object-cover block group-hover:scale-[1.01] transition-transform duration-300"
+          />
+
+          {/* DYNAMIC OVERLAY 1: STUDENT NAME PREVIEW */}
+          <div 
+            className="absolute left-1/2 w-[80%] text-center pointer-events-none"
+            style={{ top: '51.59%', transform: 'translate(-50%, -50%)' }}
+          >
+            <h2 className="text-[2.6vw] sm:text-[24px] font-serif font-extrabold uppercase tracking-wide text-white drop-shadow-[0_2px_8px_rgba(212,175,55,0.9)] leading-none truncate">
+              {studentName}
+            </h2>
           </div>
-          <div>
-            <h4 className="font-extrabold text-amber-400 text-base">TH3ORY Masterclass Certificate of Mastery</h4>
-            <p className={`text-xs mt-1 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
-              Click to launch the interactive high-resolution template viewer &amp; print options
-            </p>
+
+          {/* DYNAMIC OVERLAY 2: DATE OF COMPLETION PREVIEW */}
+          <div 
+            className="absolute pointer-events-none"
+            style={{ left: '12.89%', top: '83.54%', transform: 'translateY(-50%)' }}
+          >
+            <span className="text-[1.1vw] sm:text-[11px] font-sans font-bold text-[#E5C158] tracking-wide leading-none">
+              {issueDate}
+            </span>
+          </div>
+
+          {/* DYNAMIC OVERLAY 3: CERTIFICATE ID PREVIEW */}
+          <div 
+            className="absolute pointer-events-none"
+            style={{ left: '20.50%', top: '86.10%', transform: 'translateY(-50%)' }}
+          >
+            <span className="text-[1.1vw] sm:text-[11px] font-mono font-bold text-[#E5C158] tracking-wide leading-none">
+              {certId}
+            </span>
+          </div>
+
+          <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 backdrop-blur-xs flex items-center justify-center transition-all duration-300">
+            <span className="px-5 py-2.5 rounded-xl bg-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center gap-2 shadow-xl">
+              <Eye className="w-4 h-4" /> Click to View &amp; Download PDF
+            </span>
           </div>
         </div>
       </div>

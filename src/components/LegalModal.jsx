@@ -81,7 +81,26 @@ export default function LegalModal({ isOpen, onClose, initialTab = 'privacy' }) 
         <div className="p-6 overflow-y-auto space-y-6 text-slate-300 text-xs sm:text-sm leading-relaxed flex-1">
           {activeTab === 'privacy' && (
             <div className="space-y-4">
-              <h3 className="text-base font-bold text-white">Privacy Policy</h3>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-2xl bg-[#7C5CFC]/15 border border-[#7C5CFC]/30 text-[#FFC857] gap-3">
+                <div>
+                  <div className="text-sm font-bold text-white">Full Statutory Privacy &amp; Data Rights Declaration</div>
+                  <div className="text-xs text-slate-300">Compliant with GDPR Article 6, CCPA, and Indian DPDP Act 2023</div>
+                </div>
+                <a
+                  href="#privacy"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (onClose) onClose();
+                    window.location.hash = 'privacy';
+                    window.dispatchEvent(new Event('hashchange'));
+                  }}
+                  className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap"
+                >
+                  View Full Policy Page →
+                </a>
+              </div>
+
+              <h3 className="text-base font-bold text-white">Privacy Policy Overview</h3>
               <p>Last updated: August 2026</p>
               <p>
                 At <strong>TH3ORY Masterclass</strong> ("Mentalist Sravan Production"), we prioritize your privacy and data security. This Privacy Policy outlines how we collect, process, and protect your personal information when enrolling in our educational courses or accessing our Student Portal.

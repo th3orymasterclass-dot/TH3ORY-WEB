@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, ShoppingBag, Menu, X, ArrowRight, LogIn, Mail } from 'lucide-react';
+import { ShieldCheck, ShoppingBag, ArrowRight, LogIn, Sun, Moon, Building2 } from 'lucide-react';
 import Logo from './Logo';
 
 export default function Navbar({ onOpenCheckout, onOpenDashboard, isEnrolled }) {
   const [scrolled, setScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [themeMode, setThemeMode] = useState(() => (
+    localStorage.getItem('th3ory_theme') || 'dark'
+  ));
 
   useEffect(() => {
     const handleScroll = () => {
@@ -13,6 +15,13 @@ export default function Navbar({ onOpenCheckout, onOpenDashboard, isEnrolled }) 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const toggleTheme = () => {
+    const next = themeMode === 'dark' ? 'light' : 'dark';
+    setThemeMode(next);
+    localStorage.setItem('th3ory_theme', next);
+    window.dispatchEvent(new CustomEvent('th3ory_theme_change', { detail: next }));
+  };
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
@@ -30,106 +39,59 @@ export default function Navbar({ onOpenCheckout, onOpenDashboard, isEnrolled }) 
             <Logo className="h-7 sm:h-9" />
           </a>
 
-          {/* Desktop Nav Links */}
-          <nav className="hidden md:flex items-center gap-6 text-xs font-bold uppercase tracking-wider text-[#FAFAF7]/80">
-            <a href="#pillars" className="hover:text-[#7C5CFC] transition-colors">5 Pillars</a>
-            <a href="#instructor" className="hover:text-[#7C5CFC] transition-colors">Instructor</a>
-            <a href="#roadmap" className="hover:text-[#7C5CFC] transition-colors">30-Day Roadmap</a>
-            <a href="#structure" className="hover:text-[#7C5CFC] transition-colors">Structure</a>
-            <a href="#outcomes" className="hover:text-[#7C5CFC] transition-colors">Outcomes &amp; Bonuses</a>
-            <a href="#pricing" className="hover:text-[#7C5CFC] transition-colors">Pricing</a>
-            <a href="#contact" className="hover:text-[#7C5CFC] transition-colors flex items-center gap-1">
-              <Mail className="w-3 h-3 text-[#FFC857]" /> Contact
-            </a>
-          </nav>
+          {/* Clean Action Buttons & Theme Switcher */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Light/Dark Theme Switcher */}
+            <button
+              onClick={toggleTheme}
+              title={`Switch to ${themeMode === 'dark' ? 'Light' : 'Dark'} Mode`}
+              className="p-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-amber-400 border border-slate-700/60 transition-all shrink-0 cursor-pointer"
+            >
+              {themeMode === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
+            </button>
 
-          {/* Action Buttons */}
-          <div className="hidden sm:flex items-center gap-3">
+            {/* Enterprise Quote Option */}
+            <a
+              href="#enterprise"
+              onClick={(e) => { e.preventDefault(); window.location.hash = 'enterprise'; window.dispatchEvent(new Event('hashchange')); }}
+              className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[11px] sm:text-xs font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-md cursor-pointer shrink-0"
+            >
+              <Building2 className="w-3.5 h-3.5 text-amber-400" />
+              <span>Enterprise Quote</span>
+            </a>
+
             {/* Sign In Button */}
             <a
               href="#student"
               onClick={(e) => { e.preventDefault(); window.location.hash = 'student'; window.dispatchEvent(new Event('hashchange')); }}
-              className="px-4 py-2.5 rounded-xl bg-[#15171A] hover:bg-[#1a1d22] text-[#E9E4FF] border border-[#7C5CFC]/40 text-xs font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-md cursor-pointer"
+              className="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-[#15171A] hover:bg-[#1a1d22] text-[#E9E4FF] border border-[#7C5CFC]/40 text-[11px] sm:text-xs font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-md cursor-pointer shrink-0"
             >
               <LogIn className="w-3.5 h-3.5 text-[#FFC857]" />
               <span>Sign In</span>
             </a>
 
-            {isEnrolled ? (
+            {isEnrolled && (
               <button
                 onClick={onOpenDashboard}
-                className="px-4 py-2.5 rounded-xl bg-[#7C5CFC]/15 text-[#E9E4FF] border border-[#7C5CFC]/30 font-semibold text-xs uppercase tracking-wider hover:bg-[#7C5CFC]/25 transition-all flex items-center gap-2 cursor-pointer"
+                className="hidden sm:flex px-4 py-2.5 rounded-xl bg-[#7C5CFC]/15 text-[#E9E4FF] border border-[#7C5CFC]/30 font-semibold text-xs uppercase tracking-wider hover:bg-[#7C5CFC]/25 transition-all items-center gap-2 cursor-pointer shrink-0"
               >
                 <ShieldCheck className="w-4 h-4 text-[#FFC857]" />
-                My Dashboard
+                <span>My Dashboard</span>
               </button>
-            ) : null}
+            )}
 
+            {/* Start Your Journey / Checkout Button */}
             <button
               onClick={() => onOpenCheckout()}
-              className="relative group overflow-hidden px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFC] via-[#9277FF] to-[#7C5CFC] text-[#FAFAF7] font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-[#7C5CFC]/25 hover:shadow-[#7C5CFC]/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2 cursor-pointer"
+              className="relative group overflow-hidden px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFC] via-[#9277FF] to-[#7C5CFC] text-[#FAFAF7] font-extrabold text-[11px] sm:text-xs uppercase tracking-wider shadow-lg shadow-[#7C5CFC]/25 hover:shadow-[#7C5CFC]/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer shrink-0"
             >
-              <ShoppingBag className="w-4 h-4" />
+              <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span>{isEnrolled ? 'View Receipt' : 'Start Your Journey'}</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform hidden sm:inline-block" />
             </button>
           </div>
 
-          {/* Mobile Hamburger */}
-          <div className="flex md:hidden items-center gap-2">
-            <a
-              href="#student"
-              onClick={(e) => { e.preventDefault(); window.location.hash = 'student'; window.dispatchEvent(new Event('hashchange')); }}
-              className="px-3 py-1.5 rounded-lg bg-[#15171A] text-[#FFC857] border border-[#7C5CFC]/30 text-xs font-bold uppercase tracking-wider flex items-center gap-1 cursor-pointer"
-            >
-              <LogIn className="w-3.5 h-3.5" /> Sign In
-            </a>
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg bg-[#15171A] text-[#FFC857] border border-[#7C5CFC]/30"
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
         </div>
-
-        {/* Mobile Dropdown Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden mt-4 pt-4 border-t border-[#555A66]/30 glass-card rounded-2xl p-5 flex flex-col gap-4 text-[#FAFAF7] text-sm font-bold uppercase tracking-wider animate-fade-in">
-            <a href="#pillars" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#7C5CFC]">5 Pillars</a>
-            <a href="#instructor" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#7C5CFC]">Instructor</a>
-            <a href="#roadmap" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#7C5CFC]">30-Day Roadmap</a>
-            <a href="#structure" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#7C5CFC]">Structure</a>
-            <a href="#outcomes" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#7C5CFC]">Outcomes &amp; Bonuses</a>
-            <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#7C5CFC]">Pricing</a>
-            <a href="#contact" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#7C5CFC]">Contact Us</a>
-            
-            <div className="pt-2 border-t border-[#555A66]/30 flex flex-col gap-3">
-              <a
-                href="#student"
-                onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); window.location.hash = 'student'; window.dispatchEvent(new Event('hashchange')); }}
-                className="w-full py-3 rounded-xl bg-[#15171A] text-[#E9E4FF] border border-[#7C5CFC]/40 text-center font-extrabold flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <LogIn className="w-4 h-4 text-[#FFC857]" /> Student Sign In / Portal
-              </a>
-
-              {isEnrolled && (
-                <button
-                  onClick={() => { setMobileMenuOpen(false); onOpenDashboard(); }}
-                  className="w-full py-3 rounded-xl bg-[#7C5CFC]/20 text-[#E9E4FF] font-semibold text-center flex items-center justify-center gap-2"
-                >
-                  <ShieldCheck className="w-4 h-4 text-[#FFC857]" /> My Learning Dashboard
-                </button>
-              )}
-              <button
-                onClick={() => { setMobileMenuOpen(false); onOpenCheckout(); }}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#6344E0] text-[#FAFAF7] font-extrabold text-center shadow-lg flex items-center justify-center gap-2"
-              >
-                <ShoppingBag className="w-4 h-4" /> {isEnrolled ? 'View Receipt' : 'Start Journey ($149 / ₹11,999)'}
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </header>
   );

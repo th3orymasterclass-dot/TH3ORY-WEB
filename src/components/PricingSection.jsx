@@ -216,8 +216,8 @@ export default function PricingSection({ onSelectPlan, couponCode, setCouponCode
                 <div className="pt-6 border-t border-[#555A66]/30">
                   {isEnt ? (
                     <button
-                      onClick={() => setShowEnterpriseModal(true)}
-                      className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#7C5CFC] to-[#6344E0] hover:from-[#6c4ce0] hover:to-[#5233d0] text-[#FAFAF7] font-extrabold text-xs uppercase tracking-wider shadow-xl shadow-[#7C5CFC]/20 transition-all flex items-center justify-center gap-2"
+                      onClick={() => { window.location.hash = 'enterprise'; window.dispatchEvent(new Event('hashchange')); }}
+                      className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#7C5CFC] to-[#6344E0] hover:from-[#6c4ce0] hover:to-[#5233d0] text-[#FAFAF7] font-extrabold text-xs uppercase tracking-wider shadow-xl shadow-[#7C5CFC]/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <Building2 className="w-4 h-4" />
                       <span>Get Custom Quote for Pupils</span>

@@ -1,32 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import { Save, RotateCcw } from 'lucide-react';
 
-function Field({ label, name, value, onChange, type = 'text', rows, hint }) {
+function Field({ label, name, value, onChange, type = 'text', rows, hint, isDark = true }) {
   return (
     <div>
-      <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">{label}</label>
-      {hint && <p className="text-slate-600 text-xs mb-1.5">{hint}</p>}
+      <label className={`block text-xs font-bold uppercase tracking-widest mb-1.5 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{label}</label>
+      {hint && <p className={`text-xs mb-1.5 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>{hint}</p>}
       {rows ? (
         <textarea
           rows={rows}
           value={value ?? ''}
           onChange={e => onChange(name, e.target.value)}
-          className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/60 text-sm resize-y"
+          className={`w-full border rounded-xl px-4 py-2.5 text-sm resize-y transition-all ${
+            isDark
+              ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-600 focus:border-amber-500/60'
+              : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:border-indigo-500 shadow-xs'
+          }`}
         />
       ) : (
         <input
           type={type}
           value={value ?? ''}
           onChange={e => onChange(name, type === 'number' ? +e.target.value : e.target.value)}
-          className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/60 text-sm"
+          className={`w-full border rounded-xl px-4 py-2.5 text-sm transition-all ${
+            isDark
+              ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-600 focus:border-amber-500/60'
+              : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:border-indigo-500 shadow-xs'
+          }`}
         />
       )}
     </div>
   );
 }
 
-export default function HeroPanel({ data, save, reset, defaults }) {
+export default function HeroPanel({ data, save, reset, defaults, themeMode = 'dark' }) {
   const [d, setD] = useState(data.courseDetails);
+  const isDark = themeMode === 'dark';
+
   useEffect(() => setD(data.courseDetails), [data.courseDetails]);
 
   const update = (key, val) => setD(prev => ({ ...prev, [key]: val }));
@@ -37,86 +47,42 @@ export default function HeroPanel({ data, save, reset, defaults }) {
     <div className="space-y-8">
       <div className="flex items-start justify-between">
         <div>
-          <h2 className="text-2xl font-black text-white">Hero &amp; Branding</h2>
-          <p className="text-slate-500 text-sm mt-1">Controls the top hero section and site-wide text</p>
+          <h2 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Hero &amp; Branding</h2>
+          <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Controls the top hero section and site-wide text</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={handleReset} className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-700 text-slate-400 hover:text-red-400 hover:border-red-500/40 text-sm transition-all">
+          <button
+            onClick={handleReset}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm transition-all cursor-pointer ${
+              isDark ? 'border-slate-700 text-slate-400 hover:text-red-400 hover:border-red-500/40' : 'border-slate-300 text-slate-600 hover:text-red-600 hover:border-red-300 bg-white'
+            }`}
+          >
             <RotateCcw className="w-3.5 h-3.5" /> Reset
           </button>
-          <button onClick={handleSave} className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition-all">
+          <button
+            onClick={handleSave}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition-all cursor-pointer shadow-md"
+          >
             <Save className="w-3.5 h-3.5" /> Save Changes
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <Field label="Brand Name" name="brandName" value={d?.brandName} onChange={update} />
-        <Field label="Rating" name="rating" value={d?.rating} onChange={update} type="number" />
-        <Field label="Total Students" name="totalStudents" value={d?.totalStudents} onChange={update} type="number" />
-        <Field label="Last Updated" name="lastUpdated" value={d?.lastUpdated} onChange={update} />
-        <Field label="Course Badge" name="badge" value={d?.badge} onChange={update} />
-        <Field label="Language" name="language" value={d?.language} onChange={update} />
-      </div>
-
-      <div className="space-y-4">
-        <Field label="Course Title" name="title" value={d?.title} onChange={update} hint="Displayed as the large heading below the logo" />
-        <Field label="Subtitle / Description" name="subtitle" value={d?.subtitle} onChange={update} rows={3} />
-        <Field label="Banner Quote (Top Ribbon)" name="bannerQuote" value={d?.bannerQuote} onChange={update} rows={2} />
-        <Field label="Footer Quote" name="footerQuote" value={d?.footerQuote} onChange={update} rows={2} />
-        <Field label="Tagline" name="tagline" value={d?.tagline} onChange={update} />
-      </div>
-
-      {/* Stats cards */}
-      <div>
-        <h3 className="font-bold text-white text-sm uppercase tracking-wider mb-4">Hero Stat Cards</h3>
+      <div className={`border rounded-2xl p-6 space-y-6 shadow-xs ${
+        isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200'
+      }`}>
+        <Field label="Hero Title" name="title" value={d.title} onChange={update} isDark={isDark} />
+        <Field label="Hero Subtitle" name="subtitle" value={d.subtitle} onChange={update} rows={2} isDark={isDark} />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {(d?.stats ?? []).map((stat, i) => (
-            <div key={i} className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
-              <p className="text-xs text-slate-500 font-bold uppercase">Card {i + 1}</p>
-              {['label', 'value', 'detail'].map(f => (
-                <input
-                  key={f}
-                  placeholder={f}
-                  value={stat[f] ?? ''}
-                  onChange={e => {
-                    const newStats = d.stats.map((s, si) => si === i ? { ...s, [f]: e.target.value } : s);
-                    update('stats', newStats);
-                  }}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-amber-500/50 capitalize"
-                />
-              ))}
-            </div>
-          ))}
+          <Field label="Instructor Name" name="instructor" value={d.instructor} onChange={update} isDark={isDark} />
+          <Field label="Instructor Title / Role" name="instructorTitle" value={d.instructorTitle} onChange={update} isDark={isDark} />
         </div>
-      </div>
-
-      {/* Differentiators */}
-      <div>
-        <h3 className="font-bold text-white text-sm uppercase tracking-wider mb-4">Differentiators (Bullet Points)</h3>
-        <div className="space-y-2">
-          {(d?.differentiators ?? []).map((diff, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <input
-                value={diff}
-                onChange={e => {
-                  const arr = [...d.differentiators]; arr[i] = e.target.value;
-                  update('differentiators', arr);
-                }}
-                className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-amber-500/50"
-              />
-              <button onClick={() => update('differentiators', d.differentiators.filter((_, si) => si !== i))}
-                className="text-red-500/60 hover:text-red-400 text-xl leading-none">×</button>
-            </div>
-          ))}
-          <button onClick={() => update('differentiators', [...(d?.differentiators ?? []), ''])}
-            className="text-amber-400 text-sm hover:text-amber-300 font-medium">+ Add Point</button>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Field label="Duration" name="duration" value={d.duration} onChange={update} isDark={isDark} />
+          <Field label="Language" name="language" value={d.language} onChange={update} isDark={isDark} />
         </div>
+        <Field label="Hero Video Embed URL (Vimeo / YouTube)" name="heroVideoUrl" value={d.heroVideoUrl} onChange={update} hint="Paste direct embed link e.g. https://player.vimeo.com/video/..." isDark={isDark} />
       </div>
-
-      <button onClick={handleSave} className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2">
-        <Save className="w-4 h-4" /> Save All Hero Changes
-      </button>
     </div>
   );
 }

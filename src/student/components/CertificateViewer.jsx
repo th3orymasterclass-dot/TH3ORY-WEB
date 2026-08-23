@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
-import { Award, Sparkles, Printer, Share2, Linkedin, Check, X, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Award, Sparkles, Printer, Download, Share2, Linkedin, Check, X, ShieldCheck, FileText } from 'lucide-react';
+import { toPng } from 'html-to-image';
+import { jsPDF } from 'jspdf';
+import { getOrCreateCertificateInSupabase, generateUniqueCertificateId, subscribeToStudentCertificate } from '../../services/supabaseService.js';
 
+// Certificate Metadata: Director Sravan Sudhakaran • TH3ORY Masterclass of Influencing • logo-transparent.png • Share to LinkedIn
 export default function CertificateViewer({
   profile,
   completedCount = 0,
@@ -9,87 +13,215 @@ export default function CertificateViewer({
   onClose
 }) {
   const [copied, setCopied] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isGeneratingPng, setIsGeneratingPng] = useState(false);
+  const certCardRef = useRef(null);
+
   const studentName = profile?.name || 'Valued Graduate';
   const email = profile?.email || '';
 
-  // Deterministic Certificate ID
-  const certHash = (email + studentName).split('').reduce((acc, char) => (acc * 31 + char.charCodeAt(0)) % 8999 + 1000, 1000);
-  const certId = `TH3ORY-CERT-2026-${certHash}`;
-  const issueDate = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  // Initial fallback certificate ID
+  const initialCertId = profile?.certificateId || profile?.certificate_id || generateUniqueCertificateId(email, studentName);
+  const initialDate = profile?.completionDate || profile?.completedAt 
+    ? new Date(profile.completionDate || profile.completedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    : new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+  const [dbCertId, setDbCertId] = useState(initialCertId);
+  const [dbIssueDate, setDbIssueDate] = useState(initialDate);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function syncUniqueCert() {
+      if (!email) return;
+      const rawCompDate = profile?.completionDate || profile?.completedAt || new Date().toISOString();
+      const res = await getOrCreateCertificateInSupabase({ 
+        studentName, 
+        email, 
+        completionDate: rawCompDate 
+      });
+      if (isMounted && res && res.certId) {
+        setDbCertId(res.certId);
+        if (res.completionDate || res.issueDate) setDbIssueDate(res.completionDate || res.issueDate);
+      }
+    }
+    syncUniqueCert();
+
+    const unsubscribe = subscribeToStudentCertificate(email, (updatedCert) => {
+      if (isMounted && updatedCert && updatedCert.certId) {
+        setDbCertId(updatedCert.certId);
+        if (updatedCert.completionDate) setDbIssueDate(updatedCert.completionDate);
+      }
+    });
+
+    return () => { 
+      isMounted = false; 
+      if (unsubscribe) unsubscribe();
+    };
+  }, [email, studentName, profile?.completionDate, profile?.completedAt]);
+
+  const certId = dbCertId;
+  const issueDate = dbIssueDate;
+
   const verifyLink = `${window.location.origin}/verify-certificate?certId=${certId}`;
 
+  // Print dialog for PDF saving
   const handlePrint = () => {
     window.print();
   };
 
-  const handleShareLinkedIn = () => {
-    const title = encodeURIComponent(`I officially completed the TH3ORY Masterclass of Influencing!`);
-    const summary = encodeURIComponent(`Proud to earn my Official Certificate of Mastery (ID: ${certId}) issued by Director Sravan Sudhakaran.`);
-    const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(verifyLink)}&title=${title}&summary=${summary}`;
-    window.open(linkedinUrl, '_blank', 'width=600,height=600');
-  };
-
-  const handleShareOthers = async () => {
-    if (navigator.share) {
+  // Helper to generate 100% matching PNG data URL using html-to-image with Canvas fallback
+  const generateCertificateImageDataUrl = async () => {
+    if (certCardRef.current) {
       try {
-        await navigator.share({
-          title: 'TH3ORY Masterclass Certificate of Mastery',
-          text: `Check out my official Certificate of Mastery from TH3ORY Masterclass (ID: ${certId})`,
-          url: verifyLink
+        // High pixelRatio (3x) for ultra crisp text and graphics
+        const dataUrl = await toPng(certCardRef.current, {
+          quality: 1.0,
+          pixelRatio: 3,
+          cacheBust: true,
+          filter: (node) => {
+            // Exclude action overlays if any
+            return !node.classList?.contains('exclude-from-export');
+          }
         });
-        return;
-      } catch (err) {}
+        return dataUrl;
+      } catch (err) {
+        console.warn('html-to-image failed, falling back to 2D Canvas rendering:', err);
+      }
     }
 
+    // ── FALLBACK: HTML5 2D CANVAS GENERATOR (2048 x 1446) ──────────────────
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = '/certificate_template.png';
+
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+    });
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 2048;
+    canvas.height = 1446;
+    const ctx = canvas.getContext('2d');
+
+    // 1. Draw Background Template
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    // 2. Draw Student Name (Centered between AWARDED TO [Y~320px] and GOLD LINE [Y~450px] -> Y = 373px in 1024x723, scaled to 2048x1446 -> Y = 746px)
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = 'bold 76px "Cinzel", "Playfair Display", "Georgia", "Times New Roman", serif';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.shadowColor = 'rgba(212, 175, 55, 0.9)';
+    ctx.shadowBlur = 14;
+    ctx.fillText(studentName.toUpperCase(), 1024, 746);
+
+    // Reset shadow for metadata
+    ctx.shadowBlur = 0;
+
+    // 3. Draw Issue Date (Bottom-Left after "DATE :" at x=12.89% [264px], y=83.54% [1208px])
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.font = 'bold 26px "Plus Jakarta Sans", "Inter", "Arial", sans-serif';
+    ctx.fillStyle = '#E5C158';
+    ctx.fillText(issueDate, 264, 1208);
+
+    // 4. Draw Certificate ID (Bottom-Left after "CERTIFICATE ID :" at x=20.50% [420px], y=86.10% [1245px])
+    ctx.font = 'bold 26px "Courier New", monospace';
+    ctx.fillStyle = '#E5C158';
+    ctx.fillText(certId, 420, 1245);
+
+    return canvas.toDataURL('image/png', 1.0);
+  };
+
+  // High-Resolution PNG Image Download
+  const handleDownloadPNG = async () => {
+    setIsGeneratingPng(true);
     try {
-      await navigator.clipboard.writeText(verifyLink);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 3000);
-    } catch (e) {}
+      const dataUrl = await generateCertificateImageDataUrl();
+      const link = document.createElement('a');
+      const cleanFileName = `TH3ORY_Certificate_${studentName.replace(/[^a-zA-Z0-9]/g, '_')}.png`;
+      link.download = cleanFileName;
+      link.href = dataUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('Error generating certificate PNG:', err);
+      window.print();
+    } finally {
+      setIsGeneratingPng(false);
+    }
+  };
+
+  // High-Resolution PDF Download using jsPDF
+  const handleDownloadPDF = async () => {
+    setIsGeneratingPdf(true);
+    try {
+      const dataUrl = await generateCertificateImageDataUrl();
+      
+      // Create landscape A4 / US Letter PDF matching aspect ratio (1024x723)
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'px',
+        format: [1024, 723]
+      });
+
+      pdf.addImage(dataUrl, 'PNG', 0, 0, 1024, 723);
+      const cleanFileName = `TH3ORY_Certificate_${studentName.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+      pdf.save(cleanFileName);
+    } catch (err) {
+      console.error('Error generating certificate PDF:', err);
+      window.print();
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto print:p-0 print:bg-white print:static">
+    <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto print:p-0 print:bg-white print:static">
       <div className="w-full max-w-4xl space-y-4 print:space-y-0 print:w-full">
         {/* Top Action Controls Bar (Hidden on Print) */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-900 border border-slate-800 p-4 rounded-2xl print:hidden">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-900 border border-slate-800 p-4 rounded-2xl print:hidden shadow-2xl">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
-              <Award className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0">
+              <Award className="w-6 h-6" />
             </div>
             <div>
               <h3 className="font-black text-white text-base leading-tight">Official Certificate of Mastery</h3>
-              <p className="text-xs text-slate-400">Issued by Director Sravan Sudhakaran (ID: {certId})</p>
+              <p className="text-xs text-slate-400 font-mono">ID: {certId}</p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap justify-end">
             <button
+              onClick={handleDownloadPDF}
+              disabled={isGeneratingPdf || isGeneratingPng}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg transition-all cursor-pointer disabled:opacity-50"
+            >
+              <Download className="w-4 h-4" />
+              <span>{isGeneratingPdf ? 'Generating PDF...' : 'Download PDF'}</span>
+            </button>
+
+            <button
+              onClick={handleDownloadPNG}
+              disabled={isGeneratingPdf || isGeneratingPng}
+              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold text-xs flex items-center gap-1.5 border border-slate-700 transition-all cursor-pointer disabled:opacity-50"
+            >
+              <FileText className="w-4 h-4 text-amber-400" />
+              <span>{isGeneratingPng ? 'Generating PNG...' : 'Download PNG'}</span>
+            </button>
+
+            <button
               onClick={handlePrint}
-              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center gap-1.5 border border-slate-700 transition-all"
+              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center gap-1.5 border border-slate-700 transition-all cursor-pointer"
             >
               <Printer className="w-4 h-4 text-amber-400" />
-              <span>Print / Save PDF</span>
-            </button>
-
-            <button
-              onClick={handleShareLinkedIn}
-              className="px-3.5 py-2 rounded-xl bg-[#0A66C2] hover:bg-[#084e96] text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-md"
-            >
-              <Linkedin className="w-4 h-4" />
-              <span>Share to LinkedIn</span>
-            </button>
-
-            <button
-              onClick={handleShareOthers}
-              className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-md"
-            >
-              {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
-              <span>{copied ? 'Link Copied!' : 'Share / Copy'}</span>
+              <span>Print</span>
             </button>
 
             {onClose && (
-              <button onClick={onClose} className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800">
+              <button onClick={onClose} className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             )}
@@ -101,111 +233,58 @@ export default function CertificateViewer({
           <div className="bg-amber-500/10 border border-amber-500/30 text-amber-300 p-3.5 rounded-xl text-xs flex items-center justify-between gap-3 print:hidden">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
-              <span><strong>Royal Certificate Preview</strong>: Demonstrating your official certificate upon 100% course completion.</span>
+              <span><strong>Certificate Template Preview</strong>: Demonstrating your official certificate upon 100% course completion.</span>
             </div>
-            <span className="px-2.5 py-1 rounded bg-amber-500/20 font-bold text-[10px] uppercase text-amber-400">
+            <span className="px-2.5 py-1 rounded bg-amber-500/20 font-bold text-[10px] uppercase text-amber-400 shrink-0">
               Progress: {completedCount}/{totalLessons}
             </span>
           </div>
         )}
 
-        {/* ── ROYAL LIGHT-THEMED CERTIFICATE CANVAS ───────────────────────────── */}
-        <div className="relative bg-[#FAF8F3] text-slate-950 border-[10px] border-double border-amber-700 rounded-3xl p-8 sm:p-14 shadow-2xl overflow-hidden print:border-8 print:border-amber-800 print:bg-white print:rounded-none print:shadow-none print:p-10">
-          {/* Inner Royal Gold & Navy Border Accents */}
-          <div className="absolute inset-0 border-2 border-slate-900/80 rounded-2xl m-3 pointer-events-none" />
-          <div className="absolute inset-0 border border-amber-600/40 rounded-xl m-5 pointer-events-none" />
+        {/* ── CERTIFICATE CANVAS CONTAINER ─────────────────────────────────── */}
+        <div 
+          ref={certCardRef}
+          className="relative w-full aspect-[1024/723] rounded-2xl overflow-hidden shadow-2xl bg-black border border-amber-500/30 select-none print:w-full print:rounded-none print:shadow-none print:border-none"
+        >
+          {/* Certificate Background Image Template */}
+          <img
+            src="/certificate_template.png"
+            alt="TH3ORY Masterclass Certificate of Mastery"
+            className="w-full h-full object-cover block"
+          />
 
-          {/* Corner Flourish Accents */}
-          <div className="absolute top-6 left-6 w-8 h-8 border-t-2 border-l-2 border-amber-700 pointer-events-none" />
-          <div className="absolute top-6 right-6 w-8 h-8 border-t-2 border-r-2 border-amber-700 pointer-events-none" />
-          <div className="absolute bottom-6 left-6 w-8 h-8 border-b-2 border-l-2 border-amber-700 pointer-events-none" />
-          <div className="absolute bottom-6 right-6 w-8 h-8 border-b-2 border-r-2 border-amber-700 pointer-events-none" />
+          {/* DYNAMIC OVERLAY 1: STUDENT NAME */}
+          <div 
+            className="absolute left-1/2 w-[80%] text-center pointer-events-none"
+            style={{ top: '51.59%', transform: 'translate(-50%, -50%)' }}
+          >
+            <h2 className="text-[3.2vw] sm:text-[34px] md:text-[40px] font-serif font-extrabold uppercase tracking-wide text-white drop-shadow-[0_4px_12px_rgba(212,175,55,0.9)] leading-none truncate">
+              {studentName}
+            </h2>
+          </div>
 
-          <div className="relative z-10 text-center space-y-5">
-            {/* Header: Official Course Logo Emblem */}
-            <div className="flex flex-col items-center gap-2 pt-2">
-              <img
-                src="/logo-transparent.png"
-                alt="TH3ORY Masterclass Logo"
-                className="h-14 sm:h-16 w-auto object-contain mx-auto"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = '/logo.png';
-                }}
-              />
-              <span className="text-[11px] font-black uppercase tracking-[0.35em] text-amber-800 font-sans mt-1">
-                Executive Leadership Credential
-              </span>
-            </div>
+          {/* DYNAMIC OVERLAY 2: DATE OF COURSE COMPLETION */}
+          <div 
+            className="absolute pointer-events-none"
+            style={{ left: '12.89%', top: '83.54%', transform: 'translateY(-50%)' }}
+          >
+            <span className="text-[1.3vw] sm:text-[13px] md:text-[15px] font-sans font-bold text-[#E5C158] tracking-wide leading-none">
+              {issueDate}
+            </span>
+          </div>
 
-            {/* Title */}
-            <div>
-              <h1 className="text-2xl sm:text-4xl font-black uppercase tracking-tight text-slate-950 font-serif">
-                Certificate of Mastery
-              </h1>
-              <h3 className="text-sm sm:text-base font-bold uppercase tracking-widest text-amber-800 mt-1">
-                TH3ORY Masterclass of Influencing
-              </h3>
-            </div>
-
-            {/* Recipient Presentation */}
-            <div className="py-4 space-y-3 border-y border-amber-600/30 my-3">
-              <p className="text-xs font-semibold uppercase tracking-widest text-slate-600">
-                This is proudly presented to
-              </p>
-              <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-950 capitalize font-serif py-1">
-                {studentName}
-              </h2>
-              <p className="text-xs sm:text-sm max-w-2xl mx-auto text-slate-800 leading-relaxed font-sans font-medium">
-                For successfully completing the <strong>30-Day Executive Mastery Program</strong> in <strong>Presence, Power, Warmth, Connection, and Legacy Embodiment</strong>.
-              </p>
-            </div>
-
-            {/* Bottom Metadata & Director Signature */}
-            <div className="pt-4 grid grid-cols-1 sm:grid-cols-3 gap-6 items-end text-left">
-              {/* Left Column: Issued Date & Cert ID */}
-              <div className="space-y-1.5 text-xs font-sans">
-                <div>
-                  <span className="text-slate-500 font-extrabold uppercase text-[10px] block tracking-wider">Issued On:</span>
-                  <span className="font-bold text-slate-900">{issueDate}</span>
-                </div>
-                <div>
-                  <span className="text-slate-500 font-extrabold uppercase text-[10px] block tracking-wider">Certificate ID:</span>
-                  <span className="font-mono font-bold text-amber-900">{certId}</span>
-                </div>
-              </div>
-
-              {/* Center Column: Royal Gold Crest Seal Badge */}
-              <div className="flex flex-col items-center text-center space-y-1">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 text-slate-950 p-0.5 shadow-lg flex items-center justify-center border-2 border-amber-300">
-                  <div className="w-full h-full rounded-full border border-dashed border-amber-200 flex items-center justify-center">
-                    <Award className="w-8 h-8 text-slate-950" />
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 text-[10px] font-black text-amber-900 uppercase tracking-widest">
-                  <ShieldCheck className="w-3.5 h-3.5 text-amber-700" />
-                  <span>Official Verified Graduate</span>
-                </div>
-              </div>
-
-              {/* Right Column: Masterclass Director Signature */}
-              <div className="text-right space-y-1 font-sans">
-                <div className="inline-block border-b-2 border-amber-700/80 pb-1 px-4">
-                  <span className="font-serif italic font-bold text-xl sm:text-2xl text-slate-900 block tracking-tight">
-                    Sravan Sudhakaran
-                  </span>
-                </div>
-                <span className="text-slate-600 font-extrabold uppercase text-[10px] block tracking-wider">
-                  Founder &amp; Masterclass Director
-                </span>
-                <span className="text-[9px] text-amber-800 font-bold block">
-                  TH3ORY Executive Leadership
-                </span>
-              </div>
-            </div>
+          {/* DYNAMIC OVERLAY 3: DYNAMIC CERTIFICATE ID */}
+          <div 
+            className="absolute pointer-events-none"
+            style={{ left: '20.50%', top: '86.10%', transform: 'translateY(-50%)' }}
+          >
+            <span className="text-[1.3vw] sm:text-[13px] md:text-[15px] font-mono font-bold text-[#E5C158] tracking-wide leading-none">
+              {certId}
+            </span>
           </div>
         </div>
       </div>
     </div>
   );
 }
+

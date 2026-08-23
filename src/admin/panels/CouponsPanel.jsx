@@ -6,11 +6,13 @@ import {
 } from 'lucide-react';
 import { getCoupons, saveCoupons, defaultCoupons } from '../../data/adminData';
 
-export default function CouponsPanel({ save, enrollments = [] }) {
+export default function CouponsPanel({ save, enrollments = [], themeMode = 'dark' }) {
   const [coupons, setCoupons] = useState(() => getCoupons());
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'active' | 'inactive'
   const [activeTab, setActiveTab] = useState('coupons'); // 'coupons' | 'track'
+
+  const isDark = themeMode === 'dark';
 
   // Modal State for Add / Edit
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -38,40 +40,6 @@ export default function CouponsPanel({ save, enrollments = [] }) {
     } catch (err) {
       console.error('Error saving coupons:', err);
     }
-  };
-
-  const openCreateModal = () => {
-    setEditingCoupon(null);
-    setFormData({
-      code: '',
-      affiliation: '',
-      discountType: 'percentage',
-      discountValue: 20,
-      partnerContact: '',
-      description: '',
-      validUntil: '2027-12-31',
-      maxUses: 100,
-      isActive: true,
-      targetPlan: 'all',
-    });
-    setIsModalOpen(true);
-  };
-
-  const openEditModal = (coupon) => {
-    setEditingCoupon(coupon);
-    setFormData({
-      code: coupon.code || '',
-      affiliation: coupon.affiliation || '',
-      discountType: coupon.discountType || 'percentage',
-      discountValue: coupon.discountValue || 20,
-      partnerContact: coupon.partnerContact || '',
-      description: coupon.description || '',
-      validUntil: coupon.validUntil || '',
-      maxUses: coupon.maxUses || '',
-      isActive: coupon.isActive ?? true,
-      targetPlan: coupon.targetPlan || 'all',
-    });
-    setIsModalOpen(true);
   };
 
   const handleSaveCoupon = (e) => {
@@ -148,45 +116,87 @@ export default function CouponsPanel({ save, enrollments = [] }) {
   };
 
   const handleCopyLink = (code) => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://th3ory.online';
-    const link = `${origin}/enroll?coupon=${code}`;
-    navigator.clipboard.writeText(link);
+    const fullUrl = `${window.location.origin}/#enroll?coupon=${encodeURIComponent(code)}`;
+    navigator.clipboard.writeText(fullUrl);
     setCopiedCode(code);
     setTimeout(() => setCopiedCode(null), 2500);
   };
 
-  // Metrics Calculations
-  const activeCount = coupons.filter(c => c.isActive).length;
-  const affiliationPartners = new Set(coupons.map(c => c.affiliation)).size;
-  const totalUsages = coupons.reduce((sum, c) => sum + (c.usedCount || 0), 0);
+  const openCreateModal = () => {
+    setEditingCoupon(null);
+    setFormData({
+      code: '',
+      affiliation: '',
+      discountType: 'percentage',
+      discountValue: 20,
+      partnerContact: '',
+      description: '',
+      validUntil: '2027-12-31',
+      maxUses: 100,
+      isActive: true,
+      targetPlan: 'all',
+    });
+    setIsModalOpen(true);
+  };
 
-  // Filtered Coupons
+  const openEditModal = (coupon) => {
+    setEditingCoupon(coupon);
+    setFormData({
+      code: coupon.code,
+      affiliation: coupon.affiliation || '',
+      discountType: coupon.discountType || 'percentage',
+      discountValue: coupon.discountValue || 0,
+      partnerContact: coupon.partnerContact || '',
+      description: coupon.description || '',
+      validUntil: coupon.validUntil || '',
+      maxUses: coupon.maxUses || '',
+      isActive: coupon.isActive !== undefined ? coupon.isActive : true,
+      targetPlan: coupon.targetPlan || 'all',
+    });
+    setIsModalOpen(true);
+  };
+
+  // Filtered List
   const filteredCoupons = coupons.filter(c => {
-    const matchesSearch = c.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          c.affiliation.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          c.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' ? true :
-                          statusFilter === 'active' ? c.isActive : !c.isActive;
-    return matchesSearch && matchesStatus;
+    const q = searchQuery.trim().toLowerCase();
+    const matchesQuery = !q ||
+      c.code.toLowerCase().includes(q) ||
+      (c.affiliation && c.affiliation.toLowerCase().includes(q)) ||
+      (c.description && c.description.toLowerCase().includes(q));
+
+    const matchesStatus =
+      statusFilter === 'all' ? true :
+      statusFilter === 'active' ? c.isActive :
+      !c.isActive;
+
+    return matchesQuery && matchesStatus;
   });
 
-  // Tracked Enrollments matching Affiliation coupons
-  const affiliationEnrollments = enrollments.filter(e => e.coupon_code && e.coupon_code !== 'NONE');
+  // Calculate Aggregates
+  const activeCount = coupons.filter(c => c.isActive).length;
+  const affiliationPartners = new Set(coupons.map(c => c.affiliation).filter(Boolean)).size;
+  const totalUsages = coupons.reduce((sum, c) => sum + (c.usedCount || 0), 0);
+
+  // Enrollments tracked via affiliation coupons
+  const affiliationEnrollments = enrollments.filter(e => e.coupon_applied || e.couponApplied || e.affiliation_partner);
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      
+    <div className="space-y-6 animate-fade-in">
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900/80 border border-slate-800 p-6 rounded-2xl">
+      <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 border p-6 rounded-2xl ${
+        isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+      }`}>
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Tag className="w-5 h-5 text-amber-400" />
-            <h1 className="text-xl font-bold text-white">Custom Offers & Affiliations</h1>
-            <span className="text-[10px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full uppercase tracking-wider">
+            <Tag className="w-5 h-5 text-amber-500" />
+            <h1 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Custom Offers & Affiliations</h1>
+            <span className={`text-[10px] font-black border px-2 py-0.5 rounded-full uppercase tracking-wider ${
+              isDark ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-amber-50 text-amber-700 border-amber-200'
+            }`}>
               RAZORPAY LIVE
             </span>
           </div>
-          <p className="text-xs text-slate-400">
+          <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
             Create, manage, and track custom discount offer coupons for colleges, institutional partners, and affiliate programs.
           </p>
         </div>
@@ -194,14 +204,16 @@ export default function CouponsPanel({ save, enrollments = [] }) {
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={handleResetDefaults}
-            className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 flex items-center gap-1.5 transition-all"
+            className={`px-3 py-2 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition-all cursor-pointer ${
+              isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+            }`}
           >
             <RefreshCw className="w-3.5 h-3.5" /> Reset Defaults
           </button>
 
           <button
             onClick={openCreateModal}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 text-xs font-extrabold flex items-center gap-1.5 shadow-lg shadow-amber-500/20 transition-all uppercase tracking-wider"
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 text-xs font-extrabold flex items-center gap-1.5 shadow-lg shadow-amber-500/20 transition-all uppercase tracking-wider cursor-pointer"
           >
             <Plus className="w-4 h-4" /> Create Custom Offer
           </button>
