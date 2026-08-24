@@ -16,6 +16,7 @@ export default defineConfig({
   build: {
     chunkSizeWarningLimit: 1600,
     rollupOptions: {
+      external: ['canvas', 'puppeteer-core'],
       output: {
         manualChunks: {
           'vendor-react': ['react', 'react-dom'],
