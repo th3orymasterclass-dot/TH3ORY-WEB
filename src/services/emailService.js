@@ -129,15 +129,35 @@ export async function sendEnrollmentEmail(receipt) {
  */
 export async function sendAmbassadorApprovalEmail(ambassadorData) {
   try {
-    const portalUrl = typeof window !== 'undefined' ? `${window.location.origin}/#/ambassador-portal` : 'https://th3ory.online/#/ambassador-portal';
+    // 1. Try Vercel Serverless API endpoint
+    const response = await fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'AMBASSADOR_APPROVAL',
+        name: ambassadorData.name,
+        email: ambassadorData.email,
+        collegeName: ambassadorData.collegeName,
+        ambassadorCode: ambassadorData.ambassadorCode,
+        password: ambassadorData.password
+      })
+    });
 
+    if (response.ok) {
+      const data = await response.json();
+      console.log('[Resend Serverless API] Ambassador approval email sent successfully:', data);
+      return { success: true, data };
+    }
+
+    // 2. Client-side fallback if VITE_RESEND_API_KEY is present
+    const portalUrl = typeof window !== 'undefined' ? `${window.location.origin}/#/ambassador-portal` : 'https://th3ory.online/#/ambassador-portal';
     const apiKey = getApiKey();
     if (!apiKey) {
-      console.log('[Ambassador Email] No API key present. Simulated email logged for:', ambassadorData.email);
+      console.log('[Ambassador Email] No client VITE_RESEND_API_KEY. Email simulation logged for:', ambassadorData.email);
       return { success: true, simulated: true };
     }
 
-    const response = await fetch('https://api.resend.com/emails', {
+    const directRes = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -146,7 +166,7 @@ export async function sendAmbassadorApprovalEmail(ambassadorData) {
       body: JSON.stringify({
         from: 'TH3ORY Ambassador Desk <ambassador@th3ory.online>',
         to: [ambassadorData.email, 'th3orymasterclass@gmail.com'],
-        subject: `🌟 Welcome to TH3ORY Campus Ambassador Program - Application Approved!`,
+        subject: `🌟 Welcome to TH3ORY Campus Ambassador Program - Selection Approved!`,
         html: `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #05080f; color: #ffffff; padding: 40px 20px; text-align: center;">
             <div style="max-width: 550px; margin: 0 auto; background-color: #0b1120; border: 1px solid #1e293b; border-radius: 20px; padding: 30px; text-align: left; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);">
@@ -156,7 +176,7 @@ export async function sendAmbassadorApprovalEmail(ambassadorData) {
               </div>
               <div style="background-color: #1e293b33; border: 1px solid #f59e0b40; border-radius: 14px; padding: 20px; margin-bottom: 25px;">
                 <h2 style="color: #ffffff; font-size: 18px; font-weight: 800; margin-top: 0; margin-bottom: 8px;">Congratulations, ${ambassadorData.name}! 🎉</h2>
-                <p style="color: #cbd5e1; font-size: 14px; margin: 0;">Your application for the <strong>TH3ORY 12-Week Campus Ambassador Program</strong> representing <strong>${ambassadorData.collegeName}</strong> has been officially approved by administration.</p>
+                <p style="color: #cbd5e1; font-size: 14px; margin: 0;">Following your team interview evaluation, your selection as the official <strong>TH3ORY Campus Ambassador</strong> representing <strong>${ambassadorData.collegeName || 'your university'}</strong> has been officially approved by administration.</p>
               </div>
               
               <div style="background-color: #0f172a; border: 1px solid #334155; border-radius: 14px; padding: 20px; margin-bottom: 25px;">
@@ -170,7 +190,7 @@ export async function sendAmbassadorApprovalEmail(ambassadorData) {
 
                 <div style="background: #1e293b; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
                   <div style="color: #64748b; font-size: 11px; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Default Portal Password</div>
-                  <div style="font-family: monospace; color: #ffffff; font-weight: 700; font-size: 15px;">${ambassadorData.password || 'TH3ORY2026'}</div>
+                  <div style="font-family: monospace; color: #ffffff; font-weight: 700; font-size: 15px;">${ambassadorData.password || 'TH3ORY-AMB-2026'}</div>
                 </div>
 
                 <div style="text-align: center; margin-top: 20px;">
@@ -189,10 +209,183 @@ export async function sendAmbassadorApprovalEmail(ambassadorData) {
       })
     });
 
-    const data = await response.json();
-    return { success: response.ok, data };
+    const data = await directRes.json();
+    return { success: directRes.ok, data };
   } catch (err) {
     console.error('[Ambassador Email Exception]:', err);
+    return { success: false, error: err };
+  }
+}
+
+/**
+ * Send Automated Campus Ambassador Selection Interview Invitation Email via Resend
+ */
+export async function sendAmbassadorInterviewInviteEmail(interviewData) {
+  try {
+    const response = await fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'AMBASSADOR_INTERVIEW_INVITE',
+        name: interviewData.name,
+        email: interviewData.email,
+        collegeName: interviewData.collegeName,
+        calendlyUrl: interviewData.calendlyUrl || 'https://calendly.com/th3orymasterclass/30min',
+        scheduledSlot: interviewData.scheduledSlot || '',
+        teamNotes: interviewData.teamNotes || ''
+      })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log('[Resend Serverless API] Interview invite email sent:', data);
+      return { success: true, data };
+    }
+
+    const apiKey = getApiKey();
+    if (!apiKey) {
+      console.log('[Interview Email] No client key. Email simulation logged for:', interviewData.email);
+      return { success: true, simulated: true };
+    }
+
+    const bookingEmail = interviewData.email || 'th3orymasterclass@gmail.com';
+    const bookingLink = `${interviewData.calendlyUrl || 'https://calendly.com/th3orymasterclass/30min'}?name=${encodeURIComponent(interviewData.name || '')}&email=${encodeURIComponent(bookingEmail)}`;
+
+    const directRes = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: 'TH3ORY Team Desk <team@th3ory.online>',
+        to: [interviewData.email, 'th3orymasterclass@gmail.com'],
+        subject: `📅 Campus Ambassador Selection Interview Invitation — TH3ORY Masterclass`,
+        html: `
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #05080f; color: #ffffff; padding: 40px 20px; text-align: center;">
+            <div style="max-width: 550px; margin: 0 auto; background-color: #0b1120; border: 1px solid #1e293b; border-radius: 20px; padding: 30px; text-align: left; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);">
+              <div style="text-align: center; margin-bottom: 25px;">
+                <h1 style="color: #f59e0b; font-size: 24px; font-weight: 900; margin: 0; letter-spacing: 2px;">TH3ORY</h1>
+                <p style="color: #64748b; font-size: 12px; font-weight: 700; text-transform: uppercase; margin-top: 4px;">Campus Ambassador Selection Desk</p>
+              </div>
+              <div style="background-color: #1e293b33; border: 1px solid #f59e0b40; border-radius: 14px; padding: 20px; margin-bottom: 25px;">
+                <h2 style="color: #ffffff; font-size: 18px; font-weight: 800; margin-top: 0; margin-bottom: 8px;">Hello, ${interviewData.name}! 👋</h2>
+                <p style="color: #cbd5e1; font-size: 14px; margin: 0;">We reviewed your application to represent <strong>${interviewData.collegeName || 'your campus'}</strong> as a TH3ORY Campus Ambassador. You have been shortlisted for a 1-on-1 Selection Interview!</p>
+              </div>
+              
+              <div style="background-color: #0f172a; border: 1px solid #334155; border-radius: 14px; padding: 20px; margin-bottom: 25px;">
+                <h3 style="color: #f59e0b; font-size: 16px; font-weight: 800; margin-top: 0; margin-bottom: 12px;">📅 Schedule Your 15-Min Interview Call via Calendly</h3>
+                <p style="color: #cbd5e1; font-size: 13px; margin-bottom: 16px;">
+                  ${interviewData.scheduledSlot ? `<strong>Proposed Schedule:</strong> ${interviewData.scheduledSlot}<br/><br/>` : ''}
+                  Please pick a convenient date & time slot for your 15-minute live video/phone selection interview using our direct Calendly scheduling program:
+                </p>
+
+                <div style="text-align: center; margin-top: 20px;">
+                  <a href="${bookingLink}" style="background: linear-gradient(to right, #f59e0b, #d97706); color: #05080f; font-weight: 800; font-size: 14px; text-decoration: none; padding: 14px 32px; border-radius: 10px; display: inline-block; text-transform: uppercase; letter-spacing: 1px;">
+                    Select Interview Time Slot on Calendly &rarr;
+                  </a>
+                </div>
+              </div>
+
+              ${interviewData.teamNotes ? `
+              <div style="background-color: #1e293b; border-radius: 12px; padding: 16px; margin-bottom: 25px; color: #94a3b8; font-size: 12px;">
+                <strong style="color: #f59e0b;">Note from TH3ORY Interview Team:</strong><br/>
+                "${interviewData.teamNotes}"
+              </div>
+              ` : ''}
+
+              <div style="text-align: center; border-top: 1px solid #1e293b; padding-top: 20px;">
+                <p style="color: #64748b; font-size: 12px; margin: 0;">Mentalist Sravan Production &copy; 2026. All rights reserved.</p>
+              </div>
+            </div>
+          </div>
+        `
+      })
+    });
+
+    const data = await directRes.json();
+    return { success: directRes.ok, data };
+  } catch (err) {
+    console.error('[Ambassador Interview Email Exception]:', err);
+    return { success: false, error: err };
+  }
+}
+
+
+/**
+ * Send Central Sub-Portal Targeted Email Broadcast via Resend API
+ */
+export async function sendPortalBroadcastEmail(payload) {
+  try {
+    // 1. Try Vercel Serverless API endpoint
+    const response = await fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'BROADCAST_EMAIL',
+        to: payload.recipientEmails || payload.to || payload.email,
+        subject: payload.subject,
+        messageBody: payload.messageBody || payload.message,
+        senderName: payload.senderName || 'TH3ORY MASTERCLASS <team@th3ory.online>',
+        redirectPortal: payload.redirectPortal || 'https://th3ory.online/#/student'
+      })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log('[Resend Serverless API] Broadcast email dispatched successfully:', data);
+      return { success: true, data };
+    }
+
+    // 2. Client-side fallback if VITE_RESEND_API_KEY is present
+    const apiKey = getApiKey();
+    if (!apiKey) {
+      console.log('[Resend API] Simulated broadcast email logged:', payload);
+      return { success: true, simulated: true };
+    }
+
+    const recipients = Array.isArray(payload.recipientEmails) ? payload.recipientEmails : [payload.email || payload.to || 'th3orymasterclass@gmail.com'];
+    const targetList = recipients.filter(Boolean);
+
+    const directRes = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: payload.senderName || 'TH3ORY MASTERCLASS <team@th3ory.online>',
+        to: targetList,
+        subject: payload.subject || '📢 Notification from TH3ORY Administration',
+        html: `
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #05080f; color: #ffffff; padding: 40px 20px; text-align: center;">
+            <div style="max-width: 580px; margin: 0 auto; background-color: #0b1120; border: 1px solid #1e293b; border-radius: 20px; padding: 32px; text-align: left; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);">
+              <div style="text-align: center; margin-bottom: 25px; border-bottom: 1px solid #1e293b; padding-bottom: 20px;">
+                <h1 style="color: #f59e0b; font-size: 26px; font-weight: 900; margin: 0; letter-spacing: 2px;">TH3ORY</h1>
+                <p style="color: #64748b; font-size: 12px; font-weight: 700; text-transform: uppercase; margin-top: 4px;">Executive Portal Communications</p>
+              </div>
+              <div style="background-color: #1e293b33; border: 1px solid #f59e0b40; border-radius: 14px; padding: 20px; margin-bottom: 25px;">
+                <h2 style="color: #ffffff; font-size: 18px; font-weight: 800; margin-top: 0; margin-bottom: 10px;">${payload.subject}</h2>
+                <div style="color: #cbd5e1; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${payload.messageBody || payload.message}</div>
+              </div>
+              <div style="background-color: #0f172a; border: 1px solid #334155; border-radius: 14px; padding: 20px; text-align: center; margin-bottom: 25px;">
+                <a href="${payload.redirectPortal || 'https://th3ory.online/#/student'}" style="background: linear-gradient(to right, #f59e0b, #d97706); color: #05080f; font-weight: 800; font-size: 14px; text-decoration: none; padding: 14px 32px; border-radius: 10px; display: inline-block; text-transform: uppercase; letter-spacing: 1px;">
+                  Open Sub-Portal &rarr;
+                </a>
+              </div>
+              <div style="text-align: center; border-top: 1px solid #1e293b; padding-top: 20px;">
+                <p style="color: #64748b; font-size: 12px; margin: 0;">Mentalist Sravan Production &copy; 2026. All rights reserved.</p>
+              </div>
+            </div>
+          </div>
+        `
+      })
+    });
+
+    const data = await directRes.json();
+    return { success: directRes.ok, data };
+  } catch (err) {
+    console.error('[Portal Broadcast Email Exception]:', err);
     return { success: false, error: err };
   }
 }
