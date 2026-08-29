@@ -20,7 +20,6 @@ function run(cmd) {
 }
 
 try {
-  run('git reset HEAD~1');
   try { execSync('git rm --cached .env.local', { stdio: 'ignore' }); } catch {}
   try { execSync('git rm --cached mcp.json', { stdio: 'ignore' }); } catch {}
   try { execSync('git rm --cached .mcp.json', { stdio: 'ignore' }); } catch {}
@@ -29,8 +28,8 @@ try {
   
   run('git add -A');
   run('git status --short');
-  run('git commit -m "feat: replicate main page hero section in enterprise and ambassador pages"');
-  run('git push origin main --force');
+  run('git commit -m "feat: implement DPDP Act 2023 privacy and consent management framework"');
+  run('git push origin main');
   console.log('🎉 PUSH COMPLETED SUCCESSFULLY!');
 } catch (err) {
   console.error('Failed:', err);
