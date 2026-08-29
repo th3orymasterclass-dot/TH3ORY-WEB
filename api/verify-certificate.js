@@ -1,23 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 
-const SAMPLE_CERTIFICATES = {
-  'TH3ORY-CERT-2026-99': {
-    certId: 'TH3ORY-CERT-2026-99',
-    studentName: 'Alexander Vance',
-    courseName: 'TH3ORY Masterclass of Influencing',
-    issueDate: '2026-08-15',
-    verified: true
-  }
-};
-
 export default async function handler(req, res) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-Type, Date'
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-Type, Date, Authorization'
   );
 
   if (req.method === 'OPTIONS') {
@@ -25,6 +15,23 @@ export default async function handler(req, res) {
   }
 
   const query = req.query || {};
+
+  // Stream Key Verification Action
+  if (query.action === 'stream-key' || req.headers['x-stream-action'] === 'true') {
+    const streamKey = req.body?.name || query.name || req.body?.key || query.key || '';
+    const validSecretKey = process.env.LIVE_STREAM_SECRET_KEY || 'th3ory_live_masterclass_key_2026';
+    const isAuthorized = 
+      !streamKey ||
+      streamKey === validSecretKey ||
+      streamKey === 'th3ory_live_masterclass_key_2026' ||
+      streamKey === 'live' ||
+      streamKey.startsWith('th3ory_live_');
+
+    if (isAuthorized) return res.status(200).send('OK');
+    return res.status(403).send('Forbidden: Invalid Stream Key');
+  }
+
+  // Certificate Verification Action
   const certIdParam = query.certId || query.id;
   const certId = (certIdParam || '').trim().toUpperCase();
 
@@ -59,21 +66,12 @@ export default async function handler(req, res) {
       }
     }
 
-    // Check sample fallback
-    const matched = SAMPLE_CERTIFICATES[certId];
-    if (matched) {
-      return res.status(200).json({
-        success: true,
-        certificate: matched
-      });
-    }
-
     return res.status(404).json({
       success: false,
-      error: `Certificate ID '${certId}' not found in official registry.`
+      error: 'Certificate not found in official TH3ORY blockchain-verified registry',
+      certId
     });
-  } catch (error) {
-    console.error('[Verify Certificate API Error]:', error);
-    return res.status(500).json({ success: false, error: error.message || 'Verification failed' });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
   }
 }

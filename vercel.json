@@ -8,6 +8,26 @@
   "framework": "vite",
   "rewrites": [
     {
+      "source": "/api/dpdp-consent",
+      "destination": "/api/dpdp?action=consent"
+    },
+    {
+      "source": "/api/dpdp-dsr",
+      "destination": "/api/dpdp?action=dsr"
+    },
+    {
+      "source": "/api/dpdp-export",
+      "destination": "/api/dpdp?action=export"
+    },
+    {
+      "source": "/api/dpdp-grievance",
+      "destination": "/api/dpdp?action=grievance"
+    },
+    {
+      "source": "/api/verify-stream-key",
+      "destination": "/api/verify-certificate?action=stream-key"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/$1"
     },
