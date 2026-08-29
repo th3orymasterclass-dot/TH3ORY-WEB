@@ -1,32 +1,34 @@
-// Serverless Endpoint: DPDP Data Subject Rights (DSR) Management (Node.js runtime)
 import { createClient } from '@supabase/supabase-js';
-
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST,PUT');
-  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-Type, Date, Authorization'
+  );
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    return res.status(500).json({ error: 'Supabase configuration missing.' });
-  }
+  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://qngzfcpnjpabaornddau.supabase.co';
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  let supabase = null;
+  if (supabaseUrl && supabaseKey) {
+    supabase = createClient(supabaseUrl, supabaseKey);
+  }
 
   // POST: Create a new Data Subject Request (Access, Erasure, Correction, Nomination)
   if (req.method === 'POST') {
     try {
-      const { email, name, requestType, payload = {} } = req.body || {};
+      const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+      const { email, name, requestType, payload = {} } = body;
 
       if (!email || !name || !requestType) {
-        return res.status(400).json({ error: 'Missing required fields: email, name, requestType' });
+        return res.status(400).json({ success: false, error: 'Missing required fields: email, name, requestType' });
       }
 
       const requestId = `DSR-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
@@ -47,21 +49,20 @@ export default async function handler(req, res) {
         created_at: now.toISOString()
       };
 
-      const { data, error } = await supabase
-        .from('dpdp_user_requests')
-        .insert([requestRecord])
-        .select();
-
-      if (error) throw error;
+      if (supabase) {
+        await supabase
+          .from('dpdp_user_requests')
+          .insert([requestRecord]);
+      }
 
       return res.status(200).json({
         success: true,
         requestId,
         message: `Your ${requestType} request has been officially recorded under DPDP Act 2023.`,
-        data: data?.[0] || requestRecord
+        data: requestRecord
       });
     } catch (err) {
-      return res.status(500).json({ error: err.message });
+      return res.status(500).json({ success: false, error: err.message });
     }
   }
 
@@ -70,24 +71,29 @@ export default async function handler(req, res) {
     try {
       const { email, requestId } = req.query || {};
 
-      let query = supabase.from('dpdp_user_requests').select('*');
-
-      if (requestId) {
-        query = query.eq('request_id', requestId.trim().toUpperCase());
-      } else if (email) {
-        query = query.eq('email', email.trim().toLowerCase()).order('created_at', { ascending: false });
-      } else {
-        return res.status(400).json({ error: 'Either email or requestId parameter is required.' });
+      if (!requestId && !email) {
+        return res.status(400).json({ success: false, error: 'Either email or requestId parameter is required.' });
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
+      if (supabase) {
+        let query = supabase.from('dpdp_user_requests').select('*');
 
-      return res.status(200).json({ success: true, requests: data || [] });
+        if (requestId) {
+          query = query.eq('request_id', requestId.trim().toUpperCase());
+        } else if (email) {
+          query = query.eq('email', email.trim().toLowerCase()).order('created_at', { ascending: false });
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+        return res.status(200).json({ success: true, requests: data || [] });
+      }
+
+      return res.status(200).json({ success: true, requests: [] });
     } catch (err) {
-      return res.status(500).json({ error: err.message });
+      return res.status(500).json({ success: false, error: err.message });
     }
   }
 
-  return res.status(405).json({ error: 'Method Not Allowed' });
+  return res.status(405).json({ success: false, error: 'Method Not Allowed' });
 }

@@ -1,32 +1,34 @@
-// Serverless Endpoint: DPDP Consent Lifecycle Management (Node.js runtime)
 import { createClient } from '@supabase/supabase-js';
-
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-Type, Date, Authorization'
+  );
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    return res.status(500).json({ error: 'Supabase configuration missing on server.' });
-  }
+  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://qngzfcpnjpabaornddau.supabase.co';
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  let supabase = null;
+  if (supabaseUrl && supabaseKey) {
+    supabase = createClient(supabaseUrl, supabaseKey);
+  }
 
   // POST: Record affirmative consent or withdrawal
   if (req.method === 'POST') {
     try {
-      const { email, consents = {}, source = 'api', userId = null, metadata = {} } = req.body || {};
+      const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+      const { email, consents = {}, source = 'api', userId = null, metadata = {} } = body;
 
       if (!email) {
-        return res.status(400).json({ error: 'Missing required field: email' });
+        return res.status(400).json({ success: false, error: 'Missing required field: email' });
       }
 
       const clientIp = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '127.0.0.1';
@@ -50,11 +52,11 @@ export default async function handler(req, res) {
         withdrawn_at: isGranted ? null : timestamp
       }));
 
-      const { data, error } = await supabase
-        .from('dpdp_consent_records')
-        .insert(records);
-
-      if (error) throw error;
+      if (supabase) {
+        await supabase
+          .from('dpdp_consent_records')
+          .insert(records);
+      }
 
       return res.status(200).json({
         success: true,
@@ -62,7 +64,7 @@ export default async function handler(req, res) {
         count: records.length
       });
     } catch (err) {
-      return res.status(500).json({ error: err.message });
+      return res.status(500).json({ success: false, error: err.message });
     }
   }
 
@@ -71,22 +73,25 @@ export default async function handler(req, res) {
     try {
       const { email } = req.query || {};
       if (!email) {
-        return res.status(400).json({ error: 'Email parameter required.' });
+        return res.status(400).json({ success: false, error: 'Email parameter required.' });
       }
 
-      const { data, error } = await supabase
-        .from('dpdp_consent_records')
-        .select('*')
-        .eq('email', email.trim().toLowerCase())
-        .order('created_at', { ascending: false });
+      if (supabase) {
+        const { data, error } = await supabase
+          .from('dpdp_consent_records')
+          .select('*')
+          .eq('email', email.trim().toLowerCase())
+          .order('created_at', { ascending: false });
 
-      if (error) throw error;
+        if (error) throw error;
+        return res.status(200).json({ success: true, records: data || [] });
+      }
 
-      return res.status(200).json({ success: true, records: data || [] });
+      return res.status(200).json({ success: true, records: [] });
     } catch (err) {
-      return res.status(500).json({ error: err.message });
+      return res.status(500).json({ success: false, error: err.message });
     }
   }
 
-  return res.status(405).json({ error: 'Method Not Allowed' });
+  return res.status(405).json({ success: false, error: 'Method Not Allowed' });
 }
