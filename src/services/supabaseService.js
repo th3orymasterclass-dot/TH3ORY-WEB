@@ -711,40 +711,43 @@ export function subscribeToQueries(emailOrCallback, optionalCallback) {
 // ─── Enterprise Quotes (Dedicated Table: enterprise_quotes) ──────────────────
 export async function saveEnterpriseQuoteToSupabase(quoteData) {
   const payload = {
-    id: `eq_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-    org_name: quoteData.orgName || '',
-    contact_name: quoteData.contactName || '',
+    org_name: quoteData.orgName || quoteData.org_name || quoteData.company || '',
+    industry: quoteData.industry || 'Technology & Services',
+    employee_size: quoteData.employeeSize || quoteData.employee_size || '50-250 Employees',
+    location: quoteData.location || '',
+    website: quoteData.website || '',
+    contact_name: quoteData.contactName || quoteData.contact_name || '',
+    designation: quoteData.designation || '',
     email: quoteData.email || '',
     phone: quoteData.phone || '',
-    audience_type: quoteData.audienceType || 'Students',
+    linkedin_url: quoteData.linkedinUrl || quoteData.linkedin_url || '',
+    status: quoteData.status || 'New Lead',
+    last_contacted_at: quoteData.lastContactedAt || quoteData.last_contacted_at || new Date().toISOString().split('T')[0],
+    next_followup_at: quoteData.nextFollowupAt || quoteData.next_followup_at || '',
+    proposal_sent: quoteData.proposalSent || quoteData.proposal_sent || 'Pending Draft',
+    meeting_date: quoteData.meetingDate || quoteData.meeting_date || '',
+    probability: quoteData.probability || '50%',
+    expected_revenue: quoteData.expectedRevenue || quoteData.expected_revenue || quoteData.budget || '$10,000',
+    remarks: quoteData.remarks || quoteData.notes || '',
+    audience_type: quoteData.audienceType || 'Executive Leaders',
     pupil_count: quoteData.pupilCount || '50-100',
-    notes: quoteData.notes || '',
-    status: 'pending',
+    notes: quoteData.notes || quoteData.remarks || '',
     created_at: new Date().toISOString()
   };
 
   if (isSupabaseConfigured && supabase) {
     try {
-      const { error } = await supabase.from('enterprise_quotes').insert([{
-        org_name: quoteData.orgName,
-        contact_name: quoteData.contactName,
-        email: quoteData.email,
-        phone: quoteData.phone,
-        audience_type: quoteData.audienceType,
-        pupil_count: quoteData.pupilCount,
-        notes: quoteData.notes,
-        status: 'pending'
-      }]);
+      const { error } = await supabase.from('enterprise_quotes').insert([payload]);
 
       if (error) {
         console.warn('[Supabase] enterprise_quotes table insert fallback to queries table:', error.message);
         await supabase.from('queries').insert([{
-          student_name: quoteData.contactName || quoteData.orgName,
-          student_email: quoteData.email,
-          student_plan: 'Enterprise Quote',
-          subject: `Enterprise Quote Request: ${quoteData.orgName}`,
+          student_name: payload.contact_name || payload.org_name,
+          student_email: payload.email,
+          student_plan: 'Enterprise CRM Quote',
+          subject: `Enterprise CRM Quote Request: ${payload.org_name}`,
           type: 'Enterprise Quote',
-          message: `Org: ${quoteData.orgName} | Audience: ${quoteData.audienceType} | Pupils: ${quoteData.pupilCount} | Phone: ${quoteData.phone} | Notes: ${quoteData.notes}`,
+          message: `Company: ${payload.org_name} | Contact: ${payload.contact_name} (${payload.designation}) | Email: ${payload.email} | Phone: ${payload.phone} | Status: ${payload.status} | Revenue: ${payload.expected_revenue}`,
           status: 'open'
         }]);
       }
@@ -1904,7 +1907,10 @@ export async function saveHabitTrackerDayToSupabase(email, dayNumber, dayPayload
   if (isSupabaseConfigured && supabase) {
     try {
       const habitScores = dayPayload.scores || {};
-      const totalScore = Object.values(habitScores).reduce((a, b) => a + b, 0);
+      const scoreValues = Object.values(habitScores);
+      const totalScore = dayPayload.totalScore || (scoreValues.length > 0 
+        ? Math.round(scoreValues.reduce((a, b) => Number(a || 0) + Number(b || 0), 0) / scoreValues.length)
+        : 0);
 
       const payload = {
         email: cleanEmail,
@@ -1923,29 +1929,14 @@ export async function saveHabitTrackerDayToSupabase(email, dayNumber, dayPayload
         console.warn('[Supabase] student_habit_trackers notice:', e1.message);
       }
 
-      // 2. Write dedicated per-day row in user_progress / student_progress tables (lesson_id: student_habit_day_X)
-      const rowPayload = {
-        email: cleanEmail,
+      // 2. Write cross-reference row into student_progress table
+      const progressPayload = {
+        student_name: cleanEmail,
         lesson_id: `student_habit_day_${dayNumber}`,
-        notes: JSON.stringify(dayPayload),
+        completed: true,
         completed_at: new Date().toISOString()
       };
-
-      const { error: e2 } = await supabase.from('user_progress').upsert([rowPayload], { onConflict: 'email,lesson_id' });
-      const { error: e3 } = await supabase.from('student_progress').upsert([rowPayload], { onConflict: 'email,lesson_id' });
-
-      if (e2 && e3) {
-        // Fallback for full grid
-        const fullLocal = JSON.parse(localStorage.getItem(`th3ory_trackers_${cleanEmail}`) || '{}');
-        const gridPayload = {
-          email: cleanEmail,
-          lesson_id: 'daily_habit_tracker_grid',
-          notes: JSON.stringify(fullLocal),
-          completed_at: new Date().toISOString()
-        };
-        await supabase.from('user_progress').upsert([gridPayload], { onConflict: 'email,lesson_id' });
-        await supabase.from('student_progress').upsert([gridPayload], { onConflict: 'email,lesson_id' });
-      }
+      await supabase.from('student_progress').upsert([progressPayload], { onConflict: 'student_name,lesson_id' });
 
       return true;
     } catch (err) {
@@ -1993,7 +1984,7 @@ export async function fetchAllHabitTrackersFromSupabase(email) {
 
   // 1. Fetch from dedicated student_habit_trackers table
   try {
-    const { data: trackerRows } = await supabase
+    const { data: trackerRows, error: tErr } = await supabase
       .from('student_habit_trackers')
       .select('*')
       .eq('email', cleanEmail);
@@ -2005,74 +1996,24 @@ export async function fetchAllHabitTrackersFromSupabase(email) {
           pillarScores: row.pillar_scores || {},
           note: row.note || '',
           weeklyReflection: row.weekly_reflection || {},
+          totalScore: row.total_score || 0,
           updatedAt: row.updated_at || row.created_at
         };
       });
     }
+  } catch (err) {
+    console.warn('[Supabase] Error fetching student_habit_trackers:', err);
+  }
+
+  try {
+    localStorage.setItem(`th3ory_trackers_${cleanEmail}`, JSON.stringify(combined));
   } catch {}
 
-  // 2. Fetch per-day records from user_progress & student_progress tables (lesson_id LIKE student_habit_day_%)
-  for (const tableName of ['user_progress', 'student_progress']) {
-    try {
-      const { data: progressRows } = await supabase
-        .from(tableName)
-        .select('*')
-        .eq('email', cleanEmail)
-        .like('lesson_id', 'student_habit_day_%');
-
-      if (progressRows && progressRows.length > 0) {
-        progressRows.forEach(row => {
-          const dayNumber = row.lesson_id.replace('student_habit_day_', '');
-          if (dayNumber && row.notes) {
-            try {
-              const parsed = JSON.parse(row.notes);
-              if (!combined[`day_${dayNumber}`] || new Date(row.completed_at || 0) > new Date(combined[`day_${dayNumber}`].updatedAt || 0)) {
-                combined[`day_${dayNumber}`] = parsed;
-              }
-            } catch {}
-          }
-        });
-      }
-    } catch {}
-  }
-
-  // 3. Fallback to full grid record in user_progress
-  if (Object.keys(combined).length === 0) {
-    const fallbackGrid = await fetchDailyTrackerFromSupabase(cleanEmail);
-    if (fallbackGrid) combined = fallbackGrid;
-  }
-
-  localStorage.setItem(`th3ory_trackers_${cleanEmail}`, JSON.stringify(combined));
   return combined;
 }
 
 export async function fetchDailyTrackerFromSupabase(email) {
-  if (!email || !email.trim()) return null;
-  const cleanEmail = email.trim().toLowerCase();
-
-  let local = null;
-  try {
-    const raw = localStorage.getItem(`th3ory_trackers_${cleanEmail}`);
-    if (raw) local = JSON.parse(raw);
-  } catch {}
-
-  if (!isSupabaseConfigured || !supabase) return local;
-
-  try {
-    const { data } = await supabase
-      .from('user_progress')
-      .select('notes')
-      .eq('email', cleanEmail)
-      .eq('lesson_id', 'daily_habit_tracker_grid')
-      .single();
-
-    if (data && data.notes) {
-      const parsed = JSON.parse(data.notes);
-      return parsed;
-    }
-  } catch {}
-
-  return local;
+  return fetchAllHabitTrackersFromSupabase(email);
 }
 
 export function subscribeToStudentHabitTrackers(email, onTrackerChange) {
@@ -2091,7 +2032,7 @@ export function subscribeToStudentHabitTrackers(email, onTrackerChange) {
       )
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'user_progress', filter: `email=eq.${cleanEmail}` },
+        { event: '*', schema: 'public', table: 'student_progress', filter: `student_name=eq.${cleanEmail}` },
         () => {
           fetchAllHabitTrackersFromSupabase(cleanEmail).then(res => { if (res) onTrackerChange(res); });
         }
@@ -2734,6 +2675,20 @@ export async function saveAmbassadorWeeklyReportToSupabase(ambassadorCode, repor
 
   if (isSupabaseConfigured && supabase) {
     try {
+      // 1. Also insert into dedicated ambassador_weekly_reports table
+      await supabase.from('ambassador_weekly_reports').insert([{
+        ambassador_code: ambassadorCode,
+        posts_count: newReport.postsCount,
+        stories_count: newReport.storiesCount,
+        leads_generated: newReport.leadsGenerated,
+        event_notes: newReport.eventNotes,
+        challenges: newReport.challenges,
+        next_week_plan: newReport.nextWeekPlan,
+        points_awarded: 50,
+        submitted_at: newReport.submittedAt
+      }]);
+
+      // 2. Update ambassador application summary
       const { data } = await supabase
         .from('ambassador_applications')
         .select('weekly_reports, points')
@@ -2752,12 +2707,373 @@ export async function saveAmbassadorWeeklyReportToSupabase(ambassadorCode, repor
         })
         .eq('ambassador_code', ambassadorCode);
     } catch (err) {
-      console.warn('[Supabase] Exception saving weekly report:', err);
+      console.warn('[Supabase] Exception saving weekly report to dedicated table:', err);
     }
   }
 
   return { success: true, report: newReport };
 }
+
+export async function fetchAmbassadorWeeklyReportsFromSupabase(ambassadorCode) {
+  if (!isSupabaseConfigured || !supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from('ambassador_weekly_reports')
+      .select('*')
+      .eq('ambassador_code', ambassadorCode)
+      .order('submitted_at', { ascending: false });
+    if (error || !data) return [];
+    return data;
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchAmbassadorLeadsFromSupabase(ambassadorCode) {
+  if (!isSupabaseConfigured || !supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from('ambassador_leads')
+      .select('*')
+      .eq('ambassador_code', ambassadorCode)
+      .order('created_at', { ascending: false });
+    if (error || !data) return [];
+    return data;
+  } catch {
+    return [];
+  }
+}
+
+export async function saveAmbassadorLeadToSupabase(leadData) {
+  const payload = {
+    ambassador_code: leadData.ambassadorCode,
+    student_name: leadData.studentName,
+    student_email: leadData.studentEmail,
+    student_phone: leadData.studentPhone || null,
+    college_name: leadData.collegeName || null,
+    status: leadData.status || 'INTERESTED',
+    commission_earned: leadData.commissionEarned || 0.00
+  };
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('ambassador_leads')
+        .insert([payload])
+        .select();
+      if (!error && data) return { success: true, lead: data[0] };
+    } catch (err) {
+      console.warn('[Supabase] Exception saving ambassador lead:', err);
+    }
+  }
+
+  return { success: true, lead: payload };
+}
+
+export async function fetchAmbassadorPayoutsFromSupabase(ambassadorCode) {
+  if (!isSupabaseConfigured || !supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from('ambassador_payouts')
+      .select('*')
+      .eq('ambassador_code', ambassadorCode)
+      .order('created_at', { ascending: false });
+    if (error || !data) return [];
+    return data;
+  } catch {
+    return [];
+  }
+}
+
+export async function saveAmbassadorInterviewNotesToSupabase(appId, notesData) {
+  try {
+    const local = JSON.parse(localStorage.getItem('th3ory_ambassador_apps') || '[]');
+    const idx = local.findIndex(a => a.appId === appId || a.id === appId);
+    if (idx !== -1) {
+      local[idx].interviewNotes = notesData.interviewNotes;
+      local[idx].interviewRating = notesData.interviewRating;
+      local[idx].status = 'INTERVIEW_COMPLETED';
+      localStorage.setItem('th3ory_ambassador_apps', JSON.stringify(local));
+      window.dispatchEvent(new CustomEvent('th3ory_ambassador_apps_change'));
+    }
+  } catch {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase
+        .from('ambassador_applications')
+        .update({
+          interview_notes: notesData.interviewNotes,
+          interview_rating: notesData.interviewRating,
+          status: 'INTERVIEW_COMPLETED'
+        })
+        .or(`app_id.eq.${appId},id.eq.${appId}`);
+    } catch (err) {
+      console.warn('[Supabase] Exception saving interview notes:', err);
+    }
+  }
+
+  return { success: true };
+}
+
+export async function scheduleAmbassadorInterviewInSupabase(appId, scheduleDetails) {
+  const notesText = scheduleDetails.scheduledSlot 
+    ? `Scheduled Slot: ${scheduleDetails.scheduledSlot}${scheduleDetails.teamNotes ? ` | Note: ${scheduleDetails.teamNotes}` : ''}`
+    : scheduleDetails.teamNotes || 'Interview Scheduled via Calendly';
+
+  try {
+    const local = JSON.parse(localStorage.getItem('th3ory_ambassador_apps') || '[]');
+    const idx = local.findIndex(a => a.appId === appId || a.id === appId);
+    if (idx !== -1) {
+      local[idx].interviewNotes = notesText;
+      local[idx].status = 'INTERVIEW_SCHEDULED';
+      localStorage.setItem('th3ory_ambassador_apps', JSON.stringify(local));
+      window.dispatchEvent(new CustomEvent('th3ory_ambassador_apps_change'));
+    }
+  } catch {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase
+        .from('ambassador_applications')
+        .update({
+          interview_notes: notesText,
+          status: 'INTERVIEW_SCHEDULED'
+        })
+        .or(`app_id.eq.${appId},id.eq.${appId}`);
+    } catch (err) {
+      console.warn('[Supabase] Exception scheduling interview:', err);
+    }
+  }
+
+  return { success: true };
+}
+
+
+export async function submitAmbassadorTeamApprovalToSupabase(appId, recommendation) {
+  try {
+    const local = JSON.parse(localStorage.getItem('th3ory_ambassador_apps') || '[]');
+    const idx = local.findIndex(a => a.appId === appId || a.id === appId);
+    if (idx !== -1) {
+      local[idx].status = 'RECOMMENDED_FOR_APPROVAL';
+      local[idx].teamRecommendedBy = recommendation.teamMemberName || 'Team Member';
+      localStorage.setItem('th3ory_ambassador_apps', JSON.stringify(local));
+      window.dispatchEvent(new CustomEvent('th3ory_ambassador_apps_change'));
+    }
+  } catch {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase
+        .from('ambassador_applications')
+        .update({
+          status: 'RECOMMENDED_FOR_APPROVAL',
+          team_recommended_by: recommendation.teamMemberName || 'Team Member'
+        })
+        .or(`app_id.eq.${appId},id.eq.${appId}`);
+    } catch (err) {
+      console.warn('[Supabase] Exception submitting team recommendation:', err);
+    }
+  }
+
+  return { success: true };
+}
+
+export async function saveAmbassadorPayoutDetailsToSupabase(ambassadorCode, payoutDetails) {
+  try {
+    const local = JSON.parse(localStorage.getItem('th3ory_ambassador_apps') || '[]');
+    const idx = local.findIndex(a => a.ambassadorCode === ambassadorCode);
+    if (idx !== -1) {
+      local[idx].payoutDetails = payoutDetails;
+      localStorage.setItem('th3ory_ambassador_apps', JSON.stringify(local));
+      window.dispatchEvent(new CustomEvent('th3ory_ambassador_apps_change'));
+    }
+  } catch {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase
+        .from('ambassador_applications')
+        .update({ payout_details: payoutDetails })
+        .eq('ambassador_code', ambassadorCode);
+    } catch (err) {
+      console.warn('[Supabase] Exception saving payout details:', err);
+    }
+  }
+
+  return { success: true, payoutDetails };
+}
+
+export async function requestAmbassadorPayoutToSupabase(ambassadorCode, amount, payoutDetails) {
+  const newPayout = {
+    id: `pay_${Date.now()}`,
+    ambassador_code: ambassadorCode,
+    amount: amount,
+    payment_method: payoutDetails?.method || 'UPI / Offline Bank Transfer',
+    payment_details: JSON.stringify(payoutDetails || {}),
+    transaction_reference: `REQ-${Math.floor(100000 + Math.random() * 900000)}`,
+    status: 'PENDING',
+    created_at: new Date().toISOString()
+  };
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.from('ambassador_payouts').insert([newPayout]);
+    } catch (err) {
+      console.warn('[Supabase] Exception creating payout request:', err);
+    }
+  }
+
+  return { success: true, payout: newPayout };
+}
+
+export async function fetchAmbassadorTasksFromSupabase() {
+  if (!isSupabaseConfigured || !supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from('ambassador_tasks')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error || !data) return [];
+    return data;
+  } catch {
+    return [];
+  }
+}
+
+// ─── Affiliate Applications Intake ───────────────────────────────────────────
+export async function saveAffiliateApplicationToSupabase(formData) {
+  const appId = `AFF-APP-${Math.floor(100000 + Math.random() * 900000)}`;
+  const record = {
+    app_id: appId,
+    name: formData.name,
+    email: formData.email,
+    phone: formData.phone || '',
+    website_or_channel: formData.websiteOrChannel || '',
+    audience_size: formData.audienceSize || '1,000 - 10,000',
+    promotion_strategy: formData.promotionStrategy || '',
+    status: 'PENDING_REVIEW',
+    created_at: new Date().toISOString()
+  };
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.from('affiliate_applications').insert([record]);
+    } catch (err) {
+      console.warn('[Supabase] Exception inserting affiliate application:', err);
+    }
+  }
+
+  return { success: true, appId, record };
+}
+
+export async function fetchAllAffiliateApplicationsFromSupabase() {
+  if (!isSupabaseConfigured || !supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from('affiliate_applications')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error || !data) return [];
+    return data;
+  } catch {
+    return [];
+  }
+}
+
+// ─── Team Portal Edit & Delete Helpers ───────────────────────────────────────
+export async function deleteEnterpriseQuoteFromSupabase(id) {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.from('enterprise_quotes').delete().eq('id', id);
+    } catch (err) {
+      console.warn('[Supabase] Exception deleting enterprise quote:', err);
+    }
+  }
+  return { success: true, id };
+}
+
+export async function updateEnterpriseQuoteInSupabase(id, updates) {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.from('enterprise_quotes').update(updates).eq('id', id);
+    } catch (err) {
+      console.warn('[Supabase] Exception updating enterprise quote:', err);
+    }
+  }
+  return { success: true, id, updates };
+}
+
+export async function deleteContactInquiryFromSupabase(id) {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.from('contact_inquiries').delete().eq('id', id);
+    } catch (err) {
+      console.warn('[Supabase] Exception deleting contact inquiry:', err);
+    }
+  }
+  return { success: true, id };
+}
+
+export async function updateContactInquiryInSupabase(id, updates) {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.from('contact_inquiries').update(updates).eq('id', id);
+    } catch (err) {
+      console.warn('[Supabase] Exception updating contact inquiry:', err);
+    }
+  }
+  return { success: true, id, updates };
+}
+
+export async function deleteAmbassadorApplicationFromSupabase(id) {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.from('ambassador_applications').delete().eq('id', id);
+    } catch (err) {
+      console.warn('[Supabase] Exception deleting ambassador application:', err);
+    }
+  }
+  return { success: true, id };
+}
+
+export async function updateAmbassadorApplicationInSupabase(id, updates) {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.from('ambassador_applications').update(updates).eq('id', id);
+    } catch (err) {
+      console.warn('[Supabase] Exception updating ambassador application:', err);
+    }
+  }
+  return { success: true, id, updates };
+}
+
+export async function deleteAffiliateApplicationFromSupabase(id) {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.from('affiliate_applications').delete().eq('id', id);
+    } catch (err) {
+      console.warn('[Supabase] Exception deleting affiliate application:', err);
+    }
+  }
+  return { success: true, id };
+}
+
+export async function updateAffiliateApplicationInSupabase(id, updates) {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.from('affiliate_applications').update(updates).eq('id', id);
+    } catch (err) {
+      console.warn('[Supabase] Exception updating affiliate application:', err);
+    }
+  }
+  return { success: true, id, updates };
+}
+
+
+
+
+
 
 
 

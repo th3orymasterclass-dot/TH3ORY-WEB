@@ -228,18 +228,7 @@ export default function CertificateViewer({
           </div>
         </div>
 
-        {/* Template Preview Notice Banner */}
-        {isPreview && (
-          <div className="bg-amber-500/10 border border-amber-500/30 text-amber-300 p-3.5 rounded-xl text-xs flex items-center justify-between gap-3 print:hidden">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
-              <span><strong>Certificate Template Preview</strong>: Demonstrating your official certificate upon 100% course completion.</span>
-            </div>
-            <span className="px-2.5 py-1 rounded bg-amber-500/20 font-bold text-[10px] uppercase text-amber-400 shrink-0">
-              Progress: {completedCount}/{totalLessons}
-            </span>
-          </div>
-        )}
+
 
         {/* ── CERTIFICATE CANVAS CONTAINER ─────────────────────────────────── */}
         <div 

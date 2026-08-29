@@ -105,7 +105,7 @@ export default function PricingSection({ onSelectPlan, couponCode, setCouponCode
 
           {/* Promo Coupon Bar */}
           <div className="max-w-md mx-auto pt-2">
-            <form onSubmit={applyCoupon} className="flex gap-2">
+            <form onSubmit={applyCoupon} className="flex flex-col sm:flex-row gap-2">
               <div className="relative flex-1">
                 <Tag className="w-4 h-4 text-[#FFC857] absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
@@ -118,7 +118,7 @@ export default function PricingSection({ onSelectPlan, couponCode, setCouponCode
               </div>
               <button
                 type="submit"
-                className="px-4 py-2.5 rounded-xl bg-[#7C5CFC] hover:bg-[#6344E0] text-[#FAFAF7] font-extrabold text-xs sm:text-sm transition-colors"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#7C5CFC] hover:bg-[#6344E0] text-[#FAFAF7] font-extrabold text-xs sm:text-sm transition-colors cursor-pointer"
               >
                 Apply
               </button>
@@ -220,7 +220,7 @@ export default function PricingSection({ onSelectPlan, couponCode, setCouponCode
                       className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#7C5CFC] to-[#6344E0] hover:from-[#6c4ce0] hover:to-[#5233d0] text-[#FAFAF7] font-extrabold text-xs uppercase tracking-wider shadow-xl shadow-[#7C5CFC]/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <Building2 className="w-4 h-4" />
-                      <span>Get Custom Quote for Pupils</span>
+                      <span>View Enterprise Programs</span>
                     </button>
                   ) : (
                     <button

@@ -8,7 +8,7 @@ export default function CalendlyWidget({
   calendlyUrl = DEFAULT_CALENDLY_URL,
   name = '',
   email = INHERENT_GMAIL,
-  height = '680px',
+  height = '740px',
   title = 'Schedule Your Private 1-on-1 Consultation'
 }) {
   const containerRef = useRef(null);
@@ -21,9 +21,9 @@ export default function CalendlyWidget({
   if (name) queryParams.set('name', name);
   queryParams.set('email', activeEmail);
   queryParams.set('hide_gdpr_banner', '1');
-  queryParams.set('background_color', '0f172a');
-  queryParams.set('text_color', 'ffffff');
-  queryParams.set('primary_color', 'f59e0b');
+  queryParams.set('background_color', 'ffffff');
+  queryParams.set('text_color', '0f172a');
+  queryParams.set('primary_color', '7c5cfc');
 
   const finalUrl = `${calendlyUrl}?${queryParams.toString()}`;
 
@@ -116,11 +116,11 @@ export default function CalendlyWidget({
       </div>
 
       {/* CALENDLY SDK CONTAINER & FALLBACK IFRAME */}
-      <div className="w-full bg-slate-950 relative min-h-[600px]" style={{ height }}>
+      <div className="w-full bg-white relative min-h-[680px] sm:min-h-[720px]" style={{ height }}>
         {/* SDK Container */}
         <div 
           ref={containerRef} 
-          className="w-full h-full min-h-[600px]"
+          className="w-full h-full min-h-[680px] sm:min-h-[720px] bg-white"
         />
 
         {/* Fallback iFrame if SDK fails or while loading */}
@@ -131,9 +131,9 @@ export default function CalendlyWidget({
             height="100%"
             frameBorder="0"
             title="Calendly Live Scheduling"
-            allow="camera; microphone; autoplay; payment"
+            allow="camera; microphone; autoplay; payment; clipboard-write; display-capture"
             sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-top-navigation-by-user-activation allow-modals"
-            className="w-full h-full min-h-[600px] border-none absolute inset-0 z-0"
+            className="w-full h-full min-h-[680px] sm:min-h-[720px] border-none absolute inset-0 z-0"
           ></iframe>
         )}
 

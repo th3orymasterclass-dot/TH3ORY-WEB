@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, Check, X, Clock, AlertCircle, FileText, RefreshCw, Send, CheckCircle2, PlusCircle } from 'lucide-react';
+import { ShieldCheck, Check, X, Clock, AlertCircle, FileText, RefreshCw, Send, CheckCircle2, PlusCircle, Calendar } from 'lucide-react';
 import {
   fetchPendingTeamApprovalsFromSupabase,
   processTeamApprovalRequestInSupabase,
   subscribeToTeamApprovals
 } from '../../services/supabaseService';
+import CalendlyModal from '../../components/CalendlyModal';
 
 export default function TeamApprovalsPanel({ themeMode = 'dark' }) {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState(null);
   const [adminNotes, setAdminNotes] = useState('');
+  const [isCalendlyOpen, setIsCalendlyOpen] = useState(false);
 
   const isDark = themeMode === 'dark';
 
@@ -65,11 +67,20 @@ export default function TeamApprovalsPanel({ themeMode = 'dark' }) {
             Review, approve, or reject operational modifications and NEW DATA entries submitted by Team Portal members.
           </p>
         </div>
-        <span className={`px-3 py-1 font-bold text-xs rounded-full border ${
-          isDark ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' : 'bg-amber-50 text-amber-700 border-amber-200'
-        }`}>
-          {pendingRequests.length} Pending
-        </span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsCalendlyOpen(true)}
+            className="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-bold text-xs rounded-xl flex items-center gap-1.5 cursor-pointer shadow-sm"
+          >
+            <Calendar className="w-4 h-4 text-amber-400" />
+            <span>Schedule Team Meeting</span>
+          </button>
+          <span className={`px-3 py-1 font-bold text-xs rounded-full border ${
+            isDark ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' : 'bg-amber-50 text-amber-700 border-amber-200'
+          }`}>
+            {pendingRequests.length} Pending
+          </span>
+        </div>
       </div>
 
       {/* Pending Requests Queue Container */}
@@ -190,6 +201,14 @@ export default function TeamApprovalsPanel({ themeMode = 'dark' }) {
           </div>
         </div>
       )}
+
+      {/* Calendly Team Strategy Meeting Modal */}
+      <CalendlyModal
+        isOpen={isCalendlyOpen}
+        onClose={() => setIsCalendlyOpen(false)}
+        title="Schedule Team Operational Strategy Meeting"
+        subtitle="1-on-1 Admin Sync for Team Member Data Proposals & Approvals"
+      />
     </div>
   );
 }

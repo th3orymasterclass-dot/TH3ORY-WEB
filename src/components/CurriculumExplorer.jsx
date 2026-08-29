@@ -74,18 +74,18 @@ export default function CurriculumExplorer({ onOpenVideo }) {
                 {/* Level Header Bar */}
                 <button
                   onClick={() => toggleLevel(lvl.id)}
-                  className="w-full p-6 text-left flex items-center justify-between gap-4 bg-slate-900/50 hover:bg-slate-900/80 transition-colors"
+                  className="w-full p-4 sm:p-6 text-left flex items-start sm:items-center justify-between gap-3 bg-slate-900/50 hover:bg-slate-900/80 transition-colors"
                 >
-                  <div className="flex items-start sm:items-center gap-4">
-                    <div className="px-3.5 py-2 rounded-xl bg-amber-500/20 text-amber-300 text-xs font-black font-brand border border-amber-500/30 whitespace-nowrap">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+                    <div className="px-3.5 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 text-xs font-black font-brand border border-amber-500/30 whitespace-nowrap">
                       {lvl.levelNumber}
                     </div>
                     <div>
-                      <div className="flex items-center gap-3">
-                        <h3 className="text-xl sm:text-2xl font-black font-brand text-white tracking-wider">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                        <h3 className="text-lg sm:text-2xl font-black font-brand text-white tracking-wider">
                           {lvl.name}
                         </h3>
-                        <span className="text-xs px-2.5 py-0.5 rounded-full bg-slate-800 text-amber-400 border border-amber-500/20 font-mono">
+                        <span className="text-[11px] sm:text-xs px-2.5 py-0.5 rounded-full bg-slate-800 text-amber-400 border border-amber-500/20 font-mono">
                           {lvl.days}
                         </span>
                       </div>
@@ -93,7 +93,7 @@ export default function CurriculumExplorer({ onOpenVideo }) {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2 sm:gap-4 shrink-0">
                     <span className="text-xs px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-300 font-extrabold uppercase hidden sm:block border border-amber-500/20">
                       {lvl.capstoneDay}
                     </span>

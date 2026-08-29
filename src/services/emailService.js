@@ -390,3 +390,28 @@ export async function sendPortalBroadcastEmail(payload) {
   }
 }
 
+/**
+ * Send Formal Enterprise PDF Quote & Proposal Email via Resend API
+ */
+export async function sendEnterpriseQuotePdfEmail(quoteData) {
+  try {
+    const recipient = quoteData.email;
+    const clientOrg = quoteData.org_name || quoteData.company || 'Enterprise Account';
+    const contactName = quoteData.contact_name || 'Executive Contact';
+    const netInvestment = quoteData.expected_revenue || '$10,000';
+    const proposalId = `TH3ORY-QUOTE-${String(quoteData.id || Date.now()).slice(-6)}`;
+
+    return await sendPortalBroadcastEmail({
+      recipientEmail: recipient,
+      senderIdentity: 'TH3ORY Enterprise Desk <enterprise@th3ory.online>',
+      subject: `📜 Formal Enterprise Proposal & Quote — ${clientOrg} [${proposalId}]`,
+      messageBody: `Dear ${contactName},\n\nPlease find attached/linked your official TH3ORY Corporate Leadership Accelerator Enterprise Quote & Commercial Proposal (${proposalId}).\n\nOrganization: ${clientOrg}\nNet Investment Scope: ${netInvestment}\nProposal Status: Active Contract Draft\nValidity Period: 30 Business Days\n\nYou can review, download, or digitally sign this quote directly via your enterprise portal link below.`,
+      redirectPortal: 'https://th3ory.online/#/enterprise'
+    });
+  } catch (err) {
+    console.error('[Enterprise Quote Email Exception]:', err);
+    return { success: false, error: err };
+  }
+}
+
+

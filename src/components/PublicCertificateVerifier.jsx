@@ -63,7 +63,7 @@ export default function PublicCertificateVerifier({ initialCertId = '', onClose 
         </div>
 
         {/* Search Bar */}
-        <form onSubmit={(e) => { e.preventDefault(); handleSearch(); }} className="flex gap-2">
+        <form onSubmit={(e) => { e.preventDefault(); handleSearch(); }} className="flex flex-col sm:flex-row gap-2">
           <div className="relative flex-1">
             <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-3.5" />
             <input
@@ -76,7 +76,7 @@ export default function PublicCertificateVerifier({ initialCertId = '', onClose 
           </div>
           <button
             type="submit"
-            className="px-5 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black uppercase text-xs rounded-xl shadow-md transition-all shrink-0"
+            className="w-full sm:w-auto px-5 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black uppercase text-xs rounded-xl shadow-md transition-all shrink-0 cursor-pointer"
           >
             {loading ? 'Verifying...' : 'Verify Credential'}
           </button>

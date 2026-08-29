@@ -332,13 +332,7 @@ export default function StudentApp({ profile: initialProfile, onLogout }) {
 
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Maintenance Banner */}
-        {isMaintenanceMode && (
-          <div className="bg-amber-500 text-slate-950 px-4 py-2 text-center text-xs font-bold font-sans flex items-center justify-center gap-2 z-20 sticky top-0 border-b border-amber-600 shadow-md">
-            <ShieldAlert className="w-4 h-4 text-slate-950" />
-            <span>SYSTEM NOTICE: Platform maintenance in progress. Live queries &amp; certificate syncing may experience delays.</span>
-          </div>
-        )}
+
 
         {/* Top bar */}
         <header className={`h-14 border-b flex items-center px-4 sm:px-5 gap-4 shrink-0 backdrop-blur-sm sticky top-0 z-10 ${

@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, MessageCircle, Clock, CheckCircle2, AlertCircle, Plus, X, ChevronDown, ChevronUp, Paperclip, Trash2 } from 'lucide-react';
+import { Send, MessageCircle, Clock, CheckCircle2, AlertCircle, Plus, X, ChevronDown, ChevronUp, Paperclip, Trash2, Calendar } from 'lucide-react';
 import { getQueries, addQuery, updateQuery, spSet, removeQuery } from '../studentData';
 import { getCourseDetails } from '../../data/adminData';
 import { saveQueryToSupabase, fetchQueriesFromSupabase, subscribeToQueries } from '../../services/supabaseService';
 import { useFeatureFlags } from '../../context/FeatureFlagContext';
+import CalendlyModal from '../../components/CalendlyModal';
 
 const QUERY_TYPES = [
   'General Question',
@@ -144,6 +145,7 @@ export default function QueryPanel({ profile, themeMode = 'dark' }) {
   const [form, setForm]         = useState({ subject: '', type: 'General Question', message: '' });
   const [loading, setLoading]   = useState(false);
   const [success, setSuccess]   = useState(false);
+  const [isCalendlyOpen, setIsCalendlyOpen] = useState(false);
   const formRef = useRef();
 
   useEffect(() => {
@@ -259,6 +261,13 @@ export default function QueryPanel({ profile, themeMode = 'dark' }) {
           <p className={`text-sm mt-1 ${isLight ? 'text-slate-600' : 'text-slate-500'}`}>Ask questions and get responses from the TH3ORY instructor team</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => setIsCalendlyOpen(true)}
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-extrabold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-md cursor-pointer transition-all shrink-0"
+          >
+            <Calendar className="w-4 h-4" />
+            <span>Book 1-on-1 Call</span>
+          </button>
           <a
             href="mailto:team@th3ory.online?subject=Student%20Query%20-%20TH3ORY%20Masterclass"
             className={`px-4 py-2.5 rounded-xl border text-xs font-bold transition-all flex items-center gap-2 ${
@@ -269,7 +278,7 @@ export default function QueryPanel({ profile, themeMode = 'dark' }) {
           </a>
           {isCommunityEnabled && (
             <button onClick={() => setShowForm(v => !v)}
-              className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs uppercase tracking-widest flex items-center gap-2 transition-all shadow-md shrink-0">
+              className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-extrabold text-xs uppercase tracking-widest flex items-center gap-2 transition-all shadow-md shrink-0">
               {showForm ? <X className="w-4 h-4"/> : <Plus className="w-4 h-4"/>}
               {showForm ? 'Cancel' : 'Ask Question'}
             </button>
@@ -412,6 +421,16 @@ export default function QueryPanel({ profile, themeMode = 'dark' }) {
           </form>
         </div>
       )}
+
+      {/* Calendly 1-on-1 Mentorship Modal */}
+      <CalendlyModal
+        isOpen={isCalendlyOpen}
+        onClose={() => setIsCalendlyOpen(false)}
+        name={profile?.name || ''}
+        email={profile?.email || ''}
+        title="Schedule 1-on-1 Mentorship Session"
+        subtitle="Book a private call directly with TH3ORY Masterclass instructors"
+      />
     </div>
   );
 }

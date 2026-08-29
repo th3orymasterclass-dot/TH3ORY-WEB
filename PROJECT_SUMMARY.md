@@ -126,5 +126,5 @@ graph TD
 
 - **Primary Domain**: **[https://th3ory.online](https://th3ory.online)**
 - **WWW Subdomain**: **[https://www.th3ory.online](https://www.th3ory.online)**
-- **Latest Production Deployment ID**: `dpl_7PSjLvRM9mSgg2TDQZxdxaH5qQsB`
-- **Previous Backup Deployment ID**: `dpl_FMvhdahmspxtU3MsswTfgjq53nV6`
+- **Latest Production Deployment ID**: `dpl_CJpQeAnsGVxev9ymzZ9cZsi3x8MA`
+- **Previous Backup Deployment ID**: `dpl_HYWYExRr8zoT5ZtxotZEX41vN8ML`

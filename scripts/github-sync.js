@@ -22,7 +22,7 @@ const REPO  = 'TH3ORY-WEB';
 const BRANCH = 'main';
 
 const IGNORED_DIRS = new Set(['node_modules', 'dist', 'build', '.git', 'scratch', '.tempmediaStorage', '.gemini']);
-const IGNORED_FILES = new Set(['.env', '.ds_store', 'desktop.ini', 'npm-debug.log']);
+const IGNORED_FILES = new Set(['.env', '.env.local', '.env.example', 'mcp.json', '.mcp.json', '.ds_store', 'desktop.ini', 'npm-debug.log']);
 
 function ghRequest(method, urlPath, body = null) {
   return new Promise((resolve, reject) => {

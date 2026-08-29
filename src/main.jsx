@@ -12,6 +12,10 @@ import EnterprisePage from './components/EnterprisePage.jsx';
 import PrivacyPolicyPage from './components/PrivacyPolicyPage.jsx';
 import AmbassadorLandingPage from './components/AmbassadorLandingPage.jsx';
 import AmbassadorPortal from './components/AmbassadorPortal.jsx';
+import AmbassadorLogin from './components/AmbassadorLogin.jsx';
+import AffiliateLandingPage from './components/AffiliateLandingPage.jsx';
+import MasterclassAdvertisingPage from './components/MasterclassAdvertisingPage.jsx';
+import InstitutionalPage from './components/InstitutionalPage.jsx';
 import CertificateVerification from './components/CertificateVerification.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import NotFoundPage from './components/NotFoundPage.jsx';
@@ -31,7 +35,11 @@ function Root() {
     if (h.includes('enroll') || p.includes('enroll')) return 'enroll';
     if (h.includes('verify') || p.includes('verify')) return 'verify';
     if (h.includes('enterprise') || p.includes('enterprise')) return 'enterprise';
+    if (h.includes('affiliate') || p.includes('affiliate') || h.includes('partners')) return 'affiliate';
+    if (h.includes('masterclass') || p.includes('masterclass') || h.includes('curriculum-deepdive')) return 'masterclass';
+    if (h.includes('colleges') || p.includes('colleges') || h.includes('institution')) return 'colleges';
     if (h.includes('privacy') || p.includes('privacy')) return 'privacy';
+    if (h.includes('ambassador-login') || p.includes('ambassador-login')) return 'ambassador-login';
     if (h.includes('ambassador-portal') || p.includes('ambassador-portal') || h.includes('ambassador-dashboard')) return 'ambassador-portal';
     if (h.includes('ambassador') || p.includes('ambassador')) return 'ambassador';
     if (h.includes('404')) return '404';
@@ -140,6 +148,24 @@ function Root() {
     return <EnterprisePage onBack={() => { window.location.hash = ''; setView('public'); }} />;
   }
 
+  // ── Affiliate Partner Advertising Page ──────────────────────────────────────
+  if (view === 'affiliate') {
+    return <AffiliateLandingPage onBack={() => { window.location.hash = ''; setView('public'); }} />;
+  }
+
+  // ── 30-Day Masterclass Deep-Dive Advertising Page ───────────────────────────
+  if (view === 'masterclass') {
+    return <MasterclassAdvertisingPage 
+      onOpenCheckout={() => { window.location.hash = 'enroll'; setView('enroll'); }}
+      onBack={() => { window.location.hash = ''; setView('public'); }} 
+    />;
+  }
+
+  // ── College & Institutional Workshops Advertising Page ──────────────────────
+  if (view === 'colleges') {
+    return <InstitutionalPage onBack={() => { window.location.hash = ''; setView('public'); }} />;
+  }
+
   // ── Privacy Policy Page ──────────────────────────────────────────────────
   if (view === 'privacy') {
     return <PrivacyPolicyPage onBack={() => { window.location.hash = ''; setView('public'); }} />;
@@ -148,6 +174,14 @@ function Root() {
   // ── Campus Ambassador Public Recruitment Page ──────────────────────────────
   if (view === 'ambassador') {
     return <AmbassadorLandingPage />;
+  }
+
+  // ── Dedicated Campus Ambassador Login Page ─────────────────────────────────
+  if (view === 'ambassador-login') {
+    return <AmbassadorLogin onAuthenticated={() => {
+      window.location.hash = '#/ambassador-portal';
+      setView('ambassador-portal');
+    }} />;
   }
 
   // ── Dedicated Campus Ambassador Portal Dashboard ────────────────────────────

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Users, ShieldCheck, Check, X, Clock, AlertCircle, FileText, Send, 
   Award, Mail, Phone, GraduationCap, Sparkles, ExternalLink, RefreshCw, CheckCircle2, Lock,
-  MessageSquare, Star, UserCheck, ThumbsUp, Calendar, PhoneCall, Copy, Share2
+  MessageSquare, Star, UserCheck, ThumbsUp, Calendar, PhoneCall, Copy, Share2, Edit3, Trash2
 } from 'lucide-react';
 import { 
   fetchAllAmbassadorApplicationsFromSupabase, 
@@ -10,7 +10,9 @@ import {
   rejectAmbassadorInSupabase,
   saveAmbassadorInterviewNotesToSupabase,
   submitAmbassadorTeamApprovalToSupabase,
-  scheduleAmbassadorInterviewInSupabase
+  scheduleAmbassadorInterviewInSupabase,
+  deleteAmbassadorApplicationFromSupabase,
+  updateAmbassadorApplicationInSupabase
 } from '../../services/supabaseService';
 import { sendAmbassadorApprovalEmail, sendAmbassadorInterviewInviteEmail } from '../../services/emailService';
 import CalendlyModal from '../../components/CalendlyModal';
@@ -43,7 +45,44 @@ export default function AmbassadorApplicationsPanel({ themeMode = 'dark' }) {
   });
   const [submittingEval, setSubmittingEval] = useState(false);
 
+  // Edit & Delete State
+  const [editingAmbApp, setEditingAmbApp] = useState(null);
+  const [editAmbForm, setEditAmbForm] = useState({ name: '', email: '', phone: '', collegeName: '', degree: '', yearOfStudy: '', socialHandles: '', leadershipExp: '', motivation: '' });
+  const [deletingAmbId, setDeletingAmbId] = useState(null);
+
   const isDark = themeMode === 'dark';
+
+  const handleDeleteAmbassadorApp = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this campus ambassador application?')) return;
+    setDeletingAmbId(id);
+    await deleteAmbassadorApplicationFromSupabase(id);
+    setApplications(prev => prev.filter(a => (a.id || a.appId) !== id));
+    setDeletingAmbId(null);
+  };
+
+  const handleOpenEditAmbModal = (app) => {
+    setEditingAmbApp(app);
+    setEditAmbForm({
+      name: app.name || '',
+      email: app.email || '',
+      phone: app.phone || '',
+      collegeName: app.collegeName || app.college_name || '',
+      degree: app.degree || '',
+      yearOfStudy: app.yearOfStudy || app.year_of_study || '',
+      socialHandles: app.socialHandles || app.social_handles || '',
+      leadershipExp: app.leadershipExp || app.leadership_exp || '',
+      motivation: app.motivation || ''
+    });
+  };
+
+  const handleSaveEditAmbApp = async (e) => {
+    e.preventDefault();
+    if (!editingAmbApp) return;
+    const appId = editingAmbApp.id || editingAmbApp.appId;
+    await updateAmbassadorApplicationInSupabase(appId, editAmbForm);
+    setApplications(prev => prev.map(a => ((a.id || a.appId) === appId ? { ...a, ...editAmbForm } : a)));
+    setEditingAmbApp(null);
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -454,7 +493,28 @@ export default function AmbassadorApplicationsPanel({ themeMode = 'dark' }) {
                         <span>{copiedAppId === appId ? 'Link Copied' : 'Copy Link'}</span>
                       </button>
 
-                      {/* 4. Log Manual Evaluation Button */}
+                      {/* 4. Edit Form Application Record */}
+                      <button
+                        onClick={() => handleOpenEditAmbModal(app)}
+                        className="px-3 py-2 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/40 text-indigo-300 text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer shrink-0"
+                        title="Edit Ambassador Form Details"
+                      >
+                        <Edit3 className="w-3.5 h-3.5 text-indigo-400" />
+                        <span>Edit Form</span>
+                      </button>
+
+                      {/* 5. Delete Application Record */}
+                      <button
+                        onClick={() => handleDeleteAmbassadorApp(appId)}
+                        disabled={deletingAmbId === appId}
+                        className="px-3 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-300 text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer shrink-0"
+                        title="Delete Application Record"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                        <span>{deletingAmbId === appId ? '...' : 'Delete'}</span>
+                      </button>
+
+                      {/* 6. Log Manual Evaluation Button */}
                       <button
                         onClick={() => handleOpenInterviewModal(app)}
                         className="px-3.5 py-2 rounded-xl bg-indigo-950/60 hover:bg-indigo-900/80 border border-indigo-500/40 text-indigo-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
@@ -638,6 +698,124 @@ export default function AmbassadorApplicationsPanel({ themeMode = 'dark' }) {
         title={`Campus Ambassador Selection Interview — ${calendlyApp?.name || 'Candidate'}`}
         subtitle={`15-Min Live Selection Interview (${calendlyApp?.collegeName || 'Campus Ambassador'})`}
       />
+      {/* EDIT AMBASSADOR APPLICATION FORM MODAL */}
+      {editingAmbApp && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full p-6 space-y-4 text-white shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-bold flex items-center gap-2">
+                <Edit3 className="w-4 h-4 text-amber-400" />
+                Edit Campus Ambassador Form Record
+              </h3>
+              <button onClick={() => setEditingAmbApp(null)} className="p-1 rounded-lg bg-slate-800 text-slate-400 hover:text-white">✕</button>
+            </div>
+
+            <form onSubmit={handleSaveEditAmbApp} className="space-y-3 text-xs">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-slate-400 font-bold uppercase mb-1">Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={editAmbForm.name}
+                    onChange={e => setEditAmbForm({ ...editAmbForm, name: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 font-bold uppercase mb-1">Email Address</label>
+                  <input
+                    type="email"
+                    required
+                    value={editAmbForm.email}
+                    onChange={e => setEditAmbForm({ ...editAmbForm, email: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-slate-400 font-bold uppercase mb-1">Phone Number</label>
+                  <input
+                    type="text"
+                    value={editAmbForm.phone}
+                    onChange={e => setEditAmbForm({ ...editAmbForm, phone: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 font-bold uppercase mb-1">College / University</label>
+                  <input
+                    type="text"
+                    required
+                    value={editAmbForm.collegeName}
+                    onChange={e => setEditAmbForm({ ...editAmbForm, collegeName: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-slate-400 font-bold uppercase mb-1">Degree / Major</label>
+                  <input
+                    type="text"
+                    value={editAmbForm.degree}
+                    onChange={e => setEditAmbForm({ ...editAmbForm, degree: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 font-bold uppercase mb-1">Year of Study</label>
+                  <input
+                    type="text"
+                    value={editAmbForm.yearOfStudy}
+                    onChange={e => setEditAmbForm({ ...editAmbForm, yearOfStudy: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-400 font-bold uppercase mb-1">Social Handles / Profile URLs</label>
+                <input
+                  type="text"
+                  value={editAmbForm.socialHandles}
+                  onChange={e => setEditAmbForm({ ...editAmbForm, socialHandles: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-400 font-bold uppercase mb-1">Leadership Experience / Campus Roles</label>
+                <textarea
+                  value={editAmbForm.leadershipExp}
+                  onChange={e => setEditAmbForm({ ...editAmbForm, leadershipExp: e.target.value })}
+                  rows={2}
+                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingAmbApp(null)}
+                  className="px-4 py-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold cursor-pointer"
+                >
+                  Save Record Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

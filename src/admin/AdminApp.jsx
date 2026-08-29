@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import {
   LayoutDashboard, ShoppingBag, HelpCircle, Tag, Mail, Database,
   Sliders, ShieldCheck, Sun, Moon, Type, Flame, BookOpen, FolderOpen,
-  Star, User, Gift, Target, Video, ChevronRight, Menu, X, ExternalLink, LogOut, Shield
+  Star, User, Gift, Target, Video, ChevronRight, Menu, X, ExternalLink, LogOut, Shield, Users, Calendar, BarChart3
 } from 'lucide-react';
 import useAdminData from './useAdminData';
 import OverviewPanel       from './panels/OverviewPanel';
+import CalendlyModal       from '../components/CalendlyModal';
 
 const isAdminAuthenticated = () => (
   typeof window !== 'undefined' && (sessionStorage.getItem('th3ory_admin_auth') === '1' || localStorage.getItem('th3ory_admin_auth') === '1')
@@ -29,10 +30,14 @@ import NewsletterPanel     from './panels/NewsletterPanel';
 import FeatureFlagsPanel   from './panels/FeatureFlagsPanel';
 import TeamApprovalsPanel  from './panels/TeamApprovalsPanel';
 import AmbassadorApplicationsPanel from './panels/AmbassadorApplicationsPanel';
+import PortalEmailDispatcherPanel from './panels/PortalEmailDispatcherPanel';
+import TeamAnalyticsDashboard from '../team/panels/TeamAnalyticsDashboard';
 
 const NAV_ITEMS = [
   { id: 'overview',    label: 'Overview',           icon: LayoutDashboard },
+  { id: 'analytics',   label: 'Analytics & Intelligence', icon: BarChart3, badge: 'REALTIME' },
   { id: '__divider_db', divider: true, label: 'DATABASE & SALES' },
+  { id: 'email_dispatcher', label: 'Resend Email System', icon: Mail, badge: 'RESEND' },
   { id: 'ambassador_apps', label: 'Ambassador Applications', icon: Users, badge: 'AMBASSADOR' },
   { id: 'team_approvals', label: 'Team Approvals', icon: ShieldCheck, badge: 'QUEUE' },
   { id: 'feature_flags', label: 'Vercel Feature Flags', icon: Sliders, badge: 'VERCEL' },
@@ -60,11 +65,12 @@ const NAV_ITEMS = [
 ];
 
 export default function AdminApp({ onLogout }) {
-  const [active, setActive] = useState('overview');
+  const [active, setActive]           = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 768 : true));
-  const [themeMode, setThemeMode] = useState(() => (
+  const [themeMode, setThemeMode]     = useState(() => (
     localStorage.getItem('th3ory_admin_theme') || 'dark'
   ));
+  const [isCalendlyOpen, setIsCalendlyOpen] = useState(false);
 
   const toggleTheme = () => {
     const next = themeMode === 'dark' ? 'light' : 'dark';
@@ -93,6 +99,8 @@ export default function AdminApp({ onLogout }) {
   const renderPanel = () => {
     switch (active) {
       case 'overview':   return <OverviewPanel   {...panelProps} />;
+      case 'analytics':  return <TeamAnalyticsDashboard enterpriseQuotes={enterpriseQuotes} contactInquiries={contactInquiries} newsletterSubscribers={newsletterSubscribers} themeMode={themeMode} />;
+      case 'email_dispatcher': return <PortalEmailDispatcherPanel themeMode={themeMode} />;
       case 'ambassador_apps': return <AmbassadorApplicationsPanel themeMode={themeMode} />;
       case 'team_approvals': return <TeamApprovalsPanel themeMode={themeMode} />;
       case 'feature_flags': return <FeatureFlagsPanel themeMode={themeMode} />;
@@ -249,6 +257,16 @@ export default function AdminApp({ onLogout }) {
           </div>
 
           <div className="ml-auto flex items-center gap-2">
+            {/* Calendly Meeting Button */}
+            <button
+              onClick={() => setIsCalendlyOpen(true)}
+              className="p-1.5 rounded-xl border border-amber-500/40 bg-amber-500/15 text-amber-300 font-bold text-xs flex items-center gap-1.5 px-3 transition-all cursor-pointer hover:bg-amber-500/25"
+              title="Schedule Live Meeting via Calendly"
+            >
+              <Calendar className="w-4 h-4 text-amber-400" />
+              <span className="hidden sm:inline">Schedule Meeting</span>
+            </button>
+
             {/* Theme Toggle Button */}
             <button
               onClick={toggleTheme}
@@ -281,6 +299,14 @@ export default function AdminApp({ onLogout }) {
           </div>
         </main>
       </div>
+
+      {/* Calendly Live Meeting Initiation Modal */}
+      <CalendlyModal
+        isOpen={isCalendlyOpen}
+        onClose={() => setIsCalendlyOpen(false)}
+        title="Admin Portal — Initiate Live Meeting"
+        subtitle="Schedule a 1-on-1 meeting via Calendly for students, leads, or team members"
+      />
     </div>
   );
 }

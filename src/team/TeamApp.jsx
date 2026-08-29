@@ -1,22 +1,26 @@
 import React, { useState } from 'react';
 import {
-  HelpCircle, Mail, Tag, Shield, LogOut, ChevronRight, Menu, X, ExternalLink, Sun, Moon, Users
+  HelpCircle, Mail, Tag, Send, Users, Shield, LogOut, ChevronRight, Menu, X, ExternalLink, Sun, Moon, BarChart3
 } from 'lucide-react';
+import useAdminData from '../admin/useAdminData';
 import TeamQuotesPanel from './panels/TeamQuotesPanel';
 import TeamInquiriesPanel from './panels/TeamInquiriesPanel';
 import TeamAffiliatesPanel from './panels/TeamAffiliatesPanel';
+import NewsletterPanel from '../admin/panels/NewsletterPanel';
 import AmbassadorApplicationsPanel from '../admin/panels/AmbassadorApplicationsPanel';
-import useAdminData from '../admin/useAdminData';
+import TeamAnalyticsDashboard from './panels/TeamAnalyticsDashboard';
 
 const TEAM_NAV = [
-  { id: 'quotes',     label: 'Enterprise Quotes',    icon: HelpCircle, badge: 'RESTRICTED' },
-  { id: 'ambassador', label: 'Ambassador Applications', icon: Users,      badge: 'REVIEW' },
-  { id: 'inquiries',  label: 'Contact Us Inquiries', icon: Mail,       badge: 'RESTRICTED' },
-  { id: 'affiliates', label: 'Affiliate Program',    icon: Tag,        badge: 'POLICY' },
+  { id: 'analytics',  label: 'Analytics & Intelligence', icon: BarChart3,  badge: 'REALTIME' },
+  { id: 'quotes',     label: 'Enterprise Quotes',       icon: HelpCircle, badge: 'RESTRICTED' },
+  { id: 'inquiries',  label: 'Contact Us Enquiries',    icon: Mail,       badge: 'RESTRICTED' },
+  { id: 'affiliates', label: 'Affiliation Programs',   icon: Tag,        badge: 'POLICY' },
+  { id: 'newsletter', label: 'Newsletter Subscriptions', icon: Send,       badge: 'DISPATCH' },
+  { id: 'ambassador', label: 'Campus Ambassador Program', icon: Users,    badge: 'REVIEW' },
 ];
 
 export default function TeamApp({ onLogout }) {
-  const [active, setActive] = useState('quotes');
+  const [active, setActive] = useState('analytics');
   const [sidebarOpen, setSidebarOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 768 : true));
   const [themeMode, setThemeMode] = useState(() => (
     localStorage.getItem('th3ory_team_theme') || 'dark'
@@ -29,17 +33,83 @@ export default function TeamApp({ onLogout }) {
   };
 
   const adminState = useAdminData();
-  const { enterpriseQuotes = [], contactInquiries = [], updateQuoteStatus, updateInquiryStatus, save } = adminState;
+  const {
+    data,
+    save,
+    reset,
+    enterpriseQuotes,
+    contactInquiries,
+    newsletterSubscribers,
+    newsletterBroadcasts,
+    updateQuoteStatus,
+    updateInquiryStatus,
+    updateSubscriberStatus,
+    deleteSubscriber,
+  } = adminState;
 
   const currentNav = TEAM_NAV.find(n => n.id === active);
 
   const renderPanel = () => {
     switch (active) {
-      case 'quotes':     return <TeamQuotesPanel enterpriseQuotes={enterpriseQuotes} updateQuoteStatus={updateQuoteStatus} themeMode={themeMode} />;
-      case 'ambassador': return <AmbassadorApplicationsPanel themeMode={themeMode} />;
-      case 'inquiries':  return <TeamInquiriesPanel contactInquiries={contactInquiries} updateInquiryStatus={updateInquiryStatus} themeMode={themeMode} />;
-      case 'affiliates': return <TeamAffiliatesPanel save={save} themeMode={themeMode} />;
-      default:           return <TeamQuotesPanel enterpriseQuotes={enterpriseQuotes} updateQuoteStatus={updateQuoteStatus} themeMode={themeMode} />;
+      case 'analytics':
+        return (
+          <TeamAnalyticsDashboard
+            enterpriseQuotes={enterpriseQuotes}
+            contactInquiries={contactInquiries}
+            newsletterSubscribers={newsletterSubscribers}
+            themeMode={themeMode}
+          />
+        );
+      case 'quotes':
+        return (
+          <TeamQuotesPanel
+            enterpriseQuotes={enterpriseQuotes}
+            updateQuoteStatus={updateQuoteStatus}
+            themeMode={themeMode}
+          />
+        );
+      case 'inquiries':
+        return (
+          <TeamInquiriesPanel
+            contactInquiries={contactInquiries}
+            updateInquiryStatus={updateInquiryStatus}
+            themeMode={themeMode}
+          />
+        );
+      case 'affiliates':
+        return (
+          <TeamAffiliatesPanel
+            save={save}
+            themeMode={themeMode}
+          />
+        );
+      case 'newsletter':
+        return (
+          <NewsletterPanel
+            subscribers={newsletterSubscribers}
+            broadcasts={newsletterBroadcasts}
+            updateSubscriberStatus={updateSubscriberStatus}
+            deleteSubscriber={deleteSubscriber}
+            save={save}
+            data={data}
+            themeMode={themeMode}
+          />
+        );
+      case 'ambassador':
+        return (
+          <AmbassadorApplicationsPanel
+            themeMode={themeMode}
+          />
+        );
+      default:
+        return (
+          <TeamAnalyticsDashboard
+            enterpriseQuotes={enterpriseQuotes}
+            contactInquiries={contactInquiries}
+            newsletterSubscribers={newsletterSubscribers}
+            themeMode={themeMode}
+          />
+        );
     }
   };
 
@@ -79,11 +149,11 @@ export default function TeamApp({ onLogout }) {
           </div>
         </div>
 
-        {/* Restricted Nav */}
+        {/* Operational Nav */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           <div className="pb-2 px-2">
             <p className={`text-[10px] font-black uppercase tracking-[0.15em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-              ALLOWED MODULES (3 ONLY)
+              ALLOWED MODULES (5 ONLY)
             </p>
           </div>
           {TEAM_NAV.map(item => {
@@ -157,7 +227,7 @@ export default function TeamApp({ onLogout }) {
 
           <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm min-w-0 truncate">
             <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>Team Portal</span>
-            <ChevronRight className={`w-3.5 h-3.5 ${isDark ? 'text-slate-700' : 'text-slate-300'}`} />
+            <ChevronRight className={`w-3.5 h-3.5 ${isDark ? 'text-[#555A66]' : 'text-slate-300'}`} />
             <span className="font-semibold truncate">{currentNav?.label}</span>
           </div>
 
@@ -180,7 +250,7 @@ export default function TeamApp({ onLogout }) {
               isDark ? 'bg-indigo-950/60 border-indigo-500/30 text-indigo-300' : 'bg-indigo-50 border-indigo-200 text-indigo-800 font-semibold'
             }`}>
               <Shield className="w-3.5 h-3.5 text-indigo-500" />
-              <span className="hidden sm:inline">Restricted Access</span>
+              <span className="hidden sm:inline">Team Access</span>
             </div>
           </div>
         </header>

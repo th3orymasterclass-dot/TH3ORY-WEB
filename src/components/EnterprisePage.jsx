@@ -1,18 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Building2, Users, Crown, ShieldCheck, ArrowRight, CheckCircle2, Send, Sparkles, 
   Award, Layers, Zap, Clock, BarChart3, ArrowLeft, Lightbulb, Compass, 
   ChevronLeft, ChevronRight, Target, Check, AlertCircle, FileText, Globe, Star,
-  LayoutGrid
+  LayoutGrid, Calendar, Flame
 } from 'lucide-react';
 import Logo from './Logo';
 import SEOHead from './SEOHead';
 import StructuredData from './StructuredData';
 import { saveEnterpriseQuoteToSupabase } from '../services/supabaseService';
+import CalendlyModal from './CalendlyModal';
 
 export default function EnterprisePage({ onBack }) {
   // Carousel State
   const [activeItem, setActiveItem] = useState(0);
+
+  // Live Urgency Countdown Timer State
+  const [timeLeft, setTimeLeft] = useState({ hours: 18, minutes: 45, seconds: 20 });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
+        if (prev.minutes > 0) return { ...prev, minutes: 59, seconds: 59 };
+        if (prev.hours > 0) return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
+        return prev;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Quote Enquiry Form State
   const [formData, setFormData] = useState({
@@ -30,6 +46,7 @@ export default function EnterprisePage({ onBack }) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [referenceId, setReferenceId] = useState('');
+  const [isCalendlyOpen, setIsCalendlyOpen] = useState(false);
 
   // Scroll Helper
   const scrollToForm = (format = null) => {
@@ -139,87 +156,137 @@ export default function EnterprisePage({ onBack }) {
               <div className="hidden lg:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#7C5CFC]/15 border border-[#7C5CFC]/30 text-[#FFC857] text-xs font-extrabold tracking-wide">
                 <Crown className="w-3.5 h-3.5 text-[#FFC857]" /> Executive Corporate Solutions &amp; Enterprise Architecture
               </div>
-
-              <button
-                onClick={() => scrollToForm()}
-                className="px-4 sm:px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/25 transition-all flex items-center gap-1.5 cursor-pointer"
-              >
-                <Building2 className="w-4 h-4" />
-                <span>Request Enterprise Quote</span>
-              </button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* HERO SECTION */}
-      <section className="pt-32 pb-20 relative overflow-hidden bg-gradient-to-b from-[#15171A] via-[#1c1f26] to-[#15171A]">
-        {/* Ambient Radial Lighting */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-[#7C5CFC]/15 rounded-full blur-[140px] pointer-events-none" />
-        <div className="absolute top-1/3 right-10 w-[350px] h-[350px] bg-amber-500/10 rounded-full blur-[120px] pointer-events-none" />
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-10 text-center">
+      {/* HERO SECTION - IDENTICAL LUXURY MAIN PAGE ARCHITECTURE */}
+      <section className="relative pt-32 pb-20 overflow-hidden">
+        {/* Dynamic Intelligent Violet Radial Glow Behind Logo */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] sm:w-[900px] h-[500px] bg-[#7C5CFC]/20 rounded-full blur-[160px] pointer-events-none -z-10 animate-pulse-glow" />
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <span className="px-4 py-1.5 rounded-full bg-[#7C5CFC]/15 border border-[#7C5CFC]/40 text-[#FFC857] text-xs font-extrabold uppercase tracking-widest">
-              Influence &amp; Networking Mastery™
-            </span>
-            <span className="px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold uppercase tracking-widest">
-              Enterprise Leadership Solutions
-            </span>
+          {/* Top Banner Tagline */}
+          <div className="flex justify-center mb-6">
+            <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full glass-card border border-[#E9E4FF]/20 text-xs sm:text-sm font-bold tracking-widest text-[#E9E4FF] uppercase shadow-2xl">
+              <Crown className="w-4 h-4 text-[#FFC857] fill-[#FFC857]" />
+              <span>EXECUTIVE CORPORATE LEADERSHIP &amp; ENTERPRISE SOLUTIONS</span>
+            </div>
           </div>
 
-          <h1 className="text-4xl sm:text-6xl font-extrabold font-heading text-[#FAFAF7] leading-tight max-w-4xl mx-auto tracking-tight">
-            BUILD HIGH-PERFORMING PROFESSIONALS THROUGH <span className="text-gradient-amber">ETHICAL INFLUENCE &amp; STRATEGIC RELATIONSHIPS</span>
-          </h1>
+          {/* Hero Main Content Box */}
+          <div className="text-center max-w-5xl mx-auto space-y-6">
+            
+            {/* Responsively Big Center Hero Logo with Ambient Backlight */}
+            <div className="relative flex justify-center py-2 sm:py-6">
+              {/* Glow orb behind logo */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="w-[90%] h-[200%] bg-[#7C5CFC]/15 rounded-full blur-[80px]" />
+              </div>
+              <img
+                src="/logo-cropped.png"
+                alt="TH3ORY Enterprise Solutions Logo"
+                className="relative w-full max-w-xs sm:max-w-lg md:max-w-2xl lg:max-w-[820px] h-auto object-contain drop-shadow-[0_0_40px_rgba(124,92,252,0.55)] animate-float"
+                style={{ filter: 'drop-shadow(0 0 24px rgba(124,92,252,0.5)) drop-shadow(0 0 60px rgba(124,92,252,0.2))' }}
+              />
+            </div>
 
-          <p className="text-slate-300 text-base sm:text-xl max-w-3xl mx-auto leading-relaxed font-normal">
-            A structured leadership development system designed for HR, L&amp;D Leaders, Business Heads, Founders, and CXOs. Transform individual contributor talent into influential, high-trust organizational leaders.
-          </p>
+            {/* Masterclass Title Sub-banner */}
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black font-heading text-gradient-violet tracking-tight uppercase">
+              INFLUENCE &amp; NETWORKING MASTERY™ ENTERPRISE
+            </h1>
 
-          {/* Action CTAs */}
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
-            <button
-              onClick={() => scrollToForm()}
-              className="px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 font-black text-sm uppercase tracking-wider shadow-2xl shadow-amber-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2.5 cursor-pointer"
-            >
-              <Send className="w-5 h-5" />
-              <span>Get Custom Enterprise Quote</span>
-            </button>
+            {/* 5 Pillars Ribbon */}
+            <div className="flex flex-wrap items-center justify-center gap-2 text-xs sm:text-sm font-serif-luxury italic tracking-widest text-[#E9E4FF] uppercase py-1">
+              <span>PRESENCE</span> <span className="text-[#555A66]">•</span>
+              <span>POWER</span> <span className="text-[#555A66]">•</span>
+              <span>WARMTH</span> <span className="text-[#555A66]">•</span>
+              <span>CONNECTION</span> <span className="text-[#555A66]">•</span>
+              <span>LEGACY</span>
+            </div>
 
-            <a
-              href="#program-carousel"
-              className="px-8 py-4 rounded-2xl glass-panel hover:bg-[#7C5CFC]/20 text-[#E9E4FF] border border-[#7C5CFC]/40 font-extrabold text-sm uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer"
-            >
-              <LayoutGrid className="w-5 h-5 text-amber-400" />
-              <span>Explore Program Carousel</span>
-            </a>
+            {/* Subtitle Description */}
+            <p className="text-lg sm:text-2xl text-[#FAFAF7]/90 max-w-3xl mx-auto font-serif-luxury italic leading-relaxed">
+              A structured leadership development architecture designed for HR, L&amp;D Leaders, Business Heads, Founders, and CXOs. Transform individual contributor talent into influential, high-trust organizational leaders.
+            </p>
+
+            {/* Urgency Intake Banner with Live Countdown */}
+            <div className="inline-flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 px-4 py-2.5 rounded-2xl glass-card border border-[#E9E4FF]/20 text-xs sm:text-sm text-[#FAFAF7]/80 max-w-full">
+              <span className="flex items-center gap-1.5 font-bold text-[#FFC857]">
+                <Flame className="w-4 h-4 fill-[#FFC857]" /> Q1/Q2 Corporate Cohort Intake
+              </span>
+              <span className="hidden sm:inline-block h-3 w-px bg-[#555A66]/40" />
+              <span className="text-center sm:text-left">
+                <strong className="text-[#FFC857]">Limited Enterprise Capacity</strong> • Executive slots closing in
+              </span>
+              <div className="flex items-center gap-1 font-mono font-bold text-[#FAFAF7] bg-[#15171A] px-2.5 py-1 rounded-lg border border-[#7C5CFC]/30">
+                <span>{String(timeLeft.hours).padStart(2, '0')}h</span>:
+                <span>{String(timeLeft.minutes).padStart(2, '0')}m</span>:
+                <span>{String(timeLeft.seconds).padStart(2, '0')}s</span>
+              </div>
+            </div>
+
+            {/* Action CTAs */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+              <button
+                onClick={() => scrollToForm()}
+                className="w-full sm:w-auto px-9 py-4 rounded-2xl bg-gradient-to-r from-[#7C5CFC] via-[#9277FF] to-[#7C5CFC] hover:from-[#6c4ce0] hover:to-[#5233d0] text-[#FAFAF7] font-extrabold text-base uppercase tracking-wider shadow-xl shadow-[#7C5CFC]/30 hover:shadow-[#7C5CFC]/50 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 group cursor-pointer"
+              >
+                <span>REQUEST CUSTOM ENTERPRISE PROPOSAL</span>
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </button>
+
+              <button
+                onClick={() => setIsCalendlyOpen(true)}
+                className="w-full sm:w-auto px-7 py-4 rounded-2xl glass-card text-[#FAFAF7] hover:bg-[#15171A] font-semibold text-base border border-[#555A66] hover:border-[#7C5CFC] transition-all flex items-center justify-center gap-3 group cursor-pointer"
+              >
+                <div className="w-8 h-8 rounded-full bg-[#7C5CFC]/20 text-[#7C5CFC] flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Calendar className="w-4 h-4 text-[#FFC857]" />
+                </div>
+                <span>Schedule Strategy Call</span>
+              </button>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-[#555A66] pt-2 font-medium">
+              <span className="flex items-center gap-1.5 text-[#FAFAF7]/80">
+                <CheckCircle2 className="w-4 h-4 text-[#FFC857]" /> 100% CUSTOM CURRICULUM
+              </span>
+              <span className="flex items-center gap-1.5 text-[#FAFAF7]/80">
+                <CheckCircle2 className="w-4 h-4 text-[#FFC857]" /> ON-SITE &amp; LIVE HYBRID
+              </span>
+              <span className="flex items-center gap-1.5 text-[#FAFAF7]/80">
+                <CheckCircle2 className="w-4 h-4 text-[#FFC857]" /> MEASURABLE 90-DAY ROI
+              </span>
+            </div>
+
           </div>
 
-          {/* Key Executive Specs Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-10 max-w-5xl mx-auto text-left">
-            <div className="glass-card rounded-2xl p-6 border border-[#E9E4FF]/15 space-y-2">
-              <div className="text-xs font-bold text-amber-400 uppercase tracking-widest">Program Ecosystem</div>
-              <div className="text-2xl font-extrabold text-white font-brand">5 Pillars</div>
-              <div className="text-[11px] text-slate-400">Complete behavioral leadership architecture</div>
+          {/* 4 Core Poster Stats Grid */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-16 max-w-5xl mx-auto">
+            <div className="glass-card rounded-2xl p-6 text-center hover:translate-y-[-2px] transition-all border border-[#E9E4FF]/15">
+              <div className="text-3xl sm:text-4xl font-black font-brand text-gradient-violet uppercase">5 Pillars</div>
+              <div className="text-sm font-extrabold text-[#FAFAF7] mt-1 uppercase tracking-wider">Leadership System</div>
+              <div className="text-xs text-[#555A66] mt-0.5">Complete behavioral architecture</div>
             </div>
 
-            <div className="glass-card rounded-2xl p-6 border border-[#E9E4FF]/15 space-y-2">
-              <div className="text-xs font-bold text-[#7C5CFC] uppercase tracking-widest">Flexible Formats</div>
-              <div className="text-2xl font-extrabold text-white font-brand">4 Delivery Modes</div>
-              <div className="text-[11px] text-slate-400">Intensive, Cohort, Accelerator, Academy</div>
+            <div className="glass-card rounded-2xl p-6 text-center hover:translate-y-[-2px] transition-all border border-[#E9E4FF]/15">
+              <div className="text-3xl sm:text-4xl font-black font-brand text-gradient-violet uppercase">4 Formats</div>
+              <div className="text-sm font-extrabold text-[#FAFAF7] mt-1 uppercase tracking-wider">Flexible Delivery</div>
+              <div className="text-xs text-[#555A66] mt-0.5">Intensive, Cohort, Accelerator, Academy</div>
             </div>
 
-            <div className="glass-card rounded-2xl p-6 border border-[#E9E4FF]/15 space-y-2">
-              <div className="text-xs font-bold text-emerald-400 uppercase tracking-widest">Ethics First</div>
-              <div className="text-2xl font-extrabold text-white font-brand">4 Principles</div>
-              <div className="text-[11px] text-slate-400">Transparency, Respect, Mutual Benefit, Accountability</div>
+            <div className="glass-card rounded-2xl p-6 text-center hover:translate-y-[-2px] transition-all border border-[#E9E4FF]/15">
+              <div className="text-3xl sm:text-4xl font-black font-brand text-gradient-violet uppercase">4 Principles</div>
+              <div className="text-sm font-extrabold text-[#FAFAF7] mt-1 uppercase tracking-wider">Ethical Influence</div>
+              <div className="text-xs text-[#555A66] mt-0.5">Transparency, Respect, Mutual Benefit</div>
             </div>
 
-            <div className="glass-card rounded-2xl p-6 border border-[#E9E4FF]/15 space-y-2">
-              <div className="text-xs font-bold text-yellow-300 uppercase tracking-widest">ROI Measurement</div>
-              <div className="text-2xl font-extrabold text-white font-brand">90-Day Review</div>
-              <div className="text-[11px] text-slate-400">Pre-assessment, follow-up &amp; impact audit</div>
+            <div className="glass-card rounded-2xl p-6 text-center hover:translate-y-[-2px] transition-all border border-[#E9E4FF]/15">
+              <div className="text-3xl sm:text-4xl font-black font-brand text-gradient-violet uppercase">90-Day</div>
+              <div className="text-sm font-extrabold text-[#FAFAF7] mt-1 uppercase tracking-wider">Impact Audit</div>
+              <div className="text-xs text-[#555A66] mt-0.5">Pre &amp; post leadership review</div>
             </div>
           </div>
 
@@ -985,6 +1052,14 @@ export default function EnterprisePage({ onBack }) {
       <footer className="py-8 bg-slate-950 border-t border-slate-900 text-center text-xs text-slate-500">
         &copy; 2026 Mentalist Sravan Production. Influence &amp; Networking Mastery™ Enterprise Solutions.
       </footer>
+
+      {/* Calendly Executive Strategy Call Modal */}
+      <CalendlyModal
+        isOpen={isCalendlyOpen}
+        onClose={() => setIsCalendlyOpen(false)}
+        title="Schedule Enterprise Licensing Strategy Call"
+        subtitle="Book a private consultation with TH3ORY corporate licensing team"
+      />
     </div>
   );
 }

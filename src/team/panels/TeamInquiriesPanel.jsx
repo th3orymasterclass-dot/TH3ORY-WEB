@@ -1,14 +1,46 @@
 import React, { useState } from 'react';
-import { Mail, Shield, Check, Eye, EyeOff, Send, MessageSquare, Plus } from 'lucide-react';
-import { submitTeamApprovalRequestToSupabase } from '../../services/supabaseService';
+import { Mail, Shield, Check, Eye, EyeOff, Send, MessageSquare, Plus, Calendar, Edit3, Trash2 } from 'lucide-react';
+import { submitTeamApprovalRequestToSupabase, deleteContactInquiryFromSupabase, updateContactInquiryInSupabase } from '../../services/supabaseService';
+import CalendlyModal from '../../components/CalendlyModal';
 
-export default function TeamInquiriesPanel({ contactInquiries = [], themeMode = 'dark' }) {
-  const [maskData, setMaskData] = useState(true);
+export default function TeamInquiriesPanel({ contactInquiries = [], updateInquiryStatus, themeMode = 'dark' }) {
+  const [maskData, setMaskData] = useState(false);
   const [selectedInquiry, setSelectedInquiry] = useState(null);
+  const [calendlyInquiry, setCalendlyInquiry] = useState(null);
+  const [editingInquiry, setEditingInquiry] = useState(null);
+  const [editForm, setEditForm] = useState({ name: '', email: '', subject: '', message: '', status: 'new' });
+  const [deletingId, setDeletingId] = useState(null);
   const [proposedReply, setProposedReply] = useState('');
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
 
   const isDark = themeMode === 'dark';
+
+  const handleDeleteInquiry = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this contact inquiry?')) return;
+    setDeletingId(id);
+    await deleteContactInquiryFromSupabase(id);
+    if (updateInquiryStatus) updateInquiryStatus(id, 'DELETED');
+    setDeletingId(null);
+  };
+
+  const handleOpenEditModal = (inq) => {
+    setEditingInquiry(inq);
+    setEditForm({
+      name: inq.name || '',
+      email: inq.email || '',
+      subject: inq.subject || '',
+      message: inq.message || '',
+      status: inq.status || 'new'
+    });
+  };
+
+  const handleSaveEditInquiry = async (e) => {
+    e.preventDefault();
+    if (!editingInquiry) return;
+    await updateContactInquiryInSupabase(editingInquiry.id, editForm);
+    if (updateInquiryStatus) updateInquiryStatus(editingInquiry.id, editForm.status);
+    setEditingInquiry(null);
+  };
 
   // New Inbound Inquiry Entry State
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -85,19 +117,8 @@ export default function TeamInquiriesPanel({ contactInquiries = [], themeMode = 
 
   return (
     <div className="space-y-6">
-      {/* Policy Banner */}
-      <div className={`p-4 rounded-2xl border flex items-center justify-between gap-4 ${
-        isDark ? 'bg-indigo-950/40 border-indigo-500/30' : 'bg-indigo-50 border-indigo-200'
-      }`}>
-        <div className="flex items-center gap-3">
-          <Shield className={`w-5 h-5 shrink-0 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} />
-          <div className="text-xs">
-            <h4 className={`font-bold ${isDark ? 'text-white' : 'text-indigo-950'}`}>Contact Inquiries Data Policy Active</h4>
-            <p className={isDark ? 'text-slate-400' : 'text-indigo-700'}>Record new inbound support tickets or draft replies. All new inquiries require Admin approval supervision.</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0">
+      {/* Top Action Bar */}
+      <div className="flex items-center justify-end gap-2">
           <button
             onClick={() => setShowCreateModal(true)}
             className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl flex items-center gap-1.5 shadow-md cursor-pointer"
@@ -115,8 +136,8 @@ export default function TeamInquiriesPanel({ contactInquiries = [], themeMode = 
             {maskData ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
             <span>{maskData ? 'Masked' : 'Unmasked'}</span>
           </button>
-        </div>
       </div>
+
 
       {/* Main Table Container */}
       <div className={`border rounded-2xl p-5 shadow-sm space-y-4 ${
@@ -160,12 +181,39 @@ export default function TeamInquiriesPanel({ contactInquiries = [], themeMode = 
                     <td className="p-3 font-semibold">{inq.subject || 'General Inquiry'}</td>
                     <td className="p-3 truncate max-w-xs">{inq.message}</td>
                     <td className="p-3 text-right">
-                      <button
-                        onClick={() => { setSelectedInquiry(inq); setProposedReply(''); }}
-                        className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] rounded-lg transition-colors cursor-pointer"
-                      >
-                        Draft Reply
-                      </button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => setCalendlyInquiry(inq)}
+                          className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-bold text-[10px] rounded-lg transition-colors cursor-pointer flex items-center gap-1"
+                          title="Schedule Meeting via Calendly"
+                        >
+                          <Calendar className="w-3 h-3 text-amber-400" />
+                          <span>Schedule Call</span>
+                        </button>
+                        <button
+                          onClick={() => handleOpenEditModal(inq)}
+                          className="px-2.5 py-1 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/40 font-bold text-[10px] rounded-lg transition-colors cursor-pointer flex items-center gap-1"
+                          title="Edit Inquiry Details"
+                        >
+                          <Edit3 className="w-3 h-3 text-indigo-400" />
+                          <span>Edit</span>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteInquiry(inq.id)}
+                          disabled={deletingId === inq.id}
+                          className="px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-bold text-[10px] rounded-lg transition-colors cursor-pointer flex items-center gap-1"
+                          title="Delete Inquiry"
+                        >
+                          <Trash2 className="w-3 h-3 text-rose-400" />
+                          <span>{deletingId === inq.id ? '...' : 'Delete'}</span>
+                        </button>
+                        <button
+                          onClick={() => { setSelectedInquiry(inq); setProposedReply(''); }}
+                          className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] rounded-lg transition-colors cursor-pointer"
+                        >
+                          Draft Reply
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -341,6 +389,101 @@ export default function TeamInquiriesPanel({ contactInquiries = [], themeMode = 
           </div>
         </div>
       )}
+
+      {/* EDIT INQUIRY RECORD MODAL */}
+      {editingInquiry && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className={`border rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl ${
+            isDark ? 'bg-slate-900 border-indigo-500/40' : 'bg-white border-indigo-200'
+          }`}>
+            <h4 className={`text-sm font-bold flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              <Edit3 className="w-4 h-4 text-indigo-500" />
+              Edit Contact Inquiry Details
+            </h4>
+
+            <form onSubmit={handleSaveEditInquiry} className="space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className={`block text-xs font-bold mb-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Sender Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={editForm.name}
+                    onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                    className={`w-full border rounded-xl px-3 py-2 text-xs ${
+                      isDark ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                    }`}
+                  />
+                </div>
+                <div>
+                  <label className={`block text-xs font-bold mb-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Email Address</label>
+                  <input
+                    type="email"
+                    required
+                    value={editForm.email}
+                    onChange={e => setEditForm({ ...editForm, email: e.target.value })}
+                    className={`w-full border rounded-xl px-3 py-2 text-xs ${
+                      isDark ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                    }`}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className={`block text-xs font-bold mb-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Subject</label>
+                <input
+                  type="text"
+                  value={editForm.subject}
+                  onChange={e => setEditForm({ ...editForm, subject: e.target.value })}
+                  className={`w-full border rounded-xl px-3 py-2 text-xs ${
+                    isDark ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                  }`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-xs font-bold mb-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Inquiry Message Body</label>
+                <textarea
+                  value={editForm.message}
+                  onChange={e => setEditForm({ ...editForm, message: e.target.value })}
+                  rows={3}
+                  className={`w-full border rounded-xl p-3 text-xs ${
+                    isDark ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                  }`}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingInquiry(null)}
+                  className={`px-3 py-1.5 font-bold text-xs rounded-xl ${
+                    isDark ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+                  }`}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl cursor-pointer"
+                >
+                  Save Inquiry Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Calendly Inquiry Meeting Modal */}
+      <CalendlyModal
+        isOpen={Boolean(calendlyInquiry)}
+        onClose={() => setCalendlyInquiry(null)}
+        name={calendlyInquiry?.name || ''}
+        email={calendlyInquiry?.email || ''}
+        title={`Schedule Support Call with ${calendlyInquiry?.name || 'Inquirer'}`}
+        subtitle={`Direct Support Consultation (${calendlyInquiry?.subject || 'Contact Inquiry'})`}
+      />
     </div>
   );
 }

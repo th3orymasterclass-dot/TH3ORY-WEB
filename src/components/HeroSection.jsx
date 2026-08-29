@@ -61,7 +61,7 @@ export default function HeroSection({ onOpenVideo, onOpenCheckout }) {
           </h1>
 
           {/* 5 Pillars Ribbon */}
-          <div className="flex flex-wrap items-center justify-center gap-2 text-xs sm:text-sm font-extrabold tracking-widest text-[#E9E4FF] uppercase py-1">
+          <div className="flex flex-wrap items-center justify-center gap-2 text-xs sm:text-sm font-serif-luxury italic tracking-widest text-[#E9E4FF] uppercase py-1">
             <span>PRESENCE</span> <span className="text-[#555A66]">•</span>
             <span>POWER</span> <span className="text-[#555A66]">•</span>
             <span>WARMTH</span> <span className="text-[#555A66]">•</span>
@@ -70,21 +70,21 @@ export default function HeroSection({ onOpenVideo, onOpenCheckout }) {
           </div>
 
           {/* Subtitle Description */}
-          <p className="text-base sm:text-xl text-[#FAFAF7]/90 max-w-3xl mx-auto font-normal leading-relaxed">
+          <p className="text-lg sm:text-2xl text-[#FAFAF7]/90 max-w-3xl mx-auto font-serif-luxury italic leading-relaxed">
             {courseDetails.subtitle}
           </p>
 
           {/* Urgency Seat Counter */}
           {showUrgencyBanner && (
-            <div className="inline-flex items-center gap-3 px-4 py-2 rounded-2xl glass-card border border-[#E9E4FF]/20 text-xs sm:text-sm text-[#FAFAF7]/80">
+            <div className="inline-flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 px-4 py-2.5 rounded-2xl glass-card border border-[#E9E4FF]/20 text-xs sm:text-sm text-[#FAFAF7]/80 max-w-full">
               <span className="flex items-center gap-1.5 font-bold text-[#FFC857]">
                 <Flame className="w-4 h-4 fill-[#FFC857]" /> Cohort #{courseDetails.urgency.cohortNumber}
               </span>
-              <span className="h-3 w-px bg-[#555A66]/40" />
-              <span>
+              <span className="hidden sm:inline-block h-3 w-px bg-[#555A66]/40" />
+              <span className="text-center sm:text-left">
                 <strong className="text-[#FFC857]">{courseDetails.urgency.seatsLeft} Seats Remaining</strong> • Registration closes in
               </span>
-              <div className="flex items-center gap-1 font-mono font-bold text-[#FAFAF7] bg-[#15171A] px-2 py-0.5 rounded border border-[#7C5CFC]/30">
+              <div className="flex items-center gap-1 font-mono font-bold text-[#FAFAF7] bg-[#15171A] px-2.5 py-1 rounded-lg border border-[#7C5CFC]/30">
                 <span>{String(timeLeft.hours).padStart(2, '0')}h</span>:
                 <span>{String(timeLeft.minutes).padStart(2, '0')}m</span>:
                 <span>{String(timeLeft.seconds).padStart(2, '0')}s</span>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Send, Download, Trash2, CheckCircle, RefreshCw, Search, Sparkles, Settings, Users, ShieldCheck, Copy, Check, Paperclip, FileText, History, ExternalLink } from 'lucide-react';
+import { Mail, Send, Download, Trash2, CheckCircle, RefreshCw, Search, Sparkles, Settings, Users, ShieldCheck, Copy, Check, Paperclip, FileText, History, ExternalLink, Edit3 } from 'lucide-react';
 import { sendEnrollmentEmail } from '../../services/emailService';
 
 export default function NewsletterPanel({
@@ -8,6 +8,7 @@ export default function NewsletterPanel({
   saveBroadcast,
   updateSubscriberStatus,
   deleteSubscriber,
+  updateSubscriber,
   save,
   data,
   themeMode = 'dark'
@@ -15,6 +16,8 @@ export default function NewsletterPanel({
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'active' | 'unsubscribed'
   const [copiedAll, setCopiedAll] = useState(false);
+  const [editingSub, setEditingSub] = useState(null);
+  const [editSubForm, setEditSubForm] = useState({ email: '', source: '', status: 'active' });
 
   const isDark = themeMode === 'dark';
 
@@ -262,17 +265,31 @@ export default function NewsletterPanel({
                       </span>
                     </td>
                     <td className="p-3 text-right">
-                      {deleteSubscriber && (
+                      <div className="flex items-center justify-end gap-1.5">
                         <button
-                          onClick={() => deleteSubscriber(sub.id || sub.email)}
-                          className={`p-1 rounded-lg transition-colors cursor-pointer ${
-                            isDark ? 'text-slate-500 hover:text-rose-400 hover:bg-rose-950/30' : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50'
+                          onClick={() => {
+                            setEditingSub(sub);
+                            setEditSubForm({ email: sub.email || '', source: sub.source || '', status: sub.status || 'active' });
+                          }}
+                          className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                            isDark ? 'text-slate-400 hover:text-indigo-400 hover:bg-indigo-950/30' : 'text-slate-500 hover:text-indigo-600 hover:bg-indigo-50'
                           }`}
-                          title="Remove Subscriber"
+                          title="Edit Subscriber"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Edit3 className="w-3.5 h-3.5" />
                         </button>
-                      )}
+                        {deleteSubscriber && (
+                          <button
+                            onClick={() => deleteSubscriber(sub.id || sub.email)}
+                            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                              isDark ? 'text-slate-500 hover:text-rose-400 hover:bg-rose-950/30' : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50'
+                            }`}
+                            title="Remove Subscriber"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -372,6 +389,90 @@ export default function NewsletterPanel({
                 >
                   {dispatchLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                   <span>{dispatchLoading ? 'Dispatching...' : `Broadcast to ${activeCount} Subscribers`}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Edit Subscriber Modal */}
+      {editingSub && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className={`border rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl ${
+            isDark ? 'bg-slate-900 border-indigo-500/40' : 'bg-white border-indigo-200'
+          }`}>
+            <h4 className={`text-sm font-bold flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              <Edit3 className="w-4 h-4 text-indigo-500" />
+              Edit Subscriber Details
+            </h4>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (updateSubscriber) {
+                  updateSubscriber(editingSub.id || editingSub.email, editSubForm);
+                } else if (updateSubscriberStatus) {
+                  updateSubscriberStatus(editingSub.id || editingSub.email, editSubForm.status);
+                }
+                setEditingSub(null);
+              }}
+              className="space-y-3"
+            >
+              <div>
+                <label className={`block text-xs font-bold mb-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Subscriber Email Address</label>
+                <input
+                  type="email"
+                  required
+                  value={editSubForm.email}
+                  onChange={e => setEditSubForm({ ...editSubForm, email: e.target.value })}
+                  className={`w-full border rounded-xl px-3 py-2 text-xs font-mono ${
+                    isDark ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                  }`}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className={`block text-xs font-bold mb-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Source Channel</label>
+                  <input
+                    type="text"
+                    value={editSubForm.source}
+                    onChange={e => setEditSubForm({ ...editSubForm, source: e.target.value })}
+                    className={`w-full border rounded-xl px-3 py-2 text-xs ${
+                      isDark ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                    }`}
+                  />
+                </div>
+                <div>
+                  <label className={`block text-xs font-bold mb-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Status</label>
+                  <select
+                    value={editSubForm.status}
+                    onChange={e => setEditSubForm({ ...editSubForm, status: e.target.value })}
+                    className={`w-full border rounded-xl px-3 py-2 text-xs ${
+                      isDark ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                    }`}
+                  >
+                    <option value="active">Active</option>
+                    <option value="unsubscribed">Unsubscribed</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingSub(null)}
+                  className={`px-3 py-1.5 font-bold text-xs rounded-xl ${
+                    isDark ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+                  }`}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl cursor-pointer"
+                >
+                  Save Subscriber Changes
                 </button>
               </div>
             </form>

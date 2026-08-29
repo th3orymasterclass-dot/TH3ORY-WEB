@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Award, ShieldCheck, Zap, Users, GraduationCap, ArrowRight, CheckCircle2, 
   Send, Lock, Gift, DollarSign, Sparkles, FileText, ChevronRight, Share2, 
-  Target, Trophy, Calendar, Check, AlertCircle, ArrowLeft, Building2, HelpCircle
+  Target, Trophy, Calendar, Check, AlertCircle, ArrowLeft, Building2, HelpCircle,
+  Crown, Flame
 } from 'lucide-react';
 import Logo from './Logo';
 import SEOHead from './SEOHead';
@@ -12,6 +13,21 @@ import { saveAmbassadorApplicationToSupabase } from '../services/supabaseService
 export default function AmbassadorLandingPage() {
   const [activeTab, setActiveTab] = useState('program'); // 'program' | 'apply'
   const [step, setStep] = useState(1);
+
+  // Live Urgency Countdown Timer State
+  const [timeLeft, setTimeLeft] = useState({ hours: 11, minutes: 24, seconds: 36 });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
+        if (prev.minutes > 0) return { ...prev, minutes: 59, seconds: 59 };
+        if (prev.hours > 0) return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
+        return prev;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Form State
   const [form, setForm] = useState({
@@ -99,48 +115,147 @@ export default function AmbassadorLandingPage() {
         </div>
       </header>
 
-      {/* HERO SECTION */}
-      <section className="relative py-16 sm:py-24 px-4 sm:px-6 lg:px-8 overflow-hidden bg-gradient-to-b from-[#0b1120] via-[#05080f] to-[#05080f]">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-amber-500/5 blur-[120px] rounded-full pointer-events-none" />
-
-        <div className="max-w-5xl mx-auto text-center space-y-6 relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-extrabold uppercase tracking-widest animate-pulse">
-            <Sparkles className="w-4 h-4 text-amber-400" />
-            <span>Official 12-Week College Leadership Program</span>
+      {/* HERO SECTION - IDENTICAL LUXURY MAIN PAGE ARCHITECTURE */}
+      <section className="relative pt-28 pb-20 overflow-hidden bg-gradient-to-b from-[#0b1120] via-[#05080f] to-[#05080f]">
+        {/* Dynamic Intelligent Violet Radial Glow Behind Logo */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] sm:w-[900px] h-[500px] bg-[#7C5CFC]/20 rounded-full blur-[160px] pointer-events-none -z-10 animate-pulse-glow" />
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          
+          {/* Top Banner Tagline */}
+          <div className="flex justify-center mb-6">
+            <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full glass-card border border-[#E9E4FF]/20 text-xs sm:text-sm font-bold tracking-widest text-[#E9E4FF] uppercase shadow-2xl">
+              <Crown className="w-4 h-4 text-[#FFC857] fill-[#FFC857]" />
+              <span>OFFICIAL CAMPUS AMBASSADOR &amp; UNIVERSITY LEADERSHIP INITIATIVE</span>
+            </div>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white font-heading leading-tight">
-            BECOME A <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500">CAMPUS AMBASSADOR</span>
-          </h1>
+          {/* Hero Main Content Box */}
+          <div className="text-center max-w-5xl mx-auto space-y-6">
+            
+            {/* Responsively Big Center Hero Logo with Ambient Backlight */}
+            <div className="relative flex justify-center py-2 sm:py-6">
+              {/* Glow orb behind logo */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="w-[90%] h-[200%] bg-[#7C5CFC]/15 rounded-full blur-[80px]" />
+              </div>
+              <img
+                src="/logo-cropped.png"
+                alt="TH3ORY Campus Ambassador Logo"
+                className="relative w-full max-w-xs sm:max-w-lg md:max-w-2xl lg:max-w-[820px] h-auto object-contain drop-shadow-[0_0_40px_rgba(124,92,252,0.55)] animate-float"
+                style={{ filter: 'drop-shadow(0 0 24px rgba(124,92,252,0.5)) drop-shadow(0 0 60px rgba(124,92,252,0.2))' }}
+              />
+            </div>
 
-          <p className="max-w-3xl mx-auto text-slate-300 text-sm sm:text-base leading-relaxed">
-            Represent <strong>TH3ORY Masterclass</strong> at your university. Drive peer marketing, organize exclusive workshops, build your leadership network, and earn <strong>₹1,000 cash commission per enrollment</strong> + cash milestone bonuses &amp; certificates.
-          </p>
+            {/* Masterclass Title Sub-banner */}
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black font-heading text-gradient-violet tracking-tight uppercase">
+              CAMPUS AMBASSADOR PROGRAM
+            </h1>
 
-          {/* TAB NAV SWITCHER */}
-          <div className="pt-6 flex justify-center gap-3">
-            <button
-              onClick={() => setActiveTab('program')}
-              className={`px-6 py-3 rounded-2xl text-xs sm:text-sm font-extrabold uppercase tracking-wider transition-all flex items-center gap-2 ${
-                activeTab === 'program'
-                  ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/25 scale-[1.02]'
-                  : 'bg-slate-900 text-slate-400 border border-slate-800 hover:text-white'
-              }`}
-            >
-              <FileText className="w-4 h-4" /> Program Blueprint &amp; Rewards
-            </button>
+            {/* 5 Pillars / Themes Ribbon */}
+            <div className="flex flex-wrap items-center justify-center gap-2 text-xs sm:text-sm font-serif-luxury italic tracking-widest text-[#E9E4FF] uppercase py-1">
+              <span>LEADERSHIP</span> <span className="text-[#555A66]">•</span>
+              <span>CAMPUS IMPACT</span> <span className="text-[#555A66]">•</span>
+              <span>PEER MENTORSHIP</span> <span className="text-[#555A66]">•</span>
+              <span>COMMISSIONS</span> <span className="text-[#555A66]">•</span>
+              <span>CERTIFICATION</span>
+            </div>
 
-            <button
-              onClick={() => setActiveTab('apply')}
-              className={`px-6 py-3 rounded-2xl text-xs sm:text-sm font-extrabold uppercase tracking-wider transition-all flex items-center gap-2 ${
-                activeTab === 'apply'
-                  ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/25 scale-[1.02]'
-                  : 'bg-slate-900 text-slate-400 border border-slate-800 hover:text-white'
-              }`}
-            >
-              <Send className="w-4 h-4" /> Apply for Ambassador Cohort
-            </button>
+            {/* Subtitle Description */}
+            <p className="text-lg sm:text-2xl text-[#FAFAF7]/90 max-w-3xl mx-auto font-serif-luxury italic leading-relaxed">
+              Represent <strong>TH3ORY Masterclass</strong> at your university. Drive peer marketing, organize exclusive workshops, build your leadership network, and earn <strong>₹1,000 cash commission per enrollment</strong> + cash milestone bonuses &amp; certificates.
+            </p>
+
+            {/* Urgency Intake Banner with Live Countdown */}
+            <div className="inline-flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 px-4 py-2.5 rounded-2xl glass-card border border-[#E9E4FF]/20 text-xs sm:text-sm text-[#FAFAF7]/80 max-w-full">
+              <span className="flex items-center gap-1.5 font-bold text-[#FFC857]">
+                <Flame className="w-4 h-4 fill-[#FFC857]" /> Spring / Summer Ambassador Intake
+              </span>
+              <span className="hidden sm:inline-block h-3 w-px bg-[#555A66]/40" />
+              <span className="text-center sm:text-left">
+                <strong className="text-[#FFC857]">Limited Campus Appointments</strong> • Cohort applications close in
+              </span>
+              <div className="flex items-center gap-1 font-mono font-bold text-[#FAFAF7] bg-[#15171A] px-2.5 py-1 rounded-lg border border-[#7C5CFC]/30">
+                <span>{String(timeLeft.hours).padStart(2, '0')}h</span>:
+                <span>{String(timeLeft.minutes).padStart(2, '0')}m</span>:
+                <span>{String(timeLeft.seconds).padStart(2, '0')}s</span>
+              </div>
+            </div>
+
+            {/* Action CTAs */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+              <button
+                onClick={() => {
+                  setActiveTab('apply');
+                  const el = document.getElementById('ambassador-application-form');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className={`w-full sm:w-auto px-9 py-4 rounded-2xl font-extrabold text-base uppercase tracking-wider shadow-xl transition-all flex items-center justify-center gap-3 group cursor-pointer ${
+                  activeTab === 'apply'
+                    ? 'bg-gradient-to-r from-[#7C5CFC] via-[#9277FF] to-[#7C5CFC] text-[#FAFAF7] shadow-[#7C5CFC]/30 scale-[1.02]'
+                    : 'bg-gradient-to-r from-[#7C5CFC] via-[#9277FF] to-[#7C5CFC] hover:from-[#6c4ce0] hover:to-[#5233d0] text-[#FAFAF7] shadow-[#7C5CFC]/30 hover:scale-[1.02]'
+                }`}
+              >
+                <span>APPLY FOR AMBASSADOR COHORT</span>
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </button>
+
+              <button
+                onClick={() => setActiveTab('program')}
+                className={`w-full sm:w-auto px-7 py-4 rounded-2xl font-semibold text-base border transition-all flex items-center justify-center gap-3 group cursor-pointer ${
+                  activeTab === 'program'
+                    ? 'bg-[#15171A] border-[#7C5CFC] text-[#FAFAF7] shadow-lg shadow-[#7C5CFC]/20'
+                    : 'glass-card text-[#FAFAF7] hover:bg-[#15171A] border-[#555A66] hover:border-[#7C5CFC]'
+                }`}
+              >
+                <div className="w-8 h-8 rounded-full bg-[#7C5CFC]/20 text-[#7C5CFC] flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <FileText className="w-4 h-4 text-[#FFC857]" />
+                </div>
+                <span>Program Blueprint &amp; Rewards</span>
+              </button>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-[#555A66] pt-2 font-medium">
+              <span className="flex items-center gap-1.5 text-[#FAFAF7]/80">
+                <CheckCircle2 className="w-4 h-4 text-[#FFC857]" /> ₹1,000 / ENROLLMENT
+              </span>
+              <span className="flex items-center gap-1.5 text-[#FAFAF7]/80">
+                <CheckCircle2 className="w-4 h-4 text-[#FFC857]" /> OFFICIAL CERTIFICATE &amp; LOR
+              </span>
+              <span className="flex items-center gap-1.5 text-[#FAFAF7]/80">
+                <CheckCircle2 className="w-4 h-4 text-[#FFC857]" /> 100% FLEXIBLE SCHEDULE
+              </span>
+            </div>
+
           </div>
+
+          {/* 4 Core Poster Stats Grid */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-16 max-w-5xl mx-auto">
+            <div className="glass-card rounded-2xl p-6 text-center hover:translate-y-[-2px] transition-all border border-[#E9E4FF]/15">
+              <div className="text-3xl sm:text-4xl font-black font-brand text-gradient-violet uppercase">₹1,000</div>
+              <div className="text-sm font-extrabold text-[#FAFAF7] mt-1 uppercase tracking-wider">Per Enrollment</div>
+              <div className="text-xs text-[#555A66] mt-0.5">Direct bank / UPI payout</div>
+            </div>
+
+            <div className="glass-card rounded-2xl p-6 text-center hover:translate-y-[-2px] transition-all border border-[#E9E4FF]/15">
+              <div className="text-3xl sm:text-4xl font-black font-brand text-gradient-violet uppercase">12 Weeks</div>
+              <div className="text-sm font-extrabold text-[#FAFAF7] mt-1 uppercase tracking-wider">Term Duration</div>
+              <div className="text-xs text-[#555A66] mt-0.5">Hands-on campus leadership</div>
+            </div>
+
+            <div className="glass-card rounded-2xl p-6 text-center hover:translate-y-[-2px] transition-all border border-[#E9E4FF]/15">
+              <div className="text-3xl sm:text-4xl font-black font-brand text-gradient-violet uppercase">Top 5%</div>
+              <div className="text-sm font-extrabold text-[#FAFAF7] mt-1 uppercase tracking-wider">Cash Bonuses</div>
+              <div className="text-xs text-[#555A66] mt-0.5">Performance milestone tiers</div>
+            </div>
+
+            <div className="glass-card rounded-2xl p-6 text-center hover:translate-y-[-2px] transition-all border border-[#E9E4FF]/15">
+              <div className="text-3xl sm:text-4xl font-black font-brand text-gradient-violet uppercase">Verified</div>
+              <div className="text-sm font-extrabold text-[#FAFAF7] mt-1 uppercase tracking-wider">Credentials</div>
+              <div className="text-xs text-[#555A66] mt-0.5">LOR &amp; Leadership Certificate</div>
+            </div>
+          </div>
+
         </div>
       </section>
 
@@ -360,7 +475,7 @@ export default function AmbassadorLandingPage() {
                 </button>
               </div>
             ) : (
-              <div className="glass-panel p-6 sm:p-10 rounded-3xl border border-slate-800 space-y-8 bg-slate-950 text-left">
+              <div id="ambassador-application-form" className="glass-panel p-6 sm:p-10 rounded-3xl border border-slate-800 space-y-8 bg-slate-950 text-left">
                 <div>
                   <h2 className="text-2xl font-bold text-white font-heading mb-1">Campus Ambassador Application</h2>
                   <p className="text-slate-400 text-xs">Phase 1: Personal, Academic &amp; Leadership Screening</p>

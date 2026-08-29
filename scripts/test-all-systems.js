@@ -487,7 +487,7 @@ const teamApprovalsPanelCode = fs.readFileSync(path.join(rootDir, 'src/admin/pan
 const supabaseServiceFullCode = fs.readFileSync(path.join(rootDir, 'src/services/supabaseService.js'), 'utf8');
 
 assert(mainJsxContent.includes("view === 'team'"), 'main.jsx defines team portal route');
-assert(teamAppContent.includes('ALLOWED MODULES (3 ONLY)'), 'TeamApp.jsx restricts team access strictly to 3 allowed modules');
+assert(teamAppContent.includes('ALLOWED MODULES (5 ONLY)'), 'TeamApp.jsx restricts team access strictly to 5 allowed modules');
 assert(teamQuotesContent.includes('Data Access & Privacy Policy Active'), 'TeamQuotesPanel.jsx displays Data Access & Privacy Policy header');
 assert(teamQuotesContent.includes('create_enterprise_quote'), 'TeamQuotesPanel.jsx includes new Enterprise Lead creation modal');
 assert(teamQuotesContent.includes('submitTeamApprovalRequestToSupabase'), 'TeamQuotesPanel.jsx submits updates for Admin Portal Approval');
@@ -539,12 +539,320 @@ assert(ambassadorAdminPanelCode.includes('AmbassadorApplicationsPanel'), 'Ambass
 assert(ambassadorAdminPanelCode.includes('approveAmbassadorInSupabase'), 'AmbassadorApplicationsPanel.jsx features 1-click admin approval');
 assert(ambassadorAdminPanelCode.includes('sendAmbassadorApprovalEmail'), 'AmbassadorApplicationsPanel.jsx dispatches credentials over email');
 assert(schemaCode.includes('ambassador_applications'), 'supabase_schema.sql defines dedicated ambassador_applications table');
+assert(schemaCode.includes('ambassador_weekly_reports'), 'supabase_schema.sql defines dedicated ambassador_weekly_reports table');
+assert(schemaCode.includes('ambassador_leads'), 'supabase_schema.sql defines dedicated ambassador_leads table');
+assert(schemaCode.includes('ambassador_payouts'), 'supabase_schema.sql defines dedicated ambassador_payouts table');
+assert(schemaCode.includes('ambassador_tasks'), 'supabase_schema.sql defines dedicated ambassador_tasks table');
 assert(mainJsxContent.includes("view === 'ambassador'"), 'main.jsx defines ambassador public route');
 assert(mainJsxContent.includes("view === 'ambassador-portal'"), 'main.jsx defines ambassador-portal route');
 assert(footerJsxCode.includes('#ambassador'), 'Footer.jsx links to Campus Ambassador Program');
+assert(footerJsxCode.includes('#team'), 'Footer.jsx links to Team Access');
+
+console.log('\n▶ [Suite 32/32]: Dedicated Ambassador Relational Database Tables & Service API Audit');
+const ambSupabaseServiceCode = fs.readFileSync(path.join(rootDir, 'src/services/supabaseService.js'), 'utf8');
+const ambassadorSqlCode = fs.readFileSync(path.join(rootDir, 'supabase_ambassadors.sql'), 'utf8');
+
+assert(ambassadorSqlCode.includes('CREATE TABLE IF NOT EXISTS public.ambassador_applications'), 'supabase_ambassadors.sql creates ambassador_applications table');
+assert(ambassadorSqlCode.includes('CREATE TABLE IF NOT EXISTS public.ambassador_weekly_reports'), 'supabase_ambassadors.sql creates ambassador_weekly_reports table');
+assert(ambassadorSqlCode.includes('CREATE TABLE IF NOT EXISTS public.ambassador_leads'), 'supabase_ambassadors.sql creates ambassador_leads table');
+assert(ambassadorSqlCode.includes('CREATE TABLE IF NOT EXISTS public.ambassador_payouts'), 'supabase_ambassadors.sql creates ambassador_payouts table');
+assert(ambassadorSqlCode.includes('CREATE TABLE IF NOT EXISTS public.ambassador_tasks'), 'supabase_ambassadors.sql creates ambassador_tasks table');
+assert(ambassadorSqlCode.includes('idx_ambassador_apps_code'), 'supabase_ambassadors.sql defines index on ambassador_code');
+assert(ambassadorSqlCode.includes('ENABLE ROW LEVEL SECURITY'), 'supabase_ambassadors.sql enables Row Level Security');
+assert(ambassadorSqlCode.includes('supabase_realtime'), 'supabase_ambassadors.sql enables Realtime replication');
+
+assert(ambSupabaseServiceCode.includes('fetchAmbassadorWeeklyReportsFromSupabase'), 'supabaseService.js exports fetchAmbassadorWeeklyReportsFromSupabase');
+assert(ambSupabaseServiceCode.includes('fetchAmbassadorLeadsFromSupabase'), 'supabaseService.js exports fetchAmbassadorLeadsFromSupabase');
+assert(ambSupabaseServiceCode.includes('saveAmbassadorLeadToSupabase'), 'supabaseService.js exports saveAmbassadorLeadToSupabase');
+assert(ambSupabaseServiceCode.includes('fetchAmbassadorPayoutsFromSupabase'), 'supabaseService.js exports fetchAmbassadorPayoutsFromSupabase');
+assert(ambSupabaseServiceCode.includes('fetchAmbassadorTasksFromSupabase'), 'supabaseService.js exports fetchAmbassadorTasksFromSupabase');
+
+console.log('\n▶ [Suite 33/33]: Ambassador Full Intake Flow, Resend Credentials Dispatch, & Payout System Audit');
+const emailApiCode = fs.readFileSync(path.join(rootDir, 'api/send-email.js'), 'utf8');
+const emailServiceCode = fs.readFileSync(path.join(rootDir, 'src/services/emailService.js'), 'utf8');
+
+assert(ambSupabaseServiceCode.includes('saveAmbassadorInterviewNotesToSupabase'), 'supabaseService.js exports saveAmbassadorInterviewNotesToSupabase for team interview notes');
+assert(ambSupabaseServiceCode.includes('submitAmbassadorTeamApprovalToSupabase'), 'supabaseService.js exports submitAmbassadorTeamApprovalToSupabase for team recommendations');
+assert(ambSupabaseServiceCode.includes('saveAmbassadorPayoutDetailsToSupabase'), 'supabaseService.js exports saveAmbassadorPayoutDetailsToSupabase for payout account details');
+assert(ambSupabaseServiceCode.includes('requestAmbassadorPayoutToSupabase'), 'supabaseService.js exports requestAmbassadorPayoutToSupabase for cash transfer requests');
+
+assert(emailApiCode.includes('AMBASSADOR_APPROVAL'), 'api/send-email.js supports AMBASSADOR_APPROVAL type in Resend Vercel serverless handler');
+assert(emailApiCode.includes('TH3ORY Campus Ambassador Program'), 'api/send-email.js formats official ambassador selection email');
+assert(emailServiceCode.includes('sendAmbassadorApprovalEmail'), 'emailService.js exports sendAmbassadorApprovalEmail');
+
+assert(ambassadorAdminPanelCode.includes('handleSaveInterviewAndRecommend'), 'AmbassadorApplicationsPanel.jsx features manual interview notes & rating modal');
+assert(ambassadorAdminPanelCode.includes('Conduct Team Interview & Log Evaluation'), 'AmbassadorApplicationsPanel.jsx displays team evaluation button');
+
+assert(ambassadorPortalCode.includes('saveAmbassadorPayoutDetailsToSupabase'), 'AmbassadorPortal.jsx saves payout account details (UPI / Bank)');
+assert(ambassadorPortalCode.includes('requestAmbassadorPayoutToSupabase'), 'AmbassadorPortal.jsx requests direct cash payout transfer');
+assert(ambassadorPortalCode.includes('Set Up Payment Account'), 'AmbassadorPortal.jsx provides payment account collector modal');
+
+console.log('\n▶ [Suite 34/34]: Dedicated Campus Ambassador Login System Audit');
+const ambassadorLoginCode = fs.readFileSync(path.join(rootDir, 'src/components/AmbassadorLogin.jsx'), 'utf8');
+
+assert(ambassadorLoginCode.includes('AmbassadorLogin'), 'AmbassadorLogin.jsx component exists');
+assert(ambassadorLoginCode.includes('Ambassador Code or Email'), 'AmbassadorLogin.jsx prompts for Ambassador Code or Email');
+assert(ambassadorLoginCode.includes('Access Password'), 'AmbassadorLogin.jsx prompts for Access Password');
+assert(ambassadorLoginCode.includes('AMB-DEMO'), 'AmbassadorLogin.jsx supports AMB-DEMO demo login credentials');
+assert(ambassadorLoginCode.includes('handleFillDemo'), 'AmbassadorLogin.jsx provides 1-click Fill Demo Credentials button');
+assert(ambassadorLoginCode.includes('fetchAmbassadorByCodeFromSupabase'), 'AmbassadorLogin.jsx authenticates against Supabase ambassador_applications table');
+
+assert(mainJsxContent.includes("view === 'ambassador-login'"), 'main.jsx defines ambassador-login route');
+assert(ambassadorPortalCode.includes('AmbassadorLogin'), 'AmbassadorPortal.jsx integrates dedicated AmbassadorLogin component');
+
+console.log('\n▶ [Suite 35/35]: Central Sub-Portal Email Dispatcher & Resend System Audit');
+const emailDispatcherPanelCode = fs.readFileSync(path.join(rootDir, 'src/admin/panels/PortalEmailDispatcherPanel.jsx'), 'utf8');
+
+assert(emailApiCode.includes('TH3ORY MASTERCLASS <team@th3ory.online>'), 'api/send-email.js enforces TH3ORY MASTERCLASS <team@th3ory.online> sender ID');
+assert(emailServiceCode.includes('TH3ORY MASTERCLASS <team@th3ory.online>'), 'emailService.js defaults sender ID to TH3ORY MASTERCLASS <team@th3ory.online>');
+assert(emailDispatcherPanelCode.includes('TH3ORY MASTERCLASS <team@th3ory.online>'), 'PortalEmailDispatcherPanel.jsx uses TH3ORY MASTERCLASS <team@th3ory.online> as default sender identity');
+assert(emailApiCode.includes('redirectPortal'), 'api/send-email.js supports redirectPortal parameter');
+assert(emailServiceCode.includes('sendPortalBroadcastEmail'), 'emailService.js exports sendPortalBroadcastEmail');
+
+assert(emailDispatcherPanelCode.includes('PortalEmailDispatcherPanel'), 'PortalEmailDispatcherPanel.jsx component exists');
+assert(emailDispatcherPanelCode.includes('PRESET_TEMPLATES'), 'PortalEmailDispatcherPanel.jsx defines 5 quick template presets');
+assert(emailDispatcherPanelCode.includes('ALL_STUDENTS'), 'PortalEmailDispatcherPanel.jsx supports Student Portal targeting');
+assert(emailDispatcherPanelCode.includes('CAMPUS_AMBASSADORS'), 'PortalEmailDispatcherPanel.jsx supports Ambassador Portal targeting');
+assert(emailDispatcherPanelCode.includes('ENTERPRISE_LEADS'), 'PortalEmailDispatcherPanel.jsx supports Enterprise Portal targeting');
+assert(emailDispatcherPanelCode.includes('sendPortalBroadcastEmail'), 'PortalEmailDispatcherPanel.jsx dispatches via sendPortalBroadcastEmail');
+
+const adminAppCode = fs.readFileSync(path.join(rootDir, 'src/admin/AdminApp.jsx'), 'utf8');
+assert(adminAppCode.includes('PortalEmailDispatcherPanel'), 'AdminApp.jsx embeds PortalEmailDispatcherPanel component');
+assert(adminAppCode.includes('email_dispatcher'), 'AdminApp.jsx defines email_dispatcher nav item');
+
+const teamAppCode = fs.readFileSync(path.join(rootDir, 'src/team/TeamApp.jsx'), 'utf8');
+assert(teamAppCode.includes('TeamQuotesPanel'), 'TeamApp.jsx embeds TeamQuotesPanel component for enterprise quotes');
+assert(teamAppCode.includes('quotes'), 'TeamApp.jsx defines quotes team nav item');
+
+console.log('\n▶ [Suite 36/36]: Live Calendly 1-on-1 Consultation & Interview Scheduling Audit');
+const calendlyModalCode = fs.readFileSync(path.join(rootDir, 'src/components/CalendlyModal.jsx'), 'utf8');
+const calendlyWidgetCode = fs.readFileSync(path.join(rootDir, 'src/components/CalendlyWidget.jsx'), 'utf8');
+const queryPanelCodeCal = fs.readFileSync(path.join(rootDir, 'src/student/panels/QueryPanel.jsx'), 'utf8');
+const ambassadorPanelCode = fs.readFileSync(path.join(rootDir, 'src/admin/panels/AmbassadorApplicationsPanel.jsx'), 'utf8');
+const adminAppCalendly = fs.readFileSync(path.join(rootDir, 'src/admin/AdminApp.jsx'), 'utf8');
+const teamQuotesCalendly = fs.readFileSync(path.join(rootDir, 'src/team/panels/TeamQuotesPanel.jsx'), 'utf8');
+const teamInquiriesCalendly = fs.readFileSync(path.join(rootDir, 'src/team/panels/TeamInquiriesPanel.jsx'), 'utf8');
+const teamAffiliatesCalendly = fs.readFileSync(path.join(rootDir, 'src/team/panels/TeamAffiliatesPanel.jsx'), 'utf8');
+const queriesQuotesCalendly = fs.readFileSync(path.join(rootDir, 'src/admin/panels/QueriesQuotesPanel.jsx'), 'utf8');
+const teamApprovalsCalendly = fs.readFileSync(path.join(rootDir, 'src/admin/panels/TeamApprovalsPanel.jsx'), 'utf8');
+
+assert(calendlyModalCode.includes('assets.calendly.com/assets/external/widget.js'), 'CalendlyModal.jsx loads official Calendly embed widget script');
+assert(calendlyModalCode.includes('iframe'), 'CalendlyModal.jsx embeds interactive scheduling iframe');
+assert(calendlyWidgetCode.includes('Calendly Live Scheduling'), 'CalendlyWidget.jsx exports reusable inline booking widget');
+assert(queryPanelCodeCal.includes('CalendlyModal'), 'QueryPanel.jsx supports student 1-on-1 mentorship call scheduling via Calendly');
+assert(ambassadorPanelCode.includes('CalendlyModal'), 'AmbassadorApplicationsPanel.jsx features 1-click selection interview scheduling via Calendly');
+assert(adminAppCalendly.includes('CalendlyModal'), 'AdminApp.jsx header bar embeds Schedule Meeting button and Calendly modal');
+assert(teamQuotesCalendly.includes('CalendlyModal'), 'TeamQuotesPanel.jsx provides 1-click Schedule Call action next to enterprise leads');
+assert(teamInquiriesCalendly.includes('CalendlyModal'), 'TeamInquiriesPanel.jsx provides 1-click Schedule Call action next to contact inquiries');
+assert(teamAffiliatesCalendly.includes('CalendlyModal'), 'TeamAffiliatesPanel.jsx features Schedule Partner Call button');
+assert(queriesQuotesCalendly.includes('CalendlyModal'), 'QueriesQuotesPanel.jsx allows admins to schedule calls directly from student support tickets');
+assert(teamApprovalsCalendly.includes('CalendlyModal'), 'TeamApprovalsPanel.jsx features Schedule Team Meeting button for admin reviews');
+
+console.log('\n▶ [Suite 37/37]: Complete Interactive Advertising Suite Audit');
+const affiliateCode = fs.readFileSync(path.join(rootDir, 'src/components/AffiliateLandingPage.jsx'), 'utf8');
+const masterclassAdCode = fs.readFileSync(path.join(rootDir, 'src/components/MasterclassAdvertisingPage.jsx'), 'utf8');
+const institutionalCode = fs.readFileSync(path.join(rootDir, 'src/components/InstitutionalPage.jsx'), 'utf8');
+const supabaseServiceAdvCode = fs.readFileSync(path.join(rootDir, 'src/services/supabaseService.js'), 'utf8');
+
+assert(affiliateCode.includes('Affiliate Earnings Simulator'), 'AffiliateLandingPage.jsx features interactive revenue calculator slider');
+assert(affiliateCode.includes('saveAffiliateApplicationToSupabase'), 'AffiliateLandingPage.jsx integrates live partner intake form');
+assert(masterclassAdCode.includes('The Complete 30-Day Transformation Arc'), 'MasterclassAdvertisingPage.jsx showcases 30-day curriculum arc');
+assert(masterclassAdCode.includes('The 5 Pillars Operating System'), 'MasterclassAdvertisingPage.jsx features 5-pillar OS flowchart');
+assert(institutionalCode.includes('ELEVATE YOUR STUDENTS'), 'InstitutionalPage.jsx presents higher ed placement demeanor workshops');
+assert(institutionalCode.includes('Campus Delivery Formats'), 'InstitutionalPage.jsx provides delivery formats carousel');
+assert(supabaseServiceAdvCode.includes('saveAffiliateApplicationToSupabase'), 'supabaseService.js exports saveAffiliateApplicationToSupabase');
+assert(mainJsxContent.includes("view === 'affiliate'"), 'main.jsx routes #affiliate to AffiliateLandingPage');
+assert(mainJsxContent.includes("view === 'masterclass'"), 'main.jsx routes #masterclass to MasterclassAdvertisingPage');
+assert(mainJsxContent.includes("view === 'colleges'"), 'main.jsx routes #colleges to InstitutionalPage');
+assert(footerJsxCode.includes('#masterclass'), 'Footer.jsx links to 30-Day Masterclass Deep-Dive');
+assert(footerJsxCode.includes('#affiliate'), 'Footer.jsx links to Affiliate Partner Network');
+assert(footerJsxCode.includes('#colleges'), 'Footer.jsx links to College Workshops');
+
+console.log('\n▶ [Suite 38/38]: Team Portal Full Form Access & Edit/Delete Operations Audit');
+const supabaseServiceEditDelCode = fs.readFileSync(path.join(rootDir, 'src/services/supabaseService.js'), 'utf8');
+const teamQuotesEditDelCode = fs.readFileSync(path.join(rootDir, 'src/team/panels/TeamQuotesPanel.jsx'), 'utf8');
+const teamInquiriesEditDelCode = fs.readFileSync(path.join(rootDir, 'src/team/panels/TeamInquiriesPanel.jsx'), 'utf8');
+const teamAffiliatesEditDelCode = fs.readFileSync(path.join(rootDir, 'src/team/panels/TeamAffiliatesPanel.jsx'), 'utf8');
+const ambassadorEditDelCode = fs.readFileSync(path.join(rootDir, 'src/admin/panels/AmbassadorApplicationsPanel.jsx'), 'utf8');
+const newsletterEditDelCode = fs.readFileSync(path.join(rootDir, 'src/admin/panels/NewsletterPanel.jsx'), 'utf8');
+
+assert(supabaseServiceEditDelCode.includes('deleteEnterpriseQuoteFromSupabase'), 'supabaseService.js exports deleteEnterpriseQuoteFromSupabase');
+assert(supabaseServiceEditDelCode.includes('updateEnterpriseQuoteInSupabase'), 'supabaseService.js exports updateEnterpriseQuoteInSupabase');
+assert(supabaseServiceEditDelCode.includes('deleteContactInquiryFromSupabase'), 'supabaseService.js exports deleteContactInquiryFromSupabase');
+assert(supabaseServiceEditDelCode.includes('updateContactInquiryInSupabase'), 'supabaseService.js exports updateContactInquiryInSupabase');
+assert(supabaseServiceEditDelCode.includes('deleteAffiliateApplicationFromSupabase'), 'supabaseService.js exports deleteAffiliateApplicationFromSupabase');
+assert(supabaseServiceEditDelCode.includes('updateAffiliateApplicationInSupabase'), 'supabaseService.js exports updateAffiliateApplicationInSupabase');
+assert(supabaseServiceEditDelCode.includes('deleteAmbassadorApplicationFromSupabase'), 'supabaseService.js exports deleteAmbassadorApplicationFromSupabase');
+assert(supabaseServiceEditDelCode.includes('updateAmbassadorApplicationInSupabase'), 'supabaseService.js exports updateAmbassadorApplicationInSupabase');
+
+assert(teamQuotesEditDelCode.includes('handleDeleteQuote'), 'TeamQuotesPanel.jsx implements Delete Enterprise Quote action');
+assert(teamQuotesEditDelCode.includes('Edit Enterprise Quote Record'), 'TeamQuotesPanel.jsx provides Edit Enterprise Quote modal');
+assert(teamInquiriesEditDelCode.includes('handleDeleteInquiry'), 'TeamInquiriesPanel.jsx implements Delete Contact Inquiry action');
+assert(teamInquiriesEditDelCode.includes('Edit Contact Inquiry Details'), 'TeamInquiriesPanel.jsx provides Edit Contact Inquiry modal');
+assert(teamAffiliatesEditDelCode.includes('handleDeleteAffiliateApp'), 'TeamAffiliatesPanel.jsx implements Delete Affiliate Application action');
+assert(teamAffiliatesEditDelCode.includes('Edit Affiliate Applicant Record'), 'TeamAffiliatesPanel.jsx provides Edit Affiliate Applicant modal');
+assert(ambassadorEditDelCode.includes('handleDeleteAmbassadorApp'), 'AmbassadorApplicationsPanel.jsx implements Delete Ambassador Application action');
+assert(ambassadorEditDelCode.includes('Edit Campus Ambassador Form Record'), 'AmbassadorApplicationsPanel.jsx provides Edit Campus Ambassador modal');
+assert(newsletterEditDelCode.includes('Edit Subscriber Details'), 'NewsletterPanel.jsx provides Edit Subscriber modal');
+
+console.log('\n▶ [Suite 39/39]: Founding Launch Campaign & Razorpay Direct Redirect Audit');
+const campaignSectionCode = fs.readFileSync(path.join(rootDir, 'src/components/CampaignSection.jsx'), 'utf8');
+const appJsxCampaignCode = fs.readFileSync(path.join(rootDir, 'src/App.jsx'), 'utf8');
+const navbarCampaignCode = fs.readFileSync(path.join(rootDir, 'src/components/Navbar.jsx'), 'utf8');
+
+assert(campaignSectionCode.includes('https://rzp.io/rzp/th3orylaunch'), 'CampaignSection.jsx redirects to https://rzp.io/rzp/th3orylaunch');
+assert(campaignSectionCode.includes('₹499'), 'CampaignSection.jsx displays Founding Access Price ₹499');
+assert(campaignSectionCode.includes('1 YEAR OF EXCLUSIVE ACCESS TO INFLUENCING PSYCHOLOGY MEMBERSHIP'), 'CampaignSection.jsx includes 1 year membership benefit');
+assert(campaignSectionCode.includes('THE 30-DAY JOURNEY'), 'CampaignSection.jsx displays 30-Day 5-Level Journey');
+assert(campaignSectionCode.includes('LAUNCH GIVEAWAY'), 'CampaignSection.jsx displays ₹1,59,995 Launch Giveaway section');
+assert(campaignSectionCode.includes('WHO IS TH3ORY FOR?'), 'CampaignSection.jsx displays target audience breakdown');
+assert(appJsxCampaignCode.includes('CampaignSection'), 'App.jsx imports and renders CampaignSection on home page');
+assert(navbarCampaignCode.includes('https://rzp.io/rzp/th3orylaunch'), 'Navbar.jsx features direct Launch ₹499 link');
+
+console.log('\n▶ [Suite 40/40]: Enterprise Quote CRM System & 18-Field Realtime Database Sync Audit');
+const supabaseCrmCode = fs.readFileSync(path.join(rootDir, 'src/services/supabaseService.js'), 'utf8');
+const teamCrmCode = fs.readFileSync(path.join(rootDir, 'src/team/panels/TeamQuotesPanel.jsx'), 'utf8');
+const adminCrmCode = fs.readFileSync(path.join(rootDir, 'src/admin/panels/QueriesQuotesPanel.jsx'), 'utf8');
+const schemaCrmCode = fs.readFileSync(path.join(rootDir, 'supabase_schema.sql'), 'utf8');
+
+// Schema & Service Assertions for all 18 CRM Fields
+assert(schemaCrmCode.includes('industry TEXT'), 'supabase_schema.sql defines industry CRM column');
+assert(schemaCrmCode.includes('employee_size TEXT'), 'supabase_schema.sql defines employee_size CRM column');
+assert(schemaCrmCode.includes('location TEXT'), 'supabase_schema.sql defines location CRM column');
+assert(schemaCrmCode.includes('website TEXT'), 'supabase_schema.sql defines website CRM column');
+assert(schemaCrmCode.includes('designation TEXT'), 'supabase_schema.sql defines designation CRM column');
+assert(schemaCrmCode.includes('linkedin_url TEXT'), 'supabase_schema.sql defines linkedin_url CRM column');
+assert(schemaCrmCode.includes('last_contacted_at TEXT'), 'supabase_schema.sql defines last_contacted_at CRM column');
+assert(schemaCrmCode.includes('next_followup_at TEXT'), 'supabase_schema.sql defines next_followup_at CRM column');
+assert(schemaCrmCode.includes('proposal_sent TEXT'), 'supabase_schema.sql defines proposal_sent CRM column');
+assert(schemaCrmCode.includes('meeting_date TEXT'), 'supabase_schema.sql defines meeting_date CRM column');
+assert(schemaCrmCode.includes('probability TEXT'), 'supabase_schema.sql defines probability CRM column');
+assert(schemaCrmCode.includes('expected_revenue TEXT'), 'supabase_schema.sql defines expected_revenue CRM column');
+assert(schemaCrmCode.includes('remarks TEXT'), 'supabase_schema.sql defines remarks CRM column');
+
+// Team Portal CRM Assertions
+assert(teamCrmCode.includes('Enterprise Quote CRM Records'), 'TeamQuotesPanel.jsx renders Enterprise Quote CRM Panel');
+assert(teamCrmCode.includes('Inspect All CRM Fields'), 'TeamQuotesPanel.jsx supports 18-field CRM Inspection modal');
+assert(teamCrmCode.includes('Edit Enterprise Quote Record'), 'TeamQuotesPanel.jsx supports 18-field CRM Edit modal');
+assert(teamCrmCode.includes('Add New Enterprise Deal to CRM'), 'TeamQuotesPanel.jsx supports 18-field New Deal Creation modal');
+
+// Admin Portal CRM Assertions
+assert(adminCrmCode.includes('Enterprise Quotes CRM'), 'QueriesQuotesPanel.jsx renders Enterprise Quotes CRM in Admin Portal');
+assert(adminCrmCode.includes('Executive CRM Inspection'), 'QueriesQuotesPanel.jsx supports 18-field CRM Inspection modal');
+assert(adminCrmCode.includes('Edit Enterprise CRM Quote Record'), 'QueriesQuotesPanel.jsx supports 18-field CRM Edit modal');
+assert(adminCrmCode.includes('Create New Enterprise CRM Deal'), 'QueriesQuotesPanel.jsx supports 18-field New Deal Creation modal');
 
 
 
+console.log('\n▶ [Suite 41/41]: Team & Admin Portal Analytical Dashboard Audit');
+const teamAnalyticsCode = fs.readFileSync(path.join(rootDir, 'src/team/panels/TeamAnalyticsDashboard.jsx'), 'utf8');
+const teamAppCodeSuite41 = fs.readFileSync(path.join(rootDir, 'src/team/TeamApp.jsx'), 'utf8');
+const adminAppCodeSuite41 = fs.readFileSync(path.join(rootDir, 'src/admin/AdminApp.jsx'), 'utf8');
+
+assert(teamAnalyticsCode.includes('TeamAnalyticsDashboard'), 'TeamAnalyticsDashboard.jsx component exists');
+assert(teamAnalyticsCode.includes('Total B2B Pipeline'), 'TeamAnalyticsDashboard.jsx displays Total B2B Pipeline KPI card');
+assert(teamAnalyticsCode.includes('Support Enquiries'), 'TeamAnalyticsDashboard.jsx displays Support Enquiries KPI card');
+assert(teamAnalyticsCode.includes('Ambassador Roster'), 'TeamAnalyticsDashboard.jsx displays Ambassador Roster KPI card');
+assert(teamAnalyticsCode.includes('Newsletter Reach'), 'TeamAnalyticsDashboard.jsx displays Newsletter Reach KPI card');
+assert(teamAnalyticsCode.includes('Enterprise CRM Pipeline Stage Breakdown'), 'TeamAnalyticsDashboard.jsx renders pipeline stage distribution chart');
+assert(teamAnalyticsCode.includes('Weighted Win Forecast'), 'TeamAnalyticsDashboard.jsx calculates weighted revenue forecast');
+assert(teamAnalyticsCode.includes('Top Industry Sectors'), 'TeamAnalyticsDashboard.jsx calculates industry sector breakdown');
+assert(teamAnalyticsCode.includes('Realtime Database Health'), 'TeamAnalyticsDashboard.jsx provides real-time system health monitor');
+assert(teamAppCodeSuite41.includes('TeamAnalyticsDashboard'), 'TeamApp.jsx imports TeamAnalyticsDashboard component');
+assert(teamAppCodeSuite41.includes("id: 'analytics'"), 'TeamApp.jsx defines analytics nav item');
+assert(adminAppCodeSuite41.includes('TeamAnalyticsDashboard'), 'AdminApp.jsx imports TeamAnalyticsDashboard component');
+console.log('\n▶ [Suite 42/42]: Enterprise ROI Calculator & Quote Builder Audit');
+const roiEngineCode = fs.readFileSync(path.join(rootDir, 'src/utils/roiCalculatorEngine.js'), 'utf8');
+const roiModalCode = fs.readFileSync(path.join(rootDir, 'src/components/EnterpriseRoiCalculatorModal.jsx'), 'utf8');
+const teamQuotesCodeSuite42 = fs.readFileSync(path.join(rootDir, 'src/team/panels/TeamQuotesPanel.jsx'), 'utf8');
+const queriesQuotesCodeSuite42 = fs.readFileSync(path.join(rootDir, 'src/admin/panels/QueriesQuotesPanel.jsx'), 'utf8');
+
+assert(roiEngineCode.includes('calculateEnterpriseRoi'), 'roiCalculatorEngine.js exports calculateEnterpriseRoi calculation function');
+assert(roiEngineCode.includes('generateSensitivityMatrix'), 'roiCalculatorEngine.js exports generateSensitivityMatrix function');
+assert(roiEngineCode.includes('SCENARIO_MULTIPLIERS'), 'roiCalculatorEngine.js defines Conservative, Base, and Upside multipliers');
+assert(roiModalCode.includes('EnterpriseRoiCalculatorModal'), 'EnterpriseRoiCalculatorModal.jsx component exists');
+assert(roiModalCode.includes('Annual Quantified Benefit'), 'EnterpriseRoiCalculatorModal.jsx renders Annual Quantified Benefit KPI');
+assert(roiModalCode.includes('Illustrative ROI'), 'EnterpriseRoiCalculatorModal.jsx renders Illustrative ROI KPI');
+assert(roiModalCode.includes('Benefit / Cost Ratio'), 'EnterpriseRoiCalculatorModal.jsx renders Benefit/Cost Ratio KPI');
+assert(roiModalCode.includes('Payback Period'), 'EnterpriseRoiCalculatorModal.jsx renders Payback Period KPI');
+assert(roiModalCode.includes('Illustrative Sensitivity Matrix'), 'EnterpriseRoiCalculatorModal.jsx renders Sensitivity Matrix table');
+assert(teamQuotesCodeSuite42.includes('EnterpriseRoiCalculatorModal'), 'TeamQuotesPanel.jsx integrates EnterpriseRoiCalculatorModal');
+assert(teamQuotesCodeSuite42.includes('ROI Calc'), 'TeamQuotesPanel.jsx embeds ROI Calc button in CRM table');
+assert(queriesQuotesCodeSuite42.includes('EnterpriseRoiCalculatorModal'), 'QueriesQuotesPanel.jsx integrates EnterpriseRoiCalculatorModal');
+console.log('\n▶ [Suite 43/43]: Enterprise PDF Quote Generator & Email Dispatch Audit');
+const emailServiceCodeSuite43 = fs.readFileSync(path.join(rootDir, 'src/services/emailService.js'), 'utf8');
+const pdfModalCode = fs.readFileSync(path.join(rootDir, 'src/components/EnterprisePdfQuoteModal.jsx'), 'utf8');
+const teamQuotesCodeSuite43 = fs.readFileSync(path.join(rootDir, 'src/team/panels/TeamQuotesPanel.jsx'), 'utf8');
+const queriesQuotesCodeSuite43 = fs.readFileSync(path.join(rootDir, 'src/admin/panels/QueriesQuotesPanel.jsx'), 'utf8');
+
+assert(emailServiceCodeSuite43.includes('sendEnterpriseQuotePdfEmail'), 'emailService.js exports sendEnterpriseQuotePdfEmail dispatcher function');
+assert(pdfModalCode.includes('EnterprisePdfQuoteModal'), 'EnterprisePdfQuoteModal.jsx component exists');
+assert(pdfModalCode.includes('Download PDF'), 'EnterprisePdfQuoteModal.jsx implements 1-click Download PDF export');
+assert(pdfModalCode.includes('Email Quote'), 'EnterprisePdfQuoteModal.jsx implements 1-click Email Quote dispatch');
+assert(pdfModalCode.includes('TH3ORY MASTERCLASS'), 'EnterprisePdfQuoteModal.jsx renders branded executive proposal header');
+assert(teamQuotesCodeSuite43.includes('EnterprisePdfQuoteModal'), 'TeamQuotesPanel.jsx integrates EnterprisePdfQuoteModal');
+assert(teamQuotesCodeSuite43.includes('PDF Quote'), 'TeamQuotesPanel.jsx embeds PDF Quote button in CRM table');
+assert(queriesQuotesCodeSuite43.includes('EnterprisePdfQuoteModal'), 'QueriesQuotesPanel.jsx integrates EnterprisePdfQuoteModal');
+assert(queriesQuotesCodeSuite43.includes('PDF Quote'), 'QueriesQuotesPanel.jsx embeds PDF Quote button in Admin CRM table');
+
+console.log('\n▶ [Suite 44/44]: Dual Currency (USD & INR) & PDF ROI Breakdown Audit');
+const currencyUtilsCode = fs.readFileSync(path.join(rootDir, 'src/utils/currencyUtils.js'), 'utf8');
+const pdfModalCodeSuite44 = fs.readFileSync(path.join(rootDir, 'src/components/EnterprisePdfQuoteModal.jsx'), 'utf8');
+const roiModalCodeSuite44 = fs.readFileSync(path.join(rootDir, 'src/components/EnterpriseRoiCalculatorModal.jsx'), 'utf8');
+const analyticsCodeSuite44 = fs.readFileSync(path.join(rootDir, 'src/team/panels/TeamAnalyticsDashboard.jsx'), 'utf8');
+const teamQuotesCodeSuite44 = fs.readFileSync(path.join(rootDir, 'src/team/panels/TeamQuotesPanel.jsx'), 'utf8');
+const queriesQuotesCodeSuite44 = fs.readFileSync(path.join(rootDir, 'src/admin/panels/QueriesQuotesPanel.jsx'), 'utf8');
+
+assert(currencyUtilsCode.includes('formatDualCurrency'), 'currencyUtils.js exports formatDualCurrency helper function');
+assert(currencyUtilsCode.includes('formatDualLakhs'), 'currencyUtils.js exports formatDualLakhs helper function');
+assert(pdfModalCodeSuite44.includes('formatCurrencyByLocation'), 'EnterprisePdfQuoteModal.jsx uses location-based single currency formatting');
+assert(pdfModalCodeSuite44.includes('calculateEnterpriseRoi'), 'EnterprisePdfQuoteModal.jsx integrates calculateEnterpriseRoi model');
+assert(pdfModalCodeSuite44.includes('Recovered Participant Productivity Capacity'), 'EnterprisePdfQuoteModal.jsx embeds Productivity Capacity Value Driver');
+assert(pdfModalCodeSuite44.includes('Avoided Regrettable Employee Turnover Cost'), 'EnterprisePdfQuoteModal.jsx embeds Avoided Turnover Value Driver');
+assert(pdfModalCodeSuite44.includes('Recovered Manager Time'), 'EnterprisePdfQuoteModal.jsx embeds Manager Time Value Driver');
+assert(pdfModalCodeSuite44.includes('Opportunity Pool Business Impact'), 'EnterprisePdfQuoteModal.jsx embeds Opportunity Pool Value Driver');
+assert(roiModalCodeSuite44.includes('formatDualCurrency'), 'EnterpriseRoiCalculatorModal.jsx uses dual currency formatting');
+assert(analyticsCodeSuite44.includes('formatDualCurrency'), 'TeamAnalyticsDashboard.jsx uses dual currency for pipeline metrics');
+assert(teamQuotesCodeSuite44.includes('formatDualCurrency'), 'TeamQuotesPanel.jsx displays dual USD and INR expected revenue');
+assert(queriesQuotesCodeSuite44.includes('formatDualCurrency'), 'QueriesQuotesPanel.jsx displays dual USD and INR expected revenue');
+
+console.log('\n▶ [Suite 45/45]: Elaborative Ethical PDF Quote Structure Audit');
+const pdfModalCodeSuite45 = fs.readFileSync(path.join(rootDir, 'src/components/EnterprisePdfQuoteModal.jsx'), 'utf8');
+
+assert(pdfModalCodeSuite45.includes('Mentalist Sravan Productions Pvt. Ltd.'), 'EnterprisePdfQuoteModal.jsx renders legal corporate entity');
+assert(pdfModalCodeSuite45.includes('GSTIN: 36AAACM1234F1Z8'), 'EnterprisePdfQuoteModal.jsx renders corporate GSTIN tax identifier');
+assert(pdfModalCodeSuite45.includes('STRICTLY CONFIDENTIAL'), 'EnterprisePdfQuoteModal.jsx includes confidentiality classification notice');
+assert(pdfModalCodeSuite45.includes('TH3ORY Ethical Governance'), 'EnterprisePdfQuoteModal.jsx embeds Ethical Governance Charter');
+assert(pdfModalCodeSuite45.includes('Ethical Demeanor Profiling Guarantee'), 'EnterprisePdfQuoteModal.jsx embeds Ethical Profiling Guarantee');
+assert(pdfModalCodeSuite45.includes('Data Privacy'), 'EnterprisePdfQuoteModal.jsx embeds Data Protection & DPDP/GDPR Compliance clause');
+assert(pdfModalCodeSuite45.includes('Fair Pricing Transparency Guarantee'), 'EnterprisePdfQuoteModal.jsx embeds Fair Pricing Guarantee');
+assert(pdfModalCodeSuite45.includes('ESG'), 'EnterprisePdfQuoteModal.jsx embeds ESG & Sustainability commitment');
+assert(pdfModalCodeSuite45.includes('Statutory GST Liability'), 'EnterprisePdfQuoteModal.jsx itemizes domestic GST tax liability');
+assert(pdfModalCodeSuite45.includes('TOTAL GROSS PROGRAM INVESTMENT'), 'EnterprisePdfQuoteModal.jsx renders Total Gross Investment in single currency');
+assert(pdfModalCodeSuite45.includes('Digitally Signed'), 'EnterprisePdfQuoteModal.jsx embeds Digital Signature & Security Verification Hash');
+
+console.log('\n▶ [Suite 46/46]: Location-Based Single Currency PDF Quote Audit');
+const currencyUtilsSuite46 = fs.readFileSync(path.join(rootDir, 'src/utils/currencyUtils.js'), 'utf8');
+const pdfModalSuite46 = fs.readFileSync(path.join(rootDir, 'src/components/EnterprisePdfQuoteModal.jsx'), 'utf8');
+
+assert(currencyUtilsSuite46.includes('isIndiaLocation'), 'currencyUtils.js exports isIndiaLocation geographic detector');
+assert(currencyUtilsSuite46.includes('formatCurrencyByLocation'), 'currencyUtils.js exports formatCurrencyByLocation single currency formatter');
+assert(currencyUtilsSuite46.includes('formatLakhsOrUsdByLocation'), 'currencyUtils.js exports formatLakhsOrUsdByLocation single currency formatter');
+assert(pdfModalSuite46.includes('isIndiaLocation'), 'EnterprisePdfQuoteModal.jsx imports isIndiaLocation detector');
+assert(pdfModalSuite46.includes('formatCurrencyByLocation'), 'EnterprisePdfQuoteModal.jsx imports formatCurrencyByLocation helper');
+assert(pdfModalSuite46.includes('DOMESTIC INDIA PROPOSAL'), 'EnterprisePdfQuoteModal.jsx renders Domestic India Proposal badge');
+assert(pdfModalSuite46.includes('INTERNATIONAL EXECUTIVE PROPOSAL'), 'EnterprisePdfQuoteModal.jsx renders International Executive Proposal badge');
+assert(pdfModalSuite46.includes('Statutory GST Liability'), 'EnterprisePdfQuoteModal.jsx itemizes domestic GST tax liability');
+assert(pdfModalSuite46.includes('International Service & Processing Levy'), 'EnterprisePdfQuoteModal.jsx itemizes international processing levy');
+
+console.log('\n▶ [Suite 47/47]: PDF Print & Design Fidelity Engine Audit');
+const pdfModalSuite47 = fs.readFileSync(path.join(rootDir, 'src/components/EnterprisePdfQuoteModal.jsx'), 'utf8');
+
+assert(pdfModalSuite47.includes('window.open'), 'EnterprisePdfQuoteModal.jsx opens a dedicated print window for PDF');
+assert(pdfModalSuite47.includes('window.print()'), 'EnterprisePdfQuoteModal.jsx invokes browser print dialog for PDF save');
+assert(pdfModalSuite47.includes('-webkit-print-color-adjust: exact'), 'EnterprisePdfQuoteModal.jsx forces exact color preservation in print CSS');
+assert(pdfModalSuite47.includes('@page'), 'EnterprisePdfQuoteModal.jsx defines A4 page layout via @page CSS rule');
+assert(pdfModalSuite47.includes('print-container'), 'EnterprisePdfQuoteModal.jsx wraps printable content in print-container canvas');
 
 // ── Final Test Summary Report ────────────────────────────────────────────────
 console.log('\n============================================================');
@@ -557,5 +865,8 @@ if (failedTests > 0) {
   console.log('🎉 ALL SYSTEM TESTS PASSED SUCCESSFULLY! PRODUCTION READY.\n');
   process.exit(0);
 }
+
+
+
 
 

@@ -3,6 +3,7 @@ import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
 import PillarsSection from './components/PillarsSection';
 import InstructorSection from './components/InstructorSection';
+import CampaignSection from './components/CampaignSection';
 import VideoModal from './components/VideoModal';
 import CurriculumExplorer from './components/CurriculumExplorer';
 import OutcomesSection from './components/OutcomesSection';
@@ -79,13 +80,7 @@ export default function App() {
       <SEOHead />
       <StructuredData />
 
-      {/* Maintenance Mode Notice Banner */}
-      {isMaintenanceMode && (
-        <div className="bg-amber-500 text-slate-950 px-4 py-2 text-center text-xs font-bold font-sans flex items-center justify-center gap-2 z-50 sticky top-0 border-b border-amber-600 shadow-lg">
-          <ShieldAlert className="w-4 h-4 text-slate-950" />
-          <span>SYSTEM NOTICE: Platform maintenance is currently in progress. Live checkouts are temporarily paused.</span>
-        </div>
-      )}
+
 
       {/* Sticky Bottom Quick Enrollment Bar (Controlled via Vercel Feature Flag) */}
       {showQuickBar && (
@@ -125,6 +120,9 @@ export default function App() {
           onOpenVideo={() => setIsVideoModalOpen(true)}
           onOpenCheckout={() => handleOpenCheckoutWithPlan(mainPlan, false)}
         />
+
+        {/* Founding Launch Special Campaign Section */}
+        <CampaignSection />
 
         <PillarsSection />
 

@@ -13,7 +13,7 @@ export default function Footer({ onOpenCheckout }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         
         {/* Main Footer Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
           
           {/* Brand Info */}
           <div className="space-y-4 md:col-span-2">
@@ -57,10 +57,56 @@ export default function Footer({ onOpenCheckout }) {
           <div className="space-y-3">
             <h4 className="text-xs font-extrabold text-white uppercase tracking-widest">Navigation &amp; Legal</h4>
             <ul className="space-y-2 text-xs">
+              <li>
+                <a 
+                  href="https://rzp.io/rzp/th3orylaunch" 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-red-400 transition-colors text-red-500 font-extrabold uppercase tracking-wider cursor-pointer"
+                >
+                  🔥 Founding Launch (₹499 Special) →
+                </a>
+              </li>
               <li><a href="#pillars" className="hover:text-amber-400 transition-colors">5 Pillars of Influence</a></li>
               <li><a href="#roadmap" className="hover:text-amber-400 transition-colors">30-Day Level Roadmap</a></li>
               <li><a href="#outcomes" className="hover:text-amber-400 transition-colors">Outcomes &amp; Bonuses</a></li>
               <li><a href="#pricing" className="hover:text-amber-400 transition-colors">Pricing &amp; Plans</a></li>
+              <li>
+                <a 
+                  href="#masterclass" 
+                  onClick={(e) => { e.preventDefault(); window.location.hash = 'masterclass'; window.dispatchEvent(new Event('hashchange')); }} 
+                  className="hover:text-[#7C5CFC] transition-colors text-[#E9E4FF] font-semibold cursor-pointer"
+                >
+                  30-Day Masterclass Deep-Dive →
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="#affiliate" 
+                  onClick={(e) => { e.preventDefault(); window.location.hash = 'affiliate'; window.dispatchEvent(new Event('hashchange')); }} 
+                  className="hover:text-[#10B981] transition-colors text-[#10B981] font-semibold cursor-pointer"
+                >
+                  Affiliate Partner Network →
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="#colleges" 
+                  onClick={(e) => { e.preventDefault(); window.location.hash = 'colleges'; window.dispatchEvent(new Event('hashchange')); }} 
+                  className="hover:text-[#60A5FA] transition-colors text-[#60A5FA] font-semibold cursor-pointer"
+                >
+                  College &amp; University Workshops →
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="#ambassador" 
+                  onClick={(e) => { e.preventDefault(); window.location.hash = 'ambassador'; window.dispatchEvent(new Event('hashchange')); }} 
+                  className="hover:text-purple-400 transition-colors text-purple-300 font-semibold cursor-pointer"
+                >
+                  Campus Ambassador Program →
+                </a>
+              </li>
               <li>
                 <a 
                   href="#enterprise" 
@@ -68,15 +114,6 @@ export default function Footer({ onOpenCheckout }) {
                   className="hover:text-amber-400 transition-colors text-amber-300 font-semibold cursor-pointer"
                 >
                   Enterprise Programs →
-                </a>
-              </li>
-              <li>
-                <a 
-                  href="#ambassador" 
-                  onClick={(e) => { e.preventDefault(); window.location.hash = 'ambassador'; window.dispatchEvent(new Event('hashchange')); }} 
-                  className="hover:text-amber-400 transition-colors text-amber-300 font-semibold cursor-pointer"
-                >
-                  Campus Ambassador Program →
                 </a>
               </li>
               <li>
@@ -140,12 +177,6 @@ export default function Footer({ onOpenCheckout }) {
             <button onClick={() => setLegalModalTab('terms')} className="hover:text-amber-400 transition-colors cursor-pointer">Terms</button>
             <span>•</span>
             <button onClick={() => setLegalModalTab('refund')} className="hover:text-amber-400 transition-colors cursor-pointer">Refunds</button>
-            <a
-              href="mailto:team@th3ory.online?subject=Student%20Support%20-%20TH3ORY%20Masterclass"
-              className="hover:text-amber-400 font-bold transition-colors cursor-pointer text-amber-500"
-            >
-              Email Support
-            </a>
             <span>•</span>
             <a
               href="#student"
@@ -156,11 +187,11 @@ export default function Footer({ onOpenCheckout }) {
             </a>
             <span>•</span>
             <a
-              href="#admin"
-              onClick={(e) => { e.preventDefault(); window.location.hash = 'admin'; window.dispatchEvent(new Event('hashchange')); }}
+              href="#team"
+              onClick={(e) => { e.preventDefault(); window.location.hash = 'team'; window.dispatchEvent(new Event('hashchange')); }}
               className="hover:text-amber-400 transition-colors cursor-pointer"
             >
-              Admin Portal
+              Team Access
             </a>
           </div>
         </div>

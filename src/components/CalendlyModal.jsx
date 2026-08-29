@@ -19,14 +19,14 @@ export default function CalendlyModal({
 
   const activeEmail = email || INHERENT_GMAIL;
 
-  // Build URL with pre-fill query params
+  // Build URL with pre-fill query params - High Contrast Light Mode for 100% Form Text Visibility
   const queryParams = new URLSearchParams();
   if (name) queryParams.set('name', name);
   queryParams.set('email', activeEmail);
   queryParams.set('hide_gdpr_banner', '1');
-  queryParams.set('background_color', '0f172a');
-  queryParams.set('text_color', 'ffffff');
-  queryParams.set('primary_color', 'f59e0b');
+  queryParams.set('background_color', 'ffffff');
+  queryParams.set('text_color', '0f172a');
+  queryParams.set('primary_color', '7c5cfc');
 
   const finalUrl = `${calendlyUrl}?${queryParams.toString()}`;
 
@@ -82,8 +82,8 @@ export default function CalendlyModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/80 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-slate-950/85 backdrop-blur-md animate-fade-in overflow-y-auto">
+      <div className="relative w-full max-w-5xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[96vh] sm:max-h-[92vh] h-[800px] sm:h-[840px]">
         
         {/* MODAL HEADER */}
         <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/60 shrink-0 flex-wrap gap-3">
@@ -135,11 +135,11 @@ export default function CalendlyModal({
         </div>
 
         {/* CALENDLY EMBED IFRAME / WIDGET BODY */}
-        <div className="flex-1 w-full bg-slate-950 relative min-h-[520px] overflow-hidden">
+        <div className="flex-1 w-full bg-white relative min-h-[660px] sm:min-h-[700px] h-full overflow-y-auto">
           {/* SDK Container */}
           <div 
             ref={containerRef} 
-            className="w-full h-full min-h-[520px]"
+            className="w-full h-full min-h-[660px] sm:min-h-[700px] bg-white"
           />
 
           {/* Fallback iFrame if SDK is loading */}
@@ -150,9 +150,9 @@ export default function CalendlyModal({
               height="100%"
               frameBorder="0"
               title="Calendly Scheduling"
-              allow="camera; microphone; autoplay; payment"
+              allow="camera; microphone; autoplay; payment; clipboard-write; display-capture"
               sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-top-navigation-by-user-activation allow-modals"
-              className="w-full h-full min-h-[520px] border-none absolute inset-0 z-0"
+              className="w-full h-full min-h-[660px] sm:min-h-[700px] border-none absolute inset-0 z-0"
             ></iframe>
           )}
 

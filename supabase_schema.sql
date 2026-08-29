@@ -79,19 +79,47 @@ CREATE TABLE IF NOT EXISTS public.queries (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 4. ENTERPRISE QUOTES TABLE (Dedicated B2B & Institutional Licensing Inquiries)
+-- 4. ENTERPRISE QUOTES TABLE (Dedicated B2B & Enterprise Quotes CRM)
 CREATE TABLE IF NOT EXISTS public.enterprise_quotes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_name TEXT NOT NULL,
+    industry TEXT,
+    employee_size TEXT,
+    location TEXT,
+    website TEXT,
     contact_name TEXT,
+    designation TEXT,
     email TEXT NOT NULL,
     phone TEXT,
-    audience_type TEXT DEFAULT 'Students',
+    linkedin_url TEXT,
+    status TEXT DEFAULT 'pending',
+    last_contacted_at TEXT,
+    next_followup_at TEXT,
+    proposal_sent TEXT,
+    meeting_date TEXT,
+    probability TEXT DEFAULT '50%',
+    expected_revenue TEXT,
+    remarks TEXT,
+    audience_type TEXT DEFAULT 'Executive Leaders',
     pupil_count TEXT DEFAULT '50-100',
     notes TEXT,
-    status TEXT DEFAULT 'pending',
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Migration Statements for Enterprise Quotes CRM Fields
+ALTER TABLE public.enterprise_quotes ADD COLUMN IF NOT EXISTS industry TEXT;
+ALTER TABLE public.enterprise_quotes ADD COLUMN IF NOT EXISTS employee_size TEXT;
+ALTER TABLE public.enterprise_quotes ADD COLUMN IF NOT EXISTS location TEXT;
+ALTER TABLE public.enterprise_quotes ADD COLUMN IF NOT EXISTS website TEXT;
+ALTER TABLE public.enterprise_quotes ADD COLUMN IF NOT EXISTS designation TEXT;
+ALTER TABLE public.enterprise_quotes ADD COLUMN IF NOT EXISTS linkedin_url TEXT;
+ALTER TABLE public.enterprise_quotes ADD COLUMN IF NOT EXISTS last_contacted_at TEXT;
+ALTER TABLE public.enterprise_quotes ADD COLUMN IF NOT EXISTS next_followup_at TEXT;
+ALTER TABLE public.enterprise_quotes ADD COLUMN IF NOT EXISTS proposal_sent TEXT;
+ALTER TABLE public.enterprise_quotes ADD COLUMN IF NOT EXISTS meeting_date TEXT;
+ALTER TABLE public.enterprise_quotes ADD COLUMN IF NOT EXISTS probability TEXT DEFAULT '50%';
+ALTER TABLE public.enterprise_quotes ADD COLUMN IF NOT EXISTS expected_revenue TEXT;
+ALTER TABLE public.enterprise_quotes ADD COLUMN IF NOT EXISTS remarks TEXT;
 
 -- 5. CONTACT INQUIRIES TABLE (Dedicated Public Contact Us Form Submissions)
 CREATE TABLE IF NOT EXISTS public.contact_inquiries (
@@ -365,7 +393,7 @@ CREATE TABLE IF NOT EXISTS public.ambassador_applications (
     leadership_exp TEXT,
     motivation TEXT,
     status TEXT DEFAULT 'PENDING', -- PENDING, INTERVIEW_SCHEDULED, APPROVED, REJECTED
-    ambassador_code TEXT,
+    ambassador_code TEXT UNIQUE,
     password_hash TEXT,
     points INT DEFAULT 0,
     tier TEXT DEFAULT 'Tier 1',
@@ -377,8 +405,117 @@ CREATE TABLE IF NOT EXISTS public.ambassador_applications (
     approved_at TIMESTAMPTZ
 );
 
+-- Schema Migration statements for existing table columns
+ALTER TABLE public.ambassador_applications ADD COLUMN IF NOT EXISTS phone TEXT;
+ALTER TABLE public.ambassador_applications ADD COLUMN IF NOT EXISTS degree TEXT;
+ALTER TABLE public.ambassador_applications ADD COLUMN IF NOT EXISTS year_of_study TEXT;
+ALTER TABLE public.ambassador_applications ADD COLUMN IF NOT EXISTS social_handles TEXT;
+ALTER TABLE public.ambassador_applications ADD COLUMN IF NOT EXISTS leadership_exp TEXT;
+ALTER TABLE public.ambassador_applications ADD COLUMN IF NOT EXISTS motivation TEXT;
+ALTER TABLE public.ambassador_applications ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'PENDING';
+ALTER TABLE public.ambassador_applications ADD COLUMN IF NOT EXISTS ambassador_code TEXT;
+ALTER TABLE public.ambassador_applications ADD COLUMN IF NOT EXISTS password_hash TEXT;
+ALTER TABLE public.ambassador_applications ADD COLUMN IF NOT EXISTS points INT DEFAULT 0;
+ALTER TABLE public.ambassador_applications ADD COLUMN IF NOT EXISTS tier TEXT DEFAULT 'Tier 1';
+ALTER TABLE public.ambassador_applications ADD COLUMN IF NOT EXISTS total_leads INT DEFAULT 0;
+ALTER TABLE public.ambassador_applications ADD COLUMN IF NOT EXISTS total_enrollments INT DEFAULT 0;
+ALTER TABLE public.ambassador_applications ADD COLUMN IF NOT EXISTS total_commission NUMERIC(10, 2) DEFAULT 0.00;
+ALTER TABLE public.ambassador_applications ADD COLUMN IF NOT EXISTS weekly_reports JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE public.ambassador_applications ADD COLUMN IF NOT EXISTS approved_at TIMESTAMPTZ;
+ALTER TABLE public.ambassador_applications ADD COLUMN IF NOT EXISTS interview_notes TEXT;
+ALTER TABLE public.ambassador_applications ADD COLUMN IF NOT EXISTS interview_rating TEXT;
+ALTER TABLE public.ambassador_applications ADD COLUMN IF NOT EXISTS team_recommended_by TEXT;
+ALTER TABLE public.ambassador_applications ADD COLUMN IF NOT EXISTS payout_details JSONB DEFAULT '{}'::jsonb;
+
+-- 17. AMBASSADOR WEEKLY REPORTS TABLE (Dedicated Activity & Progress Log Ledger)
+CREATE TABLE IF NOT EXISTS public.ambassador_weekly_reports (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    ambassador_id UUID REFERENCES public.ambassador_applications(id) ON DELETE CASCADE,
+    ambassador_code TEXT NOT NULL,
+    posts_count INT DEFAULT 0,
+    stories_count INT DEFAULT 0,
+    leads_generated INT DEFAULT 0,
+    event_notes TEXT,
+    challenges TEXT,
+    next_week_plan TEXT,
+    points_awarded INT DEFAULT 50,
+    submitted_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 18. AMBASSADOR LEADS TABLE (Dedicated Trackable Referral & Lead Conversion Ledger)
+CREATE TABLE IF NOT EXISTS public.ambassador_leads (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    ambassador_code TEXT NOT NULL,
+    student_name TEXT NOT NULL,
+    student_email TEXT NOT NULL,
+    student_phone TEXT,
+    college_name TEXT,
+    status TEXT DEFAULT 'INTERESTED', -- INTERESTED, ENROLLED, CONVERTED
+    commission_earned NUMERIC(10, 2) DEFAULT 0.00,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    converted_at TIMESTAMPTZ
+);
+
+-- 19. AMBASSADOR PAYOUTS TABLE (Dedicated Financial Ledger & Payout Settlement History)
+CREATE TABLE IF NOT EXISTS public.ambassador_payouts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    ambassador_code TEXT NOT NULL,
+    amount NUMERIC(10, 2) NOT NULL,
+    payment_method TEXT DEFAULT 'UPI', -- UPI, Bank Transfer, PayPal
+    payment_details TEXT,
+    transaction_reference TEXT,
+    status TEXT DEFAULT 'PAID', -- PENDING, PROCESSING, PAID, FAILED
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 20. AMBASSADOR TASKS TABLE (Dedicated Campaign Quests & Deliverables)
+CREATE TABLE IF NOT EXISTS public.ambassador_tasks (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    reward_points INT DEFAULT 100,
+    reward_bonus NUMERIC(10, 2) DEFAULT 0.00,
+    deadline TIMESTAMPTZ,
+    status TEXT DEFAULT 'ACTIVE', -- ACTIVE, COMPLETED, ARCHIVED
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes for lightning fast queries on ambassador tables
+CREATE INDEX IF NOT EXISTS idx_ambassador_apps_code ON public.ambassador_applications(ambassador_code);
+CREATE INDEX IF NOT EXISTS idx_ambassador_apps_email ON public.ambassador_applications(email);
+CREATE INDEX IF NOT EXISTS idx_ambassador_reports_code ON public.ambassador_weekly_reports(ambassador_code);
+CREATE INDEX IF NOT EXISTS idx_ambassador_leads_code ON public.ambassador_leads(ambassador_code);
+CREATE INDEX IF NOT EXISTS idx_ambassador_payouts_code ON public.ambassador_payouts(ambassador_code);
+
+-- Enable RLS & Configure Public Access Policies for Ambassador Tables
 ALTER TABLE public.ambassador_applications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.ambassador_weekly_reports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.ambassador_leads ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.ambassador_payouts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.ambassador_tasks ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public read/insert on ambassador_applications" ON public.ambassador_applications;
+DROP POLICY IF EXISTS "Allow public read/insert on ambassador_weekly_reports" ON public.ambassador_weekly_reports;
+DROP POLICY IF EXISTS "Allow public read/insert on ambassador_leads" ON public.ambassador_leads;
+DROP POLICY IF EXISTS "Allow public read/insert on ambassador_payouts" ON public.ambassador_payouts;
+DROP POLICY IF EXISTS "Allow public read/insert on ambassador_tasks" ON public.ambassador_tasks;
+
 CREATE POLICY "Allow public read/insert on ambassador_applications" ON public.ambassador_applications FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow public read/insert on ambassador_weekly_reports" ON public.ambassador_weekly_reports FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow public read/insert on ambassador_leads" ON public.ambassador_leads FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow public read/insert on ambassador_payouts" ON public.ambassador_payouts FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow public read/insert on ambassador_tasks" ON public.ambassador_tasks FOR ALL USING (true) WITH CHECK (true);
+
+-- INITIAL DEMO SEED DATA (Live Testing Account)
+INSERT INTO public.ambassador_applications (
+    app_id, name, email, phone, college_name, degree, year_of_study, 
+    status, ambassador_code, password_hash, points, tier, total_leads, total_enrollments, total_commission
+) VALUES (
+    'AMB-APP-100201', 'Alex Vance', 'alex.vance@stanford.edu', '+1 650 555 0192', 
+    'Stanford University', 'Computer Science & Business', '3rd Year', 
+    'APPROVED', 'AMB-DEMO', 'TH3ORY-AMB-2026', 450, 'Tier 2', 24, 8, 8000.00
+) ON CONFLICT (email) DO NOTHING;
 
 -- ==============================================================================
 -- SUPABASE REALTIME REPLICATION ENABLEMENT
@@ -404,7 +541,11 @@ BEGIN
       public.coupons,
       public.certificates,
       public.student_habit_trackers,
-      public.ambassador_applications;
+      public.ambassador_applications,
+      public.ambassador_weekly_reports,
+      public.ambassador_leads,
+      public.ambassador_payouts,
+      public.ambassador_tasks;
   END IF;
 EXCEPTION WHEN OTHERS THEN
   RAISE NOTICE 'Publication table addition skipped or already present.';

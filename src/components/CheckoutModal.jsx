@@ -359,24 +359,24 @@ export default function CheckoutModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/80 backdrop-blur-xl animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-2xl glass-panel rounded-3xl overflow-hidden border border-slate-700/60 shadow-2xl my-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-xl animate-fade-in overflow-y-auto">
+      <div className="relative w-full max-w-2xl max-h-[92vh] flex flex-col glass-panel rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-700/60 shadow-2xl my-auto">
         
         {/* Modal Top Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-800 bg-slate-900/80">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-800 bg-slate-900/80 shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-400">
               <Lock className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold font-heading text-white">Interactive Enrollment & Payment</h3>
-              <p className="text-xs text-slate-400">Step {step} of 3 • 256-Bit SSL Encrypted Checkout</p>
+              <h3 className="text-base sm:text-lg font-bold font-heading text-white">Interactive Enrollment &amp; Payment</h3>
+              <p className="text-[11px] sm:text-xs text-slate-400">Step {step} of 3 • 256-Bit SSL Encrypted Checkout</p>
             </div>
           </div>
           {!isProcessing && (
             <button
               onClick={onClose}
-              className="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+              className="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -385,12 +385,12 @@ export default function CheckoutModal({
 
         {/* Step Progress Bar */}
         {!orderCompleted && (
-          <div className="w-full bg-slate-900 h-1.5 flex">
+          <div className="w-full bg-slate-900 h-1.5 flex shrink-0">
             <div className={`h-full bg-indigo-500 transition-all duration-300 ${step === 1 ? 'w-1/3' : step === 2 ? 'w-2/3' : 'w-full'}`} />
           </div>
         )}
 
-        <div className="p-6 sm:p-8 space-y-6">
+        <div className="p-4 sm:p-8 space-y-6 overflow-y-auto flex-1">
           
           {/* STEP 1: Student Details & Add-ons */}
           {step === 1 && (
