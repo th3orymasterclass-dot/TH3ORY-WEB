@@ -266,25 +266,25 @@ export default function EnterprisePage({ onBack }) {
           {/* 4 Core Poster Stats Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-16 max-w-5xl mx-auto">
             <div className="glass-card rounded-2xl p-6 text-center hover:translate-y-[-2px] transition-all border border-[#E9E4FF]/15">
-              <div className="text-3xl sm:text-4xl font-black font-brand text-gradient-violet uppercase">5 Pillars</div>
+              <div className="text-2xl sm:text-3xl md:text-4xl font-black font-brand text-gradient-violet uppercase">5 Pillars</div>
               <div className="text-sm font-extrabold text-[#FAFAF7] mt-1 uppercase tracking-wider">Leadership System</div>
               <div className="text-xs text-[#555A66] mt-0.5">Complete behavioral architecture</div>
             </div>
 
             <div className="glass-card rounded-2xl p-6 text-center hover:translate-y-[-2px] transition-all border border-[#E9E4FF]/15">
-              <div className="text-3xl sm:text-4xl font-black font-brand text-gradient-violet uppercase">4 Formats</div>
+              <div className="text-2xl sm:text-3xl md:text-4xl font-black font-brand text-gradient-violet uppercase">4 Formats</div>
               <div className="text-sm font-extrabold text-[#FAFAF7] mt-1 uppercase tracking-wider">Flexible Delivery</div>
               <div className="text-xs text-[#555A66] mt-0.5">Intensive, Cohort, Accelerator, Academy</div>
             </div>
 
             <div className="glass-card rounded-2xl p-6 text-center hover:translate-y-[-2px] transition-all border border-[#E9E4FF]/15">
-              <div className="text-3xl sm:text-4xl font-black font-brand text-gradient-violet uppercase">4 Principles</div>
+              <div className="text-2xl sm:text-3xl md:text-4xl font-black font-brand text-gradient-violet uppercase">4 Principles</div>
               <div className="text-sm font-extrabold text-[#FAFAF7] mt-1 uppercase tracking-wider">Ethical Influence</div>
               <div className="text-xs text-[#555A66] mt-0.5">Transparency, Respect, Mutual Benefit</div>
             </div>
 
             <div className="glass-card rounded-2xl p-6 text-center hover:translate-y-[-2px] transition-all border border-[#E9E4FF]/15">
-              <div className="text-3xl sm:text-4xl font-black font-brand text-gradient-violet uppercase">90-Day</div>
+              <div className="text-2xl sm:text-3xl md:text-4xl font-black font-brand text-gradient-violet uppercase">90-Day</div>
               <div className="text-sm font-extrabold text-[#FAFAF7] mt-1 uppercase tracking-wider">Impact Audit</div>
               <div className="text-xs text-[#555A66] mt-0.5">Pre &amp; post leadership review</div>
             </div>

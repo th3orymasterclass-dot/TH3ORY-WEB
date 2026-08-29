@@ -22,3 +22,5 @@ scratch/
 
 .vercel
 .env*
+mcp.json
+.mcp.json

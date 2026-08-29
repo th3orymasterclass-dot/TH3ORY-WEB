@@ -17,6 +17,7 @@ import FAQSection from './components/FAQSection';
 import Footer from './components/Footer';
 import SEOHead from './components/SEOHead';
 import StructuredData from './components/StructuredData';
+import DPCookieConsentBanner from './components/dpdp/DPCookieConsentBanner';
 import { useTh3oryLive } from './data/adminData';
 import { useFeatureFlags } from './context/FeatureFlagContext';
 import { Crown, ShoppingBag, ShieldAlert } from 'lucide-react';
@@ -176,6 +177,13 @@ export default function App() {
         isOpen={isDashboardOpen}
         onClose={() => setIsDashboardOpen(false)}
         receipt={receipt}
+      />
+
+      {/* Global DPDP Cookie & Tracker Consent Banner */}
+      <DPCookieConsentBanner
+        onOpenPrivacyPolicy={() => {
+          window.location.hash = '#/privacy';
+        }}
       />
     </div>
   );

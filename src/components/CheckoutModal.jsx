@@ -5,6 +5,7 @@ import { validateCoupon, incrementCouponUsage, getAddons } from '../data/adminDa
 import { saveEnrollmentToSupabase, generateUniqueStudentCredentials } from '../services/supabaseService';
 import { sendEnrollmentEmail } from '../services/emailService';
 import { useFeatureFlags } from '../context/FeatureFlagContext';
+import { recordDPDPConsent } from '../services/dpdpConsentManager';
 
 export default function CheckoutModal({
   isOpen,
@@ -237,6 +238,19 @@ export default function CheckoutModal({
                 discountPercentage: effectiveDiscountPct,
                 discountAmount: discountAmountINR,
               }).catch(err => console.warn('[Supabase Enrollment] Error saving to DB:', err));
+
+              // Record statutory DPDP affirmative consent
+              await recordDPDPConsent({
+                email: formData.email,
+                consents: {
+                  account_creation: true,
+                  subprocessor_transfers: true,
+                  marketing_communications: false,
+                  analytics_cookies: true
+                },
+                source: 'checkout_modal',
+                metadata: { orderId, planName: selectedPlan.name }
+              }).catch(cErr => console.warn('[DPDP Consent] Auto-record error:', cErr));
 
               const finalCode = (sbRes && sbRes.code) || uniqueCreds.enrollmentCode;
 

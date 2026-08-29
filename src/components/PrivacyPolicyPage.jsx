@@ -8,6 +8,7 @@ import Logo from './Logo';
 import SEOHead from './SEOHead';
 import StructuredData from './StructuredData';
 import { saveEnterpriseQuoteToSupabase } from '../services/supabaseService';
+import DPDPUserRightsPortal from './dpdp/DPDPUserRightsPortal';
 
 export default function PrivacyPolicyPage({ onBack }) {
   const [activeTab, setActiveTab] = useState('policy'); // 'policy' | 'rights'
@@ -395,112 +396,8 @@ export default function PrivacyPolicyPage({ onBack }) {
           </div>
         ) : (
           /* DATA SUBJECT RIGHTS REQUEST PORTAL */
-          <div className="glass-panel rounded-3xl p-6 sm:p-10 border border-[#7C5CFC]/30 shadow-2xl space-y-8 bg-slate-950/90 text-left">
-            <div className="space-y-3">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#7C5CFC]/15 text-[#FFC857] text-xs font-bold uppercase tracking-widest border border-[#7C5CFC]/30">
-                <UserCheck className="w-4 h-4" /> Interactive Statutory Request Engine
-              </div>
-              <h2 className="text-2xl sm:text-4xl font-extrabold text-white font-heading">
-                DATA SUBJECT <span className="text-gradient-violet">RIGHTS PORTAL</span>
-              </h2>
-              <p className="text-slate-300 text-sm">
-                Under GDPR, CCPA, and DPDP Act 2023, submit a formal request to access, export, rectify, or permanently delete your data.
-              </p>
-            </div>
-
-            {submittedId ? (
-              <div className="p-8 bg-emerald-500/15 border border-emerald-500/40 rounded-3xl text-center space-y-5 animate-fade-in my-4">
-                <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto" />
-                <div className="inline-block px-4 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono text-xs font-bold border border-emerald-500/30">
-                  Privacy Reference ID: {submittedId}
-                </div>
-                <h3 className="text-2xl font-extrabold text-white font-heading">Data Request Registered!</h3>
-                <p className="text-slate-300 text-sm max-w-md mx-auto leading-relaxed">
-                  Your request has been logged with our Data Protection Officer. We will process your verification and respond within 48 hours.
-                </p>
-                <button
-                  onClick={() => setSubmittedId('')}
-                  className="px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs uppercase tracking-wider transition-colors cursor-pointer"
-                >
-                  Submit Another Request
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={handleRequestSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
-                      Your Full Name *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Alex Morgan"
-                      value={requestData.name}
-                      onChange={e => setRequestData({ ...requestData, name: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#7C5CFC]"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
-                      Registered Email Address *
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      placeholder="alex@example.com"
-                      value={requestData.email}
-                      onChange={e => setRequestData({ ...requestData, email: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#7C5CFC]"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
-                    Statutory Data Right Requested *
-                  </label>
-                  <select
-                    value={requestData.requestType}
-                    onChange={e => setRequestData({ ...requestData, requestType: e.target.value })}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white text-xs focus:outline-none focus:border-[#7C5CFC]"
-                  >
-                    <option value="Data Export (Access Right)">Data Export — Access Right (GDPR Art. 15 / CCPA)</option>
-                    <option value="Account & Data Erasure">Account &amp; Data Erasure — Right to be Forgotten (GDPR Art. 17)</option>
-                    <option value="Data Rectification">Data Rectification — Correct Inaccurate Info (GDPR Art. 16)</option>
-                    <option value="Opt-Out of Data Processing">Opt-Out of Data Processing / Marketing (CCPA / DPDP)</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
-                    Specific Details or Account Context
-                  </label>
-                  <textarea
-                    rows={4}
-                    placeholder="Provide any additional account context or specific datasets you wish to export, update, or delete..."
-                    value={requestData.details}
-                    onChange={e => setRequestData({ ...requestData, details: e.target.value })}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#7C5CFC] resize-none"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#7C5CFC] to-[#6344E0] hover:from-[#6344E0] hover:to-[#5032C8] text-white font-black text-sm uppercase tracking-wider shadow-xl shadow-[#7C5CFC]/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Send className="w-5 h-5" />
-                  <span>{submitting ? 'Processing Statutory Request...' : 'Submit Data Rights Request'}</span>
-                </button>
-
-                <p className="text-[11px] text-center text-slate-500 flex items-center justify-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                  Encrypted Log • Identity Verification Required Prior to Execution
-                </p>
-              </form>
-            )}
+          <div className="rounded-3xl shadow-2xl space-y-8 text-left">
+            <DPDPUserRightsPortal onBack={() => setActiveTab('policy')} />
           </div>
         )}
 

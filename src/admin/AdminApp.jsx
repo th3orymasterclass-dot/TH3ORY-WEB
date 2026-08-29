@@ -32,9 +32,11 @@ import TeamApprovalsPanel  from './panels/TeamApprovalsPanel';
 import AmbassadorApplicationsPanel from './panels/AmbassadorApplicationsPanel';
 import PortalEmailDispatcherPanel from './panels/PortalEmailDispatcherPanel';
 import TeamAnalyticsDashboard from '../team/panels/TeamAnalyticsDashboard';
+import DPDPCompliancePanel from './panels/DPDPCompliancePanel';
 
 const NAV_ITEMS = [
   { id: 'overview',    label: 'Overview',           icon: LayoutDashboard },
+  { id: 'dpdp_compliance', label: 'DPDP Privacy & Compliance', icon: ShieldCheck, badge: 'DPDP 2023' },
   { id: 'analytics',   label: 'Analytics & Intelligence', icon: BarChart3, badge: 'REALTIME' },
   { id: '__divider_db', divider: true, label: 'DATABASE & SALES' },
   { id: 'email_dispatcher', label: 'Resend Email System', icon: Mail, badge: 'RESEND' },
@@ -99,6 +101,7 @@ export default function AdminApp({ onLogout }) {
   const renderPanel = () => {
     switch (active) {
       case 'overview':   return <OverviewPanel   {...panelProps} />;
+      case 'dpdp_compliance': return <DPDPCompliancePanel />;
       case 'analytics':  return <TeamAnalyticsDashboard enterpriseQuotes={enterpriseQuotes} contactInquiries={contactInquiries} newsletterSubscribers={newsletterSubscribers} themeMode={themeMode} />;
       case 'email_dispatcher': return <PortalEmailDispatcherPanel themeMode={themeMode} />;
       case 'ambassador_apps': return <AmbassadorApplicationsPanel themeMode={themeMode} />;

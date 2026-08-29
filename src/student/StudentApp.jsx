@@ -12,6 +12,7 @@ import QueryPanel    from './panels/QueryPanel';
 
 import CertificatePanel from './panels/CertificatePanel';
 import CharacterCodePortal from './components/CharacterCodePortal';
+import PrivacyRightsPanel from './panels/PrivacyRightsPanel';
 import { getProgress, getBookmarks } from './studentData';
 import { useTh3oryLive } from '../data/adminData';
 import { useFeatureFlags } from '../context/FeatureFlagContext';
@@ -28,6 +29,7 @@ const NAV = [
   { id: 'character_code', label: 'Character Code™',   icon: Zap },
   { id: 'queries',        label: 'Query Sessions',    icon: HelpCircle, flagKey: 'ENABLE_STUDENT_COMMUNITY' },
   { id: 'certificate',    label: 'Certificate',       icon: Award },
+  { id: 'privacy',        label: 'Privacy & Data Rights', icon: ShieldAlert },
   { id: 'shop',           label: 'Upgrade & Add-ons', icon: ShoppingBag },
   { id: 'review',         label: 'Leave a Review',    icon: Star, flagKey: 'ENABLE_LIVE_REVIEWS' },
 ];
@@ -194,6 +196,7 @@ export default function StudentApp({ profile: initialProfile, onLogout }) {
       case 'character_code': return <CharacterCodePortal profile={activeProfile} themeMode={themeMode} completedLevelsCount={completedLevelsCount} onNavigate={navigate} onClose={() => setActive('home')} />;
       case 'queries':     return <QueryPanel profile={activeProfile} themeMode={themeMode}/>;
       case 'certificate': return <CertificatePanel profile={activeProfile} completedCount={done} totalLessons={totalLessons} onNavigate={navigate} themeMode={themeMode}/>;
+      case 'privacy':     return <PrivacyRightsPanel studentData={activeProfile} />;
       case 'shop':        return <ShopPanel profile={activeProfile} themeMode={themeMode}/>;
       case 'review':      return <ReviewPanel profile={activeProfile} themeMode={themeMode}/>;
       default:            return <DashboardHome profile={activeProfile} onNavigate={navigate} themeMode={themeMode}/>;
