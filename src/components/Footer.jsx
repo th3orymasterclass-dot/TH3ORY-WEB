@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { ShieldCheck, Lock, CreditCard, Heart, GraduationCap, ArrowRight, Sparkles, Brain, Clapperboard, FileText } from 'lucide-react';
 import Logo from './Logo';
-import { getCourseDetails } from '../data/adminData';
+import { useTh3oryLive } from '../data/adminData';
 import LegalModal from './LegalModal';
 
 export default function Footer({ onOpenCheckout }) {
-  const details = getCourseDetails();
+  const { courseDetails, contact = {} } = useTh3oryLive();
+  const details = courseDetails || {};
   const [legalModalTab, setLegalModalTab] = useState(null);
 
   return (
@@ -163,7 +164,7 @@ export default function Footer({ onOpenCheckout }) {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <div>
-            &copy; 2026 Mentalist Sravan Production. All rights reserved. TH3ORY Masterclass of Influencing.
+            {contact.footerDisclaimer || `© 2026 Mentalist Sravan Production. All rights reserved. TH3ORY Masterclass of Influencing.`}
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <a

@@ -175,3 +175,64 @@ html, body {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+/* Infinite Marquee Scroll Utilities */
+@keyframes marqueeScroll {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes marqueeScrollReverse {
+  0% {
+    transform: translate3d(-50%, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-marquee-infinite {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: marqueeScroll 45s linear infinite;
+}
+
+.animate-marquee-infinite.paused,
+.marquee-container:hover .animate-marquee-infinite {
+  animation-play-state: paused;
+}
+
+.animate-marquee-infinite-slow {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: marqueeScroll 60s linear infinite;
+}
+
+.animate-marquee-infinite-slow.paused,
+.marquee-container:hover .animate-marquee-infinite-slow {
+  animation-play-state: paused;
+}
+
+.marquee-mask {
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 6%,
+    black 94%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 6%,
+    black 94%,
+    transparent 100%
+  );
+}
+

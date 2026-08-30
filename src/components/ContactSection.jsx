@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
 import { Mail, Send, CheckCircle2, MessageSquare, Sparkles, Phone, MapPin, Globe, ShieldCheck, Calendar } from 'lucide-react';
 import { saveContactInquiryToSupabase, saveNewsletterSubscriberToSupabase } from '../services/supabaseService';
+import { useTh3oryLive } from '../data/adminData';
+import { defaultContact } from '../data/courseData';
 import CalendlyModal from './CalendlyModal';
 
-export default function ContactSection() {
+export default function ContactSection({ contact: propContact }) {
+  const { contact: liveContact } = useTh3oryLive();
+  const contactData = propContact || liveContact || defaultContact;
+
   // Contact Form State
   const [contactForm, setContactForm] = useState({
     name: '',
@@ -74,13 +79,13 @@ export default function ContactSection() {
                 <Globe className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white">Mentalist Sravan Production</h3>
-                <p className="text-amber-400 text-xs font-semibold">Cognitive Experiments & Behavioral Engineering</p>
+                <h3 className="text-xl font-bold text-white">{contactData.companyName || "Mentalist Sravan Production"}</h3>
+                <p className="text-amber-400 text-xs font-semibold">{contactData.department || "Cognitive Experiments & Behavioral Engineering"}</p>
               </div>
             </div>
 
             <p className="text-slate-300 text-sm leading-relaxed">
-              TH3ORY Masterclass of Influencing is an integrated production platform designed for high-impact behavioral influence, executive tonality, non-verbal communication, and psychological leverage.
+              {contactData.description || "TH3ORY Masterclass of Influencing is an integrated production platform designed for high-impact behavioral influence, executive tonality, non-verbal communication, and psychological leverage."}
             </p>
 
             <div className="space-y-3 pt-2 text-xs text-slate-300 border-t border-slate-800">
@@ -92,6 +97,12 @@ export default function ContactSection() {
                 <Globe className="w-5 h-5 text-amber-400 shrink-0" />
                 <span>Global 24/7 multi-device student access portal with live database sync.</span>
               </div>
+              {contactData.address && (
+                <div className="flex items-center gap-3 text-slate-400">
+                  <MapPin className="w-5 h-5 text-amber-400 shrink-0" />
+                  <span>{contactData.address} • Helpline: {contactData.phone || contactData.whatsapp}</span>
+                </div>
+              )}
             </div>
           </div>
 

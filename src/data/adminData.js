@@ -11,6 +11,10 @@ import {
   studentReviews as defaultReviews,
   faqList as defaultFaqs,
   defaultContent,
+  offlineTrainings as defaultOfflineTrainings,
+  defaultCampaign,
+  defaultContact,
+  defaultSectionVisibility,
 } from './courseData.js';
 
 const LS_PREFIX = 'th3ory_admin_';
@@ -62,7 +66,11 @@ export function resetAllData() {
     console.error('[Access Control Denied] Authorised Admin session required to reset website data.');
     throw new Error('Access Control Denied: Admin authentication required.');
   }
-  const keys = ['courseDetails','video','levels','plans','addons','reviews','faqs','content'];
+  const keys = [
+    'courseDetails', 'video', 'levels', 'plans', 'addons', 
+    'reviews', 'faqs', 'content', 'coupons', 'offlineTrainings', 
+    'campaign', 'contact', 'sectionVisibility'
+  ];
   keys.forEach(k => localStorage.removeItem(LS_PREFIX + k));
   window.dispatchEvent(new CustomEvent('th3ory_data_change', { detail: { key: 'all' } }));
 }
@@ -142,16 +150,20 @@ export const defaultCoupons = [
 ];
 
 // ─── Live getters used by public components ────────────────────────────────────
-export const getCourseDetails = () => lsGet('courseDetails', defaultCourseDetails);
-export const getVideo         = () => lsGet('video', defaultVideo);
-export const getLevels        = () => lsGet('levels', defaultLevels);
-export const getPlans         = () => lsGet('plans', defaultPlans);
-export const getAddons        = () => lsGet('addons', defaultAddons);
-export const getReviews       = () => lsGet('reviews', defaultReviews);
-export const getFaqs          = () => lsGet('faqs', defaultFaqs);
-export const getContent       = () => lsGet('content', defaultContent);
-export const getCoupons        = () => lsGet('coupons', defaultCoupons);
-export const saveCoupons       = (coupons) => lsSet('coupons', coupons);
+export const getCourseDetails     = () => lsGet('courseDetails', defaultCourseDetails);
+export const getVideo             = () => lsGet('video', defaultVideo);
+export const getLevels            = () => lsGet('levels', defaultLevels);
+export const getPlans             = () => lsGet('plans', defaultPlans);
+export const getAddons            = () => lsGet('addons', defaultAddons);
+export const getReviews           = () => lsGet('reviews', defaultReviews);
+export const getFaqs              = () => lsGet('faqs', defaultFaqs);
+export const getContent           = () => lsGet('content', defaultContent);
+export const getCoupons           = () => lsGet('coupons', defaultCoupons);
+export const getOfflineTrainings  = () => lsGet('offlineTrainings', defaultOfflineTrainings);
+export const getCampaign          = () => lsGet('campaign', defaultCampaign);
+export const getContact           = () => lsGet('contact', defaultContact);
+export const getSectionVisibility  = () => lsGet('sectionVisibility', defaultSectionVisibility);
+export const saveCoupons          = (coupons) => lsSet('coupons', coupons);
 
 /**
  * Validate a custom offer coupon code live against current admin configuration.
@@ -264,6 +276,10 @@ export function useTh3oryLive() {
     faqs: getFaqs(),
     content: getContent(),
     coupons: getCoupons(),
+    offlineTrainings: getOfflineTrainings(),
+    campaign: getCampaign(),
+    contact: getContact(),
+    sectionVisibility: getSectionVisibility(),
   }));
 
   useEffect(() => {
@@ -278,6 +294,10 @@ export function useTh3oryLive() {
         faqs: getFaqs(),
         content: getContent(),
         coupons: getCoupons(),
+        offlineTrainings: getOfflineTrainings(),
+        campaign: getCampaign(),
+        contact: getContact(),
+        sectionVisibility: getSectionVisibility(),
       });
     };
 
@@ -363,6 +383,10 @@ export const defaults = {
   faqs: defaultFaqs,
   content: defaultContent,
   coupons: defaultCoupons,
+  offlineTrainings: defaultOfflineTrainings,
+  campaign: defaultCampaign,
+  contact: defaultContact,
+  sectionVisibility: defaultSectionVisibility,
   gdriveConfig: defaultGDriveConfig,
 };
 

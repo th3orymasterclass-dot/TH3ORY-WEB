@@ -102,6 +102,147 @@ export const courseDetails = {
   }
 };
 
+export const offlineTrainings = [
+  {
+    id: "nangelil-ayurveda-college",
+    title: "Nangelil Ayurveda Medical College",
+    subtitle: "World Mental Health Day Keynote & Psychology Workshop",
+    location: "Kothamangalam, Kerala",
+    date: "World Mental Health Day",
+    badge: "Medical College Masterclass",
+    image: "/trainings/training-1.jpg",
+    attendees: "350+ Med Students",
+    tags: ["Cognitive Wellness", "Doctor-Patient Empathy", "Mental Focus"],
+    description: "Special invited keynote lecture and psychological resilience workshop for medical students, interns, and faculty at Nangelil Ayurveda Medical College. Topics included cognitive wellness, non-verbal empathy in clinical communication, and emotional regulation under pressure."
+  },
+  {
+    id: "interactive-behavior-lab",
+    title: "Interactive Behavioral & Body Language Workshop",
+    subtitle: "Group Dynamics, Posture & Subconscious Cues",
+    location: "Campus Auditorium",
+    date: "Campus Intensive Bootcamp",
+    badge: "Behavioral Engineering",
+    image: "/trainings/training-2.jpg",
+    attendees: "200+ Attendees",
+    tags: ["Body Language", "Subconscious Cues", "Group Dynamics"],
+    description: "High-engagement on-ground training decoding non-verbal cues, micro-expressions, and spatial presence in collaborative settings. Students engaged in live posture calibration and confidence drills."
+  },
+  {
+    id: "cognitive-influence-seminar",
+    title: "Institutional Psychology & Mindset Seminar",
+    subtitle: "Eliminating Hesitation & High-Stakes Public Speaking",
+    location: "Institutional Main Auditorium",
+    date: "Youth Leadership Summit",
+    badge: "Executive Mindset",
+    image: "/trainings/training-3.jpg",
+    attendees: "400+ Students",
+    tags: ["Public Speaking", "Cognitive Biases", "Vocal Gravitas"],
+    description: "Full-capacity campus seminar focusing on overcoming stage anxiety, mastering vocal tonality, and utilizing psychological anchoring for placement interviews and leadership keynotes."
+  },
+  {
+    id: "experiential-mentalism-lab",
+    title: "Live Experiential Mentalism & Influence Lab",
+    subtitle: "Real-Time Perception & Stage Demonstrations",
+    location: "University Convention Center",
+    date: "Campus Leadership Fest",
+    badge: "Live Perception Demo",
+    image: "/trainings/training-4.jpg",
+    attendees: "500+ Participants",
+    tags: ["Stage Demonstrations", "Attention Control", "Decision Mechanics"],
+    description: "Real-time stage psychological demonstrations illustrating the subconscious mechanics of choice, attention misdirection, and persuasive influence in front of a packed student audience."
+  },
+  {
+    id: "career-readiness-accelerator",
+    title: "Skill Acceleration & Corporate Readiness Masterclass",
+    subtitle: "Bridging the Soft Skills, Awareness & Industry Gap",
+    location: "Tech Innovation Hall",
+    date: "Professional Development Lab",
+    badge: "Placement Accelerator",
+    image: "/trainings/training-5.jpg",
+    attendees: "150+ Future Professionals",
+    tags: ["Soft Skills", "Interview Mastery", "Corporate Demeanor"],
+    description: "Targeted masterclass directly addressing the gap between academic theory and corporate readiness—focusing on soft skills, interpersonal awareness, salary negotiation, and executive presence."
+  }
+];
+
+export const defaultCampaign = {
+  enabled: true,
+  badge: "FOUNDING LAUNCH CAMPAIGN — SPECIAL OFFER",
+  title: "TH3ORY",
+  subtitle: "MASTERCLASS OF INFLUENCING",
+  tagline: "UNDERSTAND WHY PEOPLE LISTEN. CONNECT. TRUST. REMEMBER. FOLLOW.",
+  launchPriceINR: 499,
+  regularPriceINR: 11999,
+  rzpLink: "https://rzp.io/rzp/th3orylaunch",
+  seatsTotal: 100,
+  seatsClaimed: 74,
+  bonusTag: "INSTANT ACCESS TO ALL 50 MODULES + WORKBOOKS",
+  features: [
+    {
+      title: "30-DAY COGNITIVE ARC",
+      subtitle: "5 LEVELS OF MASTERY",
+      description: "From non-verbal presence to subconscious framing, systematically build commanding authority.",
+      icon: "Crown"
+    },
+    {
+      title: "EXCLUSIVE COMMUNITY",
+      subtitle: "PRIVATE MASTERCLASS NETWORK",
+      description: "Connect with entrepreneurs, creators, leaders, and fellow high-impact thinkers.",
+      icon: "Users"
+    },
+    {
+      title: "CERTIFICATE OF COMPLETION",
+      subtitle: "VERIFIED CREDENTIAL",
+      description: "Digital badge and verification ID for your LinkedIn, portfolio, and resume.",
+      icon: "Award"
+    },
+    {
+      title: "LIFETIME REPLAY ACCESS",
+      subtitle: "CONTINUOUS UPDATES",
+      description: "Revisit all 50 video modules, exercise templates, and bonus resources anytime.",
+      icon: "Zap"
+    }
+  ]
+};
+
+export const defaultContact = {
+  companyName: "Mentalist Sravan Production",
+  department: "Cognitive Experiments & Behavioral Engineering",
+  description: "TH3ORY Masterclass of Influencing is an integrated production platform designed for high-impact behavioral influence, executive tonality, non-verbal communication, and psychological leverage.",
+  email: "contact@th3ory.online",
+  supportEmail: "support@th3ory.online",
+  phone: "+91 94000 00000",
+  whatsapp: "+91 94000 00000",
+  address: "Kochi, Kerala, India",
+  hours: "Monday – Saturday, 9:00 AM – 6:00 PM IST",
+  socials: {
+    linkedin: "https://linkedin.com",
+    youtube: "https://youtube.com",
+    instagram: "https://instagram.com",
+    twitter: "https://twitter.com"
+  },
+  footerDisclaimer: "© 2026 TH3ORY Masterclass. All rights reserved. Mentalist Sravan Production.",
+  features: [
+    "Verified digital completion certificates and automated credentials verification desk.",
+    "Global 24/7 multi-device student access portal with live database sync."
+  ]
+};
+
+export const defaultSectionVisibility = {
+  hero: true,
+  campaign: true,
+  pillars: true,
+  curriculum: true,
+  outcomes: true,
+  instructor: true,
+  offlineTrainings: true,
+  reviews: false, // Default hidden as requested
+  pricing: true,
+  contact: true,
+  faqs: true,
+  quickEnrollmentBar: true
+};
+
 export const videoPreviewData = {
   title: "TH3ORY Masterclass Teaser & 30-Day Roadmap",
   duration: "4:15",

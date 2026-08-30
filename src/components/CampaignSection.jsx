@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { Crown, Trophy, Sparkles, Gift, Flame, ArrowRight, CheckCircle2, UserCheck, Shield, ExternalLink, Eye, X, Zap } from 'lucide-react';
+import { useTh3oryLive } from '../data/adminData';
+import { defaultCampaign } from '../data/courseData';
 
-export default function CampaignSection() {
+export default function CampaignSection({ campaign: propCampaign }) {
   const [isPosterModalOpen, setIsPosterModalOpen] = useState(false);
+  const { campaign: liveCampaign } = useTh3oryLive();
+  const c = propCampaign || liveCampaign || defaultCampaign;
 
-  const RZP_LINK = "https://rzp.io/rzp/th3orylaunch";
+  const RZP_LINK = c.rzpLink || "https://rzp.io/rzp/th3orylaunch";
 
   return (
     <section id="launch-campaign" className="relative py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-[#070A11] via-[#0D0B14] to-[#070A11] border-y border-red-900/30 overflow-hidden">
@@ -19,15 +23,15 @@ export default function CampaignSection() {
         <div className="text-center space-y-4 max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-red-950/80 via-red-900/50 to-red-950/80 border border-red-500/40 text-red-400 text-xs font-mono font-bold tracking-widest uppercase shadow-lg animate-pulse">
             <Flame className="w-4 h-4 text-red-500 fill-red-500" />
-            <span>FOUNDING LAUNCH CAMPAIGN — SPECIAL OFFER</span>
+            <span>{c.badge || "FOUNDING LAUNCH CAMPAIGN — SPECIAL OFFER"}</span>
           </div>
 
           <div className="space-y-2">
             <h2 className="text-3xl sm:text-5xl font-black font-brand text-white tracking-tight uppercase">
-              TH3ORY
+              {c.title || "TH3ORY"}
             </h2>
             <p className="text-sm sm:text-base font-bold font-mono tracking-widest text-red-500 uppercase">
-              MASTERCLASS OF INFLUENCING
+              {c.subtitle || "MASTERCLASS OF INFLUENCING"}
             </p>
           </div>
 
@@ -35,7 +39,7 @@ export default function CampaignSection() {
             <h3 className="text-xl sm:text-3xl font-extrabold font-heading text-slate-100 leading-tight">
               UNDERSTAND WHY PEOPLE <br />
               <span className="bg-gradient-to-r from-red-500 via-amber-400 to-red-400 bg-clip-text text-transparent uppercase tracking-wider">
-                LISTEN. CONNECT. TRUST. REMEMBER. FOLLOW.
+                {c.tagline || "LISTEN. CONNECT. TRUST. REMEMBER. FOLLOW."}
               </span>
             </h3>
           </div>
@@ -58,17 +62,17 @@ export default function CampaignSection() {
 
               <div className="py-2">
                 <div className="text-6xl sm:text-7xl font-black font-heading text-red-500 tracking-tight flex items-baseline justify-center sm:justify-start gap-1">
-                  <span className="text-4xl text-red-400">₹</span>499
+                  <span className="text-4xl text-red-400">₹</span>{c.launchPriceINR || 499}
                 </div>
                 <div className="inline-block mt-2 px-3 py-1 bg-red-950/60 border border-red-500/30 rounded-lg text-xs font-mono font-bold text-slate-200 uppercase tracking-wider">
-                  FOUNDING ACCESS PRICE
+                  FOUNDING ACCESS PRICE (Reg. ₹{c.regularPriceINR?.toLocaleString('en-IN') || '11,999'})
                 </div>
               </div>
 
               <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs space-y-2 text-left">
                 <div className="flex items-center gap-2 font-bold text-amber-400 text-xs uppercase font-heading">
                   <Crown className="w-4 h-4 fill-amber-400 text-amber-400 shrink-0" />
-                  <span>INCLUDES 1 YEAR OF EXCLUSIVE ACCESS TO INFLUENCING PSYCHOLOGY MEMBERSHIP</span>
+                  <span>{c.bonusTag || "INCLUDES 1 YEAR OF EXCLUSIVE ACCESS TO INFLUENCING PSYCHOLOGY MEMBERSHIP"}</span>
                 </div>
                 <p className="text-slate-300 text-[11px] leading-relaxed">
                   New &amp; exclusive content, insights, and cognitive learning all year long.
@@ -84,7 +88,7 @@ export default function CampaignSection() {
                 rel="noopener noreferrer"
                 className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-red-600 via-red-500 to-amber-500 hover:from-red-500 hover:to-amber-400 text-white font-black text-sm uppercase tracking-wider shadow-xl shadow-red-600/30 hover:shadow-red-500/50 transition-all cursor-pointer flex items-center justify-center gap-2 group"
               >
-                <span>JOIN THE LAUNCH FOR ₹499</span>
+                <span>JOIN THE LAUNCH FOR ₹{c.launchPriceINR || 499}</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </a>
 

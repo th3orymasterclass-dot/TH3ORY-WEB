@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import {
   LayoutDashboard, ShoppingBag, HelpCircle, Tag, Mail, Database,
   Sliders, ShieldCheck, Sun, Moon, Type, Flame, BookOpen, FolderOpen,
-  Star, User, Gift, Target, Video, ChevronRight, Menu, X, ExternalLink, LogOut, Shield, Users, Calendar, BarChart3
+  Star, User, Gift, Target, Video, ChevronRight, Menu, X, ExternalLink, 
+  LogOut, Shield, Users, Calendar, BarChart3, Sparkles, MessageSquare, GraduationCap
 } from 'lucide-react';
 import useAdminData from './useAdminData';
 import OverviewPanel       from './panels/OverviewPanel';
@@ -33,37 +34,44 @@ import AmbassadorApplicationsPanel from './panels/AmbassadorApplicationsPanel';
 import PortalEmailDispatcherPanel from './panels/PortalEmailDispatcherPanel';
 import TeamAnalyticsDashboard from '../team/panels/TeamAnalyticsDashboard';
 import DPDPCompliancePanel from './panels/DPDPCompliancePanel';
+import SectionVisibilityPanel from './panels/SectionVisibilityPanel';
+import CampaignPanel from './panels/CampaignPanel';
+import PillarsPanel from './panels/PillarsPanel';
+import OfflineTrainingsPanel from './panels/OfflineTrainingsPanel';
+import ContactPanel from './panels/ContactPanel';
 
 const NAV_ITEMS = [
-  { id: 'overview',    label: 'Overview',           icon: LayoutDashboard },
-  { id: 'dpdp_compliance', label: 'DPDP Privacy & Compliance', icon: ShieldCheck, badge: 'DPDP 2023' },
-  { id: 'analytics',   label: 'Analytics & Intelligence', icon: BarChart3, badge: 'REALTIME' },
-  { id: '__divider_db', divider: true, label: 'DATABASE & SALES' },
-  { id: 'email_dispatcher', label: 'Resend Email System', icon: Mail, badge: 'RESEND' },
-  { id: 'ambassador_apps', label: 'Ambassador Applications', icon: Users, badge: 'AMBASSADOR' },
-  { id: 'team_approvals', label: 'Team Approvals', icon: ShieldCheck, badge: 'QUEUE' },
-  { id: 'feature_flags', label: 'Vercel Feature Flags', icon: Sliders, badge: 'VERCEL' },
-  { id: 'enrollments', label: 'Enrollments & Sales',icon: ShoppingBag, badge: 'LIVE' },
-  { id: 'queries_quotes', label: 'Forms & Quotes',  icon: HelpCircle, badge: 'FORMS' },
-  { id: 'coupons',     label: 'Coupons & Affiliations', icon: Tag, badge: 'OFFERS' },
+  { id: 'overview',           label: 'Overview',                   icon: LayoutDashboard },
+  { id: 'section_visibility', label: 'Section Master Switches',    icon: Sliders, badge: 'LAYOUT' },
+  { id: 'dpdp_compliance',    label: 'DPDP Privacy & Compliance',  icon: ShieldCheck, badge: 'DPDP 2023' },
+  { id: 'analytics',          label: 'Analytics & Intelligence',   icon: BarChart3, badge: 'REALTIME' },
+  
+  { id: '__divider_landing',  divider: true, label: 'HOMEPAGE & LANDING CONTENT' },
+  { id: 'hero',               label: 'Hero & Branding',            icon: Type },
+  { id: 'campaign',           label: 'Launch Campaign (₹499)',     icon: Flame, badge: 'OFFER' },
+  { id: 'pillars',            label: '5 Pillars & Differentiators',icon: Sparkles },
+  { id: 'curriculum',         label: 'Curriculum & Roadmap',       icon: BookOpen },
+  { id: 'outcomes',           label: 'Outcomes & Transformation',  icon: Target },
+  { id: 'bonuses',            label: 'Bonuses & Perks',            icon: Gift },
+  { id: 'instructor',         label: 'Instructor Spotlight',       icon: User },
+  { id: 'offline_trainings',  label: 'Offline Trainings Marquee',  icon: GraduationCap, badge: 'NEW' },
+  { id: 'pricing',            label: 'Pricing & Plans',            icon: Tag },
+  { id: 'contact_settings',   label: 'Contact, Studio & Footer',   icon: MessageSquare },
+  { id: 'faqs',               label: 'FAQs Management',            icon: HelpCircle },
+  { id: 'urgency',            label: 'Urgency & Seats Counter',    icon: Flame },
+  { id: 'media',              label: 'Video & Media Player',       icon: Video },
+  { id: 'content',            label: 'Content Library (PDF/Video)',icon: FolderOpen },
 
-  { id: 'newsletter',  label: 'Newsletter Subscribers', icon: Mail, badge: 'COMM' },
-  { id: 'integrations',label: 'Integrations & API', icon: Database, badge: 'DIAG' },
-  { id: '__divider1',  divider: true, label: 'SITE CONTENT' },
-  { id: 'hero',        label: 'Hero & Branding',     icon: Type },
-  { id: 'urgency',     label: 'Urgency & Seats',     icon: Flame },
-  { id: 'curriculum',  label: 'Curriculum',          icon: BookOpen },
-  { id: '__divider2',  divider: true, label: 'FILES & MEDIA' },
-  { id: 'content',     label: 'Content Library',     icon: FolderOpen, badge: 'NEW' },
-  { id: '__divider3',  divider: true, label: 'SALES & SOCIAL' },
-  { id: 'pricing',     label: 'Pricing Plans',       icon: Tag },
-  { id: 'reviews',     label: 'Reviews',             icon: Star },
-  { id: 'faqs',        label: 'FAQs',                icon: HelpCircle },
-  { id: '__divider4',  divider: true, label: 'DETAILS' },
-  { id: 'instructor',  label: 'Instructor',          icon: User },
-  { id: 'bonuses',     label: 'Bonuses & Add-ons',   icon: Gift },
-  { id: 'outcomes',    label: 'Outcomes & Pillars',  icon: Target },
-  { id: 'media',       label: 'Video & Media',       icon: Video },
+  { id: '__divider_db',       divider: true, label: 'SALES & COMMUNICATIONS' },
+  { id: 'email_dispatcher',   label: 'Resend Email System',        icon: Mail, badge: 'RESEND' },
+  { id: 'ambassador_apps',    label: 'Ambassador Applications',    icon: Users, badge: 'AMBASSADOR' },
+  { id: 'team_approvals',     label: 'Team Approvals',             icon: ShieldCheck, badge: 'QUEUE' },
+  { id: 'feature_flags',      label: 'Vercel Feature Flags',       icon: Sliders, badge: 'VERCEL' },
+  { id: 'enrollments',        label: 'Enrollments & Sales',        icon: ShoppingBag, badge: 'LIVE' },
+  { id: 'queries_quotes',     label: 'Forms & Quotes',             icon: HelpCircle, badge: 'FORMS' },
+  { id: 'coupons',            label: 'Coupons & Affiliations',     icon: Tag, badge: 'OFFERS' },
+  { id: 'newsletter',         label: 'Newsletter Subscribers',     icon: Mail, badge: 'COMM' },
+  { id: 'integrations',       label: 'Integrations & API',         icon: Database, badge: 'DIAG' },
 ];
 
 export default function AdminApp({ onLogout }) {
@@ -100,31 +108,36 @@ export default function AdminApp({ onLogout }) {
 
   const renderPanel = () => {
     switch (active) {
-      case 'overview':   return <OverviewPanel   {...panelProps} />;
-      case 'dpdp_compliance': return <DPDPCompliancePanel />;
-      case 'analytics':  return <TeamAnalyticsDashboard enterpriseQuotes={enterpriseQuotes} contactInquiries={contactInquiries} newsletterSubscribers={newsletterSubscribers} themeMode={themeMode} />;
-      case 'email_dispatcher': return <PortalEmailDispatcherPanel themeMode={themeMode} />;
-      case 'ambassador_apps': return <AmbassadorApplicationsPanel themeMode={themeMode} />;
-      case 'team_approvals': return <TeamApprovalsPanel themeMode={themeMode} />;
-      case 'feature_flags': return <FeatureFlagsPanel themeMode={themeMode} />;
-      case 'enrollments':return <EnrollmentsPanel enrollments={enrollments} themeMode={themeMode} />;
-      case 'queries_quotes': return <QueriesQuotesPanel queries={queries} enterpriseQuotes={enterpriseQuotes} contactInquiries={contactInquiries} updateQueryStatus={updateQueryStatus} updateQuoteStatus={updateQuoteStatus} updateInquiryStatus={updateInquiryStatus} deleteQuery={deleteQuery} themeMode={themeMode} />;
-      case 'coupons':    return <CouponsPanel     save={save} enrollments={enrollments} themeMode={themeMode} />;
-
-      case 'newsletter': return <NewsletterPanel subscribers={newsletterSubscribers} broadcasts={newsletterBroadcasts} saveBroadcast={saveBroadcast} updateSubscriberStatus={updateSubscriberStatus} deleteSubscriber={deleteSubscriber} save={save} data={data} themeMode={themeMode} />;
-      case 'integrations':return <IntegrationsPanel themeMode={themeMode} />;
-      case 'hero':       return <HeroPanel       {...panelProps} />;
-      case 'urgency':    return <UrgencyPanel    {...panelProps} />;
-      case 'curriculum': return <CurriculumPanel {...panelProps} />;
-      case 'content':    return <ContentPanel    {...panelProps} />;
-      case 'pricing':    return <PricingPanel    {...panelProps} />;
-      case 'reviews':    return <ReviewsPanel    {...panelProps} />;
-      case 'faqs':       return <FAQPanel        {...panelProps} />;
-      case 'instructor': return <InstructorPanel {...panelProps} />;
-      case 'bonuses':    return <BonusesPanel    {...panelProps} />;
-      case 'outcomes':   return <OutcomesPanel   {...panelProps} />;
-      case 'media':      return <MediaPanel      {...panelProps} />;
-      default:           return <OverviewPanel   {...panelProps} />;
+      case 'overview':           return <OverviewPanel   {...panelProps} />;
+      case 'section_visibility': return <SectionVisibilityPanel {...panelProps} />;
+      case 'dpdp_compliance':    return <DPDPCompliancePanel />;
+      case 'analytics':          return <TeamAnalyticsDashboard enterpriseQuotes={enterpriseQuotes} contactInquiries={contactInquiries} newsletterSubscribers={newsletterSubscribers} themeMode={themeMode} />;
+      case 'email_dispatcher':   return <PortalEmailDispatcherPanel themeMode={themeMode} />;
+      case 'ambassador_apps':    return <AmbassadorApplicationsPanel themeMode={themeMode} />;
+      case 'team_approvals':     return <TeamApprovalsPanel themeMode={themeMode} />;
+      case 'feature_flags':      return <FeatureFlagsPanel themeMode={themeMode} />;
+      case 'enrollments':        return <EnrollmentsPanel enrollments={enrollments} themeMode={themeMode} />;
+      case 'queries_quotes':     return <QueriesQuotesPanel queries={queries} enterpriseQuotes={enterpriseQuotes} contactInquiries={contactInquiries} updateQueryStatus={updateQueryStatus} updateQuoteStatus={updateQuoteStatus} updateInquiryStatus={updateInquiryStatus} deleteQuery={deleteQuery} themeMode={themeMode} />;
+      case 'coupons':            return <CouponsPanel     save={save} enrollments={enrollments} themeMode={themeMode} />;
+      case 'newsletter':         return <NewsletterPanel subscribers={newsletterSubscribers} broadcasts={newsletterBroadcasts} saveBroadcast={saveBroadcast} updateSubscriberStatus={updateSubscriberStatus} deleteSubscriber={deleteSubscriber} save={save} data={data} themeMode={themeMode} />;
+      case 'integrations':       return <IntegrationsPanel themeMode={themeMode} />;
+      
+      case 'hero':               return <HeroPanel       {...panelProps} />;
+      case 'campaign':           return <CampaignPanel   {...panelProps} />;
+      case 'pillars':            return <PillarsPanel    {...panelProps} />;
+      case 'curriculum':         return <CurriculumPanel {...panelProps} />;
+      case 'outcomes':           return <OutcomesPanel   {...panelProps} />;
+      case 'bonuses':            return <BonusesPanel    {...panelProps} />;
+      case 'instructor':         return <InstructorPanel {...panelProps} />;
+      case 'offline_trainings':  return <OfflineTrainingsPanel {...panelProps} />;
+      case 'pricing':            return <PricingPanel    {...panelProps} />;
+      case 'contact_settings':   return <ContactPanel    {...panelProps} />;
+      case 'faqs':               return <FAQPanel        {...panelProps} />;
+      case 'urgency':            return <UrgencyPanel    {...panelProps} />;
+      case 'media':              return <MediaPanel      {...panelProps} />;
+      case 'content':            return <ContentPanel    {...panelProps} />;
+      case 'reviews':            return <ReviewsPanel    {...panelProps} />;
+      default:                   return <OverviewPanel   {...panelProps} />;
     }
   };
 

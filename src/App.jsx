@@ -3,6 +3,7 @@ import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
 import PillarsSection from './components/PillarsSection';
 import InstructorSection from './components/InstructorSection';
+import OfflineTrainingsMarquee from './components/OfflineTrainingsMarquee';
 import CampaignSection from './components/CampaignSection';
 import VideoModal from './components/VideoModal';
 import CurriculumExplorer from './components/CurriculumExplorer';
@@ -23,7 +24,7 @@ import { useFeatureFlags } from './context/FeatureFlagContext';
 import { Crown, ShoppingBag, ShieldAlert } from 'lucide-react';
 
 export default function App() {
-  const { plans: pricingPlans } = useTh3oryLive();
+  const { plans: pricingPlans, sectionVisibility = {} } = useTh3oryLive();
   const mainPlan = pricingPlans[0] || {};
   const { isFeatureEnabled } = useFeatureFlags();
 
@@ -32,9 +33,8 @@ export default function App() {
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const [showEnrollmentPage, setShowEnrollmentPage] = useState(false);
 
-  const showQuickBar = isFeatureEnabled('SHOW_QUICK_ENROLLMENT_BAR', true);
+  const showQuickBar = isFeatureEnabled('SHOW_QUICK_ENROLLMENT_BAR', true) && sectionVisibility.quickEnrollmentBar !== false;
   const showSeatsUrgency = isFeatureEnabled('SHOW_LIMITED_SEATS_BANNER', true);
-  const showReviews = isFeatureEnabled('ENABLE_LIVE_REVIEWS', true);
   const isMaintenanceMode = isFeatureEnabled('MAINTENANCE_MODE', false);
 
   // Checkout state
@@ -117,39 +117,67 @@ export default function App() {
 
       {/* Main Page Layout Sections */}
       <main>
-        <HeroSection
-          onOpenVideo={() => setIsVideoModalOpen(true)}
-          onOpenCheckout={() => handleOpenCheckoutWithPlan(mainPlan, false)}
-        />
+        {sectionVisibility.hero !== false && (
+          <HeroSection
+            onOpenVideo={() => setIsVideoModalOpen(true)}
+            onOpenCheckout={() => handleOpenCheckoutWithPlan(mainPlan, false)}
+          />
+        )}
 
         {/* Founding Launch Special Campaign Section */}
-        <CampaignSection />
+        {sectionVisibility.campaign !== false && (
+          <CampaignSection />
+        )}
 
-        <PillarsSection />
+        {sectionVisibility.pillars !== false && (
+          <PillarsSection />
+        )}
 
-        <InstructorSection
-          onOpenCheckout={() => handleOpenCheckoutWithPlan(mainPlan, false)}
-        />
+        {sectionVisibility.curriculum !== false && (
+          <CurriculumExplorer
+            onOpenVideo={() => setIsVideoModalOpen(true)}
+          />
+        )}
 
-        <CurriculumExplorer
-          onOpenVideo={() => setIsVideoModalOpen(true)}
-        />
+        {sectionVisibility.outcomes !== false && (
+          <OutcomesSection />
+        )}
 
-        <OutcomesSection />
+        {sectionVisibility.instructor !== false && (
+          <InstructorSection
+            onOpenCheckout={() => handleOpenCheckoutWithPlan(mainPlan, false)}
+          />
+        )}
 
-        {showReviews && <Testimonials />}
+        {/* Previous Offline Campus & Institutional Trainings Marquee */}
+        {sectionVisibility.offlineTrainings !== false && (
+          <OfflineTrainingsMarquee
+            onOpenEnroll={() => handleOpenCheckoutWithPlan(mainPlan, false)}
+          />
+        )}
 
-        <PricingSection
-          onSelectPlan={handleOpenCheckoutWithPlan}
-          couponCode={couponCode}
-          setCouponCode={setCouponCode}
-          couponDiscount={couponDiscount}
-          setCouponDiscount={setCouponDiscount}
-        />
+        {/* Reviews Section: Disabled by default as requested. Can be enabled via Admin Portal Section Master Switches */}
+        {Boolean(sectionVisibility.reviews) && (
+          <Testimonials />
+        )}
 
-        <ContactSection />
+        {sectionVisibility.pricing !== false && (
+          <PricingSection
+            onSelectPlan={handleOpenCheckoutWithPlan}
+            couponCode={couponCode}
+            setCouponCode={setCouponCode}
+            couponDiscount={couponDiscount}
+            setCouponDiscount={setCouponDiscount}
+          />
+        )}
 
-        <FAQSection />
+        {sectionVisibility.contact !== false && (
+          <ContactSection />
+        )}
+
+        {sectionVisibility.faqs !== false && (
+          <FAQSection />
+        )}
       </main>
 
       <Footer

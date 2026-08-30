@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   lsSet, lsReset, resetAllData, defaults, isAdminAuthenticated,
   getCourseDetails, getVideo, getLevels,
-  getPlans, getAddons, getReviews, getFaqs, getContent, getCoupons
+  getPlans, getAddons, getReviews, getFaqs, getContent, getCoupons,
+  getOfflineTrainings, getCampaign, getContact, getSectionVisibility
 } from '../data/adminData.js';
 import {
   fetchCourseContentsFromSupabase,
@@ -35,15 +36,19 @@ import {
 
 export default function useAdminData() {
   const [data, setData] = useState(() => ({
-    courseDetails: getCourseDetails(),
-    video:         getVideo(),
-    levels:        getLevels(),
-    plans:         getPlans(),
-    addons:        getAddons(),
-    reviews:       getReviews(),
-    faqs:          getFaqs(),
-    content:       getContent(),
-    coupons:       getCoupons(),
+    courseDetails:    getCourseDetails(),
+    video:            getVideo(),
+    levels:           getLevels(),
+    plans:            getPlans(),
+    addons:           getAddons(),
+    reviews:          getReviews(),
+    faqs:             getFaqs(),
+    content:          getContent(),
+    coupons:          getCoupons(),
+    offlineTrainings: getOfflineTrainings(),
+    campaign:         getCampaign(),
+    contact:          getContact(),
+    sectionVisibility: getSectionVisibility(),
   }));
 
   const [enrollments, setEnrollments] = useState([]);
@@ -58,15 +63,19 @@ export default function useAdminData() {
   useEffect(() => {
     const handler = () => {
       setData({
-        courseDetails: getCourseDetails(),
-        video:         getVideo(),
-        levels:        getLevels(),
-        plans:         getPlans(),
-        addons:        getAddons(),
-        reviews:       getReviews(),
-        faqs:          getFaqs(),
-        content:       getContent(),
-        coupons:       getCoupons(),
+        courseDetails:    getCourseDetails(),
+        video:            getVideo(),
+        levels:           getLevels(),
+        plans:            getPlans(),
+        addons:           getAddons(),
+        reviews:          getReviews(),
+        faqs:             getFaqs(),
+        content:          getContent(),
+        coupons:          getCoupons(),
+        offlineTrainings: getOfflineTrainings(),
+        campaign:         getCampaign(),
+        contact:          getContact(),
+        sectionVisibility: getSectionVisibility(),
       });
     };
     window.addEventListener('th3ory_data_change', handler);
