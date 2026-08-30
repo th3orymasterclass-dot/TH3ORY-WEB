@@ -75,7 +75,7 @@ export default function HeroSection({ onOpenVideo, onOpenCheckout }) {
           {showUrgencyBanner && (
             <div className="inline-flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 px-5 py-3 rounded-2xl glass-card border border-[#7C5CFC]/30 text-xs sm:text-sm text-[#FAFAF7]/90 max-w-full shadow-lg">
               <span className="flex items-center gap-1.5 font-bold text-[#FFC857]">
-                <Rocket className="w-4 h-4 text-[#FFC857]" /> Launch Date: {courseDetails.urgency?.startDate || "November 1, 2026"}
+                <Rocket className="w-4 h-4 text-[#FFC857]" /> Launch Date: November 1, 2026
               </span>
               <span className="hidden sm:inline-block h-3 w-px bg-[#555A66]/40" />
               <span className="text-center sm:text-left text-xs">

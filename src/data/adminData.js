@@ -196,8 +196,19 @@ export const defaultCoupons = [
   }
 ];
 
+export function sanitizeCourseDetails(details) {
+  if (!details) return defaultCourseDetails;
+  const merged = { ...defaultCourseDetails, ...details };
+  merged.urgency = { ...defaultCourseDetails.urgency, ...(details.urgency || {}) };
+  if (!merged.urgency.startDate || merged.urgency.startDate.includes('September') || merged.urgency.startDate.includes('Sept')) {
+    merged.urgency.startDate = 'November 1, 2026';
+    merged.urgency.launchDate = LAUNCH_DATE_ISO;
+  }
+  return merged;
+}
+
 // ─── Live getters used by public components ────────────────────────────────────
-export const getCourseDetails     = () => lsGet('courseDetails', defaultCourseDetails);
+export const getCourseDetails     = () => sanitizeCourseDetails(lsGet('courseDetails', defaultCourseDetails));
 export const getVideo             = () => lsGet('video', defaultVideo);
 export const getLevels            = () => lsGet('levels', defaultLevels);
 export const getPlans             = () => lsGet('plans', defaultPlans);
@@ -354,7 +365,10 @@ export function useTh3oryLive() {
     fetchSiteSettingsFromSupabase().then(settings => {
       if (settings) {
         Object.keys(settings).forEach(key => {
-          try { localStorage.setItem(`th3ory_admin_${key}`, JSON.stringify(settings[key])); } catch {}
+          try {
+            const val = key === 'courseDetails' ? sanitizeCourseDetails(settings[key]) : settings[key];
+            localStorage.setItem(`th3ory_admin_${key}`, JSON.stringify(val));
+          } catch {}
         });
         handler();
       }
@@ -377,7 +391,8 @@ export function useTh3oryLive() {
     // Supabase Realtime Subscriptions for Public visitors & Admin
     const unsubSettings = subscribeToSiteSettings((key, val) => {
       try {
-        localStorage.setItem(`th3ory_admin_${key}`, JSON.stringify(val));
+        const sanitizedVal = key === 'courseDetails' ? sanitizeCourseDetails(val) : val;
+        localStorage.setItem(`th3ory_admin_${key}`, JSON.stringify(sanitizedVal));
         window.dispatchEvent(new CustomEvent('th3ory_data_change', { detail: { key } }));
       } catch {}
     });
