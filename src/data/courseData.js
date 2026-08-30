@@ -12,10 +12,11 @@ export const courseDetails = {
   language: "English (HD Captions + Transcripts)",
   badge: "👑 Flagship 30-Day Masterclass",
   urgency: {
-    cohortNumber: 15,
-    seatsLeft: 5,
-    startDate: "September 1, 2026",
-    daysRemaining: 3
+    cohortNumber: 1,
+    seatsLeft: 25,
+    startDate: "November 1, 2026",
+    launchDate: "2026-11-01T00:00:00+05:30",
+    daysRemaining: 63
   },
   stats: [
     { label: "Modules", value: "50", detail: "Daily 15–20 Min Lessons & Exercises" },

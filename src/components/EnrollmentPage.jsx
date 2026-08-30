@@ -5,7 +5,7 @@ import {
   Sparkles, Crown, Lock, ChevronDown, Globe, Loader2,
   CheckCircle2, Receipt, Download, ExternalLink, Zap
 } from 'lucide-react';
-import { getCourseDetails, getPlans, validateCoupon, incrementCouponUsage } from '../data/adminData';
+import { getCourseDetails, getPlans, validateCoupon, incrementCouponUsage, isEarlyBirdActive } from '../data/adminData';
 import { saveEnrollmentToSupabase, generateUniqueStudentCredentials } from '../services/supabaseService';
 import { sendEnrollmentEmail } from '../services/emailService';
 import { useFeatureFlags } from '../context/FeatureFlagContext';
@@ -848,6 +848,7 @@ export default function EnrollmentPage({ initialPlan, onBack }) {
   const isVipDiscountEnabled = isFeatureEnabled('ENABLE_VIP_DISCOUNT', true);
   const isSandboxEnabled = isFeatureEnabled('ENABLE_RAZORPAY_SANDBOX', false);
   const showUrgencyBanner = isFeatureEnabled('SHOW_LIMITED_SEATS_BANNER', true);
+  const isEarlyBird = isEarlyBirdActive();
 
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
@@ -857,10 +858,22 @@ export default function EnrollmentPage({ initialPlan, onBack }) {
     profession: '', dob: '',
     plan: initialPlan || null,
     isMonthly: false,
-    coupon: '',
+    coupon: isEarlyBird ? 'EARLYBIRD20' : '',
     gateway: 'razorpay',
     receipt: null,
   });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const urlCoupon = params.get('coupon') || params.get('aff') || params.get('code');
+      if (urlCoupon) {
+        setForm(f => ({ ...f, coupon: urlCoupon.toUpperCase() }));
+      } else if (isEarlyBird && !form.coupon) {
+        setForm(f => ({ ...f, coupon: 'EARLYBIRD20' }));
+      }
+    }
+  }, [isEarlyBird]);
 
   const topRef = useRef();
   const scrollTop = () => topRef.current?.scrollIntoView({ behavior: 'smooth' });

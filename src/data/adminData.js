@@ -86,7 +86,54 @@ import {
   subscribeToCourseContents,
 } from '../services/supabaseService.js';
 
+export const LAUNCH_DATE_ISO = '2026-11-01T00:00:00+05:30';
+
+/**
+ * Check if the Early Bird promotional period is currently active (before November 1, 2026)
+ */
+export function isEarlyBirdActive(targetDate = LAUNCH_DATE_ISO) {
+  try {
+    return new Date() < new Date(targetDate);
+  } catch {
+    return true;
+  }
+}
+
+/**
+ * Calculate the exact real-time countdown to the launch date
+ */
+export function getLaunchCountdown(targetDate = LAUNCH_DATE_ISO) {
+  try {
+    const diff = new Date(targetDate).getTime() - Date.now();
+    if (diff <= 0) {
+      return { days: 0, hours: 0, minutes: 0, seconds: 0, total: 0, isLaunched: true };
+    }
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const minutes = Math.floor((diff / (1000 * 60)) % 60);
+    const seconds = Math.floor((diff / 1000) % 60);
+    return { days, hours, minutes, seconds, total: diff, isLaunched: false };
+  } catch {
+    return { days: 63, hours: 0, minutes: 0, seconds: 0, total: 63 * 86400000, isLaunched: false };
+  }
+}
+
 export const defaultCoupons = [
+  {
+    id: 'c_earlybird20',
+    code: 'EARLYBIRD20',
+    affiliation: 'Early Bird Launch Special',
+    discountType: 'percentage',
+    discountValue: 20,
+    partnerContact: 'launch@th3ory.online',
+    description: 'Direct 20% Early Bird Launch Discount automatically applied until November 1, 2026',
+    validUntil: '2026-11-01T23:59:59',
+    maxUses: 5000,
+    usedCount: 0,
+    isActive: true,
+    targetPlan: 'all',
+    createdAt: '2026-08-30T00:00:00.000Z'
+  },
   {
     id: 'c_th3ory20',
     code: 'TH3ORY20',

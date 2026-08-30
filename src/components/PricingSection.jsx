@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Tag, Check, Crown, ShieldCheck, ArrowRight, Building2, Globe2, Users, Sparkles, Send, X, Flame } from 'lucide-react';
-import { useTh3oryLive } from '../data/adminData';
+import React, { useState, useEffect } from 'react';
+import { Tag, Check, Crown, ShieldCheck, ArrowRight, Building2, Globe2, Users, Sparkles, Send, X, Flame, Rocket } from 'lucide-react';
+import { useTh3oryLive, isEarlyBirdActive, validateCoupon } from '../data/adminData';
 import { useFeatureFlags } from '../context/FeatureFlagContext';
 import { saveEnterpriseQuoteToSupabase } from '../services/supabaseService';
 import { sendEnrollmentEmail } from '../services/emailService';
@@ -10,10 +10,24 @@ export default function PricingSection({ onSelectPlan, couponCode, setCouponCode
   const { isFeatureEnabled } = useFeatureFlags();
   const isVipDiscountEnabled = isFeatureEnabled('ENABLE_VIP_DISCOUNT', true);
   const showUrgencyBanner = isFeatureEnabled('SHOW_LIMITED_SEATS_BANNER', true);
+  const isEarlyBird = isEarlyBirdActive();
 
   const [currency, setCurrency] = useState('USD'); // 'USD' | 'INR'
-  const [couponInput, setCouponInput] = useState(couponCode || '');
-  const [couponMsg, setCouponMsg] = useState(couponDiscount > 0 ? `${couponCode} applied (${couponDiscount}% OFF)` : '');
+  const [couponInput, setCouponInput] = useState(() => couponCode || (isEarlyBird ? 'EARLYBIRD20' : ''));
+  const [couponMsg, setCouponMsg] = useState(() => {
+    if (couponDiscount > 0) return `${couponCode} applied (${couponDiscount}% OFF)`;
+    if (isEarlyBird) return '🎉 Early Bird 20% Discount directly applied (Valid until Nov 1 Launch)';
+    return '';
+  });
+
+  useEffect(() => {
+    if (isEarlyBird && couponDiscount === 0 && !couponCode) {
+      setCouponDiscount(20);
+      setCouponCode('EARLYBIRD20');
+      setCouponInput('EARLYBIRD20');
+      setCouponMsg('🎉 Early Bird 20% Discount directly applied (Valid until Nov 1 Launch)');
+    }
+  }, [isEarlyBird]);
 
   // Enterprise Quote Modal State
   const [showEnterpriseModal, setShowEnterpriseModal] = useState(false);
@@ -38,17 +52,24 @@ export default function PricingSection({ onSelectPlan, couponCode, setCouponCode
       setCouponMsg('❌ VIP discount coupons are currently disabled by administration.');
       return;
     }
-    if (clean === 'TH3ORY20' || clean === 'EARLYBIRD20' || clean === 'FUTURE10' || (clean === 'VIP50' && isVipDiscountEnabled)) {
-      const discountPct = clean === 'VIP50' ? 50 : ((clean === 'TH3ORY20' || clean === 'EARLYBIRD20') ? 20 : 10);
-      setCouponDiscount(discountPct);
+    const valRes = validateCoupon(clean, 'masterclass', 149, 11999);
+    if (valRes.isValid) {
+      setCouponDiscount(valRes.discountPercentage);
       setCouponCode(clean);
-      setCouponMsg(`🎉 Code ${clean} applied! You get ${discountPct}% OFF.`);
+      setCouponMsg(`🎉 Code ${clean} applied! You get ${valRes.discountPercentage}% OFF.`);
     } else if (clean === '') {
-      setCouponDiscount(0);
-      setCouponCode('');
-      setCouponMsg('');
+      if (isEarlyBird) {
+        setCouponDiscount(20);
+        setCouponCode('EARLYBIRD20');
+        setCouponInput('EARLYBIRD20');
+        setCouponMsg('🎉 Early Bird 20% Discount directly applied (Valid until Nov 1 Launch)');
+      } else {
+        setCouponDiscount(0);
+        setCouponCode('');
+        setCouponMsg('');
+      }
     } else {
-      setCouponMsg('❌ Invalid promo code. Try "TH3ORY20"');
+      setCouponMsg(valRes.message || '❌ Invalid promo code.');
     }
   };
 
@@ -193,9 +214,10 @@ export default function PricingSection({ onSelectPlan, couponCode, setCouponCode
                           </span>
                         </div>
                         {couponDiscount > 0 && (
-                          <span className="inline-block mt-1 text-xs font-bold text-emerald-400">
-                            {couponDiscount}% Promo Discount Applied
-                          </span>
+                          <div className="flex items-center gap-1.5 mt-1 text-xs font-bold text-emerald-400">
+                            <Sparkles className="w-3.5 h-3.5" />
+                            <span>{couponCode === 'EARLYBIRD20' ? '20% Early Bird Launch Discount Directly Applied' : `${couponDiscount}% Promo Discount Applied`}</span>
+                          </div>
                         )}
                       </div>
                     )}

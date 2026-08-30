@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Flame, ArrowRight, CheckCircle2, Crown } from 'lucide-react';
-import { useTh3oryLive } from '../data/adminData';
+import { Play, Flame, ArrowRight, CheckCircle2, Crown, Sparkles, Tag, Rocket } from 'lucide-react';
+import { useTh3oryLive, getLaunchCountdown, isEarlyBirdActive, LAUNCH_DATE_ISO } from '../data/adminData';
 import { useFeatureFlags } from '../context/FeatureFlagContext';
 
 export default function HeroSection({ onOpenVideo, onOpenCheckout }) {
@@ -9,22 +9,19 @@ export default function HeroSection({ onOpenVideo, onOpenCheckout }) {
   const showTrailerButton = isFeatureEnabled('ENABLE_TRAILER_VIDEO', false);
   const showUrgencyBanner = isFeatureEnabled('SHOW_LIMITED_SEATS_BANNER', true);
 
-  const [timeLeft, setTimeLeft] = useState({ hours: 14, minutes: 32, seconds: 45 });
+  const [countdown, setCountdown] = useState(() => getLaunchCountdown(LAUNCH_DATE_ISO));
+  const [isEarlyBird, setIsEarlyBird] = useState(() => isEarlyBirdActive(LAUNCH_DATE_ISO));
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
-        if (prev.minutes > 0) return { ...prev, minutes: 59, seconds: 59 };
-        if (prev.hours > 0) return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
-        return prev;
-      });
+      setCountdown(getLaunchCountdown(LAUNCH_DATE_ISO));
+      setIsEarlyBird(isEarlyBirdActive(LAUNCH_DATE_ISO));
     }, 1000);
     return () => clearInterval(timer);
   }, []);
 
   return (
-    <section className="relative pt-28 pb-20 overflow-hidden">
+    <section className="relative pt-36 sm:pt-40 pb-20 overflow-hidden">
       {/* Dynamic Intelligent Violet Radial Glow Behind Logo */}
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] sm:w-[900px] h-[500px] bg-[#7C5CFC]/20 rounded-full blur-[160px] pointer-events-none -z-10 animate-pulse-glow" />
       
@@ -74,20 +71,25 @@ export default function HeroSection({ onOpenVideo, onOpenCheckout }) {
             {courseDetails.subtitle}
           </p>
 
-          {/* Urgency Seat Counter */}
+          {/* Urgency Seat & Launch Countdown Counter */}
           {showUrgencyBanner && (
-            <div className="inline-flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 px-4 py-2.5 rounded-2xl glass-card border border-[#E9E4FF]/20 text-xs sm:text-sm text-[#FAFAF7]/80 max-w-full">
+            <div className="inline-flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 px-5 py-3 rounded-2xl glass-card border border-[#7C5CFC]/30 text-xs sm:text-sm text-[#FAFAF7]/90 max-w-full shadow-lg">
               <span className="flex items-center gap-1.5 font-bold text-[#FFC857]">
-                <Flame className="w-4 h-4 fill-[#FFC857]" /> Cohort #{courseDetails.urgency.cohortNumber}
+                <Rocket className="w-4 h-4 text-[#FFC857]" /> Launch Date: {courseDetails.urgency?.startDate || "November 1, 2026"}
               </span>
               <span className="hidden sm:inline-block h-3 w-px bg-[#555A66]/40" />
-              <span className="text-center sm:text-left">
-                <strong className="text-[#FFC857]">{courseDetails.urgency.seatsLeft} Seats Remaining</strong> • Registration closes in
+              <span className="text-center sm:text-left text-xs">
+                {isEarlyBird ? (
+                  <strong className="text-emerald-400">Early Bird 20% OFF Applied</strong>
+                ) : (
+                  <strong className="text-[#FFC857]">Enrollment Live</strong>
+                )} • Launching in
               </span>
-              <div className="flex items-center gap-1 font-mono font-bold text-[#FAFAF7] bg-[#15171A] px-2.5 py-1 rounded-lg border border-[#7C5CFC]/30">
-                <span>{String(timeLeft.hours).padStart(2, '0')}h</span>:
-                <span>{String(timeLeft.minutes).padStart(2, '0')}m</span>:
-                <span>{String(timeLeft.seconds).padStart(2, '0')}s</span>
+              <div className="flex items-center gap-1 font-mono font-bold text-[#FAFAF7] bg-[#15171A] px-3 py-1 rounded-lg border border-[#7C5CFC]/40 shadow-inner">
+                <span className="text-[#FFC857]">{String(countdown.days).padStart(2, '0')}d</span>:
+                <span>{String(countdown.hours).padStart(2, '0')}h</span>:
+                <span>{String(countdown.minutes).padStart(2, '0')}m</span>:
+                <span className="text-[#7C5CFC]">{String(countdown.seconds).padStart(2, '0')}s</span>
               </div>
             </div>
           )}
@@ -96,9 +98,9 @@ export default function HeroSection({ onOpenVideo, onOpenCheckout }) {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
             <button
               onClick={onOpenCheckout}
-              className="w-full sm:w-auto px-9 py-4 rounded-2xl bg-gradient-to-r from-[#7C5CFC] via-[#9277FF] to-[#7C5CFC] hover:from-[#6c4ce0] hover:to-[#5233d0] text-[#FAFAF7] font-extrabold text-base uppercase tracking-wider shadow-xl shadow-[#7C5CFC]/30 hover:shadow-[#7C5CFC]/50 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 group"
+              className="w-full sm:w-auto px-9 py-4 rounded-2xl bg-gradient-to-r from-[#7C5CFC] via-[#9277FF] to-[#7C5CFC] hover:from-[#6c4ce0] hover:to-[#5233d0] text-[#FAFAF7] font-extrabold text-base uppercase tracking-wider shadow-xl shadow-[#7C5CFC]/30 hover:shadow-[#7C5CFC]/50 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 group cursor-pointer"
             >
-              <span>START YOUR JOURNEY TODAY ($149 / ₹11,999)</span>
+              <span>{isEarlyBird ? 'ENROLL WITH EARLY BIRD ($119 / ₹9,599)' : 'START YOUR JOURNEY TODAY ($149 / ₹11,999)'}</span>
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldCheck, ShoppingBag, ArrowRight, LogIn, Sun, Moon, Building2, Award, Flame, Menu, X } from 'lucide-react';
 import Logo from './Logo';
+import LaunchCountdownBanner from './LaunchCountdownBanner';
 
 export default function Navbar({ onOpenCheckout, onOpenDashboard, isEnrolled }) {
   const [scrolled, setScrolled] = useState(false);
@@ -37,9 +38,12 @@ export default function Navbar({ onOpenCheckout, onOpenDashboard, isEnrolled }) 
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
-      scrolled ? 'glass-panel py-3 shadow-2xl border-b border-[#E9E4FF]/15' : 'bg-transparent py-4 sm:py-5'
+      scrolled ? 'glass-panel shadow-2xl border-b border-[#E9E4FF]/15' : 'bg-[#15171A]/90 backdrop-blur-md border-b border-[#E9E4FF]/10'
     }`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Top Real-Time Launch Countdown & Early Bird Banner */}
+      <LaunchCountdownBanner onOpenCheckout={onOpenCheckout} />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
         <div className="flex items-center justify-between">
           
           {/* Official TH3ORY Logo Brand */}

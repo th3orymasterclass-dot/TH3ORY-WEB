@@ -19,14 +19,15 @@ import Footer from './components/Footer';
 import SEOHead from './components/SEOHead';
 import StructuredData from './components/StructuredData';
 import DPCookieConsentBanner from './components/dpdp/DPCookieConsentBanner';
-import { useTh3oryLive } from './data/adminData';
+import { useTh3oryLive, isEarlyBirdActive } from './data/adminData';
 import { useFeatureFlags } from './context/FeatureFlagContext';
-import { Crown, ShoppingBag, ShieldAlert } from 'lucide-react';
+import { Crown, ShoppingBag, ShieldAlert, Sparkles, Rocket } from 'lucide-react';
 
 export default function App() {
   const { plans: pricingPlans, sectionVisibility = {} } = useTh3oryLive();
   const mainPlan = pricingPlans[0] || {};
   const { isFeatureEnabled } = useFeatureFlags();
+  const isEarlyBird = isEarlyBirdActive();
 
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -37,11 +38,11 @@ export default function App() {
   const showSeatsUrgency = isFeatureEnabled('SHOW_LIMITED_SEATS_BANNER', true);
   const isMaintenanceMode = isFeatureEnabled('MAINTENANCE_MODE', false);
 
-  // Checkout state
+  // Checkout state with auto-applied 20% Early Bird discount until launch date
   const [selectedPlan, setSelectedPlan] = useState(null); // null = use live plans[0]
   const [isMonthly, setIsMonthly] = useState(false);
-  const [couponCode, setCouponCode] = useState('');
-  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponCode, setCouponCode] = useState(() => isEarlyBird ? 'EARLYBIRD20' : '');
+  const [couponDiscount, setCouponDiscount] = useState(() => isEarlyBird ? 20 : 0);
 
   // Enrollment state
   const [isEnrolled, setIsEnrolled] = useState(false);
@@ -75,13 +76,17 @@ export default function App() {
     );
   }
 
+  // Calculate quick bar display price
+  const baseFullUSD = mainPlan.priceFull || 149;
+  const baseFullINR = mainPlan.priceINR || 11999;
+  const quickUSD = couponDiscount > 0 ? Math.round(baseFullUSD * (1 - couponDiscount / 100)) : baseFullUSD;
+  const quickINR = couponDiscount > 0 ? Math.round(baseFullINR * (1 - couponDiscount / 100)) : baseFullINR;
+
   return (
     <div className="min-h-screen bg-[#15171A] text-[#FAFAF7] relative selection:bg-[#7C5CFC] selection:text-[#FAFAF7]">
       {/* Dynamic SEO Metadata & Structured Data Schemas */}
       <SEOHead />
       <StructuredData />
-
-
 
       {/* Sticky Bottom Quick Enrollment Bar (Controlled via Vercel Feature Flag) */}
       {showQuickBar && (
@@ -92,18 +97,20 @@ export default function App() {
             </div>
             <div className="text-left">
               <div className="text-xs font-bold text-[#FAFAF7] flex items-center gap-1 font-brand">
-                TH3ORY Masterclass {showSeatsUrgency && <span className="text-[10px] text-[#FFC857] font-normal font-sans">• 5 Seats Left</span>}
+                TH3ORY Masterclass {showSeatsUrgency && <span className="text-[10px] text-[#FFC857] font-normal font-sans">• Launch Nov 1</span>}
               </div>
-              <div className="text-[11px] text-[#555A66]">Code 'TH3ORY20' for 20% OFF</div>
+              <div className="text-[11px] text-emerald-400 font-medium">
+                {isEarlyBird ? 'Early Bird 20% OFF Applied' : 'Code \'TH3ORY20\' for 20% OFF'}
+              </div>
             </div>
           </div>
 
           <button
             onClick={() => handleOpenCheckoutWithPlan(mainPlan, false)}
-            className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#6344E0] hover:from-[#6c4ce0] hover:to-[#5233d0] text-[#FAFAF7] font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-[#7C5CFC]/25 transition-all flex items-center gap-1.5 whitespace-nowrap"
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#6344E0] hover:from-[#6c4ce0] hover:to-[#5233d0] text-[#FAFAF7] font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-[#7C5CFC]/25 transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer"
           >
             <ShoppingBag className="w-3.5 h-3.5" />
-            <span>{isEnrolled ? 'View Receipt' : `Enroll ($${mainPlan.priceFull || 149} / ₹${mainPlan.priceINR?.toLocaleString('en-IN') || '11,999'})`}</span>
+            <span>{isEnrolled ? 'View Receipt' : `Enroll ($${quickUSD} / ₹${quickINR.toLocaleString('en-IN')})`}</span>
           </button>
         </div>
       )}

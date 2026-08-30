@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Lock, CreditCard, ShieldCheck, CheckCircle2, QrCode, Sparkles, Loader2, Download, ArrowRight, ArrowLeft, Mail, Tag, Percent, ShieldAlert, TestTube } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { validateCoupon, incrementCouponUsage, getAddons } from '../data/adminData';
+import { validateCoupon, incrementCouponUsage, getAddons, isEarlyBirdActive } from '../data/adminData';
 import { saveEnrollmentToSupabase, generateUniqueStudentCredentials } from '../services/supabaseService';
 import { sendEnrollmentEmail } from '../services/emailService';
 import { useFeatureFlags } from '../context/FeatureFlagContext';
@@ -23,6 +23,7 @@ export default function CheckoutModal({
   const isVipDiscountEnabled = isFeatureEnabled('ENABLE_VIP_DISCOUNT', true);
   const isSandboxEnabled = isFeatureEnabled('ENABLE_RAZORPAY_SANDBOX', false);
   const showUrgencyBanner = isFeatureEnabled('SHOW_LIMITED_SEATS_BANNER', true);
+  const isEarlyBird = isEarlyBirdActive();
 
   // Live add-ons from admin (reactive to admin changes)
   const courseAddons = getAddons();
@@ -44,7 +45,7 @@ export default function CheckoutModal({
 
   const [paymentMethod, setPaymentMethod] = useState('razorpay'); // 'razorpay' | 'card' | 'upi'
   const [selectedAddons, setSelectedAddons] = useState([]);
-  const [couponCodeInput, setCouponCodeInput] = useState(couponCode || '');
+  const [couponCodeInput, setCouponCodeInput] = useState(() => couponCode || (isEarlyBird ? 'EARLYBIRD20' : ''));
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingMsg, setProcessingMsg] = useState('Initializing secure Razorpay payment gateway...');
   const [orderCompleted, setOrderCompleted] = useState(false);
@@ -53,16 +54,18 @@ export default function CheckoutModal({
   const [acceptedModalPrivacy, setAcceptedModalPrivacy] = useState(false);
   const [modalPrivacyErr, setModalPrivacyErr] = useState(false);
 
-  // Auto-detect coupon from URL parameter
+  // Auto-detect coupon from URL parameter or default early bird
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const urlCoupon = params.get('coupon') || params.get('aff') || params.get('code');
-      if (urlCoupon && !couponCodeInput) {
+      if (urlCoupon) {
         setCouponCodeInput(urlCoupon.toUpperCase());
+      } else if (!couponCodeInput && isEarlyBird) {
+        setCouponCodeInput('EARLYBIRD20');
       }
     }
-  }, []);
+  }, [isEarlyBird]);
 
   // Base Prices
   const basePriceUSD = isMonthly ? (selectedPlan.priceMonthly || 55) : (selectedPlan.priceFull || 149);
