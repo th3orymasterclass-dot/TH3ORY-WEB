@@ -1,8 +1,8 @@
 import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
+import { safeCompare } from './_lib/security.js';
 
 export default async function handler(req, res) {
-  // Only allow POST requests for webhooks
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -29,7 +29,8 @@ export default async function handler(req, res) {
       .update(bodyStr)
       .digest('hex');
 
-    if (expectedSignature !== razorpaySignature) {
+    // Constant-time comparison
+    if (!safeCompare(expectedSignature, String(razorpaySignature).trim())) {
       console.error('[Razorpay Webhook Error]: Invalid webhook signature');
       return res.status(400).json({ error: 'Invalid webhook signature' });
     }
@@ -39,9 +40,9 @@ export default async function handler(req, res) {
     const paymentEntity = payload.payload?.payment?.entity;
     const orderEntity = payload.payload?.order?.entity;
 
-    console.log(`[Razorpay Webhook Event Received]: ${event}`);
+    console.log(`[Razorpay Webhook Event Verified]: ${event}`);
 
-    // Initialize Supabase Admin client if environment variables are present
+    // Initialize Supabase Admin client
     const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
@@ -58,52 +59,44 @@ export default async function handler(req, res) {
         const amount = paymentEntity?.amount ? paymentEntity.amount / 100 : 0;
         const notes = paymentEntity?.notes || orderEntity?.notes || {};
 
-        console.log(`[Webhook Paid Order]: Order ${orderId} for ${email} ($${amount})`);
+        if (supabase && orderId && email) {
+          const cleanEmail = email.trim().toLowerCase();
+          const studentName = notes.name || notes.studentName || cleanEmail.split('@')[0];
+          
+          // Cryptographically secure random enrollment code
+          const secureCode = `TH3ORY-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
 
-        if (supabase && orderId) {
-          // Check if enrollment already exists for this order
+          // Atomic insert with idempotency check
           const { data: existing } = await supabase
             .from('enrollments')
             .select('id')
             .eq('order_id', orderId)
-            .single();
+            .maybeSingle();
 
-          if (!existing && email) {
-            // Create enrollment automatically from webhook
-            const studentName = notes.name || notes.studentName || email.split('@')[0];
-            const enrollmentCode = notes.enrollmentCode || `TH3ORY${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-
+          if (!existing) {
             await supabase.from('enrollments').insert([
               {
                 order_id: orderId,
-                email: email,
+                email: cleanEmail,
                 name: studentName,
                 amount_paid: amount,
                 currency: paymentEntity?.currency || 'INR',
                 gateway: 'razorpay',
-                enrollment_code: enrollmentCode,
+                enrollment_code: secureCode,
                 plan_name: notes.planName || 'TH3ORY Masterclass',
                 coupon_code: notes.couponCode || 'NONE',
               },
             ]);
 
-            // Create student account if missing
-            const { data: existingAccount } = await supabase
-              .from('student_accounts')
-              .select('id')
-              .eq('email', email)
-              .single();
-
-            if (!existingAccount) {
-              await supabase.from('student_accounts').insert([
-                {
-                  email: email,
-                  name: studentName,
-                  enrollment_code: enrollmentCode,
-                  plan_name: notes.planName || 'TH3ORY Masterclass',
-                },
-              ]);
-            }
+            // Create or update student account
+            await supabase.from('student_accounts').upsert([
+              {
+                email: cleanEmail,
+                name: studentName,
+                enrollment_code: secureCode,
+                plan_name: notes.planName || 'TH3ORY Masterclass',
+              },
+            ], { onConflict: 'email' });
           }
         }
         break;
@@ -123,12 +116,13 @@ export default async function handler(req, res) {
       }
 
       default:
-        console.log(`[Webhook Ignored Event]: ${event}`);
+        // Ignore unhandled events
+        break;
     }
 
     return res.status(200).json({ success: true, eventReceived: event });
   } catch (error) {
-    console.error('[Razorpay Webhook Exception]:', error);
-    return res.status(500).json({ error: error.message || 'Webhook processing failed' });
+    console.error('[Razorpay Webhook Exception]:', error.message);
+    return res.status(500).json({ error: 'Webhook processing error' });
   }
 }

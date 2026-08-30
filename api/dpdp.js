@@ -1,17 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
+import { requireStudentAuth, requireAdminAuth, extractToken, verifyJwt } from './_lib/auth.js';
+import { setStrictCorsHeaders, sanitizeForCsv, escapeHtml, getClientIp, checkRateLimit } from './_lib/security.js';
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-Type, Date, Authorization'
-  );
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  if (setStrictCorsHeaders(req, res)) return;
 
   const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://qngzfcpnjpabaornddau.supabase.co';
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
@@ -22,7 +14,8 @@ export default async function handler(req, res) {
   }
 
   const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
-  const action = (req.query?.action || body?.action || 'consent').toLowerCase();
+  const action = String(req.query?.action || body?.action || 'consent').toLowerCase();
+  const clientIp = getClientIp(req);
 
   try {
     // -------------------------------------------------------------
@@ -31,45 +24,47 @@ export default async function handler(req, res) {
     if (action === 'consent') {
       if (req.method === 'POST') {
         const { email, consents = {}, source = 'api', userId = null, metadata = {} } = body;
-        if (!email) return res.status(400).json({ success: false, error: 'Missing email' });
+        if (!email) return res.status(400).json({ success: false, error: 'Email is required' });
 
-        const clientIp = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '127.0.0.1';
-        const userAgent = req.headers['user-agent'] || 'Unknown';
+        const cleanEmail = String(email).trim().toLowerCase().slice(0, 254);
+        const userAgent = String(req.headers['user-agent'] || 'Unknown').slice(0, 255);
         const timestamp = new Date().toISOString();
 
         const records = Object.entries(consents).map(([type, isGranted]) => ({
-          email: email.trim().toLowerCase(),
+          email: cleanEmail,
           user_id: userId,
-          consent_type: type,
+          consent_type: String(type).slice(0, 50),
           status: isGranted ? 'granted' : 'declined',
           version: '1.0',
           privacy_policy_version: '2026.1',
           language: 'en',
-          source: source,
+          source: String(source).slice(0, 50),
           purpose: `Consent for ${type}`,
-          ip_address: String(clientIp).split(',')[0].trim(),
+          ip_address: clientIp,
           user_agent: userAgent,
           metadata: { ...metadata, serverTimestamp: timestamp },
           granted_at: isGranted ? timestamp : null,
           withdrawn_at: isGranted ? null : timestamp
         }));
 
-        if (supabase) {
+        if (supabase && records.length > 0) {
           await supabase.from('dpdp_consent_records').insert(records);
         }
 
         return res.status(200).json({ success: true, count: records.length });
       }
 
-      // GET
+      // GET: Get consent status
       const { email } = req.query || {};
-      if (!email) return res.status(400).json({ success: false, error: 'Email required' });
+      if (!email) return res.status(400).json({ success: false, error: 'Email parameter required' });
+
+      const cleanEmail = String(email).trim().toLowerCase();
 
       if (supabase) {
         const { data, error } = await supabase
           .from('dpdp_consent_records')
           .select('*')
-          .eq('email', email.trim().toLowerCase())
+          .eq('email', cleanEmail)
           .order('created_at', { ascending: false });
         if (error) throw error;
         return res.status(200).json({ success: true, records: data || [] });
@@ -82,10 +77,19 @@ export default async function handler(req, res) {
     // -------------------------------------------------------------
     if (action === 'dsr') {
       if (req.method === 'POST') {
+        const rateCheck = checkRateLimit(`dsr_post_${clientIp}`, 10, 60 * 60 * 1000);
+        if (!rateCheck.allowed) {
+          return res.status(429).json({ success: false, error: 'Too many DSR requests submitted' });
+        }
+
         const { email, name, requestType, payload = {} } = body;
         if (!email || !name || !requestType) {
           return res.status(400).json({ success: false, error: 'Missing required fields: email, name, requestType' });
         }
+
+        const cleanEmail = String(email).trim().toLowerCase().slice(0, 254);
+        const cleanName = String(name).trim().slice(0, 100);
+        const cleanType = String(requestType).trim().slice(0, 50);
 
         const requestId = `DSR-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
         const now = new Date();
@@ -93,11 +97,11 @@ export default async function handler(req, res) {
 
         const requestRecord = {
           request_id: requestId,
-          email: email.trim().toLowerCase(),
-          data_principal_name: name.trim(),
-          request_type: requestType,
+          email: cleanEmail,
+          data_principal_name: cleanName,
+          request_type: cleanType,
           status: 'received',
-          priority: requestType === 'erasure' ? 'urgent' : 'normal',
+          priority: cleanType === 'erasure' ? 'urgent' : 'normal',
           is_verified: true,
           verified_at: now.toISOString(),
           request_payload: payload,
@@ -112,12 +116,23 @@ export default async function handler(req, res) {
         return res.status(200).json({ success: true, requestId, data: requestRecord });
       }
 
-      // GET
+      // GET: Query user requests (requires auth or requestId check)
       const { email, requestId } = req.query || {};
+      const token = extractToken(req);
+      const authUser = token ? verifyJwt(token) : null;
+
       if (supabase) {
         let q = supabase.from('dpdp_user_requests').select('*');
-        if (requestId) q = q.eq('request_id', requestId.trim().toUpperCase());
-        else if (email) q = q.eq('email', email.trim().toLowerCase()).order('created_at', { ascending: false });
+        if (requestId) {
+          q = q.eq('request_id', String(requestId).trim().toUpperCase());
+        } else if (email) {
+          const cleanEmail = String(email).trim().toLowerCase();
+          // If not admin and not the matching student, reject
+          if (!authUser || (authUser.role !== 'admin' && authUser.email !== cleanEmail)) {
+            return res.status(401).json({ success: false, error: 'Authentication required to view personal requests' });
+          }
+          q = q.eq('email', cleanEmail).order('created_at', { ascending: false });
+        }
         const { data, error } = await q;
         if (error) throw error;
         return res.status(200).json({ success: true, requests: data || [] });
@@ -126,19 +141,23 @@ export default async function handler(req, res) {
     }
 
     // -------------------------------------------------------------
-    // ACTION 3: EXPORT (Structured Data Portability JSON/CSV)
+    // ACTION 3: EXPORT (Protected Structured Data Portability)
     // -------------------------------------------------------------
     if (action === 'export') {
-      const email = (req.query?.email || body?.email || '').trim().toLowerCase();
-      const format = (req.query?.format || body?.format || 'json').toLowerCase();
+      const email = String(req.query?.email || body?.email || '').trim().toLowerCase();
+      const format = String(req.query?.format || body?.format || 'json').toLowerCase();
 
       if (!email) return res.status(400).json({ success: false, error: 'Email parameter required.' });
+
+      // Enforce Authentication on Data Portability Export
+      const authUser = requireStudentAuth(req, res, email);
+      if (!authUser) return; // 401/403 sent
 
       let accountData = [], enrollmentData = [], progressData = [], queriesData = [], consentData = [], certData = [];
 
       if (supabase) {
         const [accRes, enrRes, progRes, qRes, conRes, certRes] = await Promise.all([
-          supabase.from('student_accounts').select('id, email, name, phone, profession, bio, country, dob, enrollment_code, plan_name, created_at, last_login').eq('email', email),
+          supabase.from('student_accounts').select('id, email, name, phone, profession, bio, country, dob, plan_name, created_at, last_login').eq('email', email),
           supabase.from('enrollments').select('id, order_id, name, email, phone, city, country, plan_name, amount_paid, currency, gateway, created_at').eq('email', email),
           supabase.from('user_progress').select('lesson_id, completed, note, bookmarked, updated_at').eq('email', email),
           supabase.from('queries').select('id, subject, type, message, status, reply, created_at').eq('student_email', email),
@@ -171,9 +190,18 @@ export default async function handler(req, res) {
 
       if (format === 'csv') {
         let csv = 'Domain,Field,Value,Timestamp\n';
-        accountData.forEach(a => { csv += `Profile,Name,"${a.name}",${a.created_at}\nProfile,Email,"${a.email}",${a.created_at}\n`; });
-        enrollmentData.forEach(e => { csv += `Order,${e.order_id},"${e.plan_name}",${e.created_at}\n`; });
-        progressData.forEach(p => { csv += `Progress,${p.lesson_id},"Completed: ${p.completed}",${p.updated_at}\n`; });
+        accountData.forEach(a => {
+          csv += `Profile,Name,"${sanitizeForCsv(a.name)}",${a.created_at || ''}\n`;
+          csv += `Profile,Email,"${sanitizeForCsv(a.email)}",${a.created_at || ''}\n`;
+          csv += `Profile,Phone,"${sanitizeForCsv(a.phone)}",${a.created_at || ''}\n`;
+        });
+        enrollmentData.forEach(e => {
+          csv += `Order,${sanitizeForCsv(e.order_id)},"${sanitizeForCsv(e.plan_name)}",${e.created_at || ''}\n`;
+        });
+        progressData.forEach(p => {
+          csv += `Progress,${sanitizeForCsv(p.lesson_id)},"Completed: ${p.completed}",${p.updated_at || ''}\n`;
+        });
+
         res.setHeader('Content-Type', 'text/csv');
         res.setHeader('Content-Disposition', `attachment; filename=th3ory_dpdp_export_${email.replace(/[^a-zA-Z0-9]/g, '_')}.csv`);
         return res.status(200).send(csv);
@@ -189,6 +217,11 @@ export default async function handler(req, res) {
     // -------------------------------------------------------------
     if (action === 'grievance') {
       if (req.method === 'POST') {
+        const rateCheck = checkRateLimit(`grievance_${clientIp}`, 5, 60 * 60 * 1000);
+        if (!rateCheck.allowed) {
+          return res.status(429).json({ success: false, error: 'Too many grievance submissions' });
+        }
+
         const { name, email, phone = '', category, subject, description } = body;
         if (!name || !email || !category || !subject || !description) {
           return res.status(400).json({ success: false, error: 'All fields are required.' });
@@ -200,12 +233,12 @@ export default async function handler(req, res) {
 
         const grievanceRecord = {
           ticket_id: ticketId,
-          email: email.trim().toLowerCase(),
-          data_principal_name: name.trim(),
-          phone: phone.trim(),
-          category: category,
-          subject: subject.trim(),
-          description: description.trim(),
+          email: String(email).trim().toLowerCase().slice(0, 254),
+          data_principal_name: String(name).trim().slice(0, 100),
+          phone: String(phone).trim().slice(0, 25),
+          category: String(category).slice(0, 50),
+          subject: String(subject).trim().slice(0, 200),
+          description: String(description).trim().slice(0, 2000),
           status: 'open',
           priority: category === 'security_concern' ? 'critical' : 'high',
           assigned_to: 'Data Protection Officer',
@@ -223,10 +256,20 @@ export default async function handler(req, res) {
 
       // GET
       const { ticketId, email } = req.query || {};
+      const token = extractToken(req);
+      const authUser = token ? verifyJwt(token) : null;
+
       if (supabase) {
         let q = supabase.from('dpdp_grievances').select('*');
-        if (ticketId) q = q.eq('ticket_id', ticketId.trim().toUpperCase());
-        else if (email) q = q.eq('email', email.trim().toLowerCase()).order('created_at', { ascending: false });
+        if (ticketId) {
+          q = q.eq('ticket_id', String(ticketId).trim().toUpperCase());
+        } else if (email) {
+          const cleanEmail = String(email).trim().toLowerCase();
+          if (!authUser || (authUser.role !== 'admin' && authUser.email !== cleanEmail)) {
+            return res.status(401).json({ success: false, error: 'Authentication required to view grievances' });
+          }
+          q = q.eq('email', cleanEmail).order('created_at', { ascending: false });
+        }
         const { data, error } = await q;
         if (error) throw error;
         return res.status(200).json({ success: true, grievances: data || [] });
@@ -237,6 +280,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ success: false, error: `Invalid action: ${action}` });
 
   } catch (err) {
-    return res.status(500).json({ success: false, error: err.message });
+    console.error('[DPDP API Error]:', err.message);
+    return res.status(500).json({ success: false, error: 'DPDP service error' });
   }
 }

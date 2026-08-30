@@ -1,4 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
+import { requireAdminAuth } from './_lib/auth.js';
+import { setStrictCorsHeaders, getClientIp } from './_lib/security.js';
 
 // Default system feature flags with default states and descriptions
 const DEFAULT_FEATURE_FLAGS = {
@@ -53,18 +55,7 @@ const DEFAULT_FEATURE_FLAGS = {
 };
 
 export default async function handler(req, res) {
-  // Set CORS headers
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-Type, Date, Authorization'
-  );
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  if (setStrictCorsHeaders(req, res)) return;
 
   const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
@@ -74,7 +65,7 @@ export default async function handler(req, res) {
     supabase = createClient(supabaseUrl, supabaseKey);
   }
 
-  // GET: Read feature flags
+  // GET: Public read for feature flags
   if (req.method === 'GET') {
     try {
       let activeFlags = { ...DEFAULT_FEATURE_FLAGS };
@@ -93,7 +84,7 @@ export default async function handler(req, res) {
           .from('site_settings')
           .select('setting_value')
           .eq('setting_key', 'feature_flags')
-          .single();
+          .maybeSingle();
 
         if (dbSetting && dbSetting.setting_value) {
           const dbFlags = dbSetting.setting_value;
@@ -109,22 +100,24 @@ export default async function handler(req, res) {
 
       return res.status(200).json({
         success: true,
-        source: supabase ? 'Vercel Serverless + Supabase DB' : 'Vercel Serverless Environment',
         flags: activeFlags,
         timestamp: new Date().toISOString()
       });
     } catch (error) {
-      console.error('[Feature Flags GET Error]:', error);
+      console.error('[Feature Flags GET Error]:', error.message);
       return res.status(500).json({
         success: false,
-        error: error.message || 'Failed to fetch feature flags',
+        error: 'Failed to fetch feature flags',
         flags: DEFAULT_FEATURE_FLAGS
       });
     }
   }
 
-  // POST: Edit/Control feature flags (Admin authenticated)
+  // POST: Edit feature flags (Strictly Admin Authenticated)
   if (req.method === 'POST') {
+    const adminUser = requireAdminAuth(req, res);
+    if (!adminUser) return; // 401/403 sent
+
     try {
       const bodyObj = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
       const { flags } = bodyObj;
@@ -150,12 +143,12 @@ export default async function handler(req, res) {
 
       return res.status(200).json({
         success: true,
-        message: 'Feature flags updated and synchronized successfully',
+        message: 'Feature flags updated successfully by authorized administrator',
         flags
       });
     } catch (error) {
-      console.error('[Feature Flags POST Error]:', error);
-      return res.status(500).json({ success: false, error: error.message || 'Failed to update feature flags' });
+      console.error('[Feature Flags POST Error]:', error.message);
+      return res.status(500).json({ success: false, error: 'Failed to update feature flags' });
     }
   }
 

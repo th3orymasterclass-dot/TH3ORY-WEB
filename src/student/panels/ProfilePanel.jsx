@@ -105,10 +105,16 @@ export default function ProfilePanel({ profile, onProfileUpdate }) {
         // Upload to Vercel Blob via /api/upload-blob endpoint
         const cleanEmail = (form.email || 'student').replace(/[^a-zA-Z0-9]/g, '_');
         const blobFilename = `avatars/avatar_${cleanEmail}_${Date.now()}.jpg`;
+        const studentToken = typeof window !== 'undefined'
+          ? (sessionStorage.getItem('th3ory_student_token') || localStorage.getItem('th3ory_student_token') || sessionStorage.getItem('th3ory_admin_token') || localStorage.getItem('th3ory_admin_token'))
+          : '';
 
         const res = await fetch('/api/upload-blob', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(studentToken ? { 'Authorization': `Bearer ${studentToken}` } : {})
+          },
           body: JSON.stringify({
             filename: blobFilename,
             content: base64Content,

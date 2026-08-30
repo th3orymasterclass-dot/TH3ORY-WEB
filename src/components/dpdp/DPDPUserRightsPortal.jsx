@@ -127,7 +127,11 @@ export default function DPDPUserRightsPortal({ userEmail = '', onBack }) {
 
     setExportLoading(true);
     try {
-      window.open(`/api/dpdp-export?email=${encodeURIComponent(currentEmail)}&format=${format}`, '_blank');
+      const token = typeof window !== 'undefined'
+        ? (sessionStorage.getItem('th3ory_student_token') || localStorage.getItem('th3ory_student_token') || sessionStorage.getItem('th3ory_admin_token') || localStorage.getItem('th3ory_admin_token') || '')
+        : '';
+      const tokenParam = token ? `&token=${encodeURIComponent(token)}` : '';
+      window.open(`/api/dpdp-export?email=${encodeURIComponent(currentEmail)}&format=${format}${tokenParam}`, '_blank');
     } catch (err) {
       alert('Failed to initiate download: ' + err.message);
     } finally {

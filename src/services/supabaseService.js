@@ -390,9 +390,15 @@ export async function updateStudentProfileInSupabase(profileData) {
 
   // 2. Try Serverless API update endpoint first
   try {
+    const studentToken = typeof window !== 'undefined'
+      ? (sessionStorage.getItem('th3ory_student_token') || localStorage.getItem('th3ory_student_token') || sessionStorage.getItem('th3ory_admin_token') || localStorage.getItem('th3ory_admin_token'))
+      : '';
     const res = await fetch('/api/update-student-profile', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(studentToken ? { 'Authorization': `Bearer ${studentToken}` } : {})
+      },
       body: JSON.stringify({ profile: updatedProfile })
     });
     if (res.ok) {

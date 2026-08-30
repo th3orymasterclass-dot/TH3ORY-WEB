@@ -1,37 +1,33 @@
 import { createClient } from '@supabase/supabase-js';
+import { setStrictCorsHeaders, checkRateLimit, getClientIp } from './_lib/security.js';
 
-const SAMPLE_COUPONS = {
+const STATIC_FALLBACK_COUPONS = {
   'TH3ORY20': { discountPercentage: 20, active: true },
   'TH3ORY2026': { discountPercentage: 20, active: true },
   'VIP50': { discountPercentage: 50, active: true }
 };
 
 export default async function handler(req, res) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-Type, Date'
-  );
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  if (setStrictCorsHeaders(req, res)) return;
 
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, error: 'Method Not Allowed' });
+  }
+
+  const clientIp = getClientIp(req);
+  const rateCheck = checkRateLimit(`coupon_validate_${clientIp}`, 15, 60 * 1000); // 15 checks per minute
+  if (!rateCheck.allowed) {
+    return res.status(429).json({ success: false, error: 'Too many coupon validation attempts. Please slow down.' });
   }
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
     const { couponCode } = body;
 
-    const code = (couponCode || '').trim().toUpperCase();
+    const code = String(couponCode || '').trim().toUpperCase().slice(0, 30);
 
-    if (!code) {
-      return res.status(400).json({ success: false, error: 'Coupon code is required' });
+    if (!code || !/^[A-Z0-9_-]+$/.test(code)) {
+      return res.status(400).json({ success: false, error: 'Valid coupon code is required' });
     }
 
     // Check Vercel Feature Flag for VIP Discounts
@@ -40,7 +36,7 @@ export default async function handler(req, res) {
     if ((code === 'VIP50' || code.startsWith('VIP')) && isVipDisabled) {
       return res.status(400).json({
         success: false,
-        error: 'VIP discount coupons are currently disabled by administration.'
+        error: 'VIP discount coupons are currently paused by administration.'
       });
     }
 
@@ -55,7 +51,7 @@ export default async function handler(req, res) {
         .select('*')
         .eq('code', code)
         .eq('active', true)
-        .single();
+        .maybeSingle();
 
       if (dbCoupon) {
         return res.status(200).json({
@@ -69,8 +65,8 @@ export default async function handler(req, res) {
       }
     }
 
-    // Fallback static check
-    const matched = SAMPLE_COUPONS[code];
+    // Static fallback check
+    const matched = STATIC_FALLBACK_COUPONS[code];
     if (matched && matched.active) {
       return res.status(200).json({
         success: true,
@@ -84,10 +80,10 @@ export default async function handler(req, res) {
 
     return res.status(404).json({
       success: false,
-      error: `Invalid or expired coupon code: '${code}'`
+      error: `Invalid or expired coupon code`
     });
   } catch (error) {
-    console.error('[Validate Coupon API Error]:', error);
-    return res.status(500).json({ success: false, error: error.message || 'Coupon validation failed' });
+    console.error('[Validate Coupon API Error]:', error.message);
+    return res.status(500).json({ success: false, error: 'Coupon validation service error' });
   }
 }

@@ -38,6 +38,10 @@ export default function StudentLogin({ onAuthenticated, expiredNotice = false })
       if (res.ok) {
         const data = await res.json();
         if (data.success && data.student) {
+          if (data.token) {
+            sessionStorage.setItem('th3ory_student_token', data.token);
+            localStorage.setItem('th3ory_student_token', data.token);
+          }
           const profile = {
             name: data.student.name || cleanEmail.split('@')[0],
             email: data.student.email || cleanEmail,

@@ -129,10 +129,14 @@ export async function sendEnrollmentEmail(receipt) {
  */
 export async function sendAmbassadorApprovalEmail(ambassadorData) {
   try {
+    const adminToken = typeof window !== 'undefined' ? (sessionStorage.getItem('th3ory_admin_token') || localStorage.getItem('th3ory_admin_token')) : '';
     // 1. Try Vercel Serverless API endpoint
     const response = await fetch('/api/send-email', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(adminToken ? { 'Authorization': `Bearer ${adminToken}` } : {})
+      },
       body: JSON.stringify({
         type: 'AMBASSADOR_APPROVAL',
         name: ambassadorData.name,
@@ -222,9 +226,13 @@ export async function sendAmbassadorApprovalEmail(ambassadorData) {
  */
 export async function sendAmbassadorInterviewInviteEmail(interviewData) {
   try {
+    const adminToken = typeof window !== 'undefined' ? (sessionStorage.getItem('th3ory_admin_token') || localStorage.getItem('th3ory_admin_token')) : '';
     const response = await fetch('/api/send-email', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(adminToken ? { 'Authorization': `Bearer ${adminToken}` } : {})
+      },
       body: JSON.stringify({
         type: 'AMBASSADOR_INTERVIEW_INVITE',
         name: interviewData.name,
@@ -317,10 +325,14 @@ export async function sendAmbassadorInterviewInviteEmail(interviewData) {
  */
 export async function sendPortalBroadcastEmail(payload) {
   try {
+    const adminToken = typeof window !== 'undefined' ? (sessionStorage.getItem('th3ory_admin_token') || localStorage.getItem('th3ory_admin_token')) : '';
     // 1. Try Vercel Serverless API endpoint
     const response = await fetch('/api/send-email', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(adminToken ? { 'Authorization': `Bearer ${adminToken}` } : {})
+      },
       body: JSON.stringify({
         type: 'BROADCAST_EMAIL',
         to: payload.recipientEmails || payload.to || payload.email,

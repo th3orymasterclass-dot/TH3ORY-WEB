@@ -1,21 +1,17 @@
 import crypto from 'crypto';
+import { safeCompare, setStrictCorsHeaders, checkRateLimit, getClientIp } from './_lib/security.js';
 
 export default async function handler(req, res) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  );
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  if (setStrictCorsHeaders(req, res)) return;
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ success: false, error: 'Method not allowed' });
+  }
+
+  const clientIp = getClientIp(req);
+  const rateCheck = checkRateLimit(`verify_sig_${clientIp}`, 30, 5 * 60 * 1000);
+  if (!rateCheck.allowed) {
+    return res.status(429).json({ success: false, error: 'Too many verification attempts' });
   }
 
   const razorpaySecret = process.env.RAZORPAY_KEY_SECRET;
@@ -33,13 +29,14 @@ export default async function handler(req, res) {
       return res.status(400).json({ success: false, error: 'Missing required Razorpay parameters' });
     }
 
-    const body = `${razorpay_order_id}|${razorpay_payment_id}`;
+    const payload = `${String(razorpay_order_id).trim()}|${String(razorpay_payment_id).trim()}`;
     const expectedSignature = crypto
       .createHmac('sha256', razorpaySecret)
-      .update(body.toString())
+      .update(payload)
       .digest('hex');
 
-    const isValid = expectedSignature === razorpay_signature;
+    // Constant-time HMAC comparison
+    const isValid = safeCompare(expectedSignature, String(razorpay_signature).trim());
 
     if (isValid) {
       return res.status(200).json({
@@ -55,10 +52,10 @@ export default async function handler(req, res) {
       });
     }
   } catch (error) {
-    console.error('[Razorpay Signature Error]:', error);
+    console.error('[Razorpay Signature Error]:', error.message);
     return res.status(500).json({
       success: false,
-      error: error.message || 'Signature verification failed',
+      error: 'Signature verification service error',
     });
   }
 }

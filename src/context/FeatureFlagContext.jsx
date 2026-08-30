@@ -85,9 +85,13 @@ export function FeatureFlagProvider({ children }) {
     } catch {}
 
     try {
+      const adminToken = typeof window !== 'undefined' ? (sessionStorage.getItem('th3ory_admin_token') || localStorage.getItem('th3ory_admin_token')) : '';
       const res = await fetch('/api/feature-flags', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(adminToken ? { 'Authorization': `Bearer ${adminToken}` } : {})
+        },
         body: JSON.stringify({ flags: targetFlags })
       });
       if (res.ok) {
