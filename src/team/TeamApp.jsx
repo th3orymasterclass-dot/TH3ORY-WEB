@@ -93,6 +93,7 @@ export default function TeamApp({ onLogout }) {
     contactInquiries,
     newsletterSubscribers,
     newsletterBroadcasts,
+    saveBroadcast,
     updateQuoteStatus,
     updateInquiryStatus,
     updateSubscriberStatus,
@@ -144,6 +145,7 @@ export default function TeamApp({ onLogout }) {
           <NewsletterPanel
             subscribers={newsletterSubscribers}
             broadcasts={newsletterBroadcasts}
+            saveBroadcast={saveBroadcast}
             updateSubscriberStatus={updateSubscriberStatus}
             deleteSubscriber={deleteSubscriber}
             save={save}
