@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.2" baseProfile="tiny-ps" viewBox="0 0 512 512" width="512" height="512">
+  <title>TH3ORY Masterclass Verified Mark</title>
+  <desc>Official BIMI SVG Tiny 1.2 PS Mark for TH3ORY Masterclass of Influencing</desc>
+  
+  <!-- Outer Dark Circular Shield for High-Contrast Inbox Display -->
+  <circle cx="256" cy="256" r="250" fill="#05080f" stroke="#f59e0b" stroke-width="6" />
+  
+  <!-- Subtle Inner Ambient Halo Ring -->
+  <circle cx="256" cy="256" r="236" fill="#0b1120" stroke="#d97706" stroke-width="2" stroke-opacity="0.4" />
+  
+  <!-- Psychological Eye / Influence Apex Focal Node -->
+  <g fill="#f59e0b">
+    <!-- Top Apex Influence Spark -->
+    <path d="M 256 95 L 263 118 L 286 125 L 263 132 L 256 155 L 249 132 L 226 125 L 249 118 Z" fill="#fbbf24" />
+    
+    <!-- Central Brand Monogram Geometry (TH3ORY) -->
+    <!-- Scaled and Centered for 512x512 Canvas -->
+    <g transform="matrix(0.92 0 0 0.92 20.48 70)">
+      <!-- T -->
+      <path d="M 50 160 L 110 175 L 110 188 L 89 183 L 89 240 L 71 240 L 71 178 L 50 173 Z" fill="#f59e0b" />
+      
+      <!-- H -->
+      <path d="M 120 162 L 138 162 L 138 192 L 160 185 L 160 162 L 178 162 L 178 240 L 160 240 L 160 202 L 138 209 L 138 240 L 120 240 Z" fill="#f59e0b" />
+      
+      <!-- 3 -->
+      <path d="M 190 162 L 245 162 L 245 178 L 215 190 L 247 202 L 247 240 L 190 240 L 190 224 L 227 224 L 227 212 L 207 202 L 207 188 L 225 180 L 190 176 Z" fill="#fbbf24" />
+      
+      <!-- O -->
+      <path d="M 265 162 L 315 162 L 328 195 L 328 240 L 278 240 L 252 207 Z M 275 182 L 275 222 L 305 222 L 305 182 Z" fill="#f59e0b" fill-rule="evenodd" />
+      
+      <!-- R -->
+      <path d="M 340 162 L 390 162 L 402 192 L 375 202 L 402 240 L 380 240 L 358 205 L 358 240 L 340 240 Z M 358 178 L 358 190 L 380 188 L 378 178 Z" fill="#f59e0b" fill-rule="evenodd" />
+      
+      <!-- Y -->
+      <path d="M 415 162 L 435 162 L 450 195 L 465 162 L 485 162 L 460 210 L 460 240 L 440 240 L 440 210 Z" fill="#f59e0b" />
+    </g>
+    
+    <!-- MASTERCLASS Sub-Title Text Rendered via Pure Vector Paths -->
+    <g fill="#94a3b8">
+      <!-- M -->
+      <path d="M 155 330 L 161 330 L 168 343 L 175 330 L 181 330 L 181 348 L 176 348 L 176 336 L 170 348 L 166 348 L 160 336 L 160 348 L 155 348 Z" />
+      <!-- A -->
+      <path d="M 190 330 L 198 330 L 206 348 L 200 348 L 198 344 L 190 344 L 188 348 L 182 348 Z M 191 340 L 197 340 L 194 334 Z" fill-rule="evenodd" />
+      <!-- S -->
+      <path d="M 213 330 L 225 330 L 225 334 L 218 334 L 218 337 L 225 340 L 225 348 L 213 348 L 213 344 L 220 344 L 220 341 L 213 338 Z" />
+      <!-- T -->
+      <path d="M 232 330 L 246 330 L 246 334 L 241 334 L 241 348 L 236 348 L 236 334 L 232 334 Z" />
+      <!-- E -->
+      <path d="M 253 330 L 265 330 L 265 334 L 258 334 L 258 337 L 264 337 L 264 341 L 258 341 L 258 344 L 265 344 L 265 348 L 253 348 Z" />
+      <!-- R -->
+      <path d="M 272 330 L 282 330 L 286 337 L 282 340 L 286 348 L 280 348 L 277 341 L 277 348 L 272 348 Z M 277 334 L 277 338 L 281 338 L 281 334 Z" fill-rule="evenodd" />
+      <!-- C -->
+      <path d="M 293 330 L 305 330 L 305 334 L 298 334 L 298 344 L 305 344 L 305 348 L 293 348 Z" />
+      <!-- L -->
+      <path d="M 312 330 L 317 330 L 317 344 L 325 344 L 325 348 L 312 348 Z" />
+      <!-- A -->
+      <path d="M 332 330 L 340 330 L 348 348 L 342 348 L 340 344 L 332 344 L 330 348 L 324 348 Z M 333 340 L 339 340 L 336 334 Z" fill-rule="evenodd" />
+      <!-- S -->
+      <path d="M 355 330 L 367 330 L 367 334 L 360 334 L 360 337 L 367 340 L 367 348 L 355 348 L 355 344 L 362 344 L 362 341 L 355 338 Z" />
+      <!-- S -->
+      <path d="M 374 330 L 386 330 L 386 334 L 379 334 L 379 337 L 386 340 L 386 348 L 374 348 L 374 344 L 381 344 L 381 341 L 374 338 Z" />
+    </g>
+    
+    <!-- Verified Gold Security Accent Lines -->
+    <path d="M 140 375 L 372 375" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="8,4" />
+    <circle cx="256" cy="375" r="4" fill="#f59e0b" />
+  </g>
+</svg>

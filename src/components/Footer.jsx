@@ -128,13 +128,20 @@ export default function Footer({ onOpenCheckout }) {
               </li>
               <li><button onClick={() => setLegalModalTab('terms')} className="hover:text-amber-400 transition-colors text-left cursor-pointer">Terms of Service</button></li>
               <li><button onClick={() => setLegalModalTab('refund')} className="hover:text-amber-400 transition-colors text-left cursor-pointer">Refund Policy</button></li>
-              <li className="pt-2 border-t border-slate-900">
+              <li className="pt-2 border-t border-slate-900 flex flex-col gap-1.5">
                 <a
                   href="#student"
                   onClick={(e) => { e.preventDefault(); window.location.hash = 'student'; window.dispatchEvent(new Event('hashchange')); }}
                   className="text-amber-400 font-bold hover:underline flex items-center gap-1 cursor-pointer"
                 >
                   <GraduationCap className="w-3.5 h-3.5"/> Student Portal →
+                </a>
+                <a
+                  href="#team"
+                  onClick={(e) => { e.preventDefault(); window.location.hash = 'team'; window.dispatchEvent(new Event('hashchange')); }}
+                  className="text-indigo-400 font-bold hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5"/> Team Access &amp; Registration →
                 </a>
               </li>
             </ul>
@@ -158,7 +165,6 @@ export default function Footer({ onOpenCheckout }) {
               </button>
             </div>
           </div>
-
         </div>
 
         {/* Bottom Bar */}
@@ -190,9 +196,17 @@ export default function Footer({ onOpenCheckout }) {
             <a
               href="#team"
               onClick={(e) => { e.preventDefault(); window.location.hash = 'team'; window.dispatchEvent(new Event('hashchange')); }}
-              className="hover:text-amber-400 transition-colors cursor-pointer"
+              className="hover:text-indigo-400 transition-colors cursor-pointer font-semibold text-indigo-300"
             >
-              Team Access
+              Team Portal
+            </a>
+            <span>•</span>
+            <a
+              href="#team-register"
+              onClick={(e) => { e.preventDefault(); window.location.hash = 'team-register'; window.dispatchEvent(new Event('hashchange')); }}
+              className="hover:text-purple-400 transition-colors cursor-pointer font-semibold text-purple-300"
+            >
+              Team Register
             </a>
           </div>
         </div>
@@ -208,4 +222,5 @@ export default function Footer({ onOpenCheckout }) {
     </footer>
   );
 }
+
 

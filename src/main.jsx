@@ -5,6 +5,7 @@ import AdminApp   from './admin/AdminApp.jsx';
 import AdminLogin from './admin/AdminLogin.jsx';
 import TeamApp    from './team/TeamApp.jsx';
 import TeamLogin  from './team/TeamLogin.jsx';
+import TeamRegister from './team/TeamRegister.jsx';
 import StudentApp   from './student/StudentApp.jsx';
 import StudentLogin from './student/StudentLogin.jsx';
 import EnrollmentPage from './components/EnrollmentPage.jsx';
@@ -30,6 +31,7 @@ function Root() {
     const p = (window.location.pathname || '').toLowerCase();
 
     if (h.includes('admin') || p.includes('admin')) return 'admin';
+    if (h.includes('team-register') || p.includes('team-register') || h.includes('team-join') || p.includes('team-join')) return 'team-register';
     if (h.includes('team') || p.includes('team')) return 'team';
     if (h.includes('student') || p.includes('student')) return 'student';
     if (h.includes('enroll') || p.includes('enroll')) return 'enroll';
@@ -98,17 +100,29 @@ function Root() {
     }}/>;
   }
 
+  // ── Team Member Registration ───────────────────────────────────────────────
+  if (view === 'team-register') {
+    return <TeamRegister onRegistrationSuccess={(teamObj) => {
+      setTeamAuthed(true);
+      window.location.hash = '#/team';
+      setView('team');
+    }} />;
+  }
+
   // ── Team Portal ────────────────────────────────────────────────────────────
   if (view === 'team') {
     if (!teamAuthed) return <TeamLogin onAuthenticated={() => setTeamAuthed(true)}/>;
     return <TeamApp onLogout={() => {
       sessionStorage.removeItem('th3ory_team_auth');
+      sessionStorage.removeItem('th3ory_team_profile');
       localStorage.removeItem('th3ory_team_auth');
+      localStorage.removeItem('th3ory_team_profile');
       setTeamAuthed(false);
       window.location.hash = '';
       setView('public');
     }}/>;
   }
+
 
   // ── Student ────────────────────────────────────────────────────────────────
   if (view === 'student') {

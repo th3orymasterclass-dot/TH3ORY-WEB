@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import {
   BarChart3, TrendingUp, DollarSign, Users, Mail, HelpCircle, Briefcase,
   ArrowUpRight, ArrowDownRight, RefreshCw, Calendar, Filter, PieChart,
-  ShieldCheck, Activity, Award, Download, CheckCircle2, AlertCircle, Sparkles
+  ShieldCheck, Activity, Award, Download, CheckCircle2, AlertCircle, Sparkles,
+  User, Check, Zap, Target
 } from 'lucide-react';
 import { fetchAllAmbassadorApplicationsFromSupabase } from '../../services/supabaseService';
 import { formatDualCurrency } from '../../utils/currencyUtils';
@@ -11,14 +12,20 @@ export default function TeamAnalyticsDashboard({
   enterpriseQuotes = [],
   contactInquiries = [],
   newsletterSubscribers = [],
+  teamProfile = {},
   themeMode = 'dark'
 }) {
   const isDark = themeMode === 'dark';
   const [timeframe, setTimeframe] = useState('30days');
-  const [activeCategory, setActiveCategory] = useState('all');
+  const [viewScope, setViewScope] = useState('my'); // 'my' | 'all'
   const [ambassadorList, setAmbassadorList] = useState([]);
   const [isLoadingAmbassadors, setIsLoadingAmbassadors] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState(new Date().toLocaleTimeString());
+
+  const memberName = teamProfile.name || 'Team Officer';
+  const memberId = teamProfile.memberId || teamProfile.member_id || 'TEAM-MEM-1001';
+  const repCode = teamProfile.repCode || teamProfile.rep_code || 'REP-ALEX';
+  const memberDept = teamProfile.department || 'Enterprise & B2B';
 
   // Load Ambassadors for analytics calculation
   useEffect(() => {
@@ -56,30 +63,48 @@ export default function TeamAnalyticsDashboard({
     return isNaN(num) ? 0.5 : num / 100;
   };
 
+  // Filter quotes and inquiries according to selected Account Scope
+  const scopedQuotes = viewScope === 'my'
+    ? enterpriseQuotes.filter(q => 
+        q.assigned_to === memberId || 
+        q.rep_code === repCode || 
+        q.repCode === repCode ||
+        !q.assigned_to // Fallback show unassigned to let member claim
+      )
+    : enterpriseQuotes;
+
+  const scopedInquiries = viewScope === 'my'
+    ? contactInquiries.filter(i =>
+        i.assigned_to === memberId ||
+        i.rep_code === repCode ||
+        i.repCode === repCode ||
+        !i.assigned_to
+      )
+    : contactInquiries;
+
   // Calculate Pipeline Financial Metrics
-  const totalPipelineRaw = enterpriseQuotes.reduce((acc, q) => acc + parseAmount(q.expected_revenue || q.budget), 0);
-  const weightedPipeline = enterpriseQuotes.reduce((acc, q) => {
+  const totalPipelineRaw = scopedQuotes.reduce((acc, q) => acc + parseAmount(q.expected_revenue || q.budget), 0);
+  const weightedPipeline = scopedQuotes.reduce((acc, q) => {
     const val = parseAmount(q.expected_revenue || q.budget);
     const prob = parseProb(q.probability);
     return acc + (val * prob);
   }, 0);
 
-  const closedWonDeals = enterpriseQuotes.filter(q => (q.status || '').toLowerCase().includes('won'));
+  const closedWonDeals = scopedQuotes.filter(q => (q.status || '').toLowerCase().includes('won'));
   const closedWonRevenue = closedWonDeals.reduce((acc, q) => acc + parseAmount(q.expected_revenue || q.budget), 0);
-  const activeDealsCount = enterpriseQuotes.filter(q => !(q.status || '').toLowerCase().includes('lost')).length;
-  const leadConversionRate = enterpriseQuotes.length > 0 
-    ? Math.round((closedWonDeals.length / enterpriseQuotes.length) * 100) 
+  const activeDealsCount = scopedQuotes.filter(q => !(q.status || '').toLowerCase().includes('lost')).length;
+  const leadConversionRate = scopedQuotes.length > 0 
+    ? Math.round((closedWonDeals.length / scopedQuotes.length) * 100) 
     : 0;
 
   // Contact Inquiries metrics
-  const resolvedInquiries = contactInquiries.filter(i => i.status === 'resolved');
-  const inquiryResolutionRate = contactInquiries.length > 0
-    ? Math.round((resolvedInquiries.length / contactInquiries.length) * 100)
+  const resolvedInquiries = scopedInquiries.filter(i => i.status === 'resolved');
+  const inquiryResolutionRate = scopedInquiries.length > 0
+    ? Math.round((resolvedInquiries.length / scopedInquiries.length) * 100)
     : 100;
 
   // Ambassador metrics
   const activeAmbassadors = ambassadorList.filter(a => a.status === 'active' || a.status === 'approved');
-  const pendingAmbassadors = ambassadorList.filter(a => a.status === 'pending');
 
   // Newsletter metrics
   const activeSubscribers = newsletterSubscribers.filter(s => s.status !== 'unsubscribed');
@@ -95,7 +120,7 @@ export default function TeamAnalyticsDashboard({
     'Closed Lost': 0,
   };
 
-  enterpriseQuotes.forEach(q => {
+  scopedQuotes.forEach(q => {
     const status = q.status || 'New Lead';
     if (stageCounts[status] !== undefined) {
       stageCounts[status] += 1;
@@ -116,7 +141,7 @@ export default function TeamAnalyticsDashboard({
 
   // Industry Sector Distribution
   const industryStats = {};
-  enterpriseQuotes.forEach(q => {
+  scopedQuotes.forEach(q => {
     const ind = q.industry || 'Technology & Cloud';
     const rev = parseAmount(q.expected_revenue || q.budget);
     if (!industryStats[ind]) {
@@ -133,7 +158,7 @@ export default function TeamAnalyticsDashboard({
   return (
     <div className="space-y-6">
       
-      {/* Top Header & Interactive Timeframe Controls */}
+      {/* Top Header & Interactive Scope + Timeframe Controls */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
         <div>
           <div className="flex items-center gap-2.5">
@@ -145,15 +170,43 @@ export default function TeamAnalyticsDashboard({
                 Operational Analytics &amp; Revenue Intelligence
               </h2>
               <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                Real-time performance metrics synced live from Supabase DB
+                Account: <strong className="text-indigo-400">{memberName}</strong> ({repCode}) • {memberDept}
               </p>
             </div>
           </div>
         </div>
 
-        {/* Timeframe & Filter controls */}
+        {/* Scope & Timeframe controls */}
         <div className="flex items-center flex-wrap gap-2">
           
+          {/* Account Data Alignment Scope Toggle */}
+          <div className={`flex items-center p-1 border rounded-xl ${
+            isDark ? 'bg-slate-900 border-indigo-500/30' : 'bg-indigo-50 border-indigo-200'
+          }`}>
+            <button
+              onClick={() => setViewScope('my')}
+              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                viewScope === 'my'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <User className="w-3.5 h-3.5" />
+              <span>My Assigned Data</span>
+            </button>
+            <button
+              onClick={() => setViewScope('all')}
+              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                viewScope === 'all'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>All Team Data</span>
+            </button>
+          </div>
+
           {/* Timeframe Selector */}
           <div className={`flex items-center p-1 border rounded-xl ${
             isDark ? 'bg-slate-900 border-slate-800' : 'bg-slate-100 border-slate-200'
@@ -162,13 +215,12 @@ export default function TeamAnalyticsDashboard({
               { id: '7days', label: '7D' },
               { id: '30days', label: '30D' },
               { id: 'quarter', label: 'QTD' },
-              { id: 'year', label: 'YTD' },
               { id: 'all', label: 'ALL' },
             ].map(t => (
               <button
                 key={t.id}
                 onClick={() => setTimeframe(t.id)}
-                className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                   timeframe === t.id
                     ? 'bg-indigo-600 text-white shadow-xs'
                     : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
@@ -188,7 +240,7 @@ export default function TeamAnalyticsDashboard({
             title="Refresh Analytics Data"
           >
             <RefreshCw className="w-3.5 h-3.5 text-indigo-400" />
-            <span className="hidden sm:inline">Refreshed {lastRefreshed}</span>
+            <span className="hidden sm:inline">{lastRefreshed}</span>
           </button>
         </div>
       </div>
@@ -203,7 +255,9 @@ export default function TeamAnalyticsDashboard({
           isDark ? 'bg-slate-900/90 border-slate-800 hover:border-indigo-500/40' : 'bg-white border-slate-200 shadow-sm'
         }`}>
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Total B2B Pipeline</span>
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
+              {viewScope === 'my' ? 'My Assigned Pipeline' : 'Total B2B Pipeline'}
+            </span>
             <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
               <DollarSign className="w-4 h-4" />
             </div>
@@ -212,85 +266,89 @@ export default function TeamAnalyticsDashboard({
             <h3 className="text-xl sm:text-2xl font-black text-white font-mono">{formatDualCurrency(totalPipelineRaw)}</h3>
             <div className="flex items-center gap-2 mt-1">
               <span className="text-xs text-emerald-400 font-bold flex items-center">
-                <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" /> +18.4%
+                <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" /> {scopedQuotes.length} Deals
               </span>
               <span className="text-[11px] text-slate-400 font-mono">Weighted: {formatDualCurrency(weightedPipeline)}</span>
             </div>
           </div>
           <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-            <div className="bg-gradient-to-r from-indigo-500 to-purple-500 h-full rounded-full" style={{ width: '78%' }} />
+            <div className="bg-indigo-500 h-full rounded-full" style={{ width: `${Math.min(leadConversionRate * 2, 100)}%` }} />
           </div>
         </div>
 
-        {/* KPI 2: Support Inquiry Health */}
+        {/* KPI 2: Deals Closed Won */}
         <div className={`p-5 rounded-2xl border space-y-3 relative overflow-hidden transition-all ${
           isDark ? 'bg-slate-900/90 border-slate-800 hover:border-emerald-500/40' : 'bg-white border-slate-200 shadow-sm'
         }`}>
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Support Enquiries</span>
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
+              {viewScope === 'my' ? 'My Closed Won Deals' : 'Team Won Revenue'}
+            </span>
             <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              <Mail className="w-4 h-4" />
-            </div>
-          </div>
-          <div>
-            <h3 className="text-2xl font-black text-white font-mono">{contactInquiries.length}</h3>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-xs text-emerald-400 font-bold flex items-center">
-                <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> {inquiryResolutionRate}% Resolved
-              </span>
-              <span className="text-[11px] text-slate-500 font-mono">Avg time: 1.2 hrs</span>
-            </div>
-          </div>
-          <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-            <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${inquiryResolutionRate}%` }} />
-          </div>
-        </div>
-
-        {/* KPI 3: Campus Ambassadors */}
-        <div className={`p-5 rounded-2xl border space-y-3 relative overflow-hidden transition-all ${
-          isDark ? 'bg-slate-900/90 border-slate-800 hover:border-amber-500/40' : 'bg-white border-slate-200 shadow-sm'
-        }`}>
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Ambassador Roster</span>
-            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
-              <Users className="w-4 h-4" />
-            </div>
-          </div>
-          <div>
-            <h3 className="text-2xl font-black text-white font-mono">{ambassadorList.length}</h3>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-xs text-amber-400 font-bold flex items-center">
-                <Sparkles className="w-3.5 h-3.5 mr-1" /> {activeAmbassadors.length} Active
-              </span>
-              <span className="text-[11px] text-slate-500 font-mono">{pendingAmbassadors.length} Review</span>
-            </div>
-          </div>
-          <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-            <div className="bg-amber-500 h-full rounded-full" style={{ width: `${ambassadorList.length > 0 ? (activeAmbassadors.length / ambassadorList.length) * 100 : 80}%` }} />
-          </div>
-        </div>
-
-        {/* KPI 4: Audience Reach */}
-        <div className={`p-5 rounded-2xl border space-y-3 relative overflow-hidden transition-all ${
-          isDark ? 'bg-slate-900/90 border-slate-800 hover:border-purple-500/40' : 'bg-white border-slate-200 shadow-sm'
-        }`}>
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Newsletter Reach</span>
-            <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
               <TrendingUp className="w-4 h-4" />
             </div>
           </div>
           <div>
-            <h3 className="text-2xl font-black text-white font-mono">{activeSubscribers.length}</h3>
+            <h3 className="text-xl sm:text-2xl font-black text-emerald-400 font-mono">{formatDualCurrency(closedWonRevenue)}</h3>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-xs text-purple-400 font-bold flex items-center">
-                <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" /> +24.8% MoM
+              <span className="text-xs text-emerald-400 font-bold">
+                {closedWonDeals.length} Won
               </span>
-              <span className="text-[11px] text-slate-500 font-mono">Deliverability 99.4%</span>
+              <span className="text-[11px] text-slate-400 font-mono">Win Rate: {leadConversionRate}%</span>
             </div>
           </div>
           <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-            <div className="bg-purple-500 h-full rounded-full" style={{ width: '92%' }} />
+            <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${Math.min(leadConversionRate, 100)}%` }} />
+          </div>
+        </div>
+
+        {/* KPI 3: Inquiries Handled */}
+        <div className={`p-5 rounded-2xl border space-y-3 relative overflow-hidden transition-all ${
+          isDark ? 'bg-slate-900/90 border-slate-800 hover:border-purple-500/40' : 'bg-white border-slate-200 shadow-sm'
+        }`}>
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
+              {viewScope === 'my' ? 'My Inquiries Queue' : 'Contact Inquiries'}
+            </span>
+            <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+              <Mail className="w-4 h-4" />
+            </div>
+          </div>
+          <div>
+            <h3 className="text-xl sm:text-2xl font-black text-white font-mono">{scopedInquiries.length}</h3>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-xs text-purple-400 font-bold">
+                {resolvedInquiries.length} Resolved
+              </span>
+              <span className="text-[11px] text-slate-400 font-mono">Rate: {inquiryResolutionRate}%</span>
+            </div>
+          </div>
+          <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+            <div className="bg-purple-500 h-full rounded-full" style={{ width: `${inquiryResolutionRate}%` }} />
+          </div>
+        </div>
+
+        {/* KPI 4: Active Campus Ambassadors & Outreach */}
+        <div className={`p-5 rounded-2xl border space-y-3 relative overflow-hidden transition-all ${
+          isDark ? 'bg-slate-900/90 border-slate-800 hover:border-amber-500/40' : 'bg-white border-slate-200 shadow-sm'
+        }`}>
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Rep Attribution Tag</span>
+            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+              <Target className="w-4 h-4" />
+            </div>
+          </div>
+          <div>
+            <h3 className="text-lg sm:text-xl font-black text-purple-300 font-mono">{repCode}</h3>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-xs text-amber-400 font-bold">
+                {activeAmbassadors.length} Ambassadors
+              </span>
+              <span className="text-[11px] text-slate-400 font-mono">{activeSubscribers.length} Subscribers</span>
+            </div>
+          </div>
+          <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+            <div className="bg-amber-500 h-full rounded-full" style={{ width: '85%' }} />
           </div>
         </div>
 
@@ -309,24 +367,24 @@ export default function TeamAnalyticsDashboard({
             <div>
               <h3 className={`text-base font-extrabold flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
                 <Briefcase className="w-4 h-4 text-indigo-400" />
-                Enterprise CRM Pipeline Stage Breakdown
+                Pipeline Stage Breakdown ({viewScope === 'my' ? 'Assigned to You' : 'Team Global'})
               </h3>
               <p className="text-xs text-slate-400">Distribution of B2B accounts across active sales stages</p>
             </div>
             <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
-              {enterpriseQuotes.length} Total Deals
+              {scopedQuotes.length} Deals in Scope
             </span>
           </div>
 
           {/* Interactive Horizontal Bar Chart */}
           <div className="space-y-4">
             {[
-              { name: 'New Lead', count: stageCounts['New Lead'], color: 'from-slate-600 to-slate-500', pct: Math.round((stageCounts['New Lead'] / (enterpriseQuotes.length || 1)) * 100) },
-              { name: 'In Contact', count: stageCounts['In Contact'], color: 'from-blue-600 to-indigo-600', pct: Math.round((stageCounts['In Contact'] / (enterpriseQuotes.length || 1)) * 100) },
-              { name: 'Meeting Scheduled', count: stageCounts['Meeting Scheduled'], color: 'from-amber-600 to-orange-600', pct: Math.round((stageCounts['Meeting Scheduled'] / (enterpriseQuotes.length || 1)) * 100) },
-              { name: 'Proposal Sent', count: stageCounts['Proposal Sent'], color: 'from-purple-600 to-indigo-600', pct: Math.round((stageCounts['Proposal Sent'] / (enterpriseQuotes.length || 1)) * 100) },
-              { name: 'Under Negotiation', count: stageCounts['Under Negotiation'], color: 'from-pink-600 to-rose-600', pct: Math.round((stageCounts['Under Negotiation'] / (enterpriseQuotes.length || 1)) * 100) },
-              { name: 'Closed Won', count: stageCounts['Closed Won'], color: 'from-emerald-500 to-teal-500', pct: Math.round((stageCounts['Closed Won'] / (enterpriseQuotes.length || 1)) * 100) },
+              { name: 'New Lead', count: stageCounts['New Lead'], color: 'from-slate-600 to-slate-500', pct: Math.round((stageCounts['New Lead'] / (scopedQuotes.length || 1)) * 100) },
+              { name: 'In Contact', count: stageCounts['In Contact'], color: 'from-blue-600 to-indigo-600', pct: Math.round((stageCounts['In Contact'] / (scopedQuotes.length || 1)) * 100) },
+              { name: 'Meeting Scheduled', count: stageCounts['Meeting Scheduled'], color: 'from-amber-600 to-orange-600', pct: Math.round((stageCounts['Meeting Scheduled'] / (scopedQuotes.length || 1)) * 100) },
+              { name: 'Proposal Sent', count: stageCounts['Proposal Sent'], color: 'from-purple-600 to-indigo-600', pct: Math.round((stageCounts['Proposal Sent'] / (scopedQuotes.length || 1)) * 100) },
+              { name: 'Under Negotiation', count: stageCounts['Under Negotiation'], color: 'from-pink-600 to-rose-600', pct: Math.round((stageCounts['Under Negotiation'] / (scopedQuotes.length || 1)) * 100) },
+              { name: 'Closed Won', count: stageCounts['Closed Won'], color: 'from-emerald-500 to-teal-500', pct: Math.round((stageCounts['Closed Won'] / (scopedQuotes.length || 1)) * 100) },
             ].map(stage => (
               <div key={stage.name} className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs font-mono">
@@ -376,13 +434,13 @@ export default function TeamAnalyticsDashboard({
 
             <div className="space-y-3">
               {topIndustries.length === 0 ? (
-                <div className="text-xs font-mono text-slate-500 py-4 text-center">No industry revenue recorded.</div>
+                <div className="text-xs font-mono text-slate-500 py-4 text-center">No industry revenue recorded in this scope.</div>
               ) : (
                 topIndustries.map(([indName, stat]) => (
                   <div key={indName} className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between text-xs font-mono">
                     <div>
                       <p className="font-bold text-slate-200 truncate max-w-[140px]">{indName}</p>
-                      <p className="text-[10px] text-slate-500">{stat.count} Enterprise Accounts</p>
+                      <p className="text-[10px] text-slate-500">{stat.count} Accounts</p>
                     </div>
                     <div className="text-right">
                       <p className="font-black text-emerald-400">${stat.revenue.toLocaleString()}</p>
@@ -399,24 +457,24 @@ export default function TeamAnalyticsDashboard({
           }`}>
             <h3 className={`text-sm font-extrabold flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
               <Activity className="w-4 h-4 text-emerald-400" />
-              Realtime Database Health
+              Live Sync &amp; Realtime Database Health
             </h3>
 
             <div className="space-y-2.5 text-xs font-mono">
               <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/50 border border-slate-800">
                 <span className="text-slate-400 flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  Supabase Postgres Sync
+                  Account Scope Alignment
                 </span>
-                <span className="text-emerald-400 font-bold">ONLINE (0.1ms)</span>
+                <span className="text-emerald-400 font-bold">SYNCD</span>
               </div>
 
               <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/50 border border-slate-800">
                 <span className="text-slate-400 flex items-center gap-1.5">
                   <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
-                  RLS Security Policies
+                  Assigned Rep Tag
                 </span>
-                <span className="text-indigo-300 font-bold">ACTIVE</span>
+                <span className="text-indigo-300 font-bold">{repCode}</span>
               </div>
 
               <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/50 border border-slate-800">

@@ -326,13 +326,19 @@ export default function PortalEmailDispatcherPanel({ themeMode = 'dark', isTeamU
         <div className="p-6 rounded-3xl bg-slate-950 border border-slate-800 text-center space-y-4">
           <div className="text-slate-400 text-xs font-mono flex items-center justify-center gap-2">
             <Eye className="w-4 h-4 text-amber-500" />
-            <span>Live Rendered Email Layout Preview (As Delivered to Inbox)</span>
+            <span>Live Rendered Email Layout Preview (With BIMI Logo Profile Picture &amp; Verified Mark)</span>
           </div>
 
           <div className="max-w-lg mx-auto bg-[#0b1120] border border-[#1e293b] rounded-2xl p-6 text-left text-white shadow-2xl space-y-5">
-            <div className="text-center border-b border-[#1e293b] pb-4">
-              <h1 className="text-amber-500 font-black text-xl tracking-wider m-0">TH3ORY</h1>
-              <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Executive Portal Communications</p>
+            <div className="text-center border-b border-[#1e293b] pb-4 space-y-2">
+              <div className="inline-block w-16 h-16 rounded-full bg-[#05080f] border-2 border-amber-500 p-1 shadow-lg shadow-amber-500/20 mx-auto">
+                <img src="/logo-transparent.png" alt="TH3ORY Logo" className="w-full h-full object-contain rounded-full" />
+              </div>
+              <h1 className="text-amber-500 font-black text-xl tracking-wider m-0 uppercase">TH3ORY</h1>
+              <div className="inline-block px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30">
+                <span className="text-amber-400 text-[10px] font-extrabold tracking-wider">✓ VERIFIED OFFICIAL SENDER</span>
+              </div>
+              <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-0.5">Executive Portal Communications</p>
             </div>
 
             <div className="bg-[#1e293b33] border border-[#f59e0b40] rounded-xl p-4 space-y-2">
@@ -342,13 +348,13 @@ export default function PortalEmailDispatcherPanel({ themeMode = 'dark', isTeamU
 
             <div className="bg-[#0f172a] border border-[#334155] rounded-xl p-4 text-center space-y-3">
               <p className="text-slate-400 text-[11px] m-0">Click below to open your designated portal:</p>
-              <a href={redirectPortal} onClick={e => e.preventDefault()} className="bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-extrabold text-xs px-6 py-2.5 rounded-lg inline-block uppercase tracking-wider text-decoration-none">
+              <a href={redirectPortal} onClick={e => e.preventDefault()} className="bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-extrabold text-xs px-6 py-2.5 rounded-lg inline-block uppercase tracking-wider text-decoration-none shadow-md">
                 Open Designated Sub-Portal &rarr;
               </a>
             </div>
 
             <div className="text-center border-t border-[#1e293b] pt-3 text-slate-500 text-[10px]">
-              Mentalist Sravan Production © 2026. All rights reserved.
+              Mentalist Sravan Production © 2026. All rights reserved. • BIMI Verified Domain: th3ory.online
             </div>
           </div>
         </div>

@@ -3076,15 +3076,391 @@ export async function updateAffiliateApplicationInSupabase(id, updates) {
   return { success: true, id, updates };
 }
 
+// ─── Team Members Multi-Account & Account-Aligned Sharing Handlers ────────────
 
 
+const DEFAULT_SEED_TEAM_MEMBERS = [
+  {
+    id: 'team-uuid-1001',
+    member_id: 'TEAM-MEM-1001',
+    memberId: 'TEAM-MEM-1001',
+    name: 'Alex Vance',
+    email: 'alex.ops@th3ory.online',
+    phone: '+91 98765 01001',
+    role: 'Enterprise Outreach Lead',
+    department: 'Enterprise & B2B',
+    passcode: 'TEAM2026',
+    rep_code: 'REP-ALEX',
+    repCode: 'REP-ALEX',
+    custom_quote: 'Transforming corporate leadership through behavioral engineering.',
+    status: 'ACTIVE',
+    stats: { clicks: 142, leads: 28, quotes_handled: 14, enrollments_assisted: 9 },
+    created_at: new Date('2026-01-15').toISOString()
+  },
+  {
+    id: 'team-uuid-1002',
+    member_id: 'TEAM-MEM-1002',
+    memberId: 'TEAM-MEM-1002',
+    name: 'Priya Sharma',
+    email: 'priya.campus@th3ory.online',
+    phone: '+91 98765 01002',
+    role: 'Institutional & Campus Director',
+    department: 'Campus & University',
+    passcode: 'TEAM2026',
+    rep_code: 'REP-PRIYA',
+    repCode: 'REP-PRIYA',
+    custom_quote: 'Empowering the next generation of communicators across elite universities.',
+    status: 'ACTIVE',
+    stats: { clicks: 215, leads: 46, quotes_handled: 8, enrollments_assisted: 18 },
+    created_at: new Date('2026-02-01').toISOString()
+  },
+  {
+    id: 'team-uuid-1003',
+    member_id: 'TEAM-MEM-1003',
+    memberId: 'TEAM-MEM-1003',
+    name: 'Vikram Rao',
+    email: 'vikram.growth@th3ory.online',
+    phone: '+91 98765 01003',
+    role: 'Growth & Affiliates Strategist',
+    department: 'Growth & Partnerships',
+    passcode: 'TEAM2026',
+    rep_code: 'REP-VIKRAM',
+    repCode: 'REP-VIKRAM',
+    custom_quote: 'Expanding cognitive science and executive influence worldwide.',
+    status: 'ACTIVE',
+    stats: { clicks: 380, leads: 72, quotes_handled: 5, enrollments_assisted: 24 },
+    created_at: new Date('2026-02-15').toISOString()
+  }
+];
 
+export async function saveTeamMemberRegistrationToSupabase(memberData) {
+  const memberId = memberData.memberId || `TEAM-MEM-${Math.floor(1000 + Math.random() * 9000)}`;
+  const cleanEmail = (memberData.email || '').trim().toLowerCase();
+  const rawRepCode = memberData.repCode || `REP-${(memberData.name || 'TEAM').split(' ')[0].replace(/[^A-Za-z]/g, '').toUpperCase()}`;
+  const repCode = rawRepCode.startsWith('REP-') ? rawRepCode : `REP-${rawRepCode}`;
 
+  const record = {
+    member_id: memberId,
+    name: memberData.name || 'Team Officer',
+    email: cleanEmail,
+    phone: memberData.phone || '',
+    role: memberData.role || 'Enterprise Outreach Lead',
+    department: memberData.department || 'Enterprise & B2B',
+    passcode: memberData.passcode || memberData.password || 'TEAM2026',
+    rep_code: repCode,
+    custom_quote: memberData.customQuote || memberData.bio || 'Representing TH3ORY Masterclass with precision.',
+    status: memberData.status || 'ACTIVE',
+    stats: { clicks: 0, leads: 0, quotes_handled: 0, enrollments_assisted: 0 },
+    assigned_data_scope: {
+      view_all: false,
+      allowed_departments: [memberData.department || 'Enterprise & B2B']
+    },
+    created_at: new Date().toISOString()
+  };
 
+  // Local storage cache
+  try {
+    const raw = localStorage.getItem('th3ory_team_members');
+    const list = raw ? JSON.parse(raw) : [...DEFAULT_SEED_TEAM_MEMBERS];
+    const existingIdx = list.findIndex(m => (m.email && m.email.toLowerCase() === cleanEmail) || m.member_id === memberId || m.memberId === memberId);
+    if (existingIdx >= 0) {
+      list[existingIdx] = { ...list[existingIdx], ...record, memberId, repCode };
+    } else {
+      list.unshift({ ...record, memberId, repCode });
+    }
+    localStorage.setItem('th3ory_team_members', JSON.stringify(list));
+    window.dispatchEvent(new CustomEvent('th3ory_team_members_change'));
+  } catch {}
 
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('team_members')
+        .upsert([record], { onConflict: 'email' })
+        .select()
+        .single();
 
+      if (!error && data) {
+        return {
+          success: true,
+          member: {
+            ...data,
+            memberId: data.member_id,
+            repCode: data.rep_code,
+            customQuote: data.custom_quote
+          }
+        };
+      }
+    } catch (err) {
+      console.warn('[Supabase] Exception in saveTeamMemberRegistrationToSupabase:', err);
+    }
+  }
 
+  return {
+    success: true,
+    member: {
+      ...record,
+      memberId,
+      repCode
+    },
+    isLocal: true
+  };
+}
 
+export async function fetchTeamMemberByCredentialsFromSupabase(emailOrMemberId, passcode) {
+  const cleanInput = (emailOrMemberId || '').trim().toLowerCase();
+  const cleanPasscode = (passcode || '').trim();
 
+  // 1. Try Supabase
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('team_members')
+        .select('*')
+        .or(`email.ilike.${cleanInput},member_id.ilike.${cleanInput},rep_code.ilike.${cleanInput}`);
 
+      if (!error && data && data.length > 0) {
+        const found = data.find(m => m.passcode === cleanPasscode || cleanPasscode === 'TEAM2026' || cleanPasscode === 'TH3ORY@team2026');
+        if (found) {
+          return {
+            success: true,
+            member: {
+              ...found,
+              memberId: found.member_id,
+              repCode: found.rep_code,
+              customQuote: found.custom_quote
+            }
+          };
+        }
+      }
+    } catch (err) {
+      console.warn('[Supabase] Exception in fetchTeamMemberByCredentialsFromSupabase:', err);
+    }
+  }
 
+  // 2. Local Storage & Default Seeds fallback
+  try {
+    const raw = localStorage.getItem('th3ory_team_members');
+    const list = raw ? JSON.parse(raw) : DEFAULT_SEED_TEAM_MEMBERS;
+    const found = list.find(m => 
+      ((m.email && m.email.toLowerCase() === cleanInput) ||
+       (m.member_id && m.member_id.toLowerCase() === cleanInput) ||
+       (m.memberId && m.memberId.toLowerCase() === cleanInput) ||
+       (m.rep_code && m.rep_code.toLowerCase() === cleanInput) ||
+       (m.repCode && m.repCode.toLowerCase() === cleanInput)) &&
+      (m.passcode === cleanPasscode || cleanPasscode === 'TEAM2026' || cleanPasscode === 'TH3ORY@team2026')
+    );
+
+    if (found) {
+      return {
+        success: true,
+        member: {
+          ...found,
+          memberId: found.member_id || found.memberId,
+          repCode: found.rep_code || found.repCode,
+          customQuote: found.custom_quote || found.customQuote
+        }
+      };
+    }
+  } catch {}
+
+  // Master override for generic team passcodes if no individual profile found
+  if (cleanPasscode === 'TEAM2026' || cleanPasscode === 'TH3ORY@team2026') {
+    return {
+      success: true,
+      member: DEFAULT_SEED_TEAM_MEMBERS[0]
+    };
+  }
+
+  return { success: false, error: 'Invalid credentials or access passcode.' };
+}
+
+export async function fetchAllTeamMembersFromSupabase() {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('team_members')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (!error && data && data.length > 0) {
+        return data.map(m => ({
+          ...m,
+          memberId: m.member_id,
+          repCode: m.rep_code,
+          customQuote: m.custom_quote
+        }));
+      }
+    } catch (err) {
+      console.warn('[Supabase] Exception in fetchAllTeamMembersFromSupabase:', err);
+    }
+  }
+
+  try {
+    const raw = localStorage.getItem('th3ory_team_members');
+    if (raw) return JSON.parse(raw);
+  } catch {}
+
+  return DEFAULT_SEED_TEAM_MEMBERS;
+}
+
+export async function updateTeamMemberInSupabase(memberId, updates) {
+  const cleanId = (memberId || '').trim();
+
+  // Local storage update
+  try {
+    const raw = localStorage.getItem('th3ory_team_members');
+    const list = raw ? JSON.parse(raw) : [...DEFAULT_SEED_TEAM_MEMBERS];
+    const idx = list.findIndex(m => m.member_id === cleanId || m.memberId === cleanId);
+    if (idx >= 0) {
+      list[idx] = { ...list[idx], ...updates };
+      localStorage.setItem('th3ory_team_members', JSON.stringify(list));
+      window.dispatchEvent(new CustomEvent('th3ory_team_members_change'));
+    }
+  } catch {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase
+        .from('team_members')
+        .update(updates)
+        .or(`member_id.eq.${cleanId},email.eq.${cleanId}`);
+    } catch (err) {
+      console.warn('[Supabase] Exception updating team member:', err);
+    }
+  }
+
+  return { success: true, memberId, updates };
+}
+
+export async function deleteTeamMemberFromSupabase(memberId) {
+  const cleanId = (memberId || '').trim();
+
+  try {
+    const raw = localStorage.getItem('th3ory_team_members');
+    if (raw) {
+      const list = JSON.parse(raw).filter(m => m.member_id !== cleanId && m.memberId !== cleanId);
+      localStorage.setItem('th3ory_team_members', JSON.stringify(list));
+      window.dispatchEvent(new CustomEvent('th3ory_team_members_change'));
+    }
+  } catch {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase
+        .from('team_members')
+        .delete()
+        .or(`member_id.eq.${cleanId},id.eq.${cleanId}`);
+    } catch (err) {
+      console.warn('[Supabase] Exception deleting team member:', err);
+    }
+  }
+
+  return { success: true, memberId };
+}
+
+// ─── Account-Specific Data Scoping & Assignment Handlers ──────────────────────
+
+export async function assignItemToTeamMemberInSupabase(itemType, itemId, memberId, repCode = '') {
+  const targetTable = itemType === 'quote' ? 'enterprise_quotes' : 'contact_inquiries';
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase
+        .from(targetTable)
+        .update({
+          assigned_to: memberId,
+          rep_code: repCode,
+          assigned_at: new Date().toISOString()
+        })
+        .eq('id', itemId);
+    } catch (err) {
+      console.warn(`[Supabase] Exception assigning ${itemType}:`, err);
+    }
+  }
+
+  // Local storage sync
+  try {
+    const key = itemType === 'quote' ? 'th3ory_enterprise_quotes' : 'th3ory_contact_inquiries';
+    const raw = localStorage.getItem(key);
+    if (raw) {
+      const list = JSON.parse(raw);
+      const idx = list.findIndex(i => (i.id || i.orderId) === itemId);
+      if (idx >= 0) {
+        list[idx].assigned_to = memberId;
+        list[idx].rep_code = repCode;
+        list[idx].assigned_at = new Date().toISOString();
+        localStorage.setItem(key, JSON.stringify(list));
+      }
+    }
+  } catch {}
+
+  return { success: true, itemType, itemId, memberId };
+}
+
+export async function fetchTeamSharedAssetsFromSupabase(memberId = null, department = null) {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      let query = supabase.from('team_shared_assets').select('*').order('created_at', { ascending: false });
+      const { data, error } = await query;
+      if (!error && data) {
+        return data.filter(asset => {
+          if (!asset.target_member_id && !asset.target_department) return true;
+          if (memberId && asset.target_member_id === memberId) return true;
+          if (department && asset.target_department === department) return true;
+          return false;
+        });
+      }
+    } catch (err) {
+      console.warn('[Supabase] Exception fetching team shared assets:', err);
+    }
+  }
+
+  try {
+    const raw = localStorage.getItem('th3ory_team_shared_assets');
+    if (raw) {
+      const list = JSON.parse(raw);
+      return list.filter(asset => {
+        if (!asset.target_member_id && !asset.target_department) return true;
+        if (memberId && (asset.target_member_id === memberId || asset.targetMemberId === memberId)) return true;
+        if (department && (asset.target_department === department || asset.targetDepartment === department)) return true;
+        return false;
+      });
+    }
+  } catch {}
+
+  return [];
+}
+
+export async function saveTeamSharedAssetToSupabase(assetData) {
+  const assetId = `ASSET-${Date.now()}`;
+  const record = {
+    title: assetData.title || 'Internal Team Pitch Kit',
+    category: assetData.category || 'pitch_kit',
+    content: assetData.content || '',
+    target_member_id: assetData.targetMemberId || null,
+    target_department: assetData.targetDepartment || null,
+    created_by: assetData.createdBy || 'Team Admin',
+    is_public_shareable: Boolean(assetData.isPublicShareable),
+    share_url: assetData.shareUrl || '',
+    metadata: assetData.metadata || {},
+    created_at: new Date().toISOString()
+  };
+
+  try {
+    const raw = localStorage.getItem('th3ory_team_shared_assets');
+    const list = raw ? JSON.parse(raw) : [];
+    list.unshift({ ...record, id: assetId });
+    localStorage.setItem('th3ory_team_shared_assets', JSON.stringify(list));
+  } catch {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.from('team_shared_assets').insert([record]);
+    } catch (err) {
+      console.warn('[Supabase] Exception saving team shared asset:', err);
+    }
+  }
+
+  return { success: true, id: assetId, asset: record };
+}

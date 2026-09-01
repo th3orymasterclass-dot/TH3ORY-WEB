@@ -1,10 +1,17 @@
 import React, { useState } from 'react';
 import { Mail, Shield, Check, Eye, EyeOff, Send, MessageSquare, Plus, Calendar, Edit3, Trash2 } from 'lucide-react';
-import { submitTeamApprovalRequestToSupabase, deleteContactInquiryFromSupabase, updateContactInquiryInSupabase } from '../../services/supabaseService';
+import { 
+  submitTeamApprovalRequestToSupabase, 
+  deleteContactInquiryFromSupabase, 
+  updateContactInquiryInSupabase,
+  assignItemToTeamMemberInSupabase
+} from '../../services/supabaseService';
 import CalendlyModal from '../../components/CalendlyModal';
 
-export default function TeamInquiriesPanel({ contactInquiries = [], updateInquiryStatus, themeMode = 'dark' }) {
+export default function TeamInquiriesPanel({ contactInquiries = [], updateInquiryStatus, teamProfile = {}, themeMode = 'dark' }) {
   const [maskData, setMaskData] = useState(false);
+  const [scopeFilter, setScopeFilter] = useState('ALL'); // 'ALL' | 'MY_INQUIRIES'
+  const [claimingId, setClaimingId] = useState(null);
   const [selectedInquiry, setSelectedInquiry] = useState(null);
   const [calendlyInquiry, setCalendlyInquiry] = useState(null);
   const [editingInquiry, setEditingInquiry] = useState(null);
@@ -14,6 +21,22 @@ export default function TeamInquiriesPanel({ contactInquiries = [], updateInquir
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
 
   const isDark = themeMode === 'dark';
+  const memberId = teamProfile.memberId || teamProfile.member_id || 'TEAM-MEM-1001';
+  const repCode = teamProfile.repCode || teamProfile.rep_code || 'REP-TEAM';
+
+  const handleClaimInquiry = async (inqId) => {
+    setClaimingId(inqId);
+    await assignItemToTeamMemberInSupabase('inquiry', inqId, memberId, repCode);
+    setClaimingId(null);
+  };
+
+  const filteredInquiries = contactInquiries.filter(i => {
+    if (scopeFilter === 'MY_INQUIRIES') {
+      const isAssigned = (i.assigned_to === memberId) || (i.rep_code === repCode) || (i.repCode === repCode);
+      if (!isAssigned) return false;
+    }
+    return true;
+  });
 
   const handleDeleteInquiry = async (id) => {
     if (!window.confirm('Are you sure you want to delete this contact inquiry?')) return;
@@ -62,8 +85,8 @@ export default function TeamInquiriesPanel({ contactInquiries = [], updateInquir
     if (!selectedInquiry || !proposedReply) return;
 
     await submitTeamApprovalRequestToSupabase({
-      teamMemberName: 'Team Officer',
-      teamMemberEmail: 'team@th3ory.online',
+      teamMemberName: teamProfile.name || 'Team Officer',
+      teamMemberEmail: teamProfile.email || 'team@th3ory.online',
       moduleType: 'contact_inquiries',
       actionType: 'reply_inquiry',
       targetId: selectedInquiry.id,
@@ -90,8 +113,8 @@ export default function TeamInquiriesPanel({ contactInquiries = [], updateInquir
     if (!newName || !newEmail || !newMessage) return;
 
     await submitTeamApprovalRequestToSupabase({
-      teamMemberName: 'Team Officer',
-      teamMemberEmail: 'team@th3ory.online',
+      teamMemberName: teamProfile.name || 'Team Officer',
+      teamMemberEmail: teamProfile.email || 'team@th3ory.online',
       moduleType: 'contact_inquiries',
       actionType: 'create_contact_inquiry',
       targetId: null,
@@ -118,7 +141,34 @@ export default function TeamInquiriesPanel({ contactInquiries = [], updateInquir
   return (
     <div className="space-y-6">
       {/* Top Action Bar */}
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {/* Scope Toggle */}
+        <div className={`flex items-center p-1 border rounded-xl ${
+          isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'
+        }`}>
+          <button
+            onClick={() => setScopeFilter('MY_INQUIRIES')}
+            className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+              scopeFilter === 'MY_INQUIRIES'
+                ? 'bg-indigo-600 text-white shadow-xs'
+                : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            My Inquiries ({contactInquiries.filter(i => i.assigned_to === memberId || i.rep_code === repCode).length})
+          </button>
+          <button
+            onClick={() => setScopeFilter('ALL')}
+            className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+              scopeFilter === 'ALL'
+                ? 'bg-indigo-600 text-white shadow-xs'
+                : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            All Submissions ({contactInquiries.length})
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2">
           <button
             onClick={() => setShowCreateModal(true)}
             className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl flex items-center gap-1.5 shadow-md cursor-pointer"
@@ -136,8 +186,8 @@ export default function TeamInquiriesPanel({ contactInquiries = [], updateInquir
             {maskData ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
             <span>{maskData ? 'Masked' : 'Unmasked'}</span>
           </button>
+        </div>
       </div>
-
 
       {/* Main Table Container */}
       <div className={`border rounded-2xl p-5 shadow-sm space-y-4 ${
@@ -146,18 +196,18 @@ export default function TeamInquiriesPanel({ contactInquiries = [], updateInquir
         <div className="flex items-center justify-between">
           <h3 className={`text-base font-bold flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
             <Mail className="w-5 h-5 text-indigo-500" />
-            Contact Us Submissions ({contactInquiries.length})
+            Contact Us Submissions ({filteredInquiries.length})
           </h3>
           <span className={`px-2.5 py-1 text-[10px] font-mono rounded-full uppercase border ${
             isDark ? 'bg-indigo-500/10 text-indigo-300 border-indigo-500/30' : 'bg-indigo-50 text-indigo-700 border-indigo-200'
           }`}>
-            Team View
+            {teamProfile.name || 'Team Officer'}
           </span>
         </div>
 
-        {contactInquiries.length === 0 ? (
+        {filteredInquiries.length === 0 ? (
           <div className="text-center py-10 text-slate-400 text-xs font-mono">
-            No contact inquiries found.
+            No contact inquiries found matching scope.
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -174,7 +224,7 @@ export default function TeamInquiriesPanel({ contactInquiries = [], updateInquir
                 </tr>
               </thead>
               <tbody className={`divide-y ${isDark ? 'divide-slate-800/60 text-slate-300' : 'divide-slate-200 text-slate-700'}`}>
-                {contactInquiries.map((inq) => (
+                {filteredInquiries.map((inq) => (
                   <tr key={inq.id} className={isDark ? 'hover:bg-slate-800/30 transition-colors' : 'hover:bg-slate-50 transition-colors'}>
                     <td className={`p-3 font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{inq.name}</td>
                     <td className="p-3 font-mono text-indigo-600 font-semibold">{maskEmail(inq.email)}</td>

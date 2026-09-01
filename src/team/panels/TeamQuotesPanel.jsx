@@ -9,15 +9,20 @@ import {
   submitTeamApprovalRequestToSupabase, 
   deleteEnterpriseQuoteFromSupabase, 
   updateEnterpriseQuoteInSupabase,
-  saveEnterpriseQuoteToSupabase
+  saveEnterpriseQuoteToSupabase,
+  assignItemToTeamMemberInSupabase
 } from '../../services/supabaseService';
 import CalendlyModal from '../../components/CalendlyModal';
 import { EnterpriseRoiCalculatorModal } from '../../components/EnterpriseRoiCalculatorModal';
 import { EnterprisePdfQuoteModal } from '../../components/EnterprisePdfQuoteModal';
 import { formatDualCurrency, parseCurrencyAmount } from '../../utils/currencyUtils';
 
-export default function TeamQuotesPanel({ enterpriseQuotes = [], updateQuoteStatus, themeMode = 'dark' }) {
+export default function TeamQuotesPanel({ enterpriseQuotes = [], updateQuoteStatus, teamProfile = {}, themeMode = 'dark' }) {
   const isDark = themeMode === 'dark';
+
+  // Account Scope Filter
+  const [assignScopeFilter, setAssignScopeFilter] = useState('ALL'); // 'ALL' | 'MY_ASSIGNED'
+  const [claimingId, setClaimingId] = useState(null);
 
   // Privacy Masking Toggle
   const [maskData, setMaskData] = useState(false);
@@ -36,6 +41,17 @@ export default function TeamQuotesPanel({ enterpriseQuotes = [], updateQuoteStat
   const [selectedQuote, setSelectedQuote] = useState(null); // For Admin Proposal Queue
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+
+  const handleClaimQuote = async (quoteId) => {
+    setClaimingId(quoteId);
+    await assignItemToTeamMemberInSupabase(
+      'quote', 
+      quoteId, 
+      teamProfile.memberId || teamProfile.member_id || 'TEAM-MEM-1001', 
+      teamProfile.repCode || teamProfile.rep_code || 'REP-TEAM'
+    );
+    setClaimingId(null);
+  };
 
   // Propose Status Change State (Team -> Admin Approval Queue)
   const [proposedStatus, setProposedStatus] = useState('In Contact');
@@ -214,15 +230,26 @@ export default function TeamQuotesPanel({ enterpriseQuotes = [], updateQuoteStat
     }, 2000);
   };
 
-  // Filtered quotes based on Search and Filters
+  // Filtered quotes based on Search, Filters and Account Scope Alignment
+  const memberId = teamProfile.memberId || teamProfile.member_id || 'TEAM-MEM-1001';
+  const repCode = teamProfile.repCode || teamProfile.rep_code || 'REP-TEAM';
+
   const filteredQuotes = enterpriseQuotes.filter(q => {
+    if (assignScopeFilter === 'MY_ASSIGNED') {
+      const isAssigned = (q.assigned_to === memberId) || 
+                         (q.rep_code === repCode) || 
+                         (q.repCode === repCode);
+      if (!isAssigned) return false;
+    }
+
     const matchesSearch = 
       (q.org_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (q.contact_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (q.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (q.designation || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (q.location || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (q.industry || '').toLowerCase().includes(searchTerm.toLowerCase());
+      (q.industry || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (q.rep_code || '').toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus = statusFilter === 'ALL' || (q.status || 'New Lead').toLowerCase() === statusFilter.toLowerCase();
     const matchesIndustry = industryFilter === 'ALL' || (q.industry || '').toLowerCase().includes(industryFilter.toLowerCase());
@@ -231,12 +258,12 @@ export default function TeamQuotesPanel({ enterpriseQuotes = [], updateQuoteStat
   });
 
   // Calculate Pipeline Metrics
-  const totalPipelineRevenue = enterpriseQuotes.reduce((acc, q) => {
+  const totalPipelineRevenue = filteredQuotes.reduce((acc, q) => {
     const raw = (q.expected_revenue || q.budget || '0').replace(/[^0-9]/g, '');
     return acc + (parseInt(raw, 10) || 0);
   }, 0);
 
-  const activeDealsCount = enterpriseQuotes.filter(q => (q.status || '').toLowerCase() !== 'closed lost').length;
+  const activeDealsCount = filteredQuotes.filter(q => (q.status || '').toLowerCase() !== 'closed lost').length;
 
   return (
     <div className="space-y-6">
@@ -245,15 +272,15 @@ export default function TeamQuotesPanel({ enterpriseQuotes = [], updateQuoteStat
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className={`p-4 rounded-2xl border ${isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200'} shadow-xs`}>
           <div className="flex items-center justify-between text-xs font-mono text-slate-400">
-            <span>Total CRM Pipeline</span>
+            <span>{assignScopeFilter === 'MY_ASSIGNED' ? 'My Assigned Deals' : 'Total CRM Pipeline'}</span>
             <Building2 className="w-4 h-4 text-indigo-400" />
           </div>
-          <p className="text-2xl font-black text-indigo-400 mt-2">{enterpriseQuotes.length} <span className="text-xs font-normal text-slate-400">Accounts</span></p>
+          <p className="text-2xl font-black text-indigo-400 mt-2">{filteredQuotes.length} <span className="text-xs font-normal text-slate-400">Accounts</span></p>
         </div>
 
         <div className={`p-4 rounded-2xl border ${isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200'} shadow-xs`}>
           <div className="flex items-center justify-between text-xs font-mono text-slate-400">
-            <span>Active Pipeline Value</span>
+            <span>Pipeline Value in Scope</span>
             <DollarSign className="w-4 h-4 text-emerald-400" />
           </div>
           <p className="text-2xl font-black text-emerald-400 mt-2">${totalPipelineRevenue.toLocaleString()} <span className="text-xs font-normal text-slate-400">USD</span></p>
@@ -261,7 +288,7 @@ export default function TeamQuotesPanel({ enterpriseQuotes = [], updateQuoteStat
 
         <div className={`p-4 rounded-2xl border ${isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200'} shadow-xs`}>
           <div className="flex items-center justify-between text-xs font-mono text-slate-400">
-            <span>Active Deals</span>
+            <span>Active In Progress</span>
             <TrendingUp className="w-4 h-4 text-amber-400" />
           </div>
           <p className="text-2xl font-black text-amber-400 mt-2">{activeDealsCount} <span className="text-xs font-normal text-slate-400">Active</span></p>
@@ -269,24 +296,49 @@ export default function TeamQuotesPanel({ enterpriseQuotes = [], updateQuoteStat
 
         <div className={`p-4 rounded-2xl border ${isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200'} shadow-xs`}>
           <div className="flex items-center justify-between text-xs font-mono text-slate-400">
-            <span>Interlinked Sync</span>
+            <span>Account Attribution</span>
             <Shield className="w-4 h-4 text-purple-400" />
           </div>
-          <p className="text-xs font-mono font-bold text-purple-400 mt-3 flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-purple-400 animate-ping"></span>
-            Realtime Supabase DB
+          <p className="text-xs font-mono font-bold text-purple-400 mt-3 flex items-center gap-1.5 truncate">
+            {teamProfile.name || 'Team Officer'} ({repCode})
           </p>
         </div>
       </div>
 
       {/* Action Bar & Search Filters */}
       <div className={`p-4 rounded-2xl border ${isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200'} flex flex-col md:flex-row items-center justify-between gap-4`}>
-        <div className="flex items-center gap-2 w-full md:w-auto flex-1">
-          <div className="relative flex-1 max-w-md">
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto flex-1">
+          {/* Account Data Alignment Scope Toggle */}
+          <div className={`flex items-center p-1 border rounded-xl ${
+            isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'
+          }`}>
+            <button
+              onClick={() => setAssignScopeFilter('MY_ASSIGNED')}
+              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                assignScopeFilter === 'MY_ASSIGNED'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              My Deals ({enterpriseQuotes.filter(q => q.assigned_to === memberId || q.rep_code === repCode).length})
+            </button>
+            <button
+              onClick={() => setAssignScopeFilter('ALL')}
+              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                assignScopeFilter === 'ALL'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              All CRM Deals ({enterpriseQuotes.length})
+            </button>
+          </div>
+
+          <div className="relative flex-1 min-w-[200px] max-w-xs">
             <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
             <input
               type="text"
-              placeholder="Search Company, Contact, Email, Industry, Location..."
+              placeholder="Search Company, Email, Rep..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               className={`w-full pl-9 pr-4 py-1.5 text-xs rounded-xl border ${

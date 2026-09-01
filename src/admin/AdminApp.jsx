@@ -29,6 +29,7 @@ import MediaPanel          from './panels/MediaPanel';
 import IntegrationsPanel   from './panels/IntegrationsPanel';
 import NewsletterPanel     from './panels/NewsletterPanel';
 import FeatureFlagsPanel   from './panels/FeatureFlagsPanel';
+import TeamManagementPanel from './panels/TeamManagementPanel';
 import TeamApprovalsPanel  from './panels/TeamApprovalsPanel';
 import AmbassadorApplicationsPanel from './panels/AmbassadorApplicationsPanel';
 import PortalEmailDispatcherPanel from './panels/PortalEmailDispatcherPanel';
@@ -63,6 +64,7 @@ const NAV_ITEMS = [
   { id: 'content',            label: 'Content Library (PDF/Video)',icon: FolderOpen },
 
   { id: '__divider_db',       divider: true, label: 'SALES & COMMUNICATIONS' },
+  { id: 'team_roster',        label: 'Team Accounts & Roster',     icon: Users, badge: 'TEAM' },
   { id: 'email_dispatcher',   label: 'Resend Email System',        icon: Mail, badge: 'RESEND' },
   { id: 'ambassador_apps',    label: 'Ambassador Applications',    icon: Users, badge: 'AMBASSADOR' },
   { id: 'team_approvals',     label: 'Team Approvals',             icon: ShieldCheck, badge: 'QUEUE' },
@@ -112,6 +114,7 @@ export default function AdminApp({ onLogout }) {
       case 'section_visibility': return <SectionVisibilityPanel {...panelProps} />;
       case 'dpdp_compliance':    return <DPDPCompliancePanel />;
       case 'analytics':          return <TeamAnalyticsDashboard enterpriseQuotes={enterpriseQuotes} contactInquiries={contactInquiries} newsletterSubscribers={newsletterSubscribers} themeMode={themeMode} />;
+      case 'team_roster':        return <TeamManagementPanel themeMode={themeMode} />;
       case 'email_dispatcher':   return <PortalEmailDispatcherPanel themeMode={themeMode} />;
       case 'ambassador_apps':    return <AmbassadorApplicationsPanel themeMode={themeMode} />;
       case 'team_approvals':     return <TeamApprovalsPanel themeMode={themeMode} />;
@@ -121,6 +124,7 @@ export default function AdminApp({ onLogout }) {
       case 'coupons':            return <CouponsPanel     save={save} enrollments={enrollments} themeMode={themeMode} />;
       case 'newsletter':         return <NewsletterPanel subscribers={newsletterSubscribers} broadcasts={newsletterBroadcasts} saveBroadcast={saveBroadcast} updateSubscriberStatus={updateSubscriberStatus} deleteSubscriber={deleteSubscriber} save={save} data={data} themeMode={themeMode} />;
       case 'integrations':       return <IntegrationsPanel themeMode={themeMode} />;
+
       
       case 'hero':               return <HeroPanel       {...panelProps} />;
       case 'campaign':           return <CampaignPanel   {...panelProps} />;

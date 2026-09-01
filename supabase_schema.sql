@@ -517,6 +517,52 @@ INSERT INTO public.ambassador_applications (
     'APPROVED', 'AMB-DEMO', 'TH3ORY-AMB-2026', 450, 'Tier 2', 24, 8, 8000.00
 ) ON CONFLICT (email) DO NOTHING;
 
+-- 15. TEAM MEMBERS TABLE (Multi-Account Access & Account-Aligned Scoping)
+CREATE TABLE IF NOT EXISTS public.team_members (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    member_id TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    phone TEXT,
+    role TEXT NOT NULL DEFAULT 'Team Officer',
+    department TEXT NOT NULL DEFAULT 'General Operations',
+    passcode TEXT NOT NULL,
+    avatar_url TEXT,
+    rep_code TEXT UNIQUE NOT NULL,
+    custom_quote TEXT,
+    status TEXT DEFAULT 'ACTIVE',
+    assigned_data_scope JSONB DEFAULT '{"view_all": false, "allowed_departments": ["General Operations"]}'::jsonb,
+    stats JSONB DEFAULT '{"clicks": 0, "leads": 0, "quotes_handled": 0, "enrollments_assisted": 0}'::jsonb,
+    last_login TIMESTAMPTZ DEFAULT NOW(),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_team_members_email ON public.team_members(email);
+CREATE INDEX IF NOT EXISTS idx_team_members_member_id ON public.team_members(member_id);
+CREATE INDEX IF NOT EXISTS idx_team_members_rep_code ON public.team_members(rep_code);
+
+ALTER TABLE public.enterprise_quotes ADD COLUMN IF NOT EXISTS assigned_to TEXT;
+ALTER TABLE public.enterprise_quotes ADD COLUMN IF NOT EXISTS rep_code TEXT;
+ALTER TABLE public.enterprise_quotes ADD COLUMN IF NOT EXISTS assigned_at TIMESTAMPTZ;
+
+ALTER TABLE public.contact_inquiries ADD COLUMN IF NOT EXISTS assigned_to TEXT;
+ALTER TABLE public.contact_inquiries ADD COLUMN IF NOT EXISTS rep_code TEXT;
+ALTER TABLE public.contact_inquiries ADD COLUMN IF NOT EXISTS assigned_at TIMESTAMPTZ;
+
+CREATE TABLE IF NOT EXISTS public.team_shared_assets (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title TEXT NOT NULL,
+    category TEXT DEFAULT 'pitch_kit',
+    content TEXT,
+    target_member_id TEXT,
+    target_department TEXT,
+    created_by TEXT NOT NULL,
+    is_public_shareable BOOLEAN DEFAULT false,
+    share_url TEXT,
+    metadata JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- ==============================================================================
 -- SUPABASE REALTIME REPLICATION ENABLEMENT
 -- Enables instant WebSocket streaming for live updates across all open browsers
@@ -545,7 +591,9 @@ BEGIN
       public.ambassador_weekly_reports,
       public.ambassador_leads,
       public.ambassador_payouts,
-      public.ambassador_tasks;
+      public.ambassador_tasks,
+      public.team_members,
+      public.team_shared_assets;
   END IF;
 EXCEPTION WHEN OTHERS THEN
   RAISE NOTICE 'Publication table addition skipped or already present.';
@@ -557,6 +605,3 @@ END $$;
 -- TRUNCATE TABLE public.student_progress CASCADE;
 -- TRUNCATE TABLE public.user_progress CASCADE;
 -- TRUNCATE TABLE public.student_habit_trackers CASCADE;
-
-
-

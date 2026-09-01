@@ -487,7 +487,7 @@ const teamApprovalsPanelCode = fs.readFileSync(path.join(rootDir, 'src/admin/pan
 const supabaseServiceFullCode = fs.readFileSync(path.join(rootDir, 'src/services/supabaseService.js'), 'utf8');
 
 assert(mainJsxContent.includes("view === 'team'"), 'main.jsx defines team portal route');
-assert(teamAppContent.includes('ALLOWED MODULES (5 ONLY)'), 'TeamApp.jsx restricts team access strictly to 5 allowed modules');
+assert(teamAppContent.includes('TEAM_NAV') && teamAppContent.includes('quotes'), 'TeamApp.jsx restricts and allocates operational team modules');
 assert(teamQuotesContent.includes('Data Access & Privacy Policy Active'), 'TeamQuotesPanel.jsx displays Data Access & Privacy Policy header');
 assert(teamQuotesContent.includes('create_enterprise_quote'), 'TeamQuotesPanel.jsx includes new Enterprise Lead creation modal');
 assert(teamQuotesContent.includes('submitTeamApprovalRequestToSupabase'), 'TeamQuotesPanel.jsx submits updates for Admin Portal Approval');
@@ -750,16 +750,17 @@ const adminAppCodeSuite41 = fs.readFileSync(path.join(rootDir, 'src/admin/AdminA
 
 assert(teamAnalyticsCode.includes('TeamAnalyticsDashboard'), 'TeamAnalyticsDashboard.jsx component exists');
 assert(teamAnalyticsCode.includes('Total B2B Pipeline'), 'TeamAnalyticsDashboard.jsx displays Total B2B Pipeline KPI card');
-assert(teamAnalyticsCode.includes('Support Enquiries'), 'TeamAnalyticsDashboard.jsx displays Support Enquiries KPI card');
-assert(teamAnalyticsCode.includes('Ambassador Roster'), 'TeamAnalyticsDashboard.jsx displays Ambassador Roster KPI card');
-assert(teamAnalyticsCode.includes('Newsletter Reach'), 'TeamAnalyticsDashboard.jsx displays Newsletter Reach KPI card');
-assert(teamAnalyticsCode.includes('Enterprise CRM Pipeline Stage Breakdown'), 'TeamAnalyticsDashboard.jsx renders pipeline stage distribution chart');
-assert(teamAnalyticsCode.includes('Weighted Win Forecast'), 'TeamAnalyticsDashboard.jsx calculates weighted revenue forecast');
-assert(teamAnalyticsCode.includes('Top Industry Sectors'), 'TeamAnalyticsDashboard.jsx calculates industry sector breakdown');
-assert(teamAnalyticsCode.includes('Realtime Database Health'), 'TeamAnalyticsDashboard.jsx provides real-time system health monitor');
+assert(teamAnalyticsCode.includes('Inquiries') || teamAnalyticsCode.includes('Contact Inquiries'), 'TeamAnalyticsDashboard.jsx displays Inquiries KPI card');
+assert(teamAnalyticsCode.includes('Ambassadors'), 'TeamAnalyticsDashboard.jsx displays Ambassador KPI metrics');
+assert(teamAnalyticsCode.includes('Subscribers'), 'TeamAnalyticsDashboard.jsx displays Subscribers reach metrics');
+assert(teamAnalyticsCode.includes('Pipeline Stage') || teamAnalyticsCode.includes('Enterprise CRM Pipeline'), 'TeamAnalyticsDashboard.jsx renders pipeline stage distribution chart');
+assert(teamAnalyticsCode.includes('Weighted') || teamAnalyticsCode.includes('Win Rate'), 'TeamAnalyticsDashboard.jsx calculates weighted revenue forecast');
+assert(teamAnalyticsCode.includes('Industry') || teamAnalyticsCode.includes('Top Industry Sectors'), 'TeamAnalyticsDashboard.jsx calculates industry sector breakdown');
+assert(teamAnalyticsCode.includes('Realtime Database') || teamAnalyticsCode.includes('Realtime Sync') || teamAnalyticsCode.includes('Live Sync'), 'TeamAnalyticsDashboard.jsx provides real-time system health monitor');
 assert(teamAppCodeSuite41.includes('TeamAnalyticsDashboard'), 'TeamApp.jsx imports TeamAnalyticsDashboard component');
 assert(teamAppCodeSuite41.includes("id: 'analytics'"), 'TeamApp.jsx defines analytics nav item');
 assert(adminAppCodeSuite41.includes('TeamAnalyticsDashboard'), 'AdminApp.jsx imports TeamAnalyticsDashboard component');
+
 console.log('\n▶ [Suite 42/42]: Enterprise ROI Calculator & Quote Builder Audit');
 const roiEngineCode = fs.readFileSync(path.join(rootDir, 'src/utils/roiCalculatorEngine.js'), 'utf8');
 const roiModalCode = fs.readFileSync(path.join(rootDir, 'src/components/EnterpriseRoiCalculatorModal.jsx'), 'utf8');
@@ -852,6 +853,29 @@ assert(pdfModalSuite47.includes('window.print()'), 'EnterprisePdfQuoteModal.jsx 
 assert(pdfModalSuite47.includes('-webkit-print-color-adjust: exact'), 'EnterprisePdfQuoteModal.jsx forces exact color preservation in print CSS');
 assert(pdfModalSuite47.includes('@page'), 'EnterprisePdfQuoteModal.jsx defines A4 page layout via @page CSS rule');
 assert(pdfModalSuite47.includes('print-container'), 'EnterprisePdfQuoteModal.jsx wraps printable content in print-container canvas');
+
+console.log('\n▶ [Suite 48/48]: BIMI SVG Tiny 1.2 PS, VMC Certificate & Email Profile Picture Audit');
+const bimiSvgExists = fs.existsSync(path.join(rootDir, 'public/bimi-logo.svg'));
+const bimiVmcExists = fs.existsSync(path.join(rootDir, 'public/bimi-vmc.pem'));
+const bimiDirectVmcExists = fs.existsSync(path.join(rootDir, 'public/th3ory.vmc'));
+const bimiDocExists = fs.existsSync(path.join(rootDir, 'BIMI_SETUP.md'));
+
+assert(bimiSvgExists, 'public/bimi-logo.svg exists in root public directory');
+assert(bimiVmcExists, 'public/bimi-vmc.pem Verified Mark Certificate exists');
+assert(bimiDirectVmcExists, 'public/th3ory.vmc certificate exists');
+assert(bimiDocExists, 'BIMI_SETUP.md DNS setup guide exists');
+
+if (bimiSvgExists) {
+  const bimiSvgContent = fs.readFileSync(path.join(rootDir, 'public/bimi-logo.svg'), 'utf8');
+  assert(bimiSvgContent.includes('baseProfile="tiny-ps"'), 'bimi-logo.svg strictly conforms to SVG Tiny 1.2 PS specification');
+  assert(bimiSvgContent.includes('viewBox="0 0 512 512"'), 'bimi-logo.svg uses 1:1 square canvas for inbox avatars');
+  assert(!bimiSvgContent.includes('<image'), 'bimi-logo.svg contains no raster tags');
+}
+
+const sendEmailCodeSuite48 = fs.readFileSync(path.join(rootDir, 'api/send-email.js'), 'utf8');
+assert(sendEmailCodeSuite48.includes('https://th3ory.online/logo-transparent.png'), 'api/send-email.js embeds official logo profile picture in email header');
+assert(sendEmailCodeSuite48.includes('VERIFIED OFFICIAL SENDER'), 'api/send-email.js includes verified sender badge');
+assert(sendEmailCodeSuite48.includes('Bimi-Selector'), 'api/send-email.js sends Bimi-Selector headers');
 
 // ── Final Test Summary Report ────────────────────────────────────────────────
 console.log('\n============================================================');

@@ -52,15 +52,33 @@ export async function sendEnrollmentEmail(receipt) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: 'TH3ORY Team <team@th3ory.online>',
+        from: 'TH3ORY MASTERCLASS <team@th3ory.online>',
         to: [receipt.email, 'th3orymasterclass@gmail.com', 'mentalistsravan@gmail.com'],
         subject: `🎓 TH3ORY Masterclass Enrollment Confirmed - Order #${receipt.orderId}`,
+        headers: {
+          'Bimi-Selector': 'v=BIMI1; s=default',
+          'Bimi-Indicator': 'https://th3ory.online/bimi-logo.svg',
+          'Bimi-Location': 'https://th3ory.online/bimi-logo.svg; a=https://th3ory.online/bimi-vmc.pem',
+          'X-Entity-Ref-ID': `th3ory-enroll-client-${Date.now()}`
+        },
         html: `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #05080f; color: #ffffff; padding: 40px 20px; text-align: center;">
             <div style="max-width: 550px; margin: 0 auto; background-color: #0b1120; border: 1px solid #1e293b; border-radius: 20px; padding: 30px; text-align: left; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);">
-              <div style="text-align: center; margin-bottom: 25px;">
-                <h1 style="color: #f59e0b; font-size: 24px; font-weight: 900; margin: 0; letter-spacing: 2px;">TH3ORY</h1>
-                <p style="color: #64748b; font-size: 12px; font-weight: 700; text-transform: uppercase; margin-top: 4px;">Masterclass of Influencing</p>
+              <div style="text-align: center; margin-bottom: 25px; border-bottom: 1px solid #1e293b; padding-bottom: 20px;">
+                <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto 12px auto;">
+                  <tr>
+                    <td style="vertical-align: middle; text-align: center;">
+                      <div style="display: inline-block; width: 68px; height: 68px; border-radius: 50%; background: #05080f; border: 2px solid #f59e0b; padding: 4px; box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);">
+                        <img src="https://th3ory.online/logo-transparent.png" alt="TH3ORY Logo" width="56" height="56" style="width: 56px; height: 56px; object-fit: contain; display: block; border-radius: 50%;" />
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+                <h1 style="color: #f59e0b; font-size: 24px; font-weight: 900; margin: 0; letter-spacing: 2px; text-transform: uppercase;">TH3ORY</h1>
+                <div style="display: inline-block; margin-top: 4px; padding: 2px 10px; border-radius: 20px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3);">
+                  <span style="color: #f59e0b; font-size: 10px; font-weight: 800; letter-spacing: 1px;">✓ VERIFIED OFFICIAL SENDER</span>
+                </div>
+                <p style="color: #64748b; font-size: 12px; font-weight: 700; text-transform: uppercase; margin-top: 6px; letter-spacing: 1.5px;">Masterclass of Influencing</p>
               </div>
               <div style="background-color: #1e293b33; border: 1px solid #f59e0b40; border-radius: 14px; padding: 20px; margin-bottom: 25px;">
                 <h2 style="color: #ffffff; font-size: 18px; font-weight: 800; margin-top: 0; margin-bottom: 8px;">Enrollment Confirmed! 🎉</h2>
@@ -108,7 +126,7 @@ export async function sendEnrollmentEmail(receipt) {
                 </div>
               </div>
               <div style="text-align: center; border-top: 1px solid #1e293b; padding-top: 20px;">
-                <p style="color: #64748b; font-size: 12px; margin: 0;">Mentalist Sravan Production &copy; 2026. All rights reserved.</p>
+                <p style="color: #64748b; font-size: 12px; margin: 0;">Mentalist Sravan Production &copy; 2026. All rights reserved. • BIMI Verified Domain: th3ory.online</p>
               </div>
             </div>
           </div>
@@ -168,15 +186,33 @@ export async function sendAmbassadorApprovalEmail(ambassadorData) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: 'TH3ORY Ambassador Desk <ambassador@th3ory.online>',
+        from: 'TH3ORY MASTERCLASS <team@th3ory.online>',
         to: [ambassadorData.email, 'th3orymasterclass@gmail.com'],
         subject: `🌟 Welcome to TH3ORY Campus Ambassador Program - Selection Approved!`,
+        headers: {
+          'Bimi-Selector': 'v=BIMI1; s=default',
+          'Bimi-Indicator': 'https://th3ory.online/bimi-logo.svg',
+          'Bimi-Location': 'https://th3ory.online/bimi-logo.svg; a=https://th3ory.online/bimi-vmc.pem',
+          'X-Entity-Ref-ID': `th3ory-amb-client-${Date.now()}`
+        },
         html: `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #05080f; color: #ffffff; padding: 40px 20px; text-align: center;">
             <div style="max-width: 550px; margin: 0 auto; background-color: #0b1120; border: 1px solid #1e293b; border-radius: 20px; padding: 30px; text-align: left; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);">
-              <div style="text-align: center; margin-bottom: 25px;">
-                <h1 style="color: #f59e0b; font-size: 24px; font-weight: 900; margin: 0; letter-spacing: 2px;">TH3ORY</h1>
-                <p style="color: #64748b; font-size: 12px; font-weight: 700; text-transform: uppercase; margin-top: 4px;">Campus Ambassador Network</p>
+              <div style="text-align: center; margin-bottom: 25px; border-bottom: 1px solid #1e293b; padding-bottom: 20px;">
+                <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto 12px auto;">
+                  <tr>
+                    <td style="vertical-align: middle; text-align: center;">
+                      <div style="display: inline-block; width: 68px; height: 68px; border-radius: 50%; background: #05080f; border: 2px solid #f59e0b; padding: 4px; box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);">
+                        <img src="https://th3ory.online/logo-transparent.png" alt="TH3ORY Logo" width="56" height="56" style="width: 56px; height: 56px; object-fit: contain; display: block; border-radius: 50%;" />
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+                <h1 style="color: #f59e0b; font-size: 24px; font-weight: 900; margin: 0; letter-spacing: 2px; text-transform: uppercase;">TH3ORY</h1>
+                <div style="display: inline-block; margin-top: 4px; padding: 2px 10px; border-radius: 20px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3);">
+                  <span style="color: #f59e0b; font-size: 10px; font-weight: 800; letter-spacing: 1px;">✓ VERIFIED OFFICIAL SENDER</span>
+                </div>
+                <p style="color: #64748b; font-size: 12px; font-weight: 700; text-transform: uppercase; margin-top: 6px; letter-spacing: 1.5px;">Campus Ambassador Network</p>
               </div>
               <div style="background-color: #1e293b33; border: 1px solid #f59e0b40; border-radius: 14px; padding: 20px; margin-bottom: 25px;">
                 <h2 style="color: #ffffff; font-size: 18px; font-weight: 800; margin-top: 0; margin-bottom: 8px;">Congratulations, ${ambassadorData.name}! 🎉</h2>
@@ -205,7 +241,7 @@ export async function sendAmbassadorApprovalEmail(ambassadorData) {
               </div>
 
               <div style="text-align: center; border-top: 1px solid #1e293b; padding-top: 20px;">
-                <p style="color: #64748b; font-size: 12px; margin: 0;">Mentalist Sravan Production &copy; 2026. All rights reserved.</p>
+                <p style="color: #64748b; font-size: 12px; margin: 0;">Mentalist Sravan Production &copy; 2026. All rights reserved. • BIMI Verified Domain: th3ory.online</p>
               </div>
             </div>
           </div>
@@ -266,15 +302,33 @@ export async function sendAmbassadorInterviewInviteEmail(interviewData) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: 'TH3ORY Team Desk <team@th3ory.online>',
+        from: 'TH3ORY MASTERCLASS <team@th3ory.online>',
         to: [interviewData.email, 'th3orymasterclass@gmail.com'],
         subject: `📅 Campus Ambassador Selection Interview Invitation — TH3ORY Masterclass`,
+        headers: {
+          'Bimi-Selector': 'v=BIMI1; s=default',
+          'Bimi-Indicator': 'https://th3ory.online/bimi-logo.svg',
+          'Bimi-Location': 'https://th3ory.online/bimi-logo.svg; a=https://th3ory.online/bimi-vmc.pem',
+          'X-Entity-Ref-ID': `th3ory-interview-client-${Date.now()}`
+        },
         html: `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #05080f; color: #ffffff; padding: 40px 20px; text-align: center;">
             <div style="max-width: 550px; margin: 0 auto; background-color: #0b1120; border: 1px solid #1e293b; border-radius: 20px; padding: 30px; text-align: left; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);">
-              <div style="text-align: center; margin-bottom: 25px;">
-                <h1 style="color: #f59e0b; font-size: 24px; font-weight: 900; margin: 0; letter-spacing: 2px;">TH3ORY</h1>
-                <p style="color: #64748b; font-size: 12px; font-weight: 700; text-transform: uppercase; margin-top: 4px;">Campus Ambassador Selection Desk</p>
+              <div style="text-align: center; margin-bottom: 25px; border-bottom: 1px solid #1e293b; padding-bottom: 20px;">
+                <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto 12px auto;">
+                  <tr>
+                    <td style="vertical-align: middle; text-align: center;">
+                      <div style="display: inline-block; width: 68px; height: 68px; border-radius: 50%; background: #05080f; border: 2px solid #f59e0b; padding: 4px; box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);">
+                        <img src="https://th3ory.online/logo-transparent.png" alt="TH3ORY Logo" width="56" height="56" style="width: 56px; height: 56px; object-fit: contain; display: block; border-radius: 50%;" />
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+                <h1 style="color: #f59e0b; font-size: 24px; font-weight: 900; margin: 0; letter-spacing: 2px; text-transform: uppercase;">TH3ORY</h1>
+                <div style="display: inline-block; margin-top: 4px; padding: 2px 10px; border-radius: 20px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3);">
+                  <span style="color: #f59e0b; font-size: 10px; font-weight: 800; letter-spacing: 1px;">✓ VERIFIED OFFICIAL SENDER</span>
+                </div>
+                <p style="color: #64748b; font-size: 12px; font-weight: 700; text-transform: uppercase; margin-top: 6px; letter-spacing: 1.5px;">Campus Ambassador Selection Desk</p>
               </div>
               <div style="background-color: #1e293b33; border: 1px solid #f59e0b40; border-radius: 14px; padding: 20px; margin-bottom: 25px;">
                 <h2 style="color: #ffffff; font-size: 18px; font-weight: 800; margin-top: 0; margin-bottom: 8px;">Hello, ${interviewData.name}! 👋</h2>
@@ -303,7 +357,7 @@ export async function sendAmbassadorInterviewInviteEmail(interviewData) {
               ` : ''}
 
               <div style="text-align: center; border-top: 1px solid #1e293b; padding-top: 20px;">
-                <p style="color: #64748b; font-size: 12px; margin: 0;">Mentalist Sravan Production &copy; 2026. All rights reserved.</p>
+                <p style="color: #64748b; font-size: 12px; margin: 0;">Mentalist Sravan Production &copy; 2026. All rights reserved. • BIMI Verified Domain: th3ory.online</p>
               </div>
             </div>
           </div>
@@ -369,12 +423,30 @@ export async function sendPortalBroadcastEmail(payload) {
         from: payload.senderName || 'TH3ORY MASTERCLASS <team@th3ory.online>',
         to: targetList,
         subject: payload.subject || '📢 Notification from TH3ORY Administration',
+        headers: {
+          'Bimi-Selector': 'v=BIMI1; s=default',
+          'Bimi-Indicator': 'https://th3ory.online/bimi-logo.svg',
+          'Bimi-Location': 'https://th3ory.online/bimi-logo.svg; a=https://th3ory.online/bimi-vmc.pem',
+          'X-Entity-Ref-ID': `th3ory-broadcast-client-${Date.now()}`
+        },
         html: `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #05080f; color: #ffffff; padding: 40px 20px; text-align: center;">
             <div style="max-width: 580px; margin: 0 auto; background-color: #0b1120; border: 1px solid #1e293b; border-radius: 20px; padding: 32px; text-align: left; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);">
               <div style="text-align: center; margin-bottom: 25px; border-bottom: 1px solid #1e293b; padding-bottom: 20px;">
-                <h1 style="color: #f59e0b; font-size: 26px; font-weight: 900; margin: 0; letter-spacing: 2px;">TH3ORY</h1>
-                <p style="color: #64748b; font-size: 12px; font-weight: 700; text-transform: uppercase; margin-top: 4px;">Executive Portal Communications</p>
+                <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto 12px auto;">
+                  <tr>
+                    <td style="vertical-align: middle; text-align: center;">
+                      <div style="display: inline-block; width: 68px; height: 68px; border-radius: 50%; background: #05080f; border: 2px solid #f59e0b; padding: 4px; box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);">
+                        <img src="https://th3ory.online/logo-transparent.png" alt="TH3ORY Logo" width="56" height="56" style="width: 56px; height: 56px; object-fit: contain; display: block; border-radius: 50%;" />
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+                <h1 style="color: #f59e0b; font-size: 26px; font-weight: 900; margin: 0; letter-spacing: 2px; text-transform: uppercase;">TH3ORY</h1>
+                <div style="display: inline-block; margin-top: 4px; padding: 2px 10px; border-radius: 20px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3);">
+                  <span style="color: #f59e0b; font-size: 10px; font-weight: 800; letter-spacing: 1px;">✓ VERIFIED OFFICIAL SENDER</span>
+                </div>
+                <p style="color: #64748b; font-size: 12px; font-weight: 700; text-transform: uppercase; margin-top: 6px; letter-spacing: 1.5px;">Executive Portal Communications</p>
               </div>
               <div style="background-color: #1e293b33; border: 1px solid #f59e0b40; border-radius: 14px; padding: 20px; margin-bottom: 25px;">
                 <h2 style="color: #ffffff; font-size: 18px; font-weight: 800; margin-top: 0; margin-bottom: 10px;">${payload.subject}</h2>
@@ -386,13 +458,14 @@ export async function sendPortalBroadcastEmail(payload) {
                 </a>
               </div>
               <div style="text-align: center; border-top: 1px solid #1e293b; padding-top: 20px;">
-                <p style="color: #64748b; font-size: 12px; margin: 0;">Mentalist Sravan Production &copy; 2026. All rights reserved.</p>
+                <p style="color: #64748b; font-size: 12px; margin: 0;">Mentalist Sravan Production &copy; 2026. All rights reserved. • BIMI Verified Domain: th3ory.online</p>
               </div>
             </div>
           </div>
         `
       })
     });
+
 
     const data = await directRes.json();
     return { success: directRes.ok, data };
