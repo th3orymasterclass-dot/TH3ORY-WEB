@@ -251,7 +251,7 @@ export default function TeamLogin({ onAuthenticated }) {
               <Sparkles className="w-3.5 h-3.5" /> Account-Aligned Data Access:
             </p>
             <p>
-              Each team member logs into a segregated operational workspace containing tailor-made shareable outreach collateral, personal tracking links, and assigned client data.
+              Each team member logs into a segregated operational workspace containing account analytics, client inquiries, and assigned enterprise data.
             </p>
           </div>
         </div>

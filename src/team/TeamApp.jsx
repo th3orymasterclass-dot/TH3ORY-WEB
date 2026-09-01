@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   HelpCircle, Mail, Tag, Send, Users, Shield, LogOut, ChevronRight, 
-  Menu, X, ExternalLink, Sun, Moon, BarChart3, Share2, Sparkles,
+  Menu, X, ExternalLink, Sun, Moon, BarChart3, Sparkles,
   UserCheck, UserPlus, CheckCircle2, QrCode, RefreshCw
 } from 'lucide-react';
 import useAdminData from '../admin/useAdminData';
@@ -11,12 +11,10 @@ import TeamAffiliatesPanel from './panels/TeamAffiliatesPanel';
 import NewsletterPanel from '../admin/panels/NewsletterPanel';
 import AmbassadorApplicationsPanel from '../admin/panels/AmbassadorApplicationsPanel';
 import TeamAnalyticsDashboard from './panels/TeamAnalyticsDashboard';
-import TeamShareableContentPanel from './panels/TeamShareableContentPanel';
 import { fetchAllTeamMembersFromSupabase } from '../services/supabaseService';
 
 const TEAM_NAV = [
   { id: 'analytics',  label: 'Overview & My Analytics',    icon: BarChart3 },
-  { id: 'shareable',  label: 'Shareable Content & Kits',   icon: Share2 },
   { id: 'quotes',     label: 'Enterprise Quotes & Leads',  icon: HelpCircle },
   { id: 'inquiries',  label: 'Contact Us Enquiries',       icon: Mail },
   { id: 'affiliates', label: 'Affiliation Programs',      icon: Tag },
@@ -111,13 +109,6 @@ export default function TeamApp({ onLogout }) {
             enterpriseQuotes={enterpriseQuotes}
             contactInquiries={contactInquiries}
             newsletterSubscribers={newsletterSubscribers}
-            teamProfile={teamProfile}
-            themeMode={themeMode}
-          />
-        );
-      case 'shareable':
-        return (
-          <TeamShareableContentPanel
             teamProfile={teamProfile}
             themeMode={themeMode}
           />
@@ -395,7 +386,7 @@ export default function TeamApp({ onLogout }) {
             </div>
 
             <p className="text-xs text-slate-400 leading-relaxed">
-              Select any registered team member profile to switch the workspace and align the dashboard to their assigned department, quotes, and shareable content.
+              Select any registered team member profile to switch the workspace and align the dashboard to their assigned department, quotes, and inquiries.
             </p>
 
             <div className="space-y-2 max-h-64 overflow-y-auto pr-1">

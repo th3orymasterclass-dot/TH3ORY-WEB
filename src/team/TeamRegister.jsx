@@ -192,7 +192,7 @@ export default function TeamRegister({ onRegistrationSuccess }) {
                 Team Member Registration
               </h1>
               <p className="text-slate-400 text-xs sm:text-sm max-w-xl mx-auto leading-relaxed">
-                Allocate your dedicated team profile. Once provisioned, you will unlock your multi-account workspace with tailor-made shareable marketing collateral and account-aligned data.
+                Allocate your dedicated team profile. Once provisioned, you will unlock your multi-account workspace with CRM lead management and account-aligned data.
               </p>
             </div>
 
