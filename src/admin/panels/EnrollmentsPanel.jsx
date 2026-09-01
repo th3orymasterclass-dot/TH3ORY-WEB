@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ShoppingBag, Search, Filter, Calendar, CreditCard, User, Mail, Phone, MapPin, CheckCircle, Clock, FileText, X, DollarSign } from 'lucide-react';
+import { ShoppingBag, Search, Filter, Calendar, CreditCard, User, Mail, Phone, MapPin, CheckCircle, Clock, FileText, X, DollarSign, Eye, Copy } from 'lucide-react';
+import ActionDropdown from '../../components/ActionDropdown';
 
 export default function EnrollmentsPanel({ enrollments = [], themeMode = 'dark' }) {
   const [search, setSearch] = useState('');
@@ -157,12 +158,30 @@ export default function EnrollmentsPanel({ enrollments = [], themeMode = 'dark' 
                       {new Date(item.enrolled_at || item.created_at || Date.now()).toLocaleDateString()}
                     </td>
                     <td className="p-3 text-right">
-                      <button
-                        onClick={() => setSelectedEnrollment(item)}
-                        className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] rounded-lg transition-colors cursor-pointer"
-                      >
-                        View Full
-                      </button>
+                      <ActionDropdown
+                        isDark={isDark}
+                        label="Actions"
+                        items={[
+                          {
+                            label: 'View Full Receipt',
+                            icon: Eye,
+                            onClick: () => setSelectedEnrollment(item),
+                            variant: 'primary'
+                          },
+                          {
+                            label: 'Copy Enrollment Code',
+                            icon: Copy,
+                            onClick: () => navigator.clipboard.writeText(item.enrollment_code || item.order_id || ''),
+                            variant: 'default'
+                          },
+                          {
+                            label: 'Copy Student Email',
+                            icon: Mail,
+                            onClick: () => navigator.clipboard.writeText(item.email || ''),
+                            variant: 'default'
+                          }
+                        ]}
+                      />
                     </td>
                   </tr>
                 ))}

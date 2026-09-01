@@ -15,6 +15,7 @@ import {
 import CalendlyModal from '../../components/CalendlyModal';
 import { EnterpriseRoiCalculatorModal } from '../../components/EnterpriseRoiCalculatorModal';
 import { EnterprisePdfQuoteModal } from '../../components/EnterprisePdfQuoteModal';
+import ActionDropdown from '../../components/ActionDropdown';
 import { formatDualCurrency, parseCurrencyAmount } from '../../utils/currencyUtils';
 
 export default function TeamQuotesPanel({ enterpriseQuotes = [], updateQuoteStatus, teamProfile = {}, themeMode = 'dark' }) {
@@ -485,80 +486,58 @@ export default function TeamQuotesPanel({ enterpriseQuotes = [], updateQuoteStat
                       <div className="text-[10px] text-slate-400 font-mono">Win Prob: <span className="text-amber-400 font-bold">{q.probability || '50%'}</span></div>
                     </td>
 
-                    {/* Actions */}
+                    {/* Actions Dropdown */}
                     <td className="p-3 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        
-                        {/* Inspect All CRM Fields */}
-                        <button
-                          onClick={() => setInspectingQuote(q)}
-                          className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 font-bold text-[10px] rounded-lg transition-colors cursor-pointer flex items-center gap-1"
-                          title="Inspect All CRM Fields"
-                        >
-                          <Eye className="w-3 h-3 text-indigo-400" />
-                          <span>Inspect</span>
-                        </button>
-
-                        {/* Edit Record Modal */}
-                        <button
-                          onClick={() => handleOpenEditModal(q)}
-                          className="px-2 py-1 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/40 font-bold text-[10px] rounded-lg transition-colors cursor-pointer flex items-center gap-1"
-                          title="Edit Full CRM Fields"
-                        >
-                          <Edit3 className="w-3 h-3 text-indigo-400" />
-                          <span>Edit</span>
-                        </button>
-
-                        {/* Calculate ROI Button */}
-                        <button
-                          onClick={() => setRoiCalculatorQuote(q)}
-                          className="px-2 py-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 font-bold text-[10px] rounded-lg transition-colors cursor-pointer flex items-center gap-1"
-                          title="Calculate Enterprise ROI & Quote"
-                        >
-                          <Calculator className="w-3 h-3 text-emerald-400" />
-                          <span>ROI Calc</span>
-                        </button>
-
-                        {/* PDF Quote Generator & Email Dispatch */}
-                        <button
-                          onClick={() => setPdfQuoteTarget(q)}
-                          className="px-2 py-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/40 font-bold text-[10px] rounded-lg transition-colors cursor-pointer flex items-center gap-1"
-                          title="Generate & Email Downloadable PDF Quote"
-                        >
-                          <FileText className="w-3 h-3 text-purple-400" />
-                          <span>PDF Quote</span>
-                        </button>
-
-                        {/* Schedule Meeting */}
-                        <button
-                          onClick={() => setCalendlyQuote(q)}
-                          className="px-2 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-bold text-[10px] rounded-lg transition-colors cursor-pointer flex items-center gap-1"
-                          title="Schedule Meeting via Calendly"
-                        >
-                          <Calendar className="w-3 h-3 text-amber-400" />
-                          <span>Call</span>
-                        </button>
-
-                        {/* Delete Record */}
-                        <button
-                          onClick={() => handleDeleteQuote(q.id)}
-                          disabled={deletingId === q.id}
-                          className="px-2 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-bold text-[10px] rounded-lg transition-colors cursor-pointer flex items-center gap-1"
-                          title="Delete CRM Record"
-                        >
-                          <Trash2 className="w-3 h-3 text-rose-400" />
-                          <span>{deletingId === q.id ? '...' : 'Del'}</span>
-                        </button>
-
-                        {/* Propose Change for Admin Approval */}
-                        <button
-                          onClick={() => { setSelectedQuote(q); setProposedStatus(q.status || 'In Contact'); setProposedNotes(''); }}
-                          className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] rounded-lg transition-colors cursor-pointer"
-                        >
-                          Propose
-                        </button>
-
-                      </div>
+                      <ActionDropdown
+                        isDark={isDark}
+                        label="Actions"
+                        items={[
+                          {
+                            label: 'Inspect All CRM Fields',
+                            icon: Eye,
+                            onClick: () => setInspectingQuote(q),
+                            variant: 'primary'
+                          },
+                          {
+                            label: 'Edit CRM Details',
+                            icon: Edit3,
+                            onClick: () => handleOpenEditModal(q),
+                            variant: 'default'
+                          },
+                          {
+                            label: 'ROI Calculator',
+                            icon: Calculator,
+                            onClick: () => setRoiCalculatorQuote(q),
+                            variant: 'success'
+                          },
+                          {
+                            label: 'Generate PDF Quote',
+                            icon: FileText,
+                            onClick: () => setPdfQuoteTarget(q),
+                            variant: 'purple'
+                          },
+                          {
+                            label: 'Schedule Meeting Call',
+                            icon: Calendar,
+                            onClick: () => setCalendlyQuote(q),
+                            variant: 'warning'
+                          },
+                          {
+                            label: 'Propose Admin Approval',
+                            icon: Send,
+                            onClick: () => { setSelectedQuote(q); setProposedStatus(q.status || 'In Contact'); setProposedNotes(''); },
+                            variant: 'primary'
+                          },
+                          { divider: true },
+                          {
+                            label: deletingId === q.id ? 'Deleting...' : 'Delete Lead Record',
+                            icon: Trash2,
+                            onClick: () => handleDeleteQuote(q.id),
+                            disabled: deletingId === q.id,
+                            variant: 'danger'
+                          }
+                        ]}
+                      />
                     </td>
                   </tr>
                 ))}

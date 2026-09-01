@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { 
   HelpCircle, Building2, Mail, CheckCircle2, Clock, MessageSquare, 
   Search, Send, User, ChevronRight, PlusCircle, Trash2, Calendar, 
-  Globe, Linkedin, Edit3, Eye, Plus, Shield, TrendingUp, DollarSign, Calculator
+  Globe, Linkedin, Edit3, Eye, Plus, Shield, TrendingUp, DollarSign, Calculator, FileText
 } from 'lucide-react';
+import ActionDropdown from '../../components/ActionDropdown';
 import { 
   saveEnterpriseQuoteToSupabase, 
   deleteEnterpriseQuoteFromSupabase, 
@@ -541,72 +542,52 @@ export default function QueriesQuotesPanel({
                           <div className="text-[10px] text-slate-400 font-mono">Win Prob: <span className="text-amber-400 font-bold">{q.probability || '50%'}</span></div>
                         </td>
 
-                        {/* Actions */}
+                        {/* Actions Dropdown */}
                         <td className="p-3 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            
-                            {/* Inspect */}
-                            <button
-                              onClick={() => setInspectingQuote(q)}
-                              className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 font-bold text-[10px] rounded-lg transition-colors cursor-pointer flex items-center gap-1"
-                              title="Inspect All CRM Fields"
-                            >
-                              <Eye className="w-3 h-3 text-indigo-400" />
-                              <span>Inspect</span>
-                            </button>
-
-                            {/* Edit */}
-                            <button
-                              onClick={() => handleOpenEditModal(q)}
-                              className="px-2 py-1 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/40 font-bold text-[10px] rounded-lg transition-colors cursor-pointer flex items-center gap-1"
-                              title="Edit All CRM Fields"
-                            >
-                              <Edit3 className="w-3 h-3 text-indigo-400" />
-                              <span>Edit</span>
-                            </button>
-
-                            {/* Calculate Enterprise ROI */}
-                            <button
-                              onClick={() => setRoiCalculatorQuote(q)}
-                              className="px-2 py-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 font-bold text-[10px] rounded-lg transition-colors cursor-pointer flex items-center gap-1"
-                              title="Calculate Enterprise ROI & Quote"
-                            >
-                              <Calculator className="w-3 h-3 text-emerald-400" />
-                              <span>ROI Calc</span>
-                            </button>
-
-                            {/* PDF Quote Generator & Email Dispatch */}
-                            <button
-                              onClick={() => setPdfQuoteTarget(q)}
-                              className="px-2 py-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/40 font-bold text-[10px] rounded-lg transition-colors cursor-pointer flex items-center gap-1"
-                              title="Generate & Email Downloadable PDF Quote"
-                            >
-                              <FileText className="w-3 h-3 text-purple-400" />
-                              <span>PDF Quote</span>
-                            </button>
-
-                            {/* Schedule Call */}
-                            <button
-                              onClick={() => setCalendlyTarget({ name: q.contact_name, email: q.email, title: `Enterprise Meeting with ${q.org_name}` })}
-                              className="px-2 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-bold text-[10px] rounded-lg transition-colors cursor-pointer flex items-center gap-1"
-                              title="Schedule Call"
-                            >
-                              <Calendar className="w-3 h-3 text-amber-400" />
-                              <span>Call</span>
-                            </button>
-
-                            {/* Delete */}
-                            <button
-                              onClick={() => handleDeleteQuote(q.id)}
-                              disabled={deletingId === q.id}
-                              className="px-2 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-bold text-[10px] rounded-lg transition-colors cursor-pointer flex items-center gap-1"
-                              title="Delete Record"
-                            >
-                              <Trash2 className="w-3 h-3 text-rose-400" />
-                              <span>{deletingId === q.id ? '...' : 'Del'}</span>
-                            </button>
-
-                          </div>
+                          <ActionDropdown
+                            isDark={isDark}
+                            label="Actions"
+                            items={[
+                              {
+                                label: 'Inspect Record',
+                                icon: Eye,
+                                onClick: () => setInspectingQuote(q),
+                                variant: 'primary'
+                              },
+                              {
+                                label: 'Edit CRM Details',
+                                icon: Edit3,
+                                onClick: () => handleOpenEditModal(q),
+                                variant: 'default'
+                              },
+                              {
+                                label: 'ROI Calculator',
+                                icon: Calculator,
+                                onClick: () => setRoiCalculatorQuote(q),
+                                variant: 'success'
+                              },
+                              {
+                                label: 'Generate PDF Quote',
+                                icon: FileText,
+                                onClick: () => setPdfQuoteTarget(q),
+                                variant: 'purple'
+                              },
+                              {
+                                label: 'Schedule Meeting',
+                                icon: Calendar,
+                                onClick: () => setCalendlyTarget({ name: q.contact_name, email: q.email, title: `Enterprise Meeting with ${q.org_name}` }),
+                                variant: 'warning'
+                              },
+                              { divider: true },
+                              {
+                                label: deletingId === q.id ? 'Deleting...' : 'Delete Record',
+                                icon: Trash2,
+                                onClick: () => handleDeleteQuote(q.id),
+                                disabled: deletingId === q.id,
+                                variant: 'danger'
+                              }
+                            ]}
+                          />
                         </td>
                       </tr>
                     ))}

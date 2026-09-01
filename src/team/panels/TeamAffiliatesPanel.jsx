@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Tag, Shield, Check, Plus, Send, Calendar, Users, Eye, Mail, Phone, ExternalLink, Sparkles, Edit3, Trash2 } from 'lucide-react';
+import ActionDropdown from '../../components/ActionDropdown';
 import { submitTeamApprovalRequestToSupabase, fetchAllAffiliateApplicationsFromSupabase, deleteAffiliateApplicationFromSupabase, updateAffiliateApplicationInSupabase } from '../../services/supabaseService';
 import CalendlyModal from '../../components/CalendlyModal';
 
@@ -184,30 +185,32 @@ export default function TeamAffiliatesPanel({ save, themeMode = 'dark' }) {
                     </td>
                     <td className="p-3 font-mono text-[#FFC857]">{app.audience_size || 'N/A'}</td>
                     <td className="p-3 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() => setSelectedApp(app)}
-                          className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>View Details</span>
-                        </button>
-                        <button
-                          onClick={() => handleOpenEditModal(app)}
-                          className="px-2.5 py-1 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/40 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1"
-                        >
-                          <Edit3 className="w-3.5 h-3.5 text-indigo-400" />
-                          <span>Edit</span>
-                        </button>
-                        <button
-                          onClick={() => handleDeleteAffiliateApp(app.id || app.app_id)}
-                          disabled={deletingId === (app.id || app.app_id)}
-                          className="px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1"
-                        >
-                          <Trash2 className="w-3.5 h-3.5 text-rose-400" />
-                          <span>{deletingId === (app.id || app.app_id) ? '...' : 'Delete'}</span>
-                        </button>
-                      </div>
+                      <ActionDropdown
+                        isDark={isDark}
+                        label="Actions"
+                        items={[
+                          {
+                            label: 'View Full Details',
+                            icon: Eye,
+                            onClick: () => setSelectedApp(app),
+                            variant: 'primary'
+                          },
+                          {
+                            label: 'Edit Application',
+                            icon: Edit3,
+                            onClick: () => handleOpenEditModal(app),
+                            variant: 'default'
+                          },
+                          { divider: true },
+                          {
+                            label: deletingId === (app.id || app.app_id) ? 'Deleting...' : 'Delete Application',
+                            icon: Trash2,
+                            onClick: () => handleDeleteAffiliateApp(app.id || app.app_id),
+                            disabled: deletingId === (app.id || app.app_id),
+                            variant: 'danger'
+                          }
+                        ]}
+                      />
                     </td>
                   </tr>
                 ))}

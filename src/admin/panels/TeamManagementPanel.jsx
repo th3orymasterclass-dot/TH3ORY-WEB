@@ -10,6 +10,7 @@ import {
   updateTeamMemberInSupabase, 
   deleteTeamMemberFromSupabase 
 } from '../../services/supabaseService';
+import ActionDropdown from '../../components/ActionDropdown';
 
 export default function TeamManagementPanel({ themeMode = 'dark' }) {
   const isDark = themeMode === 'dark';
@@ -275,7 +276,7 @@ export default function TeamManagementPanel({ themeMode = 'dark' }) {
                   </div>
                 </div>
 
-                {/* Actions */}
+                {/* Actions Dropdown */}
                 <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between">
                   <button
                     onClick={() => handleCopy(memberId, `Team Account: ${m.name} | ID: ${memberId} | Rep: ${repCode} | Email: ${m.email} | Passcode: ${m.passcode}`)}
@@ -285,33 +286,31 @@ export default function TeamManagementPanel({ themeMode = 'dark' }) {
                     <span>{copiedId === memberId ? 'Copied' : 'Copy Creds'}</span>
                   </button>
 
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => handleOpenEdit(m)}
-                      className="p-1.5 rounded-lg border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800 transition-all cursor-pointer"
-                      title="Edit Member"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => handleToggleStatus(m)}
-                      className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
-                        isSuspended 
-                          ? 'border-emerald-500/40 text-emerald-400 hover:bg-emerald-950/30' 
-                          : 'border-amber-500/40 text-amber-400 hover:bg-amber-950/30'
-                      }`}
-                      title={isSuspended ? 'Reactivate Account' : 'Suspend Account'}
-                    >
-                      {isSuspended ? <CheckCircle2 className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
-                    </button>
-                    <button
-                      onClick={() => handleDelete(m)}
-                      className="p-1.5 rounded-lg border border-rose-500/30 text-rose-400 hover:bg-rose-950/30 transition-all cursor-pointer"
-                      title="Delete Account"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                  <ActionDropdown
+                    isDark={isDark}
+                    label="Actions"
+                    items={[
+                      {
+                        label: 'Edit Member Profile',
+                        icon: Edit3,
+                        onClick: () => handleOpenEdit(m),
+                        variant: 'primary'
+                      },
+                      {
+                        label: isSuspended ? 'Reactivate Account' : 'Suspend Account',
+                        icon: isSuspended ? CheckCircle2 : XCircle,
+                        onClick: () => handleToggleStatus(m),
+                        variant: isSuspended ? 'success' : 'warning'
+                      },
+                      { divider: true },
+                      {
+                        label: 'Delete Team Account',
+                        icon: Trash2,
+                        onClick: () => handleDelete(m),
+                        variant: 'danger'
+                      }
+                    ]}
+                  />
                 </div>
               </div>
             );

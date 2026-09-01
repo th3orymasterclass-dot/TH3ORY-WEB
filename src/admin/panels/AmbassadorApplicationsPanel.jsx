@@ -16,6 +16,7 @@ import {
 } from '../../services/supabaseService';
 import { sendAmbassadorApprovalEmail, sendAmbassadorInterviewInviteEmail } from '../../services/emailService';
 import CalendlyModal from '../../components/CalendlyModal';
+import ActionDropdown from '../../components/ActionDropdown';
 
 const DEFAULT_CALENDLY_URL = import.meta.env.VITE_CALENDLY_URL || 'https://calendly.com/th3orymasterclass/30min';
 
@@ -461,67 +462,51 @@ export default function AmbassadorApplicationsPanel({ themeMode = 'dark' }) {
                 {/* ACTION BUTTONS WORKFLOW */}
                 {!isApproved && app.status !== 'REJECTED' && (
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-800">
-                    <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                      
-                      {/* 1. Direct Embedded Calendly Call Button */}
-                      <button
-                        onClick={() => handleOpenDirectCalendlyCall(app)}
-                        className="px-3.5 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
-                        title="Call or Conduct Live Selection Interview via Calendly"
-                      >
-                        <Calendar className="w-4 h-4 text-amber-400" />
-                        <span>Call / Schedule via Calendly</span>
-                      </button>
-
-                      {/* 2. Dispatch Email Invite Modal Button */}
-                      <button
-                        onClick={() => handleOpenInviteModal(app)}
-                        className="px-3.5 py-2 rounded-xl bg-blue-950/60 hover:bg-blue-900/80 border border-blue-500/40 text-blue-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
-                        title="Send Calendly Email Invite to candidate with custom schedule option"
-                      >
-                        <Send className="w-3.5 h-3.5 text-blue-400" />
-                        <span>Send Invite Email</span>
-                      </button>
-
-                      {/* 3. Quick Copy Calendly Link Button */}
-                      <button
-                        onClick={() => handleCopyCalendlyLink(app)}
-                        className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition-all flex items-center justify-center gap-1 cursor-pointer shrink-0 border border-slate-700"
-                        title="Copy direct pre-filled Calendly link for WhatsApp/Phone outreach"
-                      >
-                        {copiedAppId === appId ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-slate-400" />}
-                        <span>{copiedAppId === appId ? 'Link Copied' : 'Copy Link'}</span>
-                      </button>
-
-                      {/* 4. Edit Form Application Record */}
-                      <button
-                        onClick={() => handleOpenEditAmbModal(app)}
-                        className="px-3 py-2 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/40 text-indigo-300 text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer shrink-0"
-                        title="Edit Ambassador Form Details"
-                      >
-                        <Edit3 className="w-3.5 h-3.5 text-indigo-400" />
-                        <span>Edit Form</span>
-                      </button>
-
-                      {/* 5. Delete Application Record */}
-                      <button
-                        onClick={() => handleDeleteAmbassadorApp(appId)}
-                        disabled={deletingAmbId === appId}
-                        className="px-3 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-300 text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer shrink-0"
-                        title="Delete Application Record"
-                      >
-                        <Trash2 className="w-3.5 h-3.5 text-rose-400" />
-                        <span>{deletingAmbId === appId ? '...' : 'Delete'}</span>
-                      </button>
-
-                      {/* 6. Log Manual Evaluation Button */}
-                      <button
-                        onClick={() => handleOpenInterviewModal(app)}
-                        className="px-3.5 py-2 rounded-xl bg-indigo-950/60 hover:bg-indigo-900/80 border border-indigo-500/40 text-indigo-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
-                      >
-                        <UserCheck className="w-4 h-4" />
-                        <span>{(app.interviewNotes || app.interview_notes) ? 'Edit Evaluation' : 'Conduct Team Interview & Log Evaluation'}</span>
-                      </button>
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <ActionDropdown
+                        isDark={isDark}
+                        label="Actions"
+                        items={[
+                          {
+                            label: 'Call / Schedule via Calendly',
+                            icon: Calendar,
+                            onClick: () => handleOpenDirectCalendlyCall(app),
+                            variant: 'warning'
+                          },
+                          {
+                            label: 'Send Invite Email',
+                            icon: Send,
+                            onClick: () => handleOpenInviteModal(app),
+                            variant: 'primary'
+                          },
+                          {
+                            label: copiedAppId === appId ? 'Link Copied!' : 'Copy Calendly Link',
+                            icon: copiedAppId === appId ? Check : Copy,
+                            onClick: () => handleCopyCalendlyLink(app),
+                            variant: 'default'
+                          },
+                          {
+                            label: (app.interviewNotes || app.interview_notes) ? 'Edit Evaluation Notes' : 'Conduct Team Interview & Log Evaluation',
+                            icon: UserCheck,
+                            onClick: () => handleOpenInterviewModal(app),
+                            variant: 'purple'
+                          },
+                          {
+                            label: 'Edit Form Details',
+                            icon: Edit3,
+                            onClick: () => handleOpenEditAmbModal(app),
+                            variant: 'default'
+                          },
+                          { divider: true },
+                          {
+                            label: deletingAmbId === appId ? 'Deleting...' : 'Delete Application',
+                            icon: Trash2,
+                            onClick: () => handleDeleteAmbassadorApp(appId),
+                            disabled: deletingAmbId === appId,
+                            variant: 'danger'
+                          }
+                        ]}
+                      />
                     </div>
 
                     <div className="flex items-center gap-3 w-full sm:w-auto mt-2 sm:mt-0">
@@ -538,7 +523,7 @@ export default function AmbassadorApplicationsPanel({ themeMode = 'dark' }) {
                         disabled={isProcessing}
                         className="flex-1 sm:flex-initial px-6 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-extrabold text-xs uppercase tracking-wider transition-all shadow-md shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
                       >
-                        {isProcessing ? 'Issuing Credentials...' : 'Approve & Dispatch Resend Credentials Email'}
+                        {isProcessing ? 'Issuing Credentials...' : 'Approve & Dispatch Credentials'}
                         <Send className="w-4 h-4" />
                       </button>
                     </div>

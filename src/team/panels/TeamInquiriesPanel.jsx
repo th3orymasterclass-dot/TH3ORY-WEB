@@ -7,6 +7,7 @@ import {
   assignItemToTeamMemberInSupabase
 } from '../../services/supabaseService';
 import CalendlyModal from '../../components/CalendlyModal';
+import ActionDropdown from '../../components/ActionDropdown';
 
 export default function TeamInquiriesPanel({ contactInquiries = [], updateInquiryStatus, teamProfile = {}, themeMode = 'dark' }) {
   const [maskData, setMaskData] = useState(false);
@@ -231,39 +232,38 @@ export default function TeamInquiriesPanel({ contactInquiries = [], updateInquir
                     <td className="p-3 font-semibold">{inq.subject || 'General Inquiry'}</td>
                     <td className="p-3 truncate max-w-xs">{inq.message}</td>
                     <td className="p-3 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() => setCalendlyInquiry(inq)}
-                          className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-bold text-[10px] rounded-lg transition-colors cursor-pointer flex items-center gap-1"
-                          title="Schedule Meeting via Calendly"
-                        >
-                          <Calendar className="w-3 h-3 text-amber-400" />
-                          <span>Schedule Call</span>
-                        </button>
-                        <button
-                          onClick={() => handleOpenEditModal(inq)}
-                          className="px-2.5 py-1 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/40 font-bold text-[10px] rounded-lg transition-colors cursor-pointer flex items-center gap-1"
-                          title="Edit Inquiry Details"
-                        >
-                          <Edit3 className="w-3 h-3 text-indigo-400" />
-                          <span>Edit</span>
-                        </button>
-                        <button
-                          onClick={() => handleDeleteInquiry(inq.id)}
-                          disabled={deletingId === inq.id}
-                          className="px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-bold text-[10px] rounded-lg transition-colors cursor-pointer flex items-center gap-1"
-                          title="Delete Inquiry"
-                        >
-                          <Trash2 className="w-3 h-3 text-rose-400" />
-                          <span>{deletingId === inq.id ? '...' : 'Delete'}</span>
-                        </button>
-                        <button
-                          onClick={() => { setSelectedInquiry(inq); setProposedReply(''); }}
-                          className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] rounded-lg transition-colors cursor-pointer"
-                        >
-                          Draft Reply
-                        </button>
-                      </div>
+                      <ActionDropdown
+                        isDark={isDark}
+                        label="Actions"
+                        items={[
+                          {
+                            label: 'Schedule Meeting Call',
+                            icon: Calendar,
+                            onClick: () => setCalendlyInquiry(inq),
+                            variant: 'warning'
+                          },
+                          {
+                            label: 'Edit Inquiry Details',
+                            icon: Edit3,
+                            onClick: () => handleOpenEditModal(inq),
+                            variant: 'default'
+                          },
+                          {
+                            label: 'Draft Proposed Reply',
+                            icon: Send,
+                            onClick: () => { setSelectedInquiry(inq); setProposedReply(''); },
+                            variant: 'primary'
+                          },
+                          { divider: true },
+                          {
+                            label: deletingId === inq.id ? 'Deleting...' : 'Delete Inquiry',
+                            icon: Trash2,
+                            onClick: () => handleDeleteInquiry(inq.id),
+                            disabled: deletingId === inq.id,
+                            variant: 'danger'
+                          }
+                        ]}
+                      />
                     </td>
                   </tr>
                 ))}

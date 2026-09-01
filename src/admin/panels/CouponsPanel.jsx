@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import {
   Tag, Plus, Search, CheckCircle2, XCircle, Edit3, Trash2,
   Copy, ExternalLink, RefreshCw, Users, Percent, DollarSign,
-  Calendar, ShieldCheck, Building2, ChevronRight, BarChart3, AlertCircle, X
+  Calendar, ShieldCheck, Building2, ChevronRight, BarChart3, AlertCircle, X, Power
 } from 'lucide-react';
+import ActionDropdown from '../../components/ActionDropdown';
 import { getCoupons, saveCoupons, defaultCoupons } from '../../data/adminData';
 
 export default function CouponsPanel({ save, enrollments = [], themeMode = 'dark' }) {
@@ -434,24 +435,39 @@ export default function CouponsPanel({ save, enrollments = [], themeMode = 'dark
                           </button>
                         </td>
 
-                        {/* Actions */}
+                        {/* Actions Dropdown */}
                         <td className="px-4 py-4 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={() => openEditModal(coupon)}
-                              title="Edit Offer"
-                              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
-                            >
-                              <Edit3 className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteCoupon(coupon.id, coupon.code)}
-                              title="Delete Offer"
-                              className="p-1.5 rounded-lg bg-slate-800 hover:bg-red-950/60 text-slate-400 hover:text-red-400 transition-colors"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
+                          <ActionDropdown
+                            isDark={isDark}
+                            label="Actions"
+                            items={[
+                              {
+                                label: 'Edit Offer Details',
+                                icon: Edit3,
+                                onClick: () => openEditModal(coupon),
+                                variant: 'primary'
+                              },
+                              {
+                                label: 'Copy Promo Code',
+                                icon: Copy,
+                                onClick: () => handleCopyCode(coupon.code),
+                                variant: 'default'
+                              },
+                              {
+                                label: isLive ? 'Deactivate Coupon' : 'Activate Coupon',
+                                icon: Power,
+                                onClick: () => handleToggleStatus(coupon.id),
+                                variant: isLive ? 'warning' : 'success'
+                              },
+                              { divider: true },
+                              {
+                                label: 'Delete Coupon',
+                                icon: Trash2,
+                                onClick: () => handleDeleteCoupon(coupon.id, coupon.code),
+                                variant: 'danger'
+                              }
+                            ]}
+                          />
                         </td>
                       </tr>
                     );

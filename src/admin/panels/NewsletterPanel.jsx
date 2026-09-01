@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Mail, Send, Download, Trash2, CheckCircle, RefreshCw, Search, Sparkles, Settings, Users, ShieldCheck, Copy, Check, Paperclip, FileText, History, ExternalLink, Edit3 } from 'lucide-react';
+import { Mail, Send, Download, Trash2, CheckCircle, RefreshCw, Search, Sparkles, Settings, Users, ShieldCheck, Copy, Check, Paperclip, FileText, History, ExternalLink, Edit3, UserCheck, UserX } from 'lucide-react';
+import ActionDropdown from '../../components/ActionDropdown';
 import { sendEnrollmentEmail } from '../../services/emailService';
 
 export default function NewsletterPanel({
@@ -264,32 +265,44 @@ export default function NewsletterPanel({
                         {sub.status || 'active'}
                       </span>
                     </td>
+                    {/* Actions Dropdown */}
                     <td className="p-3 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() => {
-                            setEditingSub(sub);
-                            setEditSubForm({ email: sub.email || '', source: sub.source || '', status: sub.status || 'active' });
-                          }}
-                          className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                            isDark ? 'text-slate-400 hover:text-indigo-400 hover:bg-indigo-950/30' : 'text-slate-500 hover:text-indigo-600 hover:bg-indigo-50'
-                          }`}
-                          title="Edit Subscriber"
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
-                        </button>
-                        {deleteSubscriber && (
-                          <button
-                            onClick={() => deleteSubscriber(sub.id || sub.email)}
-                            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                              isDark ? 'text-slate-500 hover:text-rose-400 hover:bg-rose-950/30' : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50'
-                            }`}
-                            title="Remove Subscriber"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                      </div>
+                      <ActionDropdown
+                        isDark={isDark}
+                        label="Actions"
+                        items={[
+                          {
+                            label: 'Edit Subscriber',
+                            icon: Edit3,
+                            onClick: () => {
+                              setEditingSub(sub);
+                              setEditSubForm({ email: sub.email || '', source: sub.source || '', status: sub.status || 'active' });
+                            },
+                            variant: 'primary'
+                          },
+                          {
+                            label: 'Copy Email',
+                            icon: Copy,
+                            onClick: () => navigator.clipboard.writeText(sub.email),
+                            variant: 'default'
+                          },
+                          {
+                            label: sub.status === 'unsubscribed' ? 'Reactivate Subscriber' : 'Mark Unsubscribed',
+                            icon: sub.status === 'unsubscribed' ? UserCheck : UserX,
+                            onClick: () => updateSubscriberStatus && updateSubscriberStatus(sub.id || sub.email, sub.status === 'unsubscribed' ? 'active' : 'unsubscribed'),
+                            variant: sub.status === 'unsubscribed' ? 'success' : 'warning'
+                          },
+                          ...(deleteSubscriber ? [
+                            { divider: true },
+                            {
+                              label: 'Delete Subscriber',
+                              icon: Trash2,
+                              onClick: () => deleteSubscriber(sub.id || sub.email),
+                              variant: 'danger'
+                            }
+                          ] : [])
+                        ]}
+                      />
                     </td>
                   </tr>
                 ))
