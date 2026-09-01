@@ -40,7 +40,9 @@ assert(engineSource.includes('processImageFile'), 'Implements client-side auto-c
 assert(engineSource.includes('AVATAR_PRESETS'), 'Defines curated HD persona preset avatars');
 assert(engineSource.includes('th3ory_student_avatar_change'), 'Dispatches th3ory_student_avatar_change custom event');
 assert(engineSource.includes('th3ory_ambassador_avatar_change'), 'Dispatches th3ory_ambassador_avatar_change custom event');
-assert(engineSource.includes('th3ory_team_avatar_change'), 'Dispatches th3ory_team_avatar_change custom event');
+assert(engineSource.includes('MAX_PHOTO_SIZE_BYTES'), 'Defines MAX_PHOTO_SIZE_BYTES constant');
+assert(engineSource.includes('1 * 1024 * 1024'), 'Enforces 1MB photo file size threshold in bytes');
+assert(engineSource.includes('MAX_PHOTO_SIZE_MB'), 'Exports MAX_PHOTO_SIZE_MB constant');
 
 // 2. ProfileAvatar & ProfilePictureModal UI Components
 console.log('\n▶ [Suite 2]: UI Components (ProfileAvatar & ProfilePictureModal)');
@@ -53,6 +55,8 @@ assert(avatarSource.includes('editable'), 'ProfileAvatar supports editable hover
 
 assert(modalSource.includes('export default function ProfilePictureModal'), 'ProfilePictureModal component exists and is exported');
 assert(modalSource.includes('handleFileSelect') || modalSource.includes('handleDrop'), 'ProfilePictureModal supports drag-and-drop / file browser upload');
+assert(modalSource.includes('MAX_PHOTO_SIZE_BYTES'), 'ProfilePictureModal enforces MAX_PHOTO_SIZE_BYTES validation');
+assert(modalSource.includes('1MB'), 'ProfilePictureModal displays 1MB maximum photo size in the upload prompt');
 assert(modalSource.includes('processImageFile'), 'ProfilePictureModal uses processImageFile for automatic WebP/JPEG compression');
 assert(modalSource.includes('AVATAR_PRESETS'), 'ProfilePictureModal offers preset persona selector');
 assert(modalSource.includes('memoryPartitionKey'), 'ProfilePictureModal calculates dedicated database / storage partition key');

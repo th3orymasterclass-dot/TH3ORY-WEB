@@ -66,11 +66,15 @@ export const AVATAR_PRESETS = [
   }
 ];
 
+// Max allowed photo size (1 MB limit)
+export const MAX_PHOTO_SIZE_BYTES = 1 * 1024 * 1024; // 1MB
+export const MAX_PHOTO_SIZE_MB = 1;
+
 // ─── Client-Side Image Compression & Data URL Processing ─────────────────────
 
 /**
  * Validates, scales down, and compresses an uploaded image file into an optimized Data URL.
- * Automatically respects aspect ratios and prevents memory exhaustion.
+ * Automatically respects aspect ratios and enforces a strict 1MB photo size limit.
  */
 export async function processImageFile(file, maxDimension = 480, quality = 0.85) {
   return new Promise((resolve, reject) => {
@@ -84,9 +88,9 @@ export async function processImageFile(file, maxDimension = 480, quality = 0.85)
       return reject(new Error('Please select a valid image file (JPEG, PNG, WebP, GIF, SVG).'));
     }
 
-    // Max 10MB file limit
-    if (file.size > 10 * 1024 * 1024) {
-      return reject(new Error('Image file is too large. Maximum size allowed is 10MB.'));
+    // Strict 1MB photo size limit enforcement
+    if (file.size > MAX_PHOTO_SIZE_BYTES) {
+      return reject(new Error(`Image file exceeds the 1MB limit (${(file.size / (1024 * 1024)).toFixed(2)}MB). Please upload a photo under 1MB.`));
     }
 
     // If SVG, return as standard base64 data URL without canvas rasterization

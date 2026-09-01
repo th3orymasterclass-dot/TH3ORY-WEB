@@ -7,6 +7,8 @@ import {
 import {
   AVATAR_PRESETS,
   processImageFile,
+  MAX_PHOTO_SIZE_BYTES,
+  MAX_PHOTO_SIZE_MB,
   setStudentAvatar,
   setAmbassadorAvatar,
   setTeamMemberAvatar,
@@ -86,6 +88,13 @@ export default function ProfilePictureModal({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > MAX_PHOTO_SIZE_BYTES) {
+      setErrorMessage(`Photo exceeds 1MB limit (${(file.size / (1024 * 1024)).toFixed(2)}MB). Please choose an image up to 1MB.`);
+      setSuccessMessage('');
+      if (e.target) e.target.value = '';
+      return;
+    }
+
     setIsProcessing(true);
     setErrorMessage('');
     setSuccessMessage('');
@@ -106,6 +115,12 @@ export default function ProfilePictureModal({
     setDragOver(false);
     const file = e.dataTransfer.files?.[0];
     if (!file) return;
+
+    if (file.size > MAX_PHOTO_SIZE_BYTES) {
+      setErrorMessage(`Photo exceeds 1MB limit (${(file.size / (1024 * 1024)).toFixed(2)}MB). Please choose an image up to 1MB.`);
+      setSuccessMessage('');
+      return;
+    }
 
     setIsProcessing(true);
     setErrorMessage('');
@@ -337,7 +352,7 @@ export default function ProfilePictureModal({
                   {isProcessing ? 'Optimizing photo...' : 'Click to upload or drag & drop'}
                 </p>
                 <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                  PNG, JPG, WebP, GIF, or SVG (Up to 10MB)
+                  PNG, JPG, WebP, GIF, or SVG (Maximum file size: 1MB)
                 </p>
               </div>
             </div>
