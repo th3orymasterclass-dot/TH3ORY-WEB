@@ -43,19 +43,19 @@ import ContactPanel from './panels/ContactPanel';
 
 const NAV_ITEMS = [
   { id: 'overview',           label: 'Overview',                   icon: LayoutDashboard },
-  { id: 'section_visibility', label: 'Section Master Switches',    icon: Sliders, badge: 'LAYOUT' },
-  { id: 'dpdp_compliance',    label: 'DPDP Privacy & Compliance',  icon: ShieldCheck, badge: 'DPDP 2023' },
-  { id: 'analytics',          label: 'Analytics & Intelligence',   icon: BarChart3, badge: 'REALTIME' },
+  { id: 'section_visibility', label: 'Section Master Switches',    icon: Sliders },
+  { id: 'dpdp_compliance',    label: 'DPDP Privacy & Compliance',  icon: ShieldCheck },
+  { id: 'analytics',          label: 'Analytics & Intelligence',   icon: BarChart3 },
   
   { id: '__divider_landing',  divider: true, label: 'HOMEPAGE & LANDING CONTENT' },
   { id: 'hero',               label: 'Hero & Branding',            icon: Type },
-  { id: 'campaign',           label: 'Launch Campaign (₹499)',     icon: Flame, badge: 'OFFER' },
+  { id: 'campaign',           label: 'Launch Campaign (₹499)',     icon: Flame },
   { id: 'pillars',            label: '5 Pillars & Differentiators',icon: Sparkles },
   { id: 'curriculum',         label: 'Curriculum & Roadmap',       icon: BookOpen },
   { id: 'outcomes',           label: 'Outcomes & Transformation',  icon: Target },
   { id: 'bonuses',            label: 'Bonuses & Perks',            icon: Gift },
   { id: 'instructor',         label: 'Instructor Spotlight',       icon: User },
-  { id: 'offline_trainings',  label: 'Offline Trainings Marquee',  icon: GraduationCap, badge: 'NEW' },
+  { id: 'offline_trainings',  label: 'Offline Trainings Marquee',  icon: GraduationCap },
   { id: 'pricing',            label: 'Pricing & Plans',            icon: Tag },
   { id: 'contact_settings',   label: 'Contact, Studio & Footer',   icon: MessageSquare },
   { id: 'faqs',               label: 'FAQs Management',            icon: HelpCircle },
@@ -64,16 +64,16 @@ const NAV_ITEMS = [
   { id: 'content',            label: 'Content Library (PDF/Video)',icon: FolderOpen },
 
   { id: '__divider_db',       divider: true, label: 'SALES & COMMUNICATIONS' },
-  { id: 'team_roster',        label: 'Team Accounts & Roster',     icon: Users, badge: 'TEAM' },
-  { id: 'email_dispatcher',   label: 'Resend Email System',        icon: Mail, badge: 'RESEND' },
-  { id: 'ambassador_apps',    label: 'Ambassador Applications',    icon: Users, badge: 'AMBASSADOR' },
-  { id: 'team_approvals',     label: 'Team Approvals',             icon: ShieldCheck, badge: 'QUEUE' },
-  { id: 'feature_flags',      label: 'Vercel Feature Flags',       icon: Sliders, badge: 'VERCEL' },
-  { id: 'enrollments',        label: 'Enrollments & Sales',        icon: ShoppingBag, badge: 'LIVE' },
-  { id: 'queries_quotes',     label: 'Forms & Quotes',             icon: HelpCircle, badge: 'FORMS' },
-  { id: 'coupons',            label: 'Coupons & Affiliations',     icon: Tag, badge: 'OFFERS' },
-  { id: 'newsletter',         label: 'Newsletter Subscribers',     icon: Mail, badge: 'COMM' },
-  { id: 'integrations',       label: 'Integrations & API',         icon: Database, badge: 'DIAG' },
+  { id: 'team_roster',        label: 'Team Accounts & Roster',     icon: Users },
+  { id: 'email_dispatcher',   label: 'Resend Email System',        icon: Mail },
+  { id: 'ambassador_apps',    label: 'Ambassador Applications',    icon: Users },
+  { id: 'team_approvals',     label: 'Team Approvals',             icon: ShieldCheck },
+  { id: 'feature_flags',      label: 'Vercel Feature Flags',       icon: Sliders },
+  { id: 'enrollments',        label: 'Enrollments & Sales',        icon: ShoppingBag },
+  { id: 'queries_quotes',     label: 'Forms & Quotes',             icon: HelpCircle },
+  { id: 'coupons',            label: 'Coupons & Affiliations',     icon: Tag },
+  { id: 'newsletter',         label: 'Newsletter Subscribers',     icon: Mail },
+  { id: 'integrations',       label: 'Integrations & API',         icon: Database },
 ];
 
 export default function AdminApp({ onLogout }) {
@@ -90,14 +90,30 @@ export default function AdminApp({ onLogout }) {
     localStorage.setItem('th3ory_admin_theme', next);
   };
 
-  const adminState = useAdminData();
   const {
-    data, save, reset, defaults, lastSaved,
-    enrollments, queries = [], enterpriseQuotes = [], contactInquiries = [],
-    newsletterSubscribers, newsletterBroadcasts, saveBroadcast,
-    updateQueryStatus, deleteQuery, updateQuoteStatus, updateInquiryStatus,
-    updateSubscriberStatus, deleteSubscriber
-  } = adminState;
+    counts,
+    stats,
+    queries,
+    quotes,
+    coupons,
+    newsletter,
+    teamRequests,
+    saveSectionVisibility,
+    updateQueryStatus,
+    deleteQuery,
+    updateQuote,
+    deleteQuote,
+    toggleCoupon,
+    addCoupon,
+    deleteCoupon,
+    featureFlags,
+    updateFeatureFlag,
+    toggleMaintenanceMode,
+    approveTeamRequest,
+    rejectTeamRequest,
+  } = useAdminData();
+
+  const isDark = themeMode === 'dark';
 
   // Enforce session access control
   React.useEffect(() => {
@@ -106,24 +122,69 @@ export default function AdminApp({ onLogout }) {
     }
   }, [onLogout]);
 
-  const panelProps = { data, save, reset, defaults, lastSaved, enrollments, queries, enterpriseQuotes, contactInquiries, themeMode };
-
   const renderPanel = () => {
     switch (active) {
+<<<<<<< HEAD
       case 'overview':           return <OverviewPanel   {...panelProps} />;
       case 'section_visibility': return <SectionVisibilityPanel {...panelProps} />;
       case 'dpdp_compliance':    return <DPDPCompliancePanel />;
       case 'analytics':          return <TeamAnalyticsDashboard enterpriseQuotes={enterpriseQuotes} contactInquiries={contactInquiries} newsletterSubscribers={newsletterSubscribers} themeMode={themeMode} />;
+=======
+      case 'overview':           return <OverviewPanel counts={counts} onNavigate={setActive} themeMode={themeMode} />;
+      case 'section_visibility': return <SectionVisibilityPanel themeMode={themeMode} />;
+      case 'dpdp_compliance':    return <DPDPCompliancePanel themeMode={themeMode} />;
+      case 'analytics':          return <TeamAnalyticsDashboard themeMode={themeMode} isAdminView={true} />;
+      case 'hero':               return <HeroPanel themeMode={themeMode} />;
+      case 'campaign':           return <CampaignPanel themeMode={themeMode} />;
+      case 'pillars':            return <PillarsPanel themeMode={themeMode} />;
+      case 'curriculum':         return <CurriculumPanel themeMode={themeMode} />;
+      case 'outcomes':           return <OutcomesPanel themeMode={themeMode} />;
+      case 'bonuses':            return <BonusesPanel themeMode={themeMode} />;
+      case 'instructor':         return <InstructorPanel themeMode={themeMode} />;
+      case 'offline_trainings':  return <OfflineTrainingsPanel themeMode={themeMode} />;
+      case 'pricing':            return <PricingPanel themeMode={themeMode} />;
+      case 'contact_settings':   return <ContactPanel themeMode={themeMode} />;
+      case 'faqs':               return <FAQPanel themeMode={themeMode} />;
+      case 'urgency':            return <UrgencyPanel themeMode={themeMode} />;
+      case 'media':              return <MediaPanel themeMode={themeMode} />;
+      case 'content':            return <ContentPanel themeMode={themeMode} />;
+>>>>>>> 7501bcb (fix(portals): remove all badges across portal subtopics and fix Resend test email dispatch)
       case 'team_roster':        return <TeamManagementPanel themeMode={themeMode} />;
       case 'email_dispatcher':   return <PortalEmailDispatcherPanel themeMode={themeMode} />;
       case 'ambassador_apps':    return <AmbassadorApplicationsPanel themeMode={themeMode} />;
-      case 'team_approvals':     return <TeamApprovalsPanel themeMode={themeMode} />;
-      case 'feature_flags':      return <FeatureFlagsPanel themeMode={themeMode} />;
-      case 'enrollments':        return <EnrollmentsPanel enrollments={enrollments} themeMode={themeMode} />;
-      case 'queries_quotes':     return <QueriesQuotesPanel queries={queries} enterpriseQuotes={enterpriseQuotes} contactInquiries={contactInquiries} updateQueryStatus={updateQueryStatus} updateQuoteStatus={updateQuoteStatus} updateInquiryStatus={updateInquiryStatus} deleteQuery={deleteQuery} themeMode={themeMode} />;
-      case 'coupons':            return <CouponsPanel     save={save} enrollments={enrollments} themeMode={themeMode} />;
-      case 'newsletter':         return <NewsletterPanel subscribers={newsletterSubscribers} broadcasts={newsletterBroadcasts} saveBroadcast={saveBroadcast} updateSubscriberStatus={updateSubscriberStatus} deleteSubscriber={deleteSubscriber} save={save} data={data} themeMode={themeMode} />;
+      case 'team_approvals':     return (
+        <TeamApprovalsPanel
+          requests={teamRequests}
+          onApprove={approveTeamRequest}
+          onReject={rejectTeamRequest}
+          themeMode={themeMode}
+        />
+      );
+      case 'feature_flags':      return <FeatureFlagsPanel flags={featureFlags} onUpdateFlag={updateFeatureFlag} onToggleMaintenance={toggleMaintenanceMode} themeMode={themeMode} />;
+      case 'enrollments':        return <EnrollmentsPanel themeMode={themeMode} />;
+      case 'queries_quotes':     return (
+        <QueriesQuotesPanel
+          queries={queries}
+          quotes={quotes}
+          onUpdateStatus={updateQueryStatus}
+          onDeleteQuery={deleteQuery}
+          onUpdateQuote={updateQuote}
+          onDeleteQuote={deleteQuote}
+          themeMode={themeMode}
+        />
+      );
+      case 'coupons':            return (
+        <CouponsPanel
+          coupons={coupons}
+          onToggle={toggleCoupon}
+          onAdd={addCoupon}
+          onDelete={deleteCoupon}
+          themeMode={themeMode}
+        />
+      );
+      case 'newsletter':         return <NewsletterPanel subscribers={newsletter} themeMode={themeMode} />;
       case 'integrations':       return <IntegrationsPanel themeMode={themeMode} />;
+<<<<<<< HEAD
 
       
       case 'hero':               return <HeroPanel       {...panelProps} />;
@@ -142,57 +203,61 @@ export default function AdminApp({ onLogout }) {
       case 'content':            return <ContentPanel    {...panelProps} />;
       case 'reviews':            return <ReviewsPanel    {...panelProps} />;
       default:                   return <OverviewPanel   {...panelProps} />;
+=======
+      default:                   return <OverviewPanel counts={counts} onNavigate={setActive} themeMode={themeMode} />;
+>>>>>>> 7501bcb (fix(portals): remove all badges across portal subtopics and fix Resend test email dispatch)
     }
   };
 
-  const currentNav = NAV_ITEMS.find(n => n.id === active);
-
-  const isDark = themeMode === 'dark';
+  const currentNav = NAV_ITEMS.find(n => n.id === active) || NAV_ITEMS[0];
 
   return (
-    <div className={`min-h-screen flex relative transition-colors duration-200 ${
-      isDark ? 'bg-[#05080F] text-[#FAFAF7]' : 'bg-[#F8FAFC] text-[#0F172A]'
-    }`} style={{fontFamily:"'Plus Jakarta Sans', system-ui, sans-serif"}}>
+    <div className={`min-h-screen flex ${isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`} style={{fontFamily:"'Plus Jakarta Sans', system-ui, sans-serif"}}>
 
       {/* Mobile Drawer Overlay */}
       {sidebarOpen && (
         <div
           onClick={() => setSidebarOpen(false)}
-          className={`fixed inset-0 backdrop-blur-xs z-40 md:hidden ${
-            isDark ? 'bg-[#05080F]/80' : 'bg-slate-900/40'
-          }`}
+          className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-40 md:hidden"
         />
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed md:static inset-y-0 left-0 z-50 w-64 shrink-0 transition-all duration-300 flex flex-col border-r shadow-2xl md:shadow-none ${
-        isDark ? 'bg-[#0B0F19] border-slate-800' : 'bg-white border-slate-200/80 shadow-md'
-      } ${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:w-0 md:overflow-hidden'
-      }`}>
+      <aside className={`fixed md:static inset-y-0 left-0 z-50 w-64 shrink-0 transition-transform duration-300 flex flex-col ${
+        isDark ? 'bg-slate-900/90 border-r border-slate-800' : 'bg-white border-r border-slate-200'
+      } ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:w-0 md:overflow-hidden'}`}>
         {/* Brand */}
-        <div className={`px-5 py-5 border-b ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>
+        <div className={`p-4 border-b flex items-center justify-between ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#7C5CFC] to-[#6344E0] flex items-center justify-center shrink-0 shadow-md">
-              <Shield className="w-5 h-5 text-white" />
+            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white shadow-md shadow-indigo-600/30">
+              T
             </div>
             <div>
-              <p className={`font-black text-sm tracking-tight font-heading ${isDark ? 'text-white' : 'text-slate-900'}`}>TH3ORY</p>
-              <p className={`text-xs font-semibold ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>Admin Command Center</p>
+              <h1 className={`font-bold text-sm leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>TH3ORY</h1>
+              <p className={`text-[10px] uppercase tracking-wider font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Admin Portal</p>
             </div>
           </div>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className={`p-1.5 rounded-lg md:hidden ${isDark ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-600'}`}
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
-        {/* Nav list */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {NAV_ITEMS.map(item => {
+        {/* Navigation list */}
+        <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+          {NAV_ITEMS.map((item) => {
             if (item.divider) {
               return (
-                <div key={item.id} className="pt-3 pb-1 px-2">
-                  <p className={`text-[10px] font-black uppercase tracking-[0.15em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{item.label}</p>
+                <div key={item.id} className="pt-4 pb-1 px-3">
+                  <p className={`text-[10px] font-black tracking-wider uppercase font-mono ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                    {item.label}
+                  </p>
                 </div>
               );
             }
+
             const Icon = item.icon;
             const isActive = active === item.id;
             return (
@@ -202,8 +267,8 @@ export default function AdminApp({ onLogout }) {
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group ${
                   isActive
                     ? isDark
-                      ? 'bg-indigo-600/25 text-white border border-indigo-500/40 font-bold'
-                      : 'bg-indigo-50 text-indigo-900 border border-indigo-200 font-bold shadow-xs'
+                      ? 'bg-indigo-600/25 text-white border border-indigo-500/40'
+                      : 'bg-indigo-50 text-indigo-900 border border-indigo-200'
                     : isDark
                       ? 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
@@ -215,16 +280,7 @@ export default function AdminApp({ onLogout }) {
                     : isDark ? 'text-slate-500 group-hover:text-slate-300' : 'text-slate-400 group-hover:text-slate-700'
                 }`} />
                 <span className="truncate">{item.label}</span>
-                {item.badge && (
-                  <span className={`ml-auto px-2 py-0.5 text-[10px] font-extrabold rounded-full border ${
-                    isActive
-                      ? isDark ? 'bg-amber-400/20 text-amber-300 border-amber-400/40' : 'bg-indigo-100 text-indigo-800 border-indigo-300'
-                      : isDark ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30' : 'bg-slate-100 text-slate-700 border-slate-200'
-                  }`}>
-                    {item.badge}
-                  </span>
-                )}
-                {isActive && !item.badge && <ChevronRight className={`w-3.5 h-3.5 ml-auto ${isDark ? 'text-amber-400' : 'text-indigo-600'}`} />}
+                {isActive && <ChevronRight className={`w-3.5 h-3.5 ml-auto ${isDark ? 'text-amber-400' : 'text-indigo-600'}`} />}
               </button>
             );
           })}

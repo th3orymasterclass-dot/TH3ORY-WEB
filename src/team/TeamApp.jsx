@@ -15,13 +15,13 @@ import TeamShareableContentPanel from './panels/TeamShareableContentPanel';
 import { fetchAllTeamMembersFromSupabase } from '../services/supabaseService';
 
 const TEAM_NAV = [
-  { id: 'analytics',  label: 'Overview & My Analytics',    icon: BarChart3,  badge: 'REALTIME' },
-  { id: 'shareable',  label: 'Shareable Content & Kits',   icon: Share2,     badge: 'TAILOR-MADE' },
-  { id: 'quotes',     label: 'Enterprise Quotes & Leads',  icon: HelpCircle, badge: 'ASSIGNED' },
-  { id: 'inquiries',  label: 'Contact Us Enquiries',       icon: Mail,       badge: 'ASSIGNED' },
-  { id: 'affiliates', label: 'Affiliation Programs',      icon: Tag,        badge: 'POLICY' },
-  { id: 'newsletter', label: 'Newsletter Subscriptions',    icon: Send,       badge: 'DISPATCH' },
-  { id: 'ambassador', label: 'Campus Ambassador Program',  icon: Users,      badge: 'REVIEW' },
+  { id: 'analytics',  label: 'Overview & My Analytics',    icon: BarChart3 },
+  { id: 'shareable',  label: 'Shareable Content & Kits',   icon: Share2 },
+  { id: 'quotes',     label: 'Enterprise Quotes & Leads',  icon: HelpCircle },
+  { id: 'inquiries',  label: 'Contact Us Enquiries',       icon: Mail },
+  { id: 'affiliates', label: 'Affiliation Programs',      icon: Tag },
+  { id: 'newsletter', label: 'Newsletter Subscriptions',    icon: Send },
+  { id: 'ambassador', label: 'Campus Ambassador Program',  icon: Users },
 ];
 
 export default function TeamApp({ onLogout }) {

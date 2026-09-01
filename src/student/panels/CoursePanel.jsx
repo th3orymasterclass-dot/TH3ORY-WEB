@@ -44,11 +44,6 @@ function VideoModal({ url, title, onClose }) {
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2 min-w-0 flex-wrap">
             <h3 className="text-white/90 font-medium text-xs sm:text-base truncate tracking-tight">{title}</h3>
-            {gdrive.isGDrive && (
-              <span className="text-[10px] text-blue-400/80 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-full flex items-center gap-1 font-medium shrink-0">
-                <HardDrive className="w-2.5 h-2.5" /> GDrive Protected
-              </span>
-            )}
           </div>
           <button 
             onClick={onClose} 
@@ -105,14 +100,6 @@ function VideoModal({ url, title, onClose }) {
 
 function ResourceCard({ item, onStreamResource, isLight }) {
   const typeColors = { video:'text-blue-500', pdf:'text-red-500', worksheet:'text-green-500', quiz:'text-purple-500', audio:'text-pink-500', resource:'text-amber-500', image:'text-cyan-500', archive:'text-slate-500' };
-  const gdrive = parseGoogleDriveUrl(item.url);
-  const accessKey = item.access || item.accessLevel || 'enrolled';
-  const accessBadges = {
-    free: { label: 'Free Preview', color: 'bg-green-500/15 text-green-700 border-green-500/30' },
-    enrolled: { label: 'Enrolled Only', color: 'bg-amber-500/15 text-amber-700 border-amber-500/30' },
-    vip: { label: 'VIP Only', color: 'bg-purple-500/15 text-purple-700 border-purple-500/30' },
-  };
-  const badge = accessBadges[accessKey] || accessBadges.enrolled;
 
   return (
     <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all group select-none ${
@@ -122,14 +109,6 @@ function ResourceCard({ item, onStreamResource, isLight }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <p className={`text-sm font-semibold truncate ${isLight ? 'text-slate-900' : 'text-white'}`}>{item.title}</p>
-          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${badge.color} shrink-0`}>
-            {badge.label}
-          </span>
-          {gdrive.isGDrive && (
-            <span className="text-[10px] font-bold bg-blue-500/20 text-blue-600 border border-blue-500/30 px-1.5 py-0.5 rounded flex items-center gap-1 shrink-0">
-              <HardDrive className="w-2.5 h-2.5" /> GDrive Stream
-            </span>
-          )}
         </div>
         {item.duration && <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-slate-500'}`}>{item.duration}</p>}
       </div>
@@ -383,9 +362,6 @@ export default function CoursePanel({ profile, initialLevelId, initialLessonId, 
                     </div>
 
                     <div className="flex items-center gap-1.5 shrink-0">
-                      {ls.preview && (
-                        <span className="text-[9px] bg-green-500/15 text-green-600 px-1 py-0.2 rounded font-bold">FREE</span>
-                      )}
                       {isBookmarked && (
                         <Bookmark className="w-3 h-3 text-amber-500 fill-amber-500 shrink-0" />
                       )}
@@ -428,11 +404,6 @@ export default function CoursePanel({ profile, initialLevelId, initialLessonId, 
                         <Clock className="w-3.5 h-3.5" />
                         {activeLesson.lesson.duration}
                       </span>
-                      {activeLesson.lesson.preview && (
-                        <span className="text-green-600 text-xs bg-green-500/10 border border-green-500/30 px-2 py-0.5 rounded-full font-bold">
-                          Free Preview
-                        </span>
-                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 w-full sm:w-auto justify-end shrink-0">

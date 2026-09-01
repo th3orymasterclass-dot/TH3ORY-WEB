@@ -376,13 +376,6 @@ export default function StudentApp({ profile: initialProfile, onLogout }) {
             )}
           </button>
           </div>
-
-          {/* Certificate badge */}
-          {pct === 100 && (
-            <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-full px-3 py-1 text-amber-400 text-xs font-bold shrink-0">
-              <Award className="w-3.5 h-3.5"/> Certificate Ready!
-            </div>
-          )}
         </header>
 
         {/* Panel */}

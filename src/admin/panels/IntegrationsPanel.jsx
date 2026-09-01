@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Database, CreditCard, Mail, Server, CheckCircle2, XCircle, RefreshCw, Key, ShieldCheck, Send, ExternalLink } from 'lucide-react';
 import { getSupabaseAnonKey, setSupabaseAnonKey, testSupabaseConnection } from '../../lib/supabase';
+import { sendTestEmail } from '../../services/emailService';
 
 export default function IntegrationsPanel({ themeMode = 'dark' }) {
   const [anonKey, setAnonKey] = useState(getSupabaseAnonKey());
@@ -37,28 +38,19 @@ export default function IntegrationsPanel({ themeMode = 'dark' }) {
   };
 
   const handleTestEmail = async () => {
+    if (!testEmailAddr || !testEmailAddr.includes('@')) {
+      setEmailStatus('⚠️ Please enter a valid recipient email address.');
+      return;
+    }
     setSendingEmail(true);
     setEmailStatus('Sending test email via Resend API...');
     try {
-      const res = await fetch('/api/send-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to: testEmailAddr,
-          studentName: 'Test Admin User',
-          studentId: 'STU-999999',
-          enrollmentCode: 'TH3-TEST-2026',
-          planName: 'TH3ORY Masterclass',
-          amountPaid: '11,999',
-          currency: 'INR'
-        })
-      });
-      const data = await res.json();
+      const res = await sendTestEmail(testEmailAddr.trim(), { name: 'Admin Verification' });
       setSendingEmail(false);
-      if (res.ok && data.success) {
-        setEmailStatus(`✅ Email sent cleanly! Resend ID: ${data.id || 'Delivered'}`);
+      if (res.success) {
+        setEmailStatus(`✅ Test email sent cleanly! Resend ID: ${res.id || 'Delivered'}`);
       } else {
-        setEmailStatus(`❌ Email Dispatch Error: ${data.error || 'Failed'}`);
+        setEmailStatus(`❌ Email Dispatch Error: ${res.error || 'Failed to send'}`);
       }
     } catch (err) {
       setSendingEmail(false);

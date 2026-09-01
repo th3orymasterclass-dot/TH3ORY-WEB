@@ -118,7 +118,6 @@ export default function DashboardHome({ profile, onNavigate, themeMode = 'dark' 
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-black text-amber-500 uppercase tracking-widest">Psychology Engine</span>
-              <span className="px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-600 text-[10px] font-extrabold">12 ARCHETYPES</span>
             </div>
             <h3 className={`text-xl font-black font-serif ${isLight ? 'text-slate-900' : 'text-white'}`}>THE CHARACTER CODE™ Assessment</h3>
             <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>

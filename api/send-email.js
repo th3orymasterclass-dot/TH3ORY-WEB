@@ -293,8 +293,109 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, data });
     }
 
+    // 1.5. Diagnostic Test Email
+    if (receipt.type === 'TEST_EMAIL') {
+      const recipientEmail = String(receipt.email || receipt.studentEmail || (Array.isArray(receipt.to) ? receipt.to[0] : receipt.to) || '').trim().toLowerCase();
+      if (!recipientEmail || !recipientEmail.includes('@')) {
+        return res.status(400).json({ success: false, error: 'Valid recipient email required' });
+      }
+
+      const safeName = escapeHtml(String(receipt.studentName || receipt.name || 'System Administrator').slice(0, 80));
+
+      const { data, error } = await resend.emails.send({
+        from: 'TH3ORY MASTERCLASS <team@th3ory.online>',
+        to: [recipientEmail],
+        subject: `🎯 TH3ORY Masterclass: Resend Email Integration Verified [${Date.now().toString().slice(-6)}]`,
+        headers: {
+          'Bimi-Selector': 'v=BIMI1; s=default',
+          'Bimi-Indicator': 'https://th3ory.online/bimi-logo.svg',
+          'Bimi-Location': 'https://th3ory.online/bimi-logo.svg; a=https://th3ory.online/bimi-vmc.pem',
+          'X-Entity-Ref-ID': `th3ory-diag-${Date.now()}`
+        },
+        html: `
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <script type="application/ld+json">
+            {
+              "@context": "http://schema.org",
+              "@type": "Organization",
+              "name": "TH3ORY MASTERCLASS",
+              "legalName": "Mentalist Sravan Production",
+              "url": "https://th3ory.online",
+              "logo": "https://th3ory.online/logo-transparent.png",
+              "image": "https://th3ory.online/bimi-logo.svg",
+              "email": "team@th3ory.online"
+            }
+            </script>
+          </head>
+          <body style="margin: 0; padding: 0; background-color: #05080f; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #ffffff;">
+          <div style="background-color: #05080f; padding: 40px 20px; text-align: center;">
+            <div style="max-width: 580px; margin: 0 auto; background-color: #0b1120; border: 1px solid #1e293b; border-radius: 20px; padding: 32px; text-align: left; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);">
+              
+              <div style="text-align: center; margin-bottom: 25px; border-bottom: 1px solid #1e293b; padding-bottom: 20px;">
+                <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto 12px auto;">
+                  <tr>
+                    <td style="vertical-align: middle; text-align: center;">
+                      <div style="display: inline-block; width: 68px; height: 68px; border-radius: 50%; background: #05080f; border: 2px solid #f59e0b; padding: 4px; box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);">
+                        <img src="https://th3ory.online/logo-transparent.png" alt="TH3ORY Logo" width="56" height="56" style="width: 56px; height: 56px; object-fit: contain; display: block; border-radius: 50%;" />
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+                <h1 style="color: #f59e0b; font-size: 26px; font-weight: 900; margin: 0; letter-spacing: 2px; text-transform: uppercase;">TH3ORY</h1>
+                <div style="display: inline-block; margin-top: 4px; padding: 2px 10px; border-radius: 20px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3);">
+                  <span style="color: #f59e0b; font-size: 10px; font-weight: 800; letter-spacing: 1px;">✓ VERIFIED OFFICIAL SENDER</span>
+                </div>
+                <p style="color: #64748b; font-size: 12px; font-weight: 700; text-transform: uppercase; margin-top: 6px; letter-spacing: 1.5px;">Admin Diagnostic &amp; Resend Verification</p>
+              </div>
+
+              <div style="background-color: #1e293b33; border: 1px solid #10b98140; border-radius: 14px; padding: 20px; margin-bottom: 25px;">
+                <h2 style="color: #10b981; font-size: 18px; font-weight: 800; margin-top: 0; margin-bottom: 8px;">✅ Resend Email Integration Verified!</h2>
+                <p style="color: #cbd5e1; font-size: 14px; margin: 0;">Hello <strong>${safeName}</strong>, this diagnostic email confirms that the <strong>Resend Transactional Email Engine</strong>, BIMI avatar identity, and API credentials are working at 100% operational capacity.</p>
+              </div>
+
+              <div style="background-color: #0f172a; border: 1px solid #334155; border-radius: 14px; padding: 20px; margin-bottom: 25px;">
+                <h3 style="color: #94a3b8; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-top: 0; margin-bottom: 12px;">Diagnostic Details</h3>
+                <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                  <tr style="border-bottom: 1px solid #1e293b;">
+                    <td style="padding: 8px 0; color: #64748b;">Target Recipient</td>
+                    <td style="padding: 8px 0; color: #ffffff; font-weight: 600; text-align: right;">${recipientEmail}</td>
+                  </tr>
+                  <tr style="border-bottom: 1px solid #1e293b;">
+                    <td style="padding: 8px 0; color: #64748b;">Dispatch Protocol</td>
+                    <td style="padding: 8px 0; color: #38bdf8; font-weight: 600; text-align: right;">Resend Vercel Serverless Function</td>
+                  </tr>
+                  <tr style="border-bottom: 1px solid #1e293b;">
+                    <td style="padding: 8px 0; color: #64748b;">BIMI Avatar</td>
+                    <td style="padding: 8px 0; color: #f59e0b; font-weight: 600; text-align: right;">bimi-logo.svg (SVG Tiny 1.2 PS)</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; color: #64748b;">Timestamp</td>
+                    <td style="padding: 8px 0; color: #94a3b8; font-family: monospace; text-align: right;">${new Date().toUTCString()}</td>
+                  </tr>
+                </table>
+              </div>
+
+              <div style="text-align: center; border-top: 1px solid #1e293b; padding-top: 20px;">
+                <p style="color: #64748b; font-size: 12px; margin: 0;">Mentalist Sravan Production &copy; 2026. All rights reserved. • BIMI Verified Domain: th3ory.online</p>
+              </div>
+            </div>
+          </div>
+          </body>
+          </html>
+        `
+      });
+
+      if (error) {
+        return res.status(400).json({ success: false, error: 'Failed to send test email' });
+      }
+      return res.status(200).json({ success: true, data });
+    }
+
     // 2. Default Student Enrollment Confirmation Email (Public / Webhook Transactional)
-    const recipientEmail = String(receipt.email || receipt.studentEmail || '').trim().toLowerCase();
+    const recipientEmail = String(receipt.email || receipt.studentEmail || (Array.isArray(receipt.to) ? receipt.to[0] : receipt.to) || '').trim().toLowerCase();
     if (!recipientEmail || !recipientEmail.includes('@')) {
       return res.status(400).json({ success: false, error: 'Valid recipient email required' });
     }
