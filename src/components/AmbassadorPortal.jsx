@@ -12,13 +12,16 @@ import AmbassadorLogin from './AmbassadorLogin';
 import ProfileAvatar from './ProfileAvatar';
 import ProfilePictureModal from './ProfilePictureModal';
 import { getAmbassadorAvatar } from '../utils/profileStorageEngine';
+import { buildShareableReferralLinks } from '../utils/affiliateTrackingEngine';
 import { 
   fetchAmbassadorByCodeFromSupabase, 
   saveAmbassadorWeeklyReportToSupabase,
   fetchAmbassadorLeadsFromSupabase,
   fetchAmbassadorPayoutsFromSupabase,
   saveAmbassadorPayoutDetailsToSupabase,
-  requestAmbassadorPayoutToSupabase
+  requestAmbassadorPayoutToSupabase,
+  fetchReferralClicksFromSupabase,
+  fetchReferralConversionsFromSupabase
 } from '../services/supabaseService';
 
 const AMB_NAV = [
@@ -52,8 +55,10 @@ export default function AmbassadorPortal() {
   // Dynamic Data Lists
   const [leadsList, setLeadsList] = useState([]);
   const [payoutsList, setPayoutsList] = useState([]);
+  const [clicksList, setClicksList] = useState([]);
   const [loadingLists, setLoadingLists] = useState(false);
   const [leadSearch, setLeadSearch] = useState('');
+  const [selectedLinkType, setSelectedLinkType] = useState('enrollPage');
 
   // Weekly Report Form State
   const [showReportModal, setShowReportModal] = useState(false);
@@ -191,14 +196,15 @@ export default function AmbassadorPortal() {
     return () => window.removeEventListener('th3ory_ambassador_avatar_change', handler);
   }, []);
 
-  // Fetch leads and payouts when ambassador logs in or updates
+  // Fetch leads, clicks, and payouts when ambassador logs in or updates
   useEffect(() => {
     if (ambassador?.ambassadorCode) {
       setLoadingLists(true);
       Promise.all([
         fetchAmbassadorLeadsFromSupabase(ambassador.ambassadorCode),
-        fetchAmbassadorPayoutsFromSupabase(ambassador.ambassadorCode)
-      ]).then(([leadsData, payoutsData]) => {
+        fetchAmbassadorPayoutsFromSupabase(ambassador.ambassadorCode),
+        fetchReferralClicksFromSupabase(ambassador.ambassadorCode)
+      ]).then(([leadsData, payoutsData, clicksData]) => {
         setLeadsList(leadsData && leadsData.length > 0 ? leadsData : [
           { id: '1', student_name: 'Alexander Vance', student_email: 'alex.vance@vanderbilt.edu', college_name: 'Vanderbilt University', status: 'ENROLLED', commission_earned: 1000.00, created_at: new Date(Date.now() - 86400000 * 2).toISOString() },
           { id: '2', student_name: 'Maya Patel', student_email: 'maya.patel@ucla.edu', college_name: 'UCLA', status: 'INTERESTED', commission_earned: 0.00, created_at: new Date(Date.now() - 86400000 * 5).toISOString() },
@@ -209,9 +215,48 @@ export default function AmbassadorPortal() {
           { id: 'pay_101', amount: 3000.00, payment_method: 'UPI Direct (Razorpay Payouts)', transaction_reference: 'UPI-TXN-99812401', status: 'PAID', created_at: new Date(Date.now() - 86400000 * 7).toISOString() },
           { id: 'pay_102', amount: 5000.00, payment_method: 'Bank HDFC Transfer', transaction_reference: 'NEFT-88129031', status: 'PAID', created_at: new Date(Date.now() - 86400000 * 14).toISOString() }
         ]);
+
+        setClicksList(clicksData || []);
         setLoadingLists(false);
       });
     }
+  }, [ambassador?.ambassadorCode]);
+
+  // Real-time Referral Click and Conversion Listener
+  useEffect(() => {
+    const handleRefClick = (e) => {
+      if (ambassador?.ambassadorCode && e.detail?.refCode === ambassador.ambassadorCode.toUpperCase()) {
+        setClicksList(prev => [e.detail, ...prev]);
+      }
+    };
+
+    const handleRefConv = (e) => {
+      if (ambassador?.ambassadorCode && e.detail?.ref_code === ambassador.ambassadorCode.toUpperCase()) {
+        const newLead = {
+          id: e.detail.conversion_id || `lead_${Date.now()}`,
+          student_name: e.detail.student_name,
+          student_email: e.detail.student_email,
+          status: 'ENROLLED',
+          commission_earned: e.detail.commission_amount || 1000.00,
+          created_at: new Date().toISOString()
+        };
+        setLeadsList(prev => [newLead, ...prev]);
+        setAmbassador(prev => prev ? {
+          ...prev,
+          totalEnrollments: (prev.totalEnrollments || 0) + 1,
+          totalCommission: Number(prev.totalCommission || 0) + (e.detail.commission_amount || 1000),
+          points: (prev.points || 0) + 100
+        } : prev);
+      }
+    };
+
+    window.addEventListener('th3ory_referral_click_recorded', handleRefClick);
+    window.addEventListener('th3ory_referral_conversion_recorded', handleRefConv);
+
+    return () => {
+      window.removeEventListener('th3ory_referral_click_recorded', handleRefClick);
+      window.removeEventListener('th3ory_referral_conversion_recorded', handleRefConv);
+    };
   }, [ambassador?.ambassadorCode]);
 
   const handleLogin = async (e) => {
@@ -277,10 +322,29 @@ export default function AmbassadorPortal() {
     }
   };
 
-  const referralLink = ambassador ? `https://th3ory.online/#/enroll?ambassador=${ambassador.ambassadorCode}` : '';
+  const shareableLinks = ambassador ? buildShareableReferralLinks(ambassador.ambassadorCode) : null;
   const currentPoints = ambassador ? (ambassador.points || 0) : 0;
   const nextTierPoints = currentPoints >= 700 ? 700 : (currentPoints >= 300 ? 700 : 300);
   const tierProgressPct = Math.min(100, Math.round((currentPoints / nextTierPoints) * 100));
+
+  const totalClicksCount = clicksList.length;
+  const totalEnrollmentsCount = ambassador?.totalEnrollments || leadsList.filter(l => l.status === 'ENROLLED').length;
+  const conversionRatePct = totalClicksCount > 0 
+    ? ((totalEnrollmentsCount / totalClicksCount) * 100).toFixed(1)
+    : (totalEnrollmentsCount > 0 ? '100' : '0.0');
+
+  const activeReferralUrl = shareableLinks ? (
+    selectedLinkType === 'rootHome' ? shareableLinks.rootHome :
+    selectedLinkType === 'directCheckout' ? shareableLinks.directCheckout :
+    shareableLinks.enrollPage
+  ) : '';
+
+  const handleCopyCustomLink = (url) => {
+    if (!url) return;
+    navigator.clipboard.writeText(url);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2500);
+  };
 
   const isLight = themeMode === 'light';
 
@@ -528,16 +592,18 @@ export default function AmbassadorPortal() {
                     </div>
                   </div>
 
-                  {/* Referral Code & Quick Link Copy Card */}
+                  {/* Referral Code & Multi-Destination Smart Link Generator */}
                   <div className={`p-6 rounded-3xl border space-y-4 ${
                     isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-[#1C1F24] border-[#555A66]/30'
                   }`}>
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b pb-3 border-slate-200 dark:border-slate-800">
                       <div>
                         <h3 className={`text-sm font-bold font-heading uppercase tracking-wider flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                          <Share2 className="w-4 h-4 text-amber-500" /> Unique Referral Code &amp; Student Link
+                          <Share2 className="w-4 h-4 text-amber-500" /> Multi-Destination Referral Link Generator
                         </h3>
-                        <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Share your referral link with college peers to earn ₹1,000 cash commission per enrollment.</p>
+                        <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                          Share your referral link with students. Every visit is tracked with real-time conversion attribution earning ₹1,000 cash.
+                        </p>
                       </div>
                       <span className={`text-xs font-mono font-bold text-amber-500 px-3 py-1 rounded-xl border ${
                         isLight ? 'bg-amber-50 border-amber-200' : 'bg-slate-950 border-amber-500/30'
@@ -546,52 +612,101 @@ export default function AmbassadorPortal() {
                       </span>
                     </div>
 
+                    {/* Destination Selector Tabs */}
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedLinkType('enrollPage')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          selectedLinkType === 'enrollPage'
+                            ? 'bg-amber-500 text-slate-950 shadow-md'
+                            : (isLight ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-slate-900 text-slate-400 hover:bg-slate-800')
+                        }`}
+                      >
+                        Direct Enrollment Page (/#/enroll)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedLinkType('rootHome')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          selectedLinkType === 'rootHome'
+                            ? 'bg-amber-500 text-slate-950 shadow-md'
+                            : (isLight ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-slate-900 text-slate-400 hover:bg-slate-800')
+                        }`}
+                      >
+                        Homepage Brand Link (/?ref=...)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedLinkType('directCheckout')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          selectedLinkType === 'directCheckout'
+                            ? 'bg-amber-500 text-slate-950 shadow-md'
+                            : (isLight ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-slate-900 text-slate-400 hover:bg-slate-800')
+                        }`}
+                      >
+                        Auto-Applied Coupon Link
+                      </button>
+                    </div>
+
                     <div className="flex flex-col sm:flex-row gap-3">
-                      <div className={`flex-1 px-4 py-3 rounded-xl border text-xs font-mono truncate ${
+                      <div className={`flex-1 px-4 py-3 rounded-xl border text-xs font-mono truncate flex items-center justify-between ${
                         isLight ? 'bg-slate-50 border-slate-300 text-slate-800' : 'bg-slate-950 border-slate-800 text-slate-300'
                       }`}>
-                        {referralLink}
+                        <span className="truncate">{activeReferralUrl}</span>
+                        <span className="text-[10px] text-emerald-400 font-bold ml-2 shrink-0 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Realtime Active
+                        </span>
                       </div>
                       <button
-                        onClick={handleCopyReferralLink}
-                        className="px-5 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
+                        onClick={() => handleCopyCustomLink(activeReferralUrl)}
+                        className="px-5 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0 shadow-md shadow-amber-500/20"
                       >
                         {copiedLink ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                        <span>{copiedLink ? 'Link Copied!' : 'Copy Referral Link'}</span>
+                        <span>{copiedLink ? 'Link Copied!' : 'Copy Link'}</span>
                       </button>
                     </div>
                   </div>
 
-                  {/* Performance Metrics Grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-                    <div className={`p-5 rounded-2xl border space-y-1 ${isLight ? 'bg-white border-slate-200' : 'bg-[#1C1F24] border-[#555A66]/30'}`}>
-                      <div className="text-slate-400 text-xs uppercase font-mono font-bold">Total Points</div>
-                      <div className="text-2xl font-black text-amber-500 font-mono">{currentPoints} pts</div>
-                      <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Point Score</div>
+                  {/* 6-Card Realtime Performance Metrics Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                    <div className={`p-4 rounded-2xl border space-y-1 ${isLight ? 'bg-white border-slate-200' : 'bg-[#1C1F24] border-[#555A66]/30'}`}>
+                      <div className="text-slate-400 text-[11px] uppercase font-mono font-bold">Total Points</div>
+                      <div className="text-xl font-black text-amber-500 font-mono">{currentPoints} pts</div>
+                      <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Leader Score</div>
                     </div>
 
-                    <div className={`p-5 rounded-2xl border space-y-1 ${isLight ? 'bg-white border-slate-200' : 'bg-[#1C1F24] border-[#555A66]/30'}`}>
-                      <div className="text-slate-400 text-xs uppercase font-mono font-bold">Qualified Leads</div>
-                      <div className="text-2xl font-black text-indigo-400 font-mono">{ambassador.totalLeads || leadsList.length}</div>
-                      <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Student Leads</div>
+                    <div className={`p-4 rounded-2xl border space-y-1 relative overflow-hidden ${isLight ? 'bg-white border-slate-200' : 'bg-[#1C1F24] border-[#555A66]/30'}`}>
+                      <div className="flex items-center justify-between">
+                        <div className="text-slate-400 text-[11px] uppercase font-mono font-bold">Total Clicks</div>
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                      </div>
+                      <div className="text-xl font-black text-blue-400 font-mono">{totalClicksCount}</div>
+                      <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Realtime Visits</div>
                     </div>
 
-                    <div className={`p-5 rounded-2xl border space-y-1 ${isLight ? 'bg-white border-slate-200' : 'bg-[#1C1F24] border-[#555A66]/30'}`}>
-                      <div className="text-slate-400 text-xs uppercase font-mono font-bold">Enrollments</div>
-                      <div className="text-2xl font-black text-emerald-400 font-mono">{ambassador.totalEnrollments || 3}</div>
+                    <div className={`p-4 rounded-2xl border space-y-1 ${isLight ? 'bg-white border-slate-200' : 'bg-[#1C1F24] border-[#555A66]/30'}`}>
+                      <div className="text-slate-400 text-[11px] uppercase font-mono font-bold">Student Leads</div>
+                      <div className="text-xl font-black text-indigo-400 font-mono">{leadsList.length}</div>
+                      <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Registered Inquiries</div>
+                    </div>
+
+                    <div className={`p-4 rounded-2xl border space-y-1 ${isLight ? 'bg-white border-slate-200' : 'bg-[#1C1F24] border-[#555A66]/30'}`}>
+                      <div className="text-slate-400 text-[11px] uppercase font-mono font-bold">Enrollments</div>
+                      <div className="text-xl font-black text-emerald-400 font-mono">{totalEnrollmentsCount}</div>
                       <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Driven Purchases</div>
                     </div>
 
-                    <div className={`p-5 rounded-2xl border space-y-1 ${isLight ? 'bg-white border-slate-200' : 'bg-[#1C1F24] border-[#555A66]/30'}`}>
-                      <div className="text-slate-400 text-xs uppercase font-mono font-bold">Total Commission</div>
-                      <div className="text-2xl font-black text-amber-400 font-mono">₹{(ambassador.totalCommission || 3000).toLocaleString('en-IN')}</div>
-                      <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>₹1,000 / Enrollment</div>
+                    <div className={`p-4 rounded-2xl border space-y-1 ${isLight ? 'bg-white border-slate-200' : 'bg-[#1C1F24] border-[#555A66]/30'}`}>
+                      <div className="text-slate-400 text-[11px] uppercase font-mono font-bold">Conv. Rate</div>
+                      <div className="text-xl font-black text-purple-400 font-mono">{conversionRatePct}%</div>
+                      <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Click to Sale</div>
                     </div>
 
-                    <div className={`p-5 rounded-2xl border space-y-1 col-span-2 sm:col-span-1 ${isLight ? 'bg-white border-slate-200' : 'bg-[#1C1F24] border-[#555A66]/30'}`}>
-                      <div className="text-slate-400 text-xs uppercase font-mono font-bold">Sunday Rank</div>
-                      <div className="text-2xl font-black text-purple-400 font-mono">#3 Leader</div>
-                      <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>College Standings</div>
+                    <div className={`p-4 rounded-2xl border space-y-1 ${isLight ? 'bg-white border-slate-200' : 'bg-[#1C1F24] border-[#555A66]/30'}`}>
+                      <div className="text-slate-400 text-[11px] uppercase font-mono font-bold">Commission</div>
+                      <div className="text-xl font-black text-amber-400 font-mono">₹{(ambassador.totalCommission || (totalEnrollmentsCount * 1000)).toLocaleString('en-IN')}</div>
+                      <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>₹1,000 / Sale</div>
                     </div>
                   </div>
 
@@ -646,6 +761,7 @@ export default function AmbassadorPortal() {
                   <div className={`rounded-3xl border overflow-hidden ${
                     isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-[#1C1F24] border-[#555A66]/30'
                   }`}>
+                    {/* Leads Table */}
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse">
                         <thead>
@@ -685,6 +801,70 @@ export default function AmbassadorPortal() {
                                 </td>
                                 <td className="py-3.5 px-4 font-bold text-amber-500">
                                   ₹{lead.commission_earned ? lead.commission_earned.toLocaleString('en-IN') : '0'}
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Real-time Click Stream Ledger */}
+                  <div className={`p-6 rounded-3xl border space-y-4 ${
+                    isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-[#1C1F24] border-[#555A66]/30'
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className={`text-sm font-bold font-heading uppercase tracking-wider flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                          <Sparkles className="w-4 h-4 text-amber-500" /> Live Referral Link Click Stream
+                        </h4>
+                        <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                          Real-time stream of incoming visitors clicking your unique referral link (Protected by DPDP &amp; anti-fraud hashing)
+                        </p>
+                      </div>
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                        {clicksList.length} Clicks Logged
+                      </span>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse text-xs font-mono">
+                        <thead>
+                          <tr className={`border-b text-[10px] font-bold uppercase tracking-wider ${
+                            isLight ? 'bg-slate-50 border-slate-200 text-slate-500' : 'bg-slate-950/60 border-slate-800 text-slate-400'
+                          }`}>
+                            <th className="py-2.5 px-3">Click ID</th>
+                            <th className="py-2.5 px-3">Landing Destination</th>
+                            <th className="py-2.5 px-3">Campaign Source</th>
+                            <th className="py-2.5 px-3">Status</th>
+                            <th className="py-2.5 px-3">Timestamp</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                          {clicksList.length === 0 ? (
+                            <tr>
+                              <td colSpan={5} className="py-6 text-center text-slate-400 text-xs">
+                                No clicks recorded yet. Share your link to start tracking live traffic!
+                              </td>
+                            </tr>
+                          ) : (
+                            clicksList.slice(0, 10).map((clk, idx) => (
+                              <tr key={clk.click_id || clk.clickId || idx} className={isLight ? 'hover:bg-slate-50' : 'hover:bg-slate-900/50'}>
+                                <td className="py-2.5 px-3 text-amber-500 font-bold">{clk.click_id || clk.clickId}</td>
+                                <td className="py-2.5 px-3 text-slate-400 truncate max-w-[200px]">{clk.landing_url || clk.landingUrl || '/#/enroll'}</td>
+                                <td className="py-2.5 px-3 text-slate-400">{clk.utm_source || clk.utmSource || 'Direct / Social'}</td>
+                                <td className="py-2.5 px-3">
+                                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                                    clk.converted || clk.conversion_id
+                                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                      : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                                  }`}>
+                                    {clk.converted || clk.conversion_id ? 'CONVERTED' : 'VISITED'}
+                                  </span>
+                                </td>
+                                <td className="py-2.5 px-3 text-slate-500">
+                                  {clk.created_at || clk.timestamp ? new Date(clk.created_at || clk.timestamp).toLocaleTimeString() : 'Just now'}
                                 </td>
                               </tr>
                             ))

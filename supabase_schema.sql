@@ -565,6 +565,51 @@ CREATE TABLE IF NOT EXISTS public.team_shared_assets (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 24. REFERRAL CLICKS TABLE (Real-Time Click Tracking & Anti-Fraud Ledger)
+CREATE TABLE IF NOT EXISTS public.referral_clicks (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    click_id TEXT UNIQUE NOT NULL,
+    ref_code TEXT NOT NULL,
+    ref_type TEXT DEFAULT 'CAMPAIGN',
+    landing_url TEXT,
+    referrer_url TEXT,
+    ip_hash TEXT,
+    user_agent TEXT,
+    utm_source TEXT,
+    utm_medium TEXT,
+    utm_campaign TEXT,
+    converted BOOLEAN DEFAULT false,
+    conversion_id TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 25. REFERRAL CONVERSIONS TABLE (Verified Commission & Conversion Audit Ledger)
+CREATE TABLE IF NOT EXISTS public.referral_conversions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    conversion_id TEXT UNIQUE NOT NULL,
+    click_id TEXT REFERENCES public.referral_clicks(click_id) ON DELETE SET NULL,
+    ref_code TEXT NOT NULL,
+    ref_type TEXT DEFAULT 'CAMPAIGN',
+    student_name TEXT,
+    student_email TEXT,
+    order_id TEXT,
+    plan_id TEXT,
+    plan_name TEXT,
+    gross_amount NUMERIC(10, 2) DEFAULT 0.00,
+    currency TEXT DEFAULT 'INR',
+    commission_rate TEXT,
+    commission_amount NUMERIC(10, 2) DEFAULT 0.00,
+    gateway TEXT DEFAULT 'Razorpay',
+    status TEXT DEFAULT 'APPROVED', -- 'PENDING_VERIFICATION' | 'APPROVED' | 'PAID' | 'REJECTED'
+    payout_id TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_referral_clicks_code ON public.referral_clicks(ref_code);
+CREATE INDEX IF NOT EXISTS idx_referral_clicks_created ON public.referral_clicks(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_referral_conversions_code ON public.referral_conversions(ref_code);
+CREATE INDEX IF NOT EXISTS idx_referral_conversions_order ON public.referral_conversions(order_id);
+
 -- ==============================================================================
 -- SUPABASE REALTIME REPLICATION ENABLEMENT
 -- Enables instant WebSocket streaming for live updates across all open browsers
@@ -595,7 +640,9 @@ BEGIN
       public.ambassador_payouts,
       public.ambassador_tasks,
       public.team_members,
-      public.team_shared_assets;
+      public.team_shared_assets,
+      public.referral_clicks,
+      public.referral_conversions;
   END IF;
 EXCEPTION WHEN OTHERS THEN
   RAISE NOTICE 'Publication table addition skipped or already present.';

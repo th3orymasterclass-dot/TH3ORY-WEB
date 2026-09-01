@@ -3521,3 +3521,226 @@ export async function saveTeamSharedAssetToSupabase(assetData) {
 
   return { success: true, id: assetId, asset: record };
 }
+
+// ─── Referral & Affiliate Link Tracking Handlers (Dedicated Tables) ───────────
+
+export async function recordReferralClickToSupabase(clickData) {
+  const payload = {
+    click_id: clickData.click_id || clickData.clickId,
+    ref_code: (clickData.ref_code || clickData.refCode || 'DIRECT').toUpperCase(),
+    ref_type: clickData.ref_type || clickData.refType || 'CAMPAIGN',
+    landing_url: clickData.landing_url || clickData.landingUrl || '',
+    referrer_url: clickData.referrer_url || clickData.referrerUrl || '',
+    ip_hash: clickData.ip_hash || clickData.fingerprint || '',
+    user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+    utm_source: clickData.utm_source || clickData.utmSource || '',
+    utm_medium: clickData.utm_medium || clickData.utmMedium || '',
+    utm_campaign: clickData.utm_campaign || clickData.utmCampaign || '',
+    converted: false,
+    created_at: new Date().toISOString()
+  };
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.from('referral_clicks').insert([payload]);
+    } catch (err) {
+      console.warn('[Supabase] Referral click persistence note:', err);
+    }
+  }
+
+  return { success: true, click: payload };
+}
+
+export async function recordReferralConversionToSupabase(conversionData) {
+  const payload = {
+    conversion_id: conversionData.conversion_id || conversionData.conversionId,
+    click_id: conversionData.click_id || conversionData.clickId || null,
+    ref_code: (conversionData.ref_code || conversionData.refCode || '').toUpperCase(),
+    ref_type: conversionData.ref_type || conversionData.refType || 'CAMPAIGN',
+    student_name: conversionData.student_name || conversionData.studentName || 'Student',
+    student_email: (conversionData.student_email || conversionData.studentEmail || '').toLowerCase(),
+    order_id: conversionData.order_id || conversionData.orderId || '',
+    plan_id: conversionData.plan_id || conversionData.planId || 'masterclass',
+    plan_name: conversionData.plan_name || conversionData.planName || 'TH3ORY Masterclass',
+    gross_amount: Number(conversionData.gross_amount || conversionData.grossAmount || 11999),
+    currency: conversionData.currency || 'INR',
+    commission_rate: conversionData.commission_rate || conversionData.commissionRate || '₹1,000 Flat',
+    commission_amount: Number(conversionData.commission_amount || conversionData.commissionAmount || 1000),
+    gateway: conversionData.gateway || 'Razorpay',
+    status: conversionData.status || 'APPROVED',
+    created_at: new Date().toISOString()
+  };
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      // 1. Insert into referral_conversions
+      await supabase.from('referral_conversions').insert([payload]);
+
+      // 2. Mark corresponding click as converted
+      if (payload.click_id) {
+        await supabase
+          .from('referral_clicks')
+          .update({ converted: true, conversion_id: payload.conversion_id })
+          .eq('click_id', payload.click_id);
+      }
+
+      // 3. If Campus Ambassador referral, update ambassador summary and add to ambassador_leads
+      if (payload.ref_type === 'AMBASSADOR' || payload.ref_code.startsWith('AMB-') || payload.ref_code.startsWith('AMB')) {
+        await supabase.from('ambassador_leads').insert([{
+          ambassador_code: payload.ref_code,
+          student_name: payload.student_name,
+          student_email: payload.student_email,
+          status: 'ENROLLED',
+          commission_earned: payload.commission_amount,
+          created_at: payload.created_at
+        }]);
+
+        // Increment ambassador stats
+        const { data: amb } = await supabase
+          .from('ambassador_applications')
+          .select('total_leads, total_enrollments, total_commission, points')
+          .eq('ambassador_code', payload.ref_code)
+          .single();
+
+        if (amb) {
+          await supabase
+            .from('ambassador_applications')
+            .update({
+              total_leads: (amb.total_leads || 0) + 1,
+              total_enrollments: (amb.total_enrollments || 0) + 1,
+              total_commission: Number(amb.total_commission || 0) + payload.commission_amount,
+              points: (amb.points || 0) + 100 // 100 points per successful conversion
+            })
+            .eq('ambassador_code', payload.ref_code);
+        }
+      }
+    } catch (err) {
+      console.warn('[Supabase] Referral conversion persistence note:', err);
+    }
+  }
+
+  return { success: true, conversion: payload };
+}
+
+export async function fetchReferralClicksFromSupabase(refCode = null) {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      let query = supabase.from('referral_clicks').select('*').order('created_at', { ascending: false });
+      if (refCode) {
+        query = query.eq('ref_code', refCode.toUpperCase());
+      }
+      const { data, error } = await query;
+      if (!error && data) return data;
+    } catch (err) {
+      console.warn('[Supabase] Exception fetching referral clicks:', err);
+    }
+  }
+
+  // Local fallback
+  try {
+    const raw = localStorage.getItem('th3ory_aff_clicks_log');
+    if (raw) {
+      const list = JSON.parse(raw);
+      if (refCode) return list.filter(c => c.refCode === refCode.toUpperCase() || c.ref_code === refCode.toUpperCase());
+      return list;
+    }
+  } catch {}
+
+  return [];
+}
+
+export async function fetchReferralConversionsFromSupabase(refCode = null) {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      let query = supabase.from('referral_conversions').select('*').order('created_at', { ascending: false });
+      if (refCode) {
+        query = query.eq('ref_code', refCode.toUpperCase());
+      }
+      const { data, error } = await query;
+      if (!error && data) return data;
+    } catch (err) {
+      console.warn('[Supabase] Exception fetching referral conversions:', err);
+    }
+  }
+
+  // Local fallback
+  try {
+    const raw = localStorage.getItem('th3ory_aff_conversions_log');
+    if (raw) {
+      const list = JSON.parse(raw);
+      if (refCode) return list.filter(c => c.refCode === refCode.toUpperCase() || c.ref_code === refCode.toUpperCase());
+      return list;
+    }
+  } catch {}
+
+  return [];
+}
+
+export async function fetchAllReferralAnalyticsFromSupabase() {
+  const [clicks, conversions] = await Promise.all([
+    fetchReferralClicksFromSupabase(),
+    fetchReferralConversionsFromSupabase()
+  ]);
+
+  const totalClicks = clicks.length;
+  const uniqueClicks = new Set(clicks.map(c => c.ip_hash || c.click_id)).size;
+  const totalConversions = conversions.length;
+  const conversionRate = totalClicks > 0 ? ((totalConversions / totalClicks) * 100).toFixed(1) : 0;
+  const totalCommissionDisbursed = conversions.reduce((sum, c) => sum + Number(c.commission_amount || 0), 0);
+  const totalGrossDriven = conversions.reduce((sum, c) => sum + Number(c.gross_amount || 0), 0);
+
+  // Group by referral code
+  const codePerformance = {};
+  clicks.forEach(c => {
+    const code = (c.ref_code || c.refCode || 'UNKNOWN').toUpperCase();
+    if (!codePerformance[code]) {
+      codePerformance[code] = { code, refType: c.ref_type || 'CAMPAIGN', clicks: 0, conversions: 0, revenue: 0, commission: 0 };
+    }
+    codePerformance[code].clicks++;
+  });
+
+  conversions.forEach(c => {
+    const code = (c.ref_code || c.refCode || 'UNKNOWN').toUpperCase();
+    if (!codePerformance[code]) {
+      codePerformance[code] = { code, refType: c.ref_type || 'CAMPAIGN', clicks: 0, conversions: 0, revenue: 0, commission: 0 };
+    }
+    codePerformance[code].conversions++;
+    codePerformance[code].revenue += Number(c.gross_amount || 0);
+    codePerformance[code].commission += Number(c.commission_amount || 0);
+  });
+
+  return {
+    totalClicks,
+    uniqueClicks,
+    totalConversions,
+    conversionRate: Number(conversionRate),
+    totalCommissionDisbursed,
+    totalGrossDriven,
+    clicks,
+    conversions,
+    codePerformance: Object.values(codePerformance)
+  };
+}
+
+export function subscribeToReferralTracking(onUpdate) {
+  if (!isSupabaseConfigured || !supabase) return () => {};
+  try {
+    const channelName = `referral_tracking_${Date.now()}`;
+    const sub = supabase
+      .channel(channelName)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'referral_clicks' }, () => {
+        fetchAllReferralAnalyticsFromSupabase().then(res => onUpdate(res));
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'referral_conversions' }, () => {
+        fetchAllReferralAnalyticsFromSupabase().then(res => onUpdate(res));
+      })
+      .subscribe();
+
+    return () => {
+      try { supabase.removeChannel(sub); } catch {}
+    };
+  } catch {
+    return () => {};
+  }
+}
+

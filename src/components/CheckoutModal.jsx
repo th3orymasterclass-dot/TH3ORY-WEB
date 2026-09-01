@@ -6,6 +6,7 @@ import { saveEnrollmentToSupabase, generateUniqueStudentCredentials } from '../s
 import { sendEnrollmentEmail } from '../services/emailService';
 import { useFeatureFlags } from '../context/FeatureFlagContext';
 import { recordDPDPConsent } from '../services/dpdpConsentManager';
+import { getActiveAttribution, recordReferralConversion } from '../utils/affiliateTrackingEngine';
 
 export default function CheckoutModal({
   isOpen,
@@ -54,13 +55,17 @@ export default function CheckoutModal({
   const [acceptedModalPrivacy, setAcceptedModalPrivacy] = useState(false);
   const [modalPrivacyErr, setModalPrivacyErr] = useState(false);
 
-  // Auto-detect coupon from URL parameter or default early bird
+  // Auto-detect coupon / active referral attribution from URL or storage
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      const activeAff = getActiveAttribution();
       const params = new URLSearchParams(window.location.search);
-      const urlCoupon = params.get('coupon') || params.get('aff') || params.get('code');
+      const urlCoupon = params.get('coupon') || params.get('aff') || params.get('code') || params.get('ref') || params.get('amb');
+      
       if (urlCoupon) {
         setCouponCodeInput(urlCoupon.toUpperCase());
+      } else if (activeAff && activeAff.refCode) {
+        setCouponCodeInput(activeAff.refCode);
       } else if (!couponCodeInput && isEarlyBird) {
         setCouponCodeInput('EARLYBIRD20');
       }
@@ -257,6 +262,18 @@ export default function CheckoutModal({
 
               const finalCode = (sbRes && sbRes.code) || uniqueCreds.enrollmentCode;
 
+              // Record verified referral conversion attribution
+              recordReferralConversion({
+                studentName: formData.fullName,
+                studentEmail: formData.email,
+                orderId,
+                planId: selectedPlan.id || 'pro',
+                planName: selectedPlan.name,
+                grossAmount: grandTotalINR,
+                currency: 'INR',
+                gateway: 'Razorpay'
+              }).catch(rErr => console.warn('[Referral Attribution] Conversion recording notice:', rErr));
+
               // Send confirmation email via Vercel Serverless Email API with unique credentials
               sendEnrollmentEmail({
                 name: formData.fullName,
@@ -357,6 +374,18 @@ export default function CheckoutModal({
         }).catch(err => console.warn('[Supabase Enrollment] Error saving to DB:', err));
 
         const finalCode = (sbRes && sbRes.code) || uniqueCreds.enrollmentCode;
+
+        // Record verified referral conversion attribution
+        recordReferralConversion({
+          studentName: formData.fullName,
+          studentEmail: formData.email,
+          orderId,
+          planId: selectedPlan.id || 'pro',
+          planName: selectedPlan.name,
+          grossAmount: grandTotalUSD,
+          currency: 'USD',
+          gateway: paymentMethod
+        }).catch(rErr => console.warn('[Referral Attribution] Conversion recording notice:', rErr));
 
         sendEnrollmentEmail({
           name: formData.fullName,

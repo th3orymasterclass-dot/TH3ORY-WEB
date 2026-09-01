@@ -9,6 +9,7 @@ import { getCourseDetails, getPlans, validateCoupon, incrementCouponUsage, isEar
 import { saveEnrollmentToSupabase, generateUniqueStudentCredentials } from '../services/supabaseService';
 import { sendEnrollmentEmail } from '../services/emailService';
 import { useFeatureFlags } from '../context/FeatureFlagContext';
+import { getActiveAttribution, recordReferralConversion } from '../utils/affiliateTrackingEngine';
 
 // ─── Country codes ─────────────────────────────────────────────────────────────
 const COUNTRY_CODES = [
@@ -480,6 +481,19 @@ function Step3({ form, setForm, onNext, onBack }) {
 
               const sbRes = await saveEnrollmentToSupabase(receipt);
               const finalReceipt = { ...receipt, code: sbRes.code || receipt.code, studentId: sbRes.studentId || receipt.studentId };
+              
+              // Record verified referral conversion attribution
+              recordReferralConversion({
+                studentName: form.name,
+                studentEmail: form.email,
+                orderId: receipt.orderId,
+                planId: plan?.id || 'masterclass',
+                planName: plan?.name || 'TH3ORY Masterclass',
+                grossAmount: totalINR,
+                currency: 'INR',
+                gateway: 'Razorpay'
+              }).catch(rErr => console.warn('[Referral Attribution] Conversion recording notice:', rErr));
+
               sendEnrollmentEmail(finalReceipt).catch(err => console.error(err));
 
               setLoading(false);
@@ -538,6 +552,19 @@ function Step3({ form, setForm, onNext, onBack }) {
 
     const sbRes = await saveEnrollmentToSupabase(receipt);
     const finalReceipt = { ...receipt, code: sbRes.code || receipt.code, studentId: sbRes.studentId || receipt.studentId };
+    
+    // Record verified referral conversion attribution
+    recordReferralConversion({
+      studentName: form.name,
+      studentEmail: form.email,
+      orderId: receipt.orderId,
+      planId: plan?.id || 'masterclass',
+      planName: plan?.name || 'TH3ORY Masterclass',
+      grossAmount: totalUSD,
+      currency: 'USD',
+      gateway
+    }).catch(rErr => console.warn('[Referral Attribution] Conversion recording notice:', rErr));
+
     sendEnrollmentEmail(finalReceipt).catch(err => console.error(err));
 
     setLoading(false);
@@ -865,10 +892,13 @@ export default function EnrollmentPage({ initialPlan, onBack }) {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      const activeAff = getActiveAttribution();
       const params = new URLSearchParams(window.location.search);
-      const urlCoupon = params.get('coupon') || params.get('aff') || params.get('code');
+      const urlCoupon = params.get('coupon') || params.get('aff') || params.get('code') || params.get('ref') || params.get('amb');
       if (urlCoupon) {
         setForm(f => ({ ...f, coupon: urlCoupon.toUpperCase() }));
+      } else if (activeAff && activeAff.refCode) {
+        setForm(f => ({ ...f, coupon: activeAff.refCode }));
       } else if (isEarlyBird && !form.coupon) {
         setForm(f => ({ ...f, coupon: 'EARLYBIRD20' }));
       }

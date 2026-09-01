@@ -23,6 +23,7 @@ import NotFoundPage from './components/NotFoundPage.jsx';
 import { FeatureFlagProvider } from './context/FeatureFlagContext.jsx';
 import { UIStatusProvider } from './context/UIStatusContext.jsx';
 import { Analytics } from '@vercel/analytics/react';
+import { captureAndTrackReferral } from './utils/affiliateTrackingEngine.js';
 import './index.css';
 
 function Root() {
@@ -63,6 +64,9 @@ function Root() {
   });
 
   useEffect(() => {
+    // 1. Intercept and capture any affiliate / referral URL parameters across all possibilities
+    captureAndTrackReferral().catch(err => console.warn('[Affiliate Tracking Engine] capture notice:', err));
+
     // Purge legacy th3ory_local_ localStorage keys to ensure 100% pure Supabase live sync
     try {
       const keysToRemove = [];
@@ -76,6 +80,7 @@ function Root() {
     } catch {}
 
     const handler = () => {
+      captureAndTrackReferral().catch(() => {});
       setView(getInitialView());
     };
     window.addEventListener('hashchange', handler);

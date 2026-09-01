@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Tag, Shield, Check, Plus, Send, Calendar, Users, Eye, Mail, Phone, ExternalLink, Sparkles, Edit3, Trash2 } from 'lucide-react';
+import { Tag, Shield, Check, Plus, Send, Calendar, Users, Eye, Mail, Phone, ExternalLink, Sparkles, Edit3, Trash2, Copy, TrendingUp, MousePointerClick } from 'lucide-react';
 import ActionDropdown from '../../components/ActionDropdown';
-import { submitTeamApprovalRequestToSupabase, fetchAllAffiliateApplicationsFromSupabase, deleteAffiliateApplicationFromSupabase, updateAffiliateApplicationInSupabase } from '../../services/supabaseService';
+import { 
+  submitTeamApprovalRequestToSupabase, 
+  fetchAllAffiliateApplicationsFromSupabase, 
+  deleteAffiliateApplicationFromSupabase, 
+  updateAffiliateApplicationInSupabase,
+  fetchAllReferralAnalyticsFromSupabase,
+  subscribeToReferralTracking
+} from '../../services/supabaseService';
+import { buildShareableReferralLinks } from '../../utils/affiliateTrackingEngine';
 import CalendlyModal from '../../components/CalendlyModal';
 
 export default function TeamAffiliatesPanel({ save, themeMode = 'dark' }) {
@@ -11,6 +19,17 @@ export default function TeamAffiliatesPanel({ save, themeMode = 'dark' }) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [isCalendlyOpen, setIsCalendlyOpen] = useState(false);
+  const [copiedCode, setCopiedCode] = useState('');
+
+  // Real-time Referral Analytics State
+  const [referralStats, setReferralStats] = useState({
+    totalClicks: 0,
+    uniqueClicks: 0,
+    totalConversions: 0,
+    conversionRate: 0,
+    totalGrossDriven: 0,
+    totalCommissionDisbursed: 0
+  });
 
   // Affiliate Partner Applications State
   const [applications, setApplications] = useState([]);
@@ -62,8 +81,12 @@ export default function TeamAffiliatesPanel({ save, themeMode = 'dark' }) {
   const loadAffiliateApplications = async () => {
     setLoadingApps(true);
     try {
-      const data = await fetchAllAffiliateApplicationsFromSupabase();
+      const [data, stats] = await Promise.all([
+        fetchAllAffiliateApplicationsFromSupabase(),
+        fetchAllReferralAnalyticsFromSupabase()
+      ]);
       setApplications(data || []);
+      if (stats) setReferralStats(stats);
     } catch (err) {
       console.warn('Error fetching affiliate applications:', err);
     } finally {
@@ -73,7 +96,18 @@ export default function TeamAffiliatesPanel({ save, themeMode = 'dark' }) {
 
   useEffect(() => {
     loadAffiliateApplications();
+    const unsubscribe = subscribeToReferralTracking((newStats) => {
+      if (newStats) setReferralStats(newStats);
+    });
+    return () => unsubscribe();
   }, []);
+
+  const handleCopyPartnerLink = (code) => {
+    const link = `https://th3ory.online/#/enroll?coupon=${code}`;
+    navigator.clipboard.writeText(link);
+    setCopiedCode(code);
+    setTimeout(() => setCopiedCode(''), 2500);
+  };
 
   const handleProposeAffiliateCode = async (e) => {
     e.preventDefault();
@@ -220,6 +254,36 @@ export default function TeamAffiliatesPanel({ save, themeMode = 'dark' }) {
         )}
       </div>
 
+      {/* REALTIME REFERRAL ATTRIBUTION & PERFORMANCE METRICS */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className={`p-4 rounded-2xl border space-y-1 ${isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200'}`}>
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] uppercase font-mono font-bold text-slate-400">Tracked Clicks</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          </div>
+          <div className="text-xl font-black text-blue-400 font-mono">{referralStats.totalClicks}</div>
+          <div className="text-[10px] text-slate-500">Live Traffic Visits</div>
+        </div>
+
+        <div className={`p-4 rounded-2xl border space-y-1 ${isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200'}`}>
+          <div className="text-[10px] uppercase font-mono font-bold text-slate-400">Total Conversions</div>
+          <div className="text-xl font-black text-emerald-400 font-mono">{referralStats.totalConversions}</div>
+          <div className="text-[10px] text-slate-500">Attributed Sales</div>
+        </div>
+
+        <div className={`p-4 rounded-2xl border space-y-1 ${isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200'}`}>
+          <div className="text-[10px] uppercase font-mono font-bold text-slate-400">Conversion Rate</div>
+          <div className="text-xl font-black text-purple-400 font-mono">{referralStats.conversionRate}%</div>
+          <div className="text-[10px] text-slate-500">Overall Click-to-Enroll</div>
+        </div>
+
+        <div className={`p-4 rounded-2xl border space-y-1 ${isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200'}`}>
+          <div className="text-[10px] uppercase font-mono font-bold text-slate-400">Gross Driven</div>
+          <div className="text-xl font-black text-amber-400 font-mono">₹{referralStats.totalGrossDriven.toLocaleString('en-IN')}</div>
+          <div className="text-[10px] text-slate-500">Partner Attributed Revenue</div>
+        </div>
+      </div>
+
       {/* SECTION 2: ACTIVE DISCOUNT CODES TABLE */}
       <div className={`border rounded-2xl p-5 shadow-sm space-y-4 ${
         isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200'
@@ -227,7 +291,7 @@ export default function TeamAffiliatesPanel({ save, themeMode = 'dark' }) {
         <div className="flex items-center justify-between">
           <h3 className={`text-base font-bold flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
             <Tag className="w-5 h-5 text-indigo-500" />
-            Active Affiliate Codes ({affiliates.length})
+            Active Affiliate Codes &amp; Referral Links ({affiliates.length})
           </h3>
           <span className={`px-2.5 py-1 text-[10px] font-mono rounded-full uppercase border ${
             isDark ? 'bg-indigo-500/10 text-indigo-300 border-indigo-500/30' : 'bg-indigo-50 text-indigo-700 border-indigo-200'
@@ -247,6 +311,7 @@ export default function TeamAffiliatesPanel({ save, themeMode = 'dark' }) {
                 <th className="p-3">Affiliation / Partner</th>
                 <th className="p-3">Redemptions</th>
                 <th className="p-3">Status</th>
+                <th className="p-3 text-right">Referral Link</th>
               </tr>
             </thead>
             <tbody className={`divide-y ${isDark ? 'divide-slate-800' : 'divide-slate-200'}`}>
@@ -260,6 +325,16 @@ export default function TeamAffiliatesPanel({ save, themeMode = 'dark' }) {
                     <span className="px-2 py-0.5 text-[10px] font-mono rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                       {a.status}
                     </span>
+                  </td>
+                  <td className="p-3 text-right">
+                    <button
+                      type="button"
+                      onClick={() => handleCopyPartnerLink(a.code)}
+                      className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-amber-400 hover:text-amber-300 rounded-lg text-[11px] font-mono font-bold inline-flex items-center gap-1 transition-all cursor-pointer border border-slate-700"
+                    >
+                      {copiedCode === a.code ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                      <span>{copiedCode === a.code ? 'Link Copied!' : 'Copy Link'}</span>
+                    </button>
                   </td>
                 </tr>
               ))}
