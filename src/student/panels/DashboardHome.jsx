@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Award, BookOpen, CheckCircle2, Clock, Flame, Target, TrendingUp, Play, Star, Zap, Mail } from 'lucide-react';
+import { Award, BookOpen, CheckCircle2, Clock, Flame, Target, TrendingUp, Play, Star, Zap, Mail, Camera } from 'lucide-react';
 import { getProgress } from '../studentData';
 import { getLevels, getCourseDetails } from '../../data/adminData';
 import { fetchStudentDataFromSupabase, subscribeToStudentProgress } from '../../services/supabaseService';
+import { getStudentAvatar } from '../../utils/profileStorageEngine';
+import ProfileAvatar from '../../components/ProfileAvatar';
 import DailyHabitTracker from '../components/DailyHabitTracker';
 import DayTasksTracker from '../components/DayTasksTracker';
 
@@ -32,6 +34,7 @@ export default function DashboardHome({ profile, onNavigate, themeMode = 'dark' 
   const [progress, setProgress] = useState(() => getProgress(profile?.email));
   const [levels, setLevels]     = useState(getLevels());
   const [details, setDetails]   = useState(getCourseDetails());
+  const [avatar, setAvatar]     = useState(() => getStudentAvatar(profile?.email) || profile?.avatar || profile?.avatarUrl || '');
 
   useEffect(() => {
     const email = profile?.email;
@@ -40,8 +43,13 @@ export default function DashboardHome({ profile, onNavigate, themeMode = 'dark' 
       setLevels(getLevels());
       setDetails(getCourseDetails());
     };
+    const hAvatar = (e) => {
+      if (e.detail?.avatarUrl !== undefined) setAvatar(e.detail.avatarUrl);
+    };
+
     window.addEventListener('th3ory_student_change', hStudent);
     window.addEventListener('th3ory_data_change', hData);
+    window.addEventListener('th3ory_student_avatar_change', hAvatar);
 
     const refreshDashboard = () => {
       if (email) {
@@ -51,6 +59,7 @@ export default function DashboardHome({ profile, onNavigate, themeMode = 'dark' 
       }
       setLevels(getLevels());
       setDetails(getCourseDetails());
+      setAvatar(getStudentAvatar(email) || profile?.avatar || '');
     };
 
     window.addEventListener('focus', refreshDashboard);
@@ -65,6 +74,7 @@ export default function DashboardHome({ profile, onNavigate, themeMode = 'dark' 
     return () => {
       window.removeEventListener('th3ory_student_change', hStudent);
       window.removeEventListener('th3ory_data_change', hData);
+      window.removeEventListener('th3ory_student_avatar_change', hAvatar);
       window.removeEventListener('focus', refreshDashboard);
       document.removeEventListener('visibilitychange', refreshDashboard);
       unsub();
@@ -92,17 +102,26 @@ export default function DashboardHome({ profile, onNavigate, themeMode = 'dark' 
 
   return (
     <div className="space-y-8">
-      {/* Welcome */}
-      <div className={`relative rounded-2xl overflow-hidden p-7 border ${
+      {/* Welcome Banner with Avatar */}
+      <div className={`relative rounded-2xl overflow-hidden p-7 border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 ${
         isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-gradient-to-br from-slate-900 to-slate-950 border-slate-800'
       }`}
         style={{backgroundImage: isLight ? 'none' : 'radial-gradient(ellipse at 80% 0%, rgba(245,158,11,0.12) 0%, transparent 60%)'}}>
-        <div className="relative z-10">
-          <p className={`text-sm mb-1 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>Welcome back,</p>
-          <h2 className={`text-3xl font-black mb-3 ${isLight ? 'text-slate-900' : 'text-white'}`}>{profile.name} 👋</h2>
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="px-3 py-1 bg-amber-500/15 border border-amber-500/30 rounded-full text-amber-600 text-xs font-extrabold">{profile.plan}</span>
-            <span className={`text-xs ${isLight ? 'text-slate-600' : 'text-slate-500'}`}>Enrolled {daysSince === 0 ? 'today' : `${daysSince} day${daysSince!==1?'s':''} ago`}</span>
+        <div className="relative z-10 flex items-center gap-5 min-w-0">
+          <ProfileAvatar
+            src={avatar}
+            name={profile?.name || 'Student'}
+            role="student"
+            size="xl"
+            showStatus={true}
+          />
+          <div className="min-w-0">
+            <p className={`text-xs font-semibold uppercase tracking-wider mb-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Welcome back,</p>
+            <h2 className={`text-2xl sm:text-3xl font-black mb-2 truncate ${isLight ? 'text-slate-900' : 'text-white'}`}>{profile.name} 👋</h2>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="px-3 py-1 bg-amber-500/15 border border-amber-500/30 rounded-full text-amber-600 dark:text-amber-400 text-xs font-extrabold">{profile.plan}</span>
+              <span className={`text-xs ${isLight ? 'text-slate-600' : 'text-slate-500'}`}>Enrolled {daysSince === 0 ? 'today' : `${daysSince} day${daysSince!==1?'s':''} ago`}</span>
+            </div>
           </div>
         </div>
       </div>

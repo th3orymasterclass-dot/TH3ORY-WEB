@@ -38,6 +38,7 @@ ALTER TABLE public.enrollments ADD COLUMN IF NOT EXISTS coupon_code TEXT DEFAULT
 ALTER TABLE public.enrollments ADD COLUMN IF NOT EXISTS affiliation_name TEXT DEFAULT 'Direct';
 ALTER TABLE public.enrollments ADD COLUMN IF NOT EXISTS discount_percentage NUMERIC(5, 2) DEFAULT 0.00;
 ALTER TABLE public.enrollments ADD COLUMN IF NOT EXISTS discount_amount NUMERIC(10, 2) DEFAULT 0.00;
+ALTER TABLE public.enrollments ADD COLUMN IF NOT EXISTS avatar_url TEXT;
 
 -- 2. STUDENT ACCOUNTS TABLE (Registered Students & Portal Access)
 CREATE TABLE IF NOT EXISTS public.student_accounts (
@@ -426,6 +427,7 @@ ALTER TABLE public.ambassador_applications ADD COLUMN IF NOT EXISTS interview_no
 ALTER TABLE public.ambassador_applications ADD COLUMN IF NOT EXISTS interview_rating TEXT;
 ALTER TABLE public.ambassador_applications ADD COLUMN IF NOT EXISTS team_recommended_by TEXT;
 ALTER TABLE public.ambassador_applications ADD COLUMN IF NOT EXISTS payout_details JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE public.ambassador_applications ADD COLUMN IF NOT EXISTS avatar_url TEXT;
 
 -- 17. AMBASSADOR WEEKLY REPORTS TABLE (Dedicated Activity & Progress Log Ledger)
 CREATE TABLE IF NOT EXISTS public.ambassador_weekly_reports (

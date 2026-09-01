@@ -17,6 +17,8 @@ import {
 import { sendAmbassadorApprovalEmail, sendAmbassadorInterviewInviteEmail } from '../../services/emailService';
 import CalendlyModal from '../../components/CalendlyModal';
 import ActionDropdown from '../../components/ActionDropdown';
+import ProfileAvatar from '../../components/ProfileAvatar';
+import { getAmbassadorAvatar } from '../../utils/profileStorageEngine';
 
 const DEFAULT_CALENDLY_URL = import.meta.env.VITE_CALENDLY_URL || 'https://calendly.com/th3orymasterclass/30min';
 
@@ -373,9 +375,12 @@ export default function AmbassadorApplicationsPanel({ themeMode = 'dark' }) {
                 {/* CANDIDATE HEADER */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 font-extrabold flex items-center justify-center font-mono">
-                      {app.name ? app.name.substring(0, 2).toUpperCase() : 'AM'}
-                    </div>
+                    <ProfileAvatar
+                      src={getAmbassadorAvatar(app.ambassadorCode || app.email) || app.avatar_url || app.avatar || ''}
+                      name={app.name || 'Ambassador'}
+                      role="ambassador"
+                      size="md"
+                    />
                     <div>
                       <div className="flex items-center gap-2">
                         <h3 className={`text-base font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{app.name}</h3>

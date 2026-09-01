@@ -9,6 +9,9 @@ import {
 import Logo from './Logo';
 import SEOHead from './SEOHead';
 import AmbassadorLogin from './AmbassadorLogin';
+import ProfileAvatar from './ProfileAvatar';
+import ProfilePictureModal from './ProfilePictureModal';
+import { getAmbassadorAvatar } from '../utils/profileStorageEngine';
 import { 
   fetchAmbassadorByCodeFromSupabase, 
   saveAmbassadorWeeklyReportToSupabase,
@@ -33,6 +36,8 @@ export default function AmbassadorPortal() {
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [copiedLink, setCopiedLink] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState('');
 
   // App Layout State (matching Student Portal)
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -156,11 +161,34 @@ export default function AmbassadorPortal() {
         const parsed = JSON.parse(saved);
         if (parsed && parsed.ambassadorCode) {
           fetchAmbassadorByCodeFromSupabase(parsed.ambassadorCode).then(res => {
-            if (res) setAmbassador(res);
+            if (res) {
+              setAmbassador(res);
+              const av = getAmbassadorAvatar(res.ambassadorCode) || res.avatar || res.avatarUrl || '';
+              setAvatarUrl(av);
+            }
           });
         }
       }
     } catch {}
+  }, []);
+
+  // Update avatar whenever ambassador profile changes
+  useEffect(() => {
+    if (ambassador?.ambassadorCode) {
+      const av = getAmbassadorAvatar(ambassador.ambassadorCode) || ambassador.avatar || ambassador.avatarUrl || '';
+      setAvatarUrl(av);
+    }
+  }, [ambassador?.ambassadorCode, ambassador?.avatar, ambassador?.avatarUrl]);
+
+  // Real-time ambassador avatar change listener
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.detail?.avatarUrl !== undefined) {
+        setAvatarUrl(e.detail.avatarUrl);
+      }
+    };
+    window.addEventListener('th3ory_ambassador_avatar_change', handler);
+    return () => window.removeEventListener('th3ory_ambassador_avatar_change', handler);
   }, []);
 
   // Fetch leads and payouts when ambassador logs in or updates
@@ -173,9 +201,8 @@ export default function AmbassadorPortal() {
       ]).then(([leadsData, payoutsData]) => {
         setLeadsList(leadsData && leadsData.length > 0 ? leadsData : [
           { id: '1', student_name: 'Alexander Vance', student_email: 'alex.vance@vanderbilt.edu', college_name: 'Vanderbilt University', status: 'ENROLLED', commission_earned: 1000.00, created_at: new Date(Date.now() - 86400000 * 2).toISOString() },
-          { id: '2', student_name: 'Elena Rostova', student_email: 'elena.rostova@behavioral.co', college_name: 'Stanford University', status: 'ENROLLED', commission_earned: 1000.00, created_at: new Date(Date.now() - 86400000 * 4).toISOString() },
-          { id: '3', student_name: 'Marcus Brody', student_email: 'marcus.brody@harvard.edu', college_name: 'Harvard University', status: 'INTERESTED', commission_earned: 0.00, created_at: new Date(Date.now() - 86400000 * 5).toISOString() },
-          { id: '4', student_name: 'Dr. Sarah Jenkins', student_email: 'sarah.jenkins@oxford.ac.uk', college_name: 'Oxford University', status: 'ENROLLED', commission_earned: 1000.00, created_at: new Date(Date.now() - 86400000 * 8).toISOString() }
+          { id: '2', student_name: 'Maya Patel', student_email: 'maya.patel@ucla.edu', college_name: 'UCLA', status: 'INTERESTED', commission_earned: 0.00, created_at: new Date(Date.now() - 86400000 * 5).toISOString() },
+          { id: '3', student_name: 'Rohan Sharma', student_email: 'rohan.s@berkeley.edu', college_name: 'UC Berkeley', status: 'ENROLLED', commission_earned: 1000.00, created_at: new Date(Date.now() - 86400000 * 8).toISOString() }
         ]);
 
         setPayoutsList(payoutsData && payoutsData.length > 0 ? payoutsData : [
@@ -198,6 +225,8 @@ export default function AmbassadorPortal() {
       const res = await fetchAmbassadorByCodeFromSupabase(authCode);
       if (res) {
         setAmbassador(res);
+        const av = getAmbassadorAvatar(res.ambassadorCode) || res.avatar || res.avatarUrl || '';
+        setAvatarUrl(av);
         try {
           sessionStorage.setItem('th3ory_ambassador_session', JSON.stringify(res));
         } catch {}
@@ -326,12 +355,23 @@ export default function AmbassadorPortal() {
             <div className={`px-4 py-4 border-b ${isLight ? 'border-slate-200' : 'border-[#555A66]/30'}`}>
               <div className={`border rounded-xl p-3 ${isLight ? 'bg-amber-50/70 border-amber-200' : 'bg-amber-500/10 border-amber-500/20'}`}>
                 <div className="flex items-center gap-2.5 mb-2.5">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-yellow-500 flex items-center justify-center text-slate-950 font-black text-sm shrink-0">
-                    {(ambassador?.name || 'A')[0].toUpperCase()}
-                  </div>
+                  <ProfileAvatar
+                    src={avatarUrl}
+                    name={ambassador?.name || 'Ambassador'}
+                    role="ambassador"
+                    size="md"
+                    editable={true}
+                    onClick={() => setShowProfileModal(true)}
+                  />
                   <div className="min-w-0 flex-1">
                     <p className={`font-bold text-sm truncate ${isLight ? 'text-slate-900' : 'text-[#FAFAF7]'}`}>{ambassador.name}</p>
                     <p className={`text-xs truncate font-semibold ${isLight ? 'text-amber-800' : 'text-amber-400'}`}>{ambassador.collegeName || 'Stanford University'}</p>
+                    <button
+                      onClick={() => setShowProfileModal(true)}
+                      className="text-[10px] text-amber-500 hover:text-amber-400 font-semibold cursor-pointer underline mt-0.5 block"
+                    >
+                      Change Photo
+                    </button>
                   </div>
                 </div>
 
@@ -425,6 +465,15 @@ export default function AmbassadorPortal() {
               </div>
 
               <div className="flex items-center gap-3">
+                <ProfileAvatar
+                  src={avatarUrl}
+                  name={ambassador?.name || 'Ambassador'}
+                  role="ambassador"
+                  size="sm"
+                  editable={true}
+                  onClick={() => setShowProfileModal(true)}
+                />
+
                 <button
                   onClick={() => setShowReportModal(true)}
                   className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-extrabold text-xs uppercase tracking-wider transition-all shadow-md shadow-amber-500/20 flex items-center gap-1.5 cursor-pointer shrink-0"
@@ -447,9 +496,15 @@ export default function AmbassadorPortal() {
                     isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-[#1C1F24] border-[#555A66]/30'
                   }`}>
                     <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-500 text-slate-950 font-black text-xl flex items-center justify-center shrink-0">
-                        {ambassador.name ? ambassador.name.substring(0, 2).toUpperCase() : 'AM'}
-                      </div>
+                      <ProfileAvatar
+                        src={avatarUrl}
+                        name={ambassador?.name || 'Ambassador'}
+                        role="ambassador"
+                        size="xl"
+                        editable={true}
+                        showStatus={true}
+                        onClick={() => setShowProfileModal(true)}
+                      />
                       <div>
                         <div className="flex items-center gap-2">
                           <h1 className={`text-xl sm:text-2xl font-bold font-heading ${isLight ? 'text-slate-900' : 'text-white'}`}>{ambassador.name}</h1>
@@ -1155,6 +1210,20 @@ export default function AmbassadorPortal() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Profile Picture Management Modal */}
+      {ambassador && (
+        <ProfilePictureModal
+          isOpen={showProfileModal}
+          onClose={() => setShowProfileModal(false)}
+          currentAvatar={avatarUrl}
+          userName={ambassador.name || 'Campus Ambassador'}
+          userRole="ambassador"
+          userIdentifier={ambassador.ambassadorCode || ''}
+          themeMode={themeMode}
+          onAvatarUpdated={(url) => setAvatarUrl(url)}
+        />
       )}
 
     </div>

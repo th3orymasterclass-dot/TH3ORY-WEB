@@ -1782,6 +1782,34 @@ export function subscribeToStudentProgress(email, onDataChange) {
   }
 }
 
+export async function saveStudentProfilePictureToSupabase(email, avatarUrl) {
+  if (!email) return false;
+  const cleanEmail = email.trim().toLowerCase();
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      // 1. Update or upsert student_accounts table
+      await supabase
+        .from('student_accounts')
+        .upsert([{
+          email: cleanEmail,
+          avatar_url: avatarUrl,
+          last_login: new Date().toISOString()
+        }], { onConflict: 'email' });
+
+      // 2. Cross-sync to enrollments table if record exists
+      await supabase
+        .from('enrollments')
+        .update({ avatar_url: avatarUrl })
+        .eq('email', cleanEmail);
+    } catch (err) {
+      console.warn('[Supabase] Exception saving student avatar:', err);
+    }
+  }
+
+  return true;
+}
+
 export function subscribeToStudentProfile(email, onProfileChange) {
   if (!email || !isSupabaseConfigured || !supabase) return () => {};
   const cleanEmail = email.trim().toLowerCase();
@@ -1803,6 +1831,7 @@ export function subscribeToStudentProfile(email, onProfileChange) {
               country: payload.new.country || '',
               dob: payload.new.dob || null,
               avatar: payload.new.avatar_url || '',
+              avatarUrl: payload.new.avatar_url || '',
               plan: payload.new.plan_name || 'TH3ORY Masterclass',
             };
             try {
@@ -2594,6 +2623,8 @@ export async function fetchAmbassadorByCodeFromSupabase(codeOrEmail) {
           totalLeads: d.total_leads || 8,
           totalEnrollments: d.total_enrollments || 3,
           totalCommission: d.total_commission || 3000,
+          avatar: d.avatar_url || '',
+          avatarUrl: d.avatar_url || '',
           weeklyReports: d.weekly_reports || []
         };
       }
@@ -2625,6 +2656,8 @@ export async function fetchAmbassadorByCodeFromSupabase(codeOrEmail) {
         totalLeads: found.totalLeads || 8,
         totalEnrollments: found.totalEnrollments || 3,
         totalCommission: found.totalCommission || 3000,
+        avatar: found.avatar_url || found.avatar || found.avatarUrl || '',
+        avatarUrl: found.avatar_url || found.avatar || found.avatarUrl || '',
         weeklyReports: found.weeklyReports || []
       };
     }
@@ -2648,11 +2681,31 @@ export async function fetchAmbassadorByCodeFromSupabase(codeOrEmail) {
       totalLeads: 24,
       totalEnrollments: 8,
       totalCommission: 8000,
+      avatar: '',
+      avatarUrl: '',
       weeklyReports: []
     };
   }
 
   return null;
+}
+
+export async function saveAmbassadorProfilePictureToSupabase(ambassadorCodeOrEmail, avatarUrl) {
+  if (!ambassadorCodeOrEmail) return false;
+  const clean = ambassadorCodeOrEmail.trim();
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase
+        .from('ambassador_applications')
+        .update({ avatar_url: avatarUrl })
+        .or(`ambassador_code.ilike.${clean},email.ilike.${clean}`);
+    } catch (err) {
+      console.warn('[Supabase] Exception updating ambassador avatar:', err);
+    }
+  }
+
+  return true;
 }
 
 export async function saveAmbassadorWeeklyReportToSupabase(ambassadorCode, reportData) {
@@ -3331,6 +3384,10 @@ export async function updateTeamMemberInSupabase(memberId, updates) {
   }
 
   return { success: true, memberId, updates };
+}
+
+export async function saveTeamMemberProfilePictureToSupabase(memberId, avatarUrl) {
+  return updateTeamMemberInSupabase(memberId, { avatar_url: avatarUrl });
 }
 
 export async function deleteTeamMemberFromSupabase(memberId) {

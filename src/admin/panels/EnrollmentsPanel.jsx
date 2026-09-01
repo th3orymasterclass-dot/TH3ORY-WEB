@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { ShoppingBag, Search, Filter, Calendar, CreditCard, User, Mail, Phone, MapPin, CheckCircle, Clock, FileText, X, DollarSign, Eye, Copy } from 'lucide-react';
 import ActionDropdown from '../../components/ActionDropdown';
+import ProfileAvatar from '../../components/ProfileAvatar';
+import { getStudentAvatar } from '../../utils/profileStorageEngine';
 
 export default function EnrollmentsPanel({ enrollments = [], themeMode = 'dark' }) {
   const [search, setSearch] = useState('');
@@ -139,7 +141,17 @@ export default function EnrollmentsPanel({ enrollments = [], themeMode = 'dark' 
               <tbody className={`divide-y ${isDark ? 'divide-slate-800/60 text-slate-300' : 'divide-slate-200 text-slate-700'}`}>
                 {filtered.map((item) => (
                   <tr key={item.id || item.order_id} className={isDark ? 'hover:bg-slate-800/30 transition-colors' : 'hover:bg-slate-50 transition-colors'}>
-                    <td className={`p-3 font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{item.name || 'Anonymous Student'}</td>
+                    <td className={`p-3 font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                      <div className="flex items-center gap-2">
+                        <ProfileAvatar
+                          src={getStudentAvatar(item.email) || item.avatar_url || item.avatar || ''}
+                          name={item.name || 'Student'}
+                          role="student"
+                          size="xs"
+                        />
+                        <span>{item.name || 'Anonymous Student'}</span>
+                      </div>
+                    </td>
                     <td className="p-3 font-mono text-indigo-600 font-semibold">{item.email}</td>
                     <td className="p-3 font-mono text-amber-500 font-bold">{item.enrollment_code || item.order_id?.slice(0, 8) || 'N/A'}</td>
                     <td className="p-3 font-mono font-bold text-emerald-600">

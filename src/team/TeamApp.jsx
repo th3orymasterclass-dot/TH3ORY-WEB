@@ -11,6 +11,9 @@ import TeamAffiliatesPanel from './panels/TeamAffiliatesPanel';
 import NewsletterPanel from '../admin/panels/NewsletterPanel';
 import AmbassadorApplicationsPanel from '../admin/panels/AmbassadorApplicationsPanel';
 import TeamAnalyticsDashboard from './panels/TeamAnalyticsDashboard';
+import ProfileAvatar from '../components/ProfileAvatar';
+import ProfilePictureModal from '../components/ProfilePictureModal';
+import { getTeamMemberAvatar } from '../utils/profileStorageEngine';
 import { fetchAllTeamMembersFromSupabase } from '../services/supabaseService';
 
 const TEAM_NAV = [
@@ -48,6 +51,14 @@ export default function TeamApp({ onLogout }) {
 
   const [allMembers, setAllMembers] = useState([]);
   const [showAccountSwitcher, setShowAccountSwitcher] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState(() => (
+    getTeamMemberAvatar(teamProfile.memberId || teamProfile.repCode || teamProfile.email) ||
+    teamProfile.avatar ||
+    teamProfile.avatarUrl ||
+    teamProfile.avatar_url ||
+    ''
+  ));
 
   useEffect(() => {
     async function loadMembers() {
@@ -57,7 +68,24 @@ export default function TeamApp({ onLogout }) {
       } catch {}
     }
     loadMembers();
+
+    const handleAvatarChange = (e) => {
+      if (e.detail?.avatarUrl !== undefined) {
+        setAvatarUrl(e.detail.avatarUrl);
+      }
+    };
+    window.addEventListener('th3ory_team_avatar_change', handleAvatarChange);
+    return () => window.removeEventListener('th3ory_team_avatar_change', handleAvatarChange);
   }, []);
+
+  useEffect(() => {
+    const av = getTeamMemberAvatar(teamProfile.memberId || teamProfile.repCode || teamProfile.email) ||
+      teamProfile.avatar ||
+      teamProfile.avatarUrl ||
+      teamProfile.avatar_url ||
+      '';
+    setAvatarUrl(av);
+  }, [teamProfile]);
 
   const handleSwitchAccount = (member) => {
     const profileObj = {
@@ -213,12 +241,23 @@ export default function TeamApp({ onLogout }) {
           isDark ? 'bg-slate-950/70 border-slate-800/80' : 'bg-indigo-50/60 border-indigo-100'
         }`}>
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-xs shrink-0 shadow-xs">
-              {(teamProfile.name || 'T')[0].toUpperCase()}
-            </div>
+            <ProfileAvatar
+              src={avatarUrl}
+              name={teamProfile.name || 'Team Officer'}
+              role="team"
+              size="md"
+              editable={true}
+              onClick={() => setShowProfileModal(true)}
+            />
             <div className="min-w-0 flex-1">
               <p className={`font-bold text-xs truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{teamProfile.name}</p>
               <p className="text-[10px] text-indigo-400 font-semibold truncate">{teamProfile.role}</p>
+              <button
+                onClick={() => setShowProfileModal(true)}
+                className="text-[10px] text-indigo-400 hover:text-indigo-300 font-semibold cursor-pointer underline mt-0.5 block"
+              >
+                Change Photo
+              </button>
             </div>
           </div>
 
@@ -337,9 +376,12 @@ export default function TeamApp({ onLogout }) {
                   : 'bg-indigo-50 border-indigo-200 text-indigo-800 hover:bg-indigo-100'
               }`}
             >
-              <div className="w-5 h-5 rounded-md bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white text-[10px] font-black">
-                {(teamProfile.name || 'T')[0].toUpperCase()}
-              </div>
+              <ProfileAvatar
+                src={avatarUrl}
+                name={teamProfile.name || 'Team Officer'}
+                role="team"
+                size="xs"
+              />
               <span className="hidden sm:inline font-semibold">{teamProfile.name}</span>
               <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400 font-mono">
                 {teamProfile.repCode || 'REP'}
@@ -394,6 +436,7 @@ export default function TeamApp({ onLogout }) {
             <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
               {allMembers.map(m => {
                 const isCurrent = (m.email && m.email === teamProfile.email) || (m.memberId && m.memberId === teamProfile.memberId);
+                const mAvatar = getTeamMemberAvatar(m.memberId || m.member_id || m.repCode || m.rep_code) || m.avatar_url || m.avatar || '';
                 return (
                   <div
                     key={m.memberId || m.member_id || m.email}
@@ -405,9 +448,12 @@ export default function TeamApp({ onLogout }) {
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
-                        {(m.name || 'T')[0].toUpperCase()}
-                      </div>
+                      <ProfileAvatar
+                        src={mAvatar}
+                        name={m.name || 'Team Officer'}
+                        role="team"
+                        size="md"
+                      />
                       <div>
                         <p className="font-bold text-xs text-white">{m.name}</p>
                         <p className="text-[10px] text-indigo-400">{m.role || m.department}</p>
@@ -444,6 +490,20 @@ export default function TeamApp({ onLogout }) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Profile Picture Management Modal */}
+      {teamProfile && (
+        <ProfilePictureModal
+          isOpen={showProfileModal}
+          onClose={() => setShowProfileModal(false)}
+          currentAvatar={avatarUrl}
+          userName={teamProfile.name || 'Team Officer'}
+          userRole="team"
+          userIdentifier={teamProfile.memberId || teamProfile.repCode || teamProfile.email || ''}
+          themeMode={themeMode}
+          onAvatarUpdated={(url) => setAvatarUrl(url)}
+        />
       )}
 
     </div>

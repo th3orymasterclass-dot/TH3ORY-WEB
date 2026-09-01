@@ -11,6 +11,8 @@ import {
   deleteTeamMemberFromSupabase 
 } from '../../services/supabaseService';
 import ActionDropdown from '../../components/ActionDropdown';
+import ProfileAvatar from '../../components/ProfileAvatar';
+import { getTeamMemberAvatar } from '../../utils/profileStorageEngine';
 
 export default function TeamManagementPanel({ themeMode = 'dark' }) {
   const isDark = themeMode === 'dark';
@@ -234,9 +236,12 @@ export default function TeamManagementPanel({ themeMode = 'dark' }) {
                 {/* Header */}
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-base shadow-sm">
-                      {(m.name || 'T')[0].toUpperCase()}
-                    </div>
+                    <ProfileAvatar
+                      src={getTeamMemberAvatar(memberId || repCode || m.email) || m.avatar_url || m.avatar || ''}
+                      name={m.name || 'Team Officer'}
+                      role="team"
+                      size="lg"
+                    />
                     <div>
                       <h4 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-slate-900'}`}>{m.name}</h4>
                       <p className="text-[11px] text-indigo-400 font-medium truncate max-w-[170px]">{m.role}</p>

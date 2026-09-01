@@ -13,6 +13,9 @@ import QueryPanel    from './panels/QueryPanel';
 import CertificatePanel from './panels/CertificatePanel';
 import CharacterCodePortal from './components/CharacterCodePortal';
 import PrivacyRightsPanel from './panels/PrivacyRightsPanel';
+import ProfileAvatar from '../components/ProfileAvatar';
+import ProfilePictureModal from '../components/ProfilePictureModal';
+import { getStudentAvatar } from '../utils/profileStorageEngine';
 import { getProgress, getBookmarks } from './studentData';
 import { useTh3oryLive } from '../data/adminData';
 import { useFeatureFlags } from '../context/FeatureFlagContext';
@@ -56,6 +59,8 @@ export default function StudentApp({ profile: initialProfile, onLogout }) {
   const [sidebarOpen, setSidebar] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 768 : true));
   const [currentProfile, setCurrentProfile] = useState(initialProfile);
   const [progress, setProgress]   = useState(() => getProgress(initialProfile?.email));
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState(() => getStudentAvatar(initialProfile?.email) || initialProfile?.avatar || initialProfile?.avatarUrl || '');
 
   // Live reactive admin data (levels, content, etc.)
   const liveData = useTh3oryLive();
@@ -132,14 +137,32 @@ export default function StudentApp({ profile: initialProfile, onLogout }) {
 
     // Profile update event listener
     const hProfile = (e) => {
-      if (e.detail) setCurrentProfile(prev => ({ ...prev, ...e.detail }));
+      if (e.detail) {
+        setCurrentProfile(prev => ({ ...prev, ...e.detail }));
+        if (e.detail.avatar || e.detail.avatarUrl) {
+          setAvatarUrl(e.detail.avatar || e.detail.avatarUrl);
+        }
+      }
     };
     window.addEventListener('th3ory_student_profile_update', hProfile);
+
+    // Dedicated memory segmentation avatar change listener
+    const hAvatar = (e) => {
+      if (e.detail?.avatarUrl !== undefined) {
+        setAvatarUrl(e.detail.avatarUrl);
+      }
+    };
+    window.addEventListener('th3ory_student_avatar_change', hAvatar);
 
     const refreshProfileAndData = () => {
       if (initialProfile?.email) {
         fetchStudentProfileFromSupabase(initialProfile.email).then(freshProfile => {
-          if (freshProfile) setCurrentProfile(prev => ({ ...prev, ...freshProfile }));
+          if (freshProfile) {
+            setCurrentProfile(prev => ({ ...prev, ...freshProfile }));
+            if (freshProfile.avatar || freshProfile.avatarUrl) {
+              setAvatarUrl(freshProfile.avatar || freshProfile.avatarUrl);
+            }
+          }
         });
         fetchStudentDataFromSupabase(initialProfile.email).then(data => {
           if (data?.progress) setProgress(data.progress);
@@ -159,11 +182,15 @@ export default function StudentApp({ profile: initialProfile, onLogout }) {
 
     const unsubProfile = subscribeToStudentProfile(initialProfile.email, (updatedProfile) => {
       setCurrentProfile(prev => ({ ...prev, ...updatedProfile }));
+      if (updatedProfile?.avatar || updatedProfile?.avatarUrl) {
+        setAvatarUrl(updatedProfile.avatar || updatedProfile.avatarUrl);
+      }
     });
 
     return () => {
       window.removeEventListener('th3ory_student_change', h);
       window.removeEventListener('th3ory_student_profile_update', hProfile);
+      window.removeEventListener('th3ory_student_avatar_change', hAvatar);
       window.removeEventListener('focus', refreshProfileAndData);
       document.removeEventListener('visibilitychange', refreshProfileAndData);
       unsubProgress();
@@ -254,12 +281,25 @@ export default function StudentApp({ profile: initialProfile, onLogout }) {
         <div className={`px-4 py-4 border-b ${isLight ? 'border-slate-200' : 'border-[#555A66]/30'}`}>
           <div className={`border rounded-xl p-3 ${isLight ? 'bg-purple-50 border-purple-200' : 'bg-[#7C5CFC]/10 border-[#7C5CFC]/20'}`}>
             <div className="flex items-center gap-2.5 mb-2.5">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#7C5CFC] to-[#6344E0] flex items-center justify-center text-[#FAFAF7] font-black text-sm shrink-0">
-                {(activeProfile?.name || 'S')[0].toUpperCase()}
-              </div>
+              <ProfileAvatar
+                src={avatarUrl}
+                name={activeProfile?.name || 'Student'}
+                role="student"
+                size="md"
+                editable={true}
+                onClick={() => setShowProfileModal(true)}
+              />
               <div className="min-w-0 flex-1">
-                <p className={`font-bold text-sm truncate ${isLight ? 'text-slate-900' : 'text-[#FAFAF7]'}`}>{activeProfile?.name || 'Student'}</p>
+                <div className="flex items-center justify-between gap-1">
+                  <p className={`font-bold text-sm truncate ${isLight ? 'text-slate-900' : 'text-[#FAFAF7]'}`}>{activeProfile?.name || 'Student'}</p>
+                </div>
                 <p className={`text-xs truncate ${isLight ? 'text-purple-700 font-semibold' : 'text-[#555A66]'}`}>{activeProfile?.plan || 'TH3ORY Masterclass'}</p>
+                <button
+                  onClick={() => setShowProfileModal(true)}
+                  className="text-[10px] text-amber-500 hover:text-amber-400 font-semibold cursor-pointer underline mt-0.5 block"
+                >
+                  Change Photo
+                </button>
               </div>
             </div>
             {/* Progress bar */}
@@ -352,8 +392,8 @@ export default function StudentApp({ profile: initialProfile, onLogout }) {
             <span className={`font-semibold truncate ${isLight ? 'text-slate-900' : 'text-white'}`}>{currentNav?.label}</span>
           </div>
 
-          {/* Theme Mode Toggle in Top Bar */}
-          <div className="flex items-center gap-2 ml-auto shrink-0">
+          {/* Theme Mode Toggle & Avatar in Top Bar */}
+          <div className="flex items-center gap-3 ml-auto shrink-0">
             <button
               onClick={toggleTheme}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold transition-all shrink-0 select-none ${
@@ -363,18 +403,27 @@ export default function StudentApp({ profile: initialProfile, onLogout }) {
               }`}
               title={`Switch to ${isLight ? 'Dark' : 'Light'} Mode`}
             >
-            {isLight ? (
-              <>
-                <Moon className="w-3.5 h-3.5 text-slate-700" />
-                <span className="hidden sm:inline">Dark Mode</span>
-              </>
-            ) : (
-              <>
-                <Sun className="w-3.5 h-3.5 text-amber-400" />
-                <span className="hidden sm:inline">Light Mode</span>
-              </>
-            )}
-          </button>
+              {isLight ? (
+                <>
+                  <Moon className="w-3.5 h-3.5 text-slate-700" />
+                  <span className="hidden sm:inline">Dark Mode</span>
+                </>
+              ) : (
+                <>
+                  <Sun className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="hidden sm:inline">Light Mode</span>
+                </>
+              )}
+            </button>
+
+            <ProfileAvatar
+              src={avatarUrl}
+              name={activeProfile?.name || 'Student'}
+              role="student"
+              size="sm"
+              editable={true}
+              onClick={() => setShowProfileModal(true)}
+            />
           </div>
         </header>
 
@@ -385,6 +434,18 @@ export default function StudentApp({ profile: initialProfile, onLogout }) {
           </div>
         </main>
       </div>
+
+      {/* Profile Picture Management Modal */}
+      <ProfilePictureModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        currentAvatar={avatarUrl}
+        userName={activeProfile?.name || 'Student'}
+        userRole="student"
+        userIdentifier={activeProfile?.email || ''}
+        themeMode={themeMode}
+        onAvatarUpdated={(url) => setAvatarUrl(url)}
+      />
     </div>
   );
 }
