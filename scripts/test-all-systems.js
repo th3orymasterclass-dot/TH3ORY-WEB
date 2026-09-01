@@ -593,9 +593,8 @@ const ambassadorLoginCode = fs.readFileSync(path.join(rootDir, 'src/components/A
 assert(ambassadorLoginCode.includes('AmbassadorLogin'), 'AmbassadorLogin.jsx component exists');
 assert(ambassadorLoginCode.includes('Ambassador Code or Email'), 'AmbassadorLogin.jsx prompts for Ambassador Code or Email');
 assert(ambassadorLoginCode.includes('Access Password'), 'AmbassadorLogin.jsx prompts for Access Password');
-assert(ambassadorLoginCode.includes('AMB-DEMO'), 'AmbassadorLogin.jsx supports AMB-DEMO demo login credentials');
-assert(ambassadorLoginCode.includes('handleFillDemo'), 'AmbassadorLogin.jsx provides 1-click Fill Demo Credentials button');
 assert(ambassadorLoginCode.includes('fetchAmbassadorByCodeFromSupabase'), 'AmbassadorLogin.jsx authenticates against Supabase ambassador_applications table');
+assert(!ambassadorLoginCode.includes('handleFillDemo'), 'AmbassadorLogin.jsx secures interface by removing demo quick-fill buttons');
 
 assert(mainJsxContent.includes("view === 'ambassador-login'"), 'main.jsx defines ambassador-login route');
 assert(ambassadorPortalCode.includes('AmbassadorLogin'), 'AmbassadorPortal.jsx integrates dedicated AmbassadorLogin component');

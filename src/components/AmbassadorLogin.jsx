@@ -9,12 +9,6 @@ export default function AmbassadorLogin({ onAuthenticated, expiredNotice = false
   const [error, setError]       = useState(expiredNotice ? '🔒 Session Expired: For your security, ambassador sessions auto-logout after 24 hours. Please log in again.' : '');
   const [loading, setLoading]   = useState(false);
 
-  const handleFillDemo = () => {
-    setCode('AMB-DEMO');
-    setPassword('TH3ORY-AMB-2026');
-    setError('');
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     const cleanCode = code.trim().toUpperCase();
@@ -102,7 +96,7 @@ export default function AmbassadorLogin({ onAuthenticated, expiredNotice = false
                 onChange={e => setCode(e.target.value.toUpperCase())}
                 autoFocus
                 required
-                placeholder="e.g. AMB-STAN-712 or AMB-DEMO"
+                placeholder="e.g. AMB-STAN-712"
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30 transition-all text-sm font-mono tracking-wider"
               />
             </div>
@@ -153,19 +147,6 @@ export default function AmbassadorLogin({ onAuthenticated, expiredNotice = false
               {loading ? 'Authenticating Ambassador...' : 'Log In To Ambassador Portal'}
             </button>
           </form>
-
-          {/* DEMO QUICK LOGIN BUTTON */}
-          <div className="pt-3 border-t border-slate-800 text-center space-y-2">
-            <p className="text-[11px] text-slate-500">Want to test the Ambassador Portal?</p>
-            <button
-              type="button"
-              onClick={handleFillDemo}
-              className="w-full py-2 px-3 rounded-xl bg-slate-950 hover:bg-slate-800 border border-amber-500/30 text-amber-400 text-xs font-bold font-mono transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>Use Demo Credentials (AMB-DEMO)</span>
-            </button>
-          </div>
         </div>
 
         {/* BOTTOM HELPER LINKS */}

@@ -95,15 +95,6 @@ export default function AmbassadorLandingPage() {
           </a>
 
           <div className="flex items-center gap-3">
-            <a
-              href="#ambassador-portal"
-              onClick={(e) => { e.preventDefault(); window.location.hash = 'ambassador-portal'; window.dispatchEvent(new Event('hashchange')); }}
-              className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-400 border border-amber-500/30 text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer"
-            >
-              <Lock className="w-3.5 h-3.5 text-amber-400" />
-              <span>Ambassador Login</span>
-            </a>
-
             <button
               onClick={() => { window.location.hash = ''; window.dispatchEvent(new Event('hashchange')); }}
               className="px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"

@@ -202,7 +202,7 @@ export default function AmbassadorPortal() {
           sessionStorage.setItem('th3ory_ambassador_session', JSON.stringify(res));
         } catch {}
       } else {
-        setLoginError('Invalid Ambassador Code or Password. Try logging in with demo code: AMB-DEMO');
+        setLoginError('Invalid Ambassador Code or Password. Please check the credentials sent to your email.');
       }
     } catch (err) {
       setLoginError('Login failed. Please verify credentials.');

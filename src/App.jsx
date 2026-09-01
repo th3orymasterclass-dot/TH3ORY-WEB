@@ -164,7 +164,7 @@ export default function App() {
         )}
 
         {/* Reviews Section: Disabled by default as requested. Can be enabled via Admin Portal Section Master Switches */}
-        {Boolean(sectionVisibility.reviews) && (
+        {Boolean(sectionVisibility.reviews) && isFeatureEnabled('ENABLE_LIVE_REVIEWS', true) && (
           <Testimonials />
         )}
 

@@ -70,7 +70,7 @@ export default async function handler(req, res) {
         .from('student_accounts')
         .select('*')
         .eq('email', cleanEmail)
-        .limit(5);
+        .limit(10);
 
       if (students && students.length > 0) {
         matchedStudent = students.find(s => {
@@ -87,7 +87,7 @@ export default async function handler(req, res) {
           .from('enrollments')
           .select('*')
           .eq('email', cleanEmail)
-          .limit(5);
+          .limit(10);
 
         if (enrollments && enrollments.length > 0) {
           const matchedEnrollment = enrollments.find(e => {

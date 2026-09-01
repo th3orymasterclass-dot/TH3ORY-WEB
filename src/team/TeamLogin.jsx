@@ -59,7 +59,7 @@ export default function TeamLogin({ onAuthenticated }) {
                   onChange={e => setPasscode(e.target.value)}
                   autoFocus
                   required
-                  placeholder="Enter team passcode (e.g. TEAM2026)"
+                  placeholder="Enter your assigned team passcode"
                   className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 pr-11 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 text-sm"
                 />
                 <button

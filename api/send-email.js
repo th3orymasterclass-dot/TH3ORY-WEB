@@ -42,7 +42,8 @@ export default async function handler(req, res) {
       const targetList = rawRecipients.map(e => String(e).trim()).filter(e => e.includes('@')).slice(0, 100);
       if (targetList.length === 0) targetList.push('th3orymasterclass@gmail.com');
 
-      const portalUrl = 'https://th3ory.online/#/student';
+      const redirectPortal = receipt.redirectPortal;
+      const portalUrl = redirectPortal ? `https://th3ory.online/#/${redirectPortal}` : 'https://th3ory.online/#/student';
       const subjectLine = escapeHtml(String(receipt.subject || '📢 Official Notification from TH3ORY Administration').slice(0, 150));
       const bodyContent = escapeHtml(String(receipt.messageBody || receipt.message || 'No content specified.').slice(0, 5000));
 
