@@ -270,14 +270,8 @@ export default function TeamApp({ onLogout }) {
                     : isDark ? 'text-slate-500 group-hover:text-slate-300' : 'text-slate-400 group-hover:text-slate-700'
                 }`} />
                 <span className="truncate">{item.label}</span>
-                {item.badge && (
-                  <span className={`ml-auto text-[9px] px-1.5 py-0.5 rounded font-black tracking-wider uppercase ${
-                    isActive
-                      ? isDark ? 'bg-indigo-500/30 text-indigo-300' : 'bg-indigo-200 text-indigo-900'
-                      : isDark ? 'bg-slate-800 text-slate-400' : 'bg-slate-200 text-slate-600'
-                  }`}>
-                    {item.badge}
-                  </span>
+                {isActive && (
+                  <ChevronRight className={`w-3.5 h-3.5 ml-auto ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} />
                 )}
               </button>
             );

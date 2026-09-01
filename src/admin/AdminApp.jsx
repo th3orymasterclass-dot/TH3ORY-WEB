@@ -124,12 +124,6 @@ export default function AdminApp({ onLogout }) {
 
   const renderPanel = () => {
     switch (active) {
-<<<<<<< HEAD
-      case 'overview':           return <OverviewPanel   {...panelProps} />;
-      case 'section_visibility': return <SectionVisibilityPanel {...panelProps} />;
-      case 'dpdp_compliance':    return <DPDPCompliancePanel />;
-      case 'analytics':          return <TeamAnalyticsDashboard enterpriseQuotes={enterpriseQuotes} contactInquiries={contactInquiries} newsletterSubscribers={newsletterSubscribers} themeMode={themeMode} />;
-=======
       case 'overview':           return <OverviewPanel counts={counts} onNavigate={setActive} themeMode={themeMode} />;
       case 'section_visibility': return <SectionVisibilityPanel themeMode={themeMode} />;
       case 'dpdp_compliance':    return <DPDPCompliancePanel themeMode={themeMode} />;
@@ -148,7 +142,6 @@ export default function AdminApp({ onLogout }) {
       case 'urgency':            return <UrgencyPanel themeMode={themeMode} />;
       case 'media':              return <MediaPanel themeMode={themeMode} />;
       case 'content':            return <ContentPanel themeMode={themeMode} />;
->>>>>>> 7501bcb (fix(portals): remove all badges across portal subtopics and fix Resend test email dispatch)
       case 'team_roster':        return <TeamManagementPanel themeMode={themeMode} />;
       case 'email_dispatcher':   return <PortalEmailDispatcherPanel themeMode={themeMode} />;
       case 'ambassador_apps':    return <AmbassadorApplicationsPanel themeMode={themeMode} />;
@@ -184,28 +177,7 @@ export default function AdminApp({ onLogout }) {
       );
       case 'newsletter':         return <NewsletterPanel subscribers={newsletter} themeMode={themeMode} />;
       case 'integrations':       return <IntegrationsPanel themeMode={themeMode} />;
-<<<<<<< HEAD
-
-      
-      case 'hero':               return <HeroPanel       {...panelProps} />;
-      case 'campaign':           return <CampaignPanel   {...panelProps} />;
-      case 'pillars':            return <PillarsPanel    {...panelProps} />;
-      case 'curriculum':         return <CurriculumPanel {...panelProps} />;
-      case 'outcomes':           return <OutcomesPanel   {...panelProps} />;
-      case 'bonuses':            return <BonusesPanel    {...panelProps} />;
-      case 'instructor':         return <InstructorPanel {...panelProps} />;
-      case 'offline_trainings':  return <OfflineTrainingsPanel {...panelProps} />;
-      case 'pricing':            return <PricingPanel    {...panelProps} />;
-      case 'contact_settings':   return <ContactPanel    {...panelProps} />;
-      case 'faqs':               return <FAQPanel        {...panelProps} />;
-      case 'urgency':            return <UrgencyPanel    {...panelProps} />;
-      case 'media':              return <MediaPanel      {...panelProps} />;
-      case 'content':            return <ContentPanel    {...panelProps} />;
-      case 'reviews':            return <ReviewsPanel    {...panelProps} />;
-      default:                   return <OverviewPanel   {...panelProps} />;
-=======
       default:                   return <OverviewPanel counts={counts} onNavigate={setActive} themeMode={themeMode} />;
->>>>>>> 7501bcb (fix(portals): remove all badges across portal subtopics and fix Resend test email dispatch)
     }
   };
 
