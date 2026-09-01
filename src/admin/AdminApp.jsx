@@ -91,29 +91,27 @@ export default function AdminApp({ onLogout }) {
   };
 
   const {
-    counts,
-    stats,
+    data,
+    save,
+    reset,
+    lastSaved,
+    enrollments,
     queries,
-    quotes,
-    coupons,
-    newsletter,
-    teamRequests,
-    saveSectionVisibility,
+    enterpriseQuotes,
+    contactInquiries,
+    newsletterSubscribers,
+    newsletterBroadcasts,
+    saveBroadcast,
     updateQueryStatus,
     deleteQuery,
-    updateQuote,
-    deleteQuote,
-    toggleCoupon,
-    addCoupon,
-    deleteCoupon,
-    featureFlags,
-    updateFeatureFlag,
-    toggleMaintenanceMode,
-    approveTeamRequest,
-    rejectTeamRequest,
+    updateQuoteStatus,
+    updateInquiryStatus,
+    updateSubscriberStatus,
+    deleteSubscriber,
   } = useAdminData();
 
   const isDark = themeMode === 'dark';
+  const panelProps = { data, save, reset, themeMode };
 
   // Enforce session access control
   React.useEffect(() => {
@@ -124,60 +122,90 @@ export default function AdminApp({ onLogout }) {
 
   const renderPanel = () => {
     switch (active) {
-      case 'overview':           return <OverviewPanel counts={counts} onNavigate={setActive} themeMode={themeMode} />;
-      case 'section_visibility': return <SectionVisibilityPanel themeMode={themeMode} />;
-      case 'dpdp_compliance':    return <DPDPCompliancePanel themeMode={themeMode} />;
-      case 'analytics':          return <TeamAnalyticsDashboard themeMode={themeMode} isAdminView={true} />;
-      case 'hero':               return <HeroPanel themeMode={themeMode} />;
-      case 'campaign':           return <CampaignPanel themeMode={themeMode} />;
-      case 'pillars':            return <PillarsPanel themeMode={themeMode} />;
-      case 'curriculum':         return <CurriculumPanel themeMode={themeMode} />;
-      case 'outcomes':           return <OutcomesPanel themeMode={themeMode} />;
-      case 'bonuses':            return <BonusesPanel themeMode={themeMode} />;
-      case 'instructor':         return <InstructorPanel themeMode={themeMode} />;
-      case 'offline_trainings':  return <OfflineTrainingsPanel themeMode={themeMode} />;
-      case 'pricing':            return <PricingPanel themeMode={themeMode} />;
-      case 'contact_settings':   return <ContactPanel themeMode={themeMode} />;
-      case 'faqs':               return <FAQPanel themeMode={themeMode} />;
-      case 'urgency':            return <UrgencyPanel themeMode={themeMode} />;
-      case 'media':              return <MediaPanel themeMode={themeMode} />;
-      case 'content':            return <ContentPanel themeMode={themeMode} />;
+      case 'overview':           return (
+        <OverviewPanel 
+          data={data} 
+          save={save} 
+          reset={reset} 
+          lastSaved={lastSaved} 
+          enrollments={enrollments} 
+          queries={queries} 
+          enterpriseQuotes={enterpriseQuotes} 
+          contactInquiries={contactInquiries} 
+          themeMode={themeMode} 
+        />
+      );
+      case 'section_visibility': return <SectionVisibilityPanel {...panelProps} />;
+      case 'dpdp_compliance':    return <DPDPCompliancePanel />;
+      case 'analytics':          return (
+        <TeamAnalyticsDashboard 
+          enterpriseQuotes={enterpriseQuotes} 
+          contactInquiries={contactInquiries} 
+          newsletterSubscribers={newsletterSubscribers} 
+          themeMode={themeMode} 
+          isAdminView={true} 
+        />
+      );
+      case 'hero':               return <HeroPanel {...panelProps} />;
+      case 'campaign':           return <CampaignPanel {...panelProps} />;
+      case 'pillars':            return <PillarsPanel {...panelProps} />;
+      case 'curriculum':         return <CurriculumPanel {...panelProps} />;
+      case 'outcomes':           return <OutcomesPanel {...panelProps} />;
+      case 'bonuses':            return <BonusesPanel {...panelProps} />;
+      case 'instructor':         return <InstructorPanel {...panelProps} />;
+      case 'offline_trainings':  return <OfflineTrainingsPanel {...panelProps} />;
+      case 'pricing':            return <PricingPanel {...panelProps} />;
+      case 'contact_settings':   return <ContactPanel {...panelProps} />;
+      case 'faqs':               return <FAQPanel {...panelProps} />;
+      case 'urgency':            return <UrgencyPanel {...panelProps} />;
+      case 'media':              return <MediaPanel {...panelProps} />;
+      case 'content':            return <ContentPanel {...panelProps} />;
+      case 'reviews':            return <ReviewsPanel {...panelProps} />;
       case 'team_roster':        return <TeamManagementPanel themeMode={themeMode} />;
       case 'email_dispatcher':   return <PortalEmailDispatcherPanel themeMode={themeMode} />;
       case 'ambassador_apps':    return <AmbassadorApplicationsPanel themeMode={themeMode} />;
-      case 'team_approvals':     return (
-        <TeamApprovalsPanel
-          requests={teamRequests}
-          onApprove={approveTeamRequest}
-          onReject={rejectTeamRequest}
-          themeMode={themeMode}
-        />
-      );
-      case 'feature_flags':      return <FeatureFlagsPanel flags={featureFlags} onUpdateFlag={updateFeatureFlag} onToggleMaintenance={toggleMaintenanceMode} themeMode={themeMode} />;
-      case 'enrollments':        return <EnrollmentsPanel themeMode={themeMode} />;
+      case 'team_approvals':     return <TeamApprovalsPanel themeMode={themeMode} />;
+      case 'feature_flags':      return <FeatureFlagsPanel themeMode={themeMode} />;
+      case 'enrollments':        return <EnrollmentsPanel enrollments={enrollments} themeMode={themeMode} />;
       case 'queries_quotes':     return (
         <QueriesQuotesPanel
           queries={queries}
-          quotes={quotes}
-          onUpdateStatus={updateQueryStatus}
-          onDeleteQuery={deleteQuery}
-          onUpdateQuote={updateQuote}
-          onDeleteQuote={deleteQuote}
+          enterpriseQuotes={enterpriseQuotes}
+          contactInquiries={contactInquiries}
+          updateQueryStatus={updateQueryStatus}
+          updateQuoteStatus={updateQuoteStatus}
+          updateInquiryStatus={updateInquiryStatus}
+          deleteQuery={deleteQuery}
           themeMode={themeMode}
         />
       );
-      case 'coupons':            return (
-        <CouponsPanel
-          coupons={coupons}
-          onToggle={toggleCoupon}
-          onAdd={addCoupon}
-          onDelete={deleteCoupon}
-          themeMode={themeMode}
+      case 'coupons':            return <CouponsPanel save={save} enrollments={enrollments} themeMode={themeMode} />;
+      case 'newsletter':         return (
+        <NewsletterPanel 
+          subscribers={newsletterSubscribers} 
+          broadcasts={newsletterBroadcasts} 
+          saveBroadcast={saveBroadcast} 
+          updateSubscriberStatus={updateSubscriberStatus} 
+          deleteSubscriber={deleteSubscriber} 
+          save={save} 
+          data={data} 
+          themeMode={themeMode} 
         />
       );
-      case 'newsletter':         return <NewsletterPanel subscribers={newsletter} themeMode={themeMode} />;
       case 'integrations':       return <IntegrationsPanel themeMode={themeMode} />;
-      default:                   return <OverviewPanel counts={counts} onNavigate={setActive} themeMode={themeMode} />;
+      default:                   return (
+        <OverviewPanel 
+          data={data} 
+          save={save} 
+          reset={reset} 
+          lastSaved={lastSaved} 
+          enrollments={enrollments} 
+          queries={queries} 
+          enterpriseQuotes={enterpriseQuotes} 
+          contactInquiries={contactInquiries} 
+          themeMode={themeMode} 
+        />
+      );
     }
   };
 
