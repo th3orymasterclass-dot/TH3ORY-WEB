@@ -193,26 +193,26 @@ export default function EnterpriseDiagnosticModal({
                 </h1>
 
                 <p className="text-slate-300 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-                  A structured behavioral assessment designed to evaluate how professionals and executive leaders approach 
-                  communication, interpersonal influence, relationship capital, decision-making, and high-stakes conflict.
+                  A structured behavioral assessment designed to evaluate how leaders, managers, and cross-functional teams 
+                  across your organization approach communication, interpersonal influence, relationship capital, decision-making, and high-stakes conflict.
                 </p>
 
                 {/* 3 Core Pillars Ribbon from Page 1 of PDF */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 text-left">
                   <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-1">
                     <div className="text-xs font-black text-amber-400 uppercase tracking-widest font-mono">1. ASSESS</div>
-                    <div className="text-sm font-bold text-white">Current Influence Profile</div>
-                    <div className="text-xs text-slate-400">See your live capability score across 7 distinct dimensions.</div>
+                    <div className="text-sm font-bold text-white">Workforce Influence Profile</div>
+                    <div className="text-xs text-slate-400">Benchmark capability scores across 7 key organizational dimensions.</div>
                   </div>
                   <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-1">
                     <div className="text-xs font-black text-[#7C5CFC] uppercase tracking-widest font-mono">2. UNDERSTAND</div>
-                    <div className="text-sm font-bold text-white">Strengths &amp; Growth Areas</div>
-                    <div className="text-xs text-slate-400">Pinpoint your strongest leverage area and development priorities.</div>
+                    <div className="text-sm font-bold text-white">Team Strengths &amp; Blindspots</div>
+                    <div className="text-xs text-slate-400">Pinpoint leadership leverage areas and departmental friction points.</div>
                   </div>
                   <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-1">
                     <div className="text-xs font-black text-emerald-400 uppercase tracking-widest font-mono">3. DEVELOP</div>
-                    <div className="text-sm font-bold text-white">Practical Next Steps</div>
-                    <div className="text-xs text-slate-400">Transform individual insights into deliberate 90-day action plans.</div>
+                    <div className="text-sm font-bold text-white">Targeted Corporate Programs</div>
+                    <div className="text-xs text-slate-400">Transform workforce diagnostics into tailored 90-day corporate intensives.</div>
                   </div>
                 </div>
               </div>
@@ -222,18 +222,18 @@ export default function EnterpriseDiagnosticModal({
                 
                 <div className="lg:col-span-7 glass-panel rounded-2xl p-6 border border-slate-800 space-y-4">
                   <h3 className="text-base font-bold text-white flex items-center gap-2 font-brand">
-                    <Compass className="w-5 h-5 text-amber-400" /> Participant Instructions
+                    <Compass className="w-5 h-5 text-amber-400" /> Enterprise Assessment Guidelines
                   </h3>
                   <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                    This assessment is designed to help you understand how you currently approach communication, influence, relationships, 
-                    decision-making and difficult interactions.
+                    Evaluate the statements based on the observable behaviors, communication habits, and negotiation practices 
+                    typically demonstrated by professionals and leaders across your organization.
                   </p>
                   <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-medium">
-                    ⚡ <strong>Key Rule:</strong> There are no right or wrong answers. Answer based on how you <em>usually behave in real situations</em>, 
-                    rather than how you would ideally like to behave.
+                    ⚡ <strong>Evaluation Principle:</strong> Answer based on how teams and leaders <em>actually operate in real workplace situations</em>, 
+                    rather than ideal aspirational standards.
                   </div>
                   <div className="text-[11px] text-slate-500 italic">
-                    * TH3ORY Diagnostic Index™ is a developmental learning assessment — not a clinical or validated psychometric diagnosis.
+                    * TH3ORY Diagnostic Index™ is an enterprise organizational development benchmark — not a clinical or psychometric diagnosis.
                   </div>
                 </div>
 
@@ -245,7 +245,7 @@ export default function EnterpriseDiagnosticModal({
                     <div className="space-y-1.5 pt-2 text-xs">
                       {LIKERT_OPTIONS.map(opt => (
                         <div key={opt.value} className="flex items-center justify-between p-2 rounded-lg bg-slate-900/80 border border-slate-800">
-                          <span className="font-semibold text-slate-200">{opt.label}</span>
+                          <span className="font-semibold text-slate-200">{opt.shortLabel}</span>
                           <span className="w-5 h-5 rounded-full bg-slate-800 text-amber-400 font-mono font-bold flex items-center justify-center text-[11px]">
                             {opt.value}
                           </span>
@@ -254,7 +254,7 @@ export default function EnterpriseDiagnosticModal({
                     </div>
                   </div>
                   <div className="text-[11px] text-slate-400">
-                    35 questions across 7 capability dimensions • Approx 4–5 minutes
+                    35 enterprise items across 7 capability dimensions • Approx 4–5 minutes
                   </div>
                 </div>
 
@@ -266,7 +266,7 @@ export default function EnterpriseDiagnosticModal({
                   onClick={() => setCurrentStep('assessment')}
                   className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-[#7C5CFC] via-[#9277FF] to-[#7C5CFC] hover:from-[#6c4ce0] hover:to-[#5233d0] text-white font-extrabold text-sm uppercase tracking-wider shadow-xl shadow-[#7C5CFC]/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 cursor-pointer"
                 >
-                  <span>Begin Full 35-Item Assessment</span>
+                  <span>Begin Workforce Assessment (35 Items)</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
 
@@ -276,7 +276,7 @@ export default function EnterpriseDiagnosticModal({
                     className="w-full sm:w-auto px-5 py-4 rounded-2xl glass-card text-amber-400 hover:text-white hover:bg-slate-900 text-xs font-bold border border-amber-500/30 hover:border-amber-400 transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <Crown className="w-4 h-4 text-amber-400" />
-                    <span>Load Executive Demo Profile</span>
+                    <span>Load Enterprise Demo Profile</span>
                   </button>
                 </div>
               </div>
