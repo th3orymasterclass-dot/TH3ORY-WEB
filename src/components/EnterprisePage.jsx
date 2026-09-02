@@ -3,17 +3,22 @@ import {
   Building2, Users, Crown, ShieldCheck, ArrowRight, CheckCircle2, Send, Sparkles, 
   Award, Layers, Zap, Clock, BarChart3, ArrowLeft, Lightbulb, Compass, 
   ChevronLeft, ChevronRight, Target, Check, AlertCircle, FileText, Globe, Star,
-  LayoutGrid, Calendar, Flame
+  LayoutGrid, Calendar, Flame, Activity
 } from 'lucide-react';
 import Logo from './Logo';
 import SEOHead from './SEOHead';
 import StructuredData from './StructuredData';
 import { saveEnterpriseQuoteToSupabase } from '../services/supabaseService';
 import CalendlyModal from './CalendlyModal';
+import EnterpriseDiagnosticModal from './EnterpriseDiagnosticModal';
 
 export default function EnterprisePage({ onBack }) {
   // Carousel State
   const [activeItem, setActiveItem] = useState(0);
+
+  // Diagnostic Questionnaire Modal State
+  const [isDiagnosticOpen, setIsDiagnosticOpen] = useState(false);
+  const [diagnosticData, setDiagnosticData] = useState(null);
 
   // Live Urgency Countdown Timer State
   const [timeLeft, setTimeLeft] = useState({ hours: 18, minutes: 45, seconds: 20 });
@@ -55,6 +60,24 @@ export default function EnterprisePage({ onBack }) {
     }
     const el = document.getElementById('enterprise-quote-form');
     if (el) el.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Transfer Diagnostic Assessment Data into Quote Form
+  const handleApplyDiagnosticToQuote = (diagSummary) => {
+    setDiagnosticData(diagSummary);
+    setFormData(prev => ({
+      ...prev,
+      deliveryFormat: diagSummary.recommendedFormat?.includes('6-Week') ? '6-Week Leadership Cohort' : 
+                      diagSummary.recommendedFormat?.includes('12-Week') ? '12-Week Executive Accelerator' : 
+                      diagSummary.recommendedFormat?.includes('Annual') ? 'Annual Enterprise Academy' : '3-Day Corporate Intensive',
+      notes: `[TH3ORY Diagnostic Index™ Attached]\n• Overall Score: ${diagSummary.overallScore}/100 (${diagSummary.overallBand})\n• Strongest Capability: ${diagSummary.strongestArea} (${diagSummary.strongestScore}/100)\n• Development Priority: ${diagSummary.developmentPriority} (${diagSummary.priorityScore}/100)\n• Influence Gap: ${diagSummary.influenceGap} pts\n• Dimension Breakdown: ${diagSummary.dimensionBreakdown}\n\n${prev.notes ? `Additional Client Goals: ${prev.notes}` : ''}`
+    }));
+
+    // Smooth scroll to quote enquiry form
+    setTimeout(() => {
+      const el = document.getElementById('enterprise-quote-form');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }, 150);
   };
 
   const handleSubmit = async (e) => {
@@ -229,35 +252,43 @@ export default function EnterprisePage({ onBack }) {
             </div>
 
             {/* Action CTAs */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-4">
+              <button
+                onClick={() => setIsDiagnosticOpen(true)}
+                className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 font-black text-sm uppercase tracking-wider shadow-2xl shadow-amber-500/25 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2.5 cursor-pointer"
+              >
+                <Sparkles className="w-5 h-5 text-slate-950 fill-slate-950" />
+                <span>Take TH3ORY Diagnostic Index™ (35 Items)</span>
+              </button>
+
               <button
                 onClick={() => scrollToForm()}
-                className="w-full sm:w-auto px-9 py-4 rounded-2xl bg-gradient-to-r from-[#7C5CFC] via-[#9277FF] to-[#7C5CFC] hover:from-[#6c4ce0] hover:to-[#5233d0] text-[#FAFAF7] font-extrabold text-base uppercase tracking-wider shadow-xl shadow-[#7C5CFC]/30 hover:shadow-[#7C5CFC]/50 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 group cursor-pointer"
+                className="w-full sm:w-auto px-7 py-4 rounded-2xl bg-gradient-to-r from-[#7C5CFC] via-[#9277FF] to-[#7C5CFC] hover:from-[#6c4ce0] hover:to-[#5233d0] text-[#FAFAF7] font-extrabold text-sm uppercase tracking-wider shadow-xl shadow-[#7C5CFC]/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2.5 group cursor-pointer"
               >
-                <span>REQUEST CUSTOM ENTERPRISE PROPOSAL</span>
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <span>Request Custom Proposal</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>
 
               <button
                 onClick={() => setIsCalendlyOpen(true)}
-                className="w-full sm:w-auto px-7 py-4 rounded-2xl glass-card text-[#FAFAF7] hover:bg-[#15171A] font-semibold text-base border border-[#555A66] hover:border-[#7C5CFC] transition-all flex items-center justify-center gap-3 group cursor-pointer"
+                className="w-full sm:w-auto px-6 py-4 rounded-2xl glass-card text-[#FAFAF7] hover:bg-[#15171A] font-semibold text-sm border border-[#555A66] hover:border-[#7C5CFC] transition-all flex items-center justify-center gap-2.5 group cursor-pointer"
               >
-                <div className="w-8 h-8 rounded-full bg-[#7C5CFC]/20 text-[#7C5CFC] flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Calendar className="w-4 h-4 text-[#FFC857]" />
+                <div className="w-6 h-6 rounded-full bg-[#7C5CFC]/20 text-[#7C5CFC] flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Calendar className="w-3.5 h-3.5 text-[#FFC857]" />
                 </div>
-                <span>Schedule Strategy Call</span>
+                <span>Strategy Call</span>
               </button>
             </div>
 
             <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-[#555A66] pt-2 font-medium">
               <span className="flex items-center gap-1.5 text-[#FAFAF7]/80">
+                <CheckCircle2 className="w-4 h-4 text-[#FFC857]" /> 7 CAPABILITY DIMENSIONS
+              </span>
+              <span className="flex items-center gap-1.5 text-[#FAFAF7]/80">
                 <CheckCircle2 className="w-4 h-4 text-[#FFC857]" /> 100% CUSTOM CURRICULUM
               </span>
               <span className="flex items-center gap-1.5 text-[#FAFAF7]/80">
-                <CheckCircle2 className="w-4 h-4 text-[#FFC857]" /> ON-SITE &amp; LIVE HYBRID
-              </span>
-              <span className="flex items-center gap-1.5 text-[#FAFAF7]/80">
-                <CheckCircle2 className="w-4 h-4 text-[#FFC857]" /> MEASURABLE 90-DAY ROI
+                <CheckCircle2 className="w-4 h-4 text-[#FFC857]" /> PRE &amp; POST 90-DAY AUDIT
               </span>
             </div>
 
@@ -415,6 +446,140 @@ export default function EnterprisePage({ onBack }) {
               </div>
 
             </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* TH3ORY DIAGNOSTIC INDEX™ SECTION */}
+      <section id="diagnostic-index-section" className="py-24 bg-gradient-to-b from-slate-950 via-[#15171A] to-slate-950 border-t border-slate-900 relative overflow-hidden">
+        {/* Ambient Glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-[#7C5CFC]/10 rounded-full blur-[140px] pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16 relative z-10">
+          
+          <div className="text-center max-w-3xl mx-auto space-y-4">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#7C5CFC]/15 text-[#FFC857] text-xs font-extrabold uppercase tracking-widest border border-[#7C5CFC]/30">
+              <Sparkles className="w-4 h-4 text-[#FFC857]" /> Human Influence &amp; Behavioural Assessment
+            </div>
+            <h2 className="text-3xl sm:text-5xl font-extrabold font-heading text-white">
+              TH3ORY DIAGNOSTIC <span className="text-gradient-violet">INDEX™</span>
+            </h2>
+            <p className="text-slate-400 text-base sm:text-lg">
+              A 35-item developmental assessment across seven core capability dimensions. Benchmark executive presence, 
+              uncover blind spots, and track measurable behavioral ROI across your leadership cohorts.
+            </p>
+          </div>
+
+          {/* 3 Pillars of Diagnostic Index */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="glass-panel rounded-3xl p-8 border border-slate-800 space-y-4 hover:border-amber-500/40 transition-all">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/15 text-amber-400 flex items-center justify-center font-mono font-bold text-lg border border-amber-500/30">
+                01
+              </div>
+              <h3 className="text-xl font-bold text-white font-brand">ASSESS</h3>
+              <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
+                See your current influence profile. 35 standardized Likert items evaluating behavioral control, 
+                perception, and high-pressure communication.
+              </p>
+            </div>
+
+            <div className="glass-panel rounded-3xl p-8 border border-slate-800 space-y-4 hover:border-[#7C5CFC]/40 transition-all">
+              <div className="w-12 h-12 rounded-2xl bg-[#7C5CFC]/15 text-[#E9E4FF] flex items-center justify-center font-mono font-bold text-lg border border-[#7C5CFC]/30">
+                02
+              </div>
+              <h3 className="text-xl font-bold text-white font-brand">UNDERSTAND</h3>
+              <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
+                Identify strengths and development areas. Pinpoint your strongest capability and calculate 
+                your influence gap across high and low-stakes scenarios.
+              </p>
+            </div>
+
+            <div className="glass-panel rounded-3xl p-8 border border-slate-800 space-y-4 hover:border-emerald-500/40 transition-all">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center font-mono font-bold text-lg border border-emerald-500/30">
+                03
+              </div>
+              <h3 className="text-xl font-bold text-white font-brand">DEVELOP</h3>
+              <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
+                Turn insight into practical next steps. Map diagnostic findings into customized 3-Day Intensives, 
+                6-Week Cohorts, and 90-day deliberate practice roadmaps.
+              </p>
+            </div>
+          </div>
+
+          {/* 7 Capability Dimensions Grid Preview */}
+          <div className="glass-card rounded-3xl p-6 sm:p-10 border border-[#7C5CFC]/30 space-y-8 bg-slate-950/80">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+              <div>
+                <span className="text-xs font-mono font-bold text-amber-400 uppercase tracking-wider">7 Core Dimensions</span>
+                <h3 className="text-2xl font-bold text-white font-heading mt-1">The Complete Influence Matrix</h3>
+              </div>
+              <button
+                onClick={() => setIsDiagnosticOpen(true)}
+                className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 transition-all flex items-center gap-2 cursor-pointer self-start sm:self-auto"
+              >
+                <span>Launch Diagnostic Modal</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { code: 'S1-S5', name: 'Self', desc: 'Self-awareness & behavioural control' },
+                { code: 'P1-P5', name: 'Perception', desc: 'Understanding how others see and interpret' },
+                { code: 'PR1-PR5', name: 'Presence', desc: 'Communication, clarity & credibility' },
+                { code: 'C1-C5', name: 'Connection', desc: 'Listening, trust & relationships' },
+                { code: 'PE1-PE5', name: 'Persuasion', desc: 'Influence & decision-making' },
+                { code: 'PO1-PO5', name: 'Power', desc: 'Difficult conversations, conflict & negotiation' },
+                { code: 'PF1-PF5', name: 'Performance', desc: 'Influence under pressure' }
+              ].map((item, idx) => (
+                <div key={idx} className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2 hover:border-[#7C5CFC] transition-all">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-white uppercase font-brand">{item.name}</span>
+                    <span className="px-2 py-0.5 rounded-md bg-slate-800 text-[#FFC857] font-mono text-[10px] font-bold">
+                      {item.code}
+                    </span>
+                  </div>
+                  <p className="text-slate-400 text-xs leading-relaxed">
+                    {item.desc}
+                  </p>
+                </div>
+              ))}
+
+              <div 
+                onClick={() => setIsDiagnosticOpen(true)}
+                className="p-4 rounded-2xl bg-gradient-to-br from-[#7C5CFC]/20 to-[#6344E0]/10 border border-[#7C5CFC]/40 flex flex-col items-center justify-center text-center space-y-2 cursor-pointer hover:scale-[1.02] transition-all group"
+              >
+                <div className="w-9 h-9 rounded-full bg-[#7C5CFC] text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div className="text-xs font-bold text-white uppercase">Take Full Assessment</div>
+                <div className="text-[11px] text-amber-400 font-medium">35 Items • Instant Results →</div>
+              </div>
+            </div>
+
+            {/* 90-Day Pre & Post Audit Callout Banner */}
+            <div className="p-5 rounded-2xl bg-slate-900 border border-amber-500/20 flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/30">
+                  <Crown className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="font-bold text-white text-sm">Enterprise Pre &amp; Post 90-Day Impact Auditing</div>
+                  <p className="text-slate-400">
+                    HR and L&amp;D Directors deploy this index across management tiers to track measurable behavioral shifts post-program.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setIsDiagnosticOpen(true)}
+                className="px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs border border-slate-700 transition-all whitespace-nowrap cursor-pointer"
+              >
+                Launch Diagnostic Tool
+              </button>
+            </div>
+
           </div>
 
         </div>
@@ -870,6 +1035,36 @@ export default function EnterprisePage({ onBack }) {
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-7">
                     
+                    {/* Attached Diagnostic Data Alert Banner */}
+                    {diagnosticData && (
+                      <div className="p-4 rounded-2xl bg-gradient-to-r from-[#7C5CFC]/20 via-[#9277FF]/15 to-amber-500/10 border border-[#7C5CFC]/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs animate-fade-in">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/30">
+                            <Sparkles className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <div className="font-bold text-white flex items-center gap-2">
+                              <span>TH3ORY Diagnostic Index™ Profile Attached</span>
+                              <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold">
+                                {diagnosticData.overallScore}/100 ({diagnosticData.overallBand})
+                              </span>
+                            </div>
+                            <div className="text-slate-300 text-[11px] mt-0.5">
+                              Strongest: <strong className="text-emerald-400">{diagnosticData.strongestArea}</strong> • Growth Focus: <strong className="text-amber-400">{diagnosticData.developmentPriority}</strong> (Gap: {diagnosticData.influenceGap} pts)
+                            </div>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => setIsDiagnosticOpen(true)}
+                          className="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-400 border border-amber-500/30 font-bold text-xs whitespace-nowrap cursor-pointer transition-all hover:border-amber-400"
+                        >
+                          View / Retake Assessment
+                        </button>
+                      </div>
+                    )}
+
                     {/* SECTION 1: Organization & Primary Contact */}
                     <div className="space-y-4 text-left">
                       <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
@@ -1052,6 +1247,32 @@ export default function EnterprisePage({ onBack }) {
       <footer className="py-8 bg-slate-950 border-t border-slate-900 text-center text-xs text-slate-500">
         &copy; 2026 Mentalist Sravan Production. Influence &amp; Networking Mastery™ Enterprise Solutions.
       </footer>
+
+      {/* Sticky Floating Diagnostic Index Launcher Pill */}
+      <div className="fixed bottom-6 right-6 z-30 animate-fade-in">
+        <button
+          onClick={() => setIsDiagnosticOpen(true)}
+          className="px-4 py-3.5 rounded-2xl bg-gradient-to-r from-[#7C5CFC] via-[#9277FF] to-[#FFC857] text-slate-950 font-black text-xs uppercase tracking-wider shadow-2xl shadow-[#7C5CFC]/40 hover:scale-105 active:scale-95 transition-all flex items-center gap-2.5 border border-white/20 cursor-pointer"
+          title="Launch TH3ORY Diagnostic Index™ Assessment"
+        >
+          <Sparkles className="w-4 h-4 fill-slate-950" />
+          <span className="hidden sm:inline">TH3ORY Diagnostic Index™</span>
+          <span className="sm:hidden">Diagnostic Index</span>
+          {diagnosticData && (
+            <span className="px-1.5 py-0.5 rounded-md bg-slate-950 text-amber-400 font-mono text-[10px]">
+              {diagnosticData.overallScore}/100
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* TH3ORY Diagnostic Index™ Interactive Modal */}
+      <EnterpriseDiagnosticModal
+        isOpen={isDiagnosticOpen}
+        onClose={() => setIsDiagnosticOpen(false)}
+        onApplyToQuote={handleApplyDiagnosticToQuote}
+        onOpenCalendly={() => setIsCalendlyOpen(true)}
+      />
 
       {/* Calendly Executive Strategy Call Modal */}
       <CalendlyModal
