@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { 
   X, Sparkles, Crown, ArrowRight, ArrowLeft, CheckCircle2, 
-  BarChart3, Target, ShieldCheck, Download, Printer, RotateCcw, 
+  BarChart3, Target, ShieldCheck, Download, RotateCcw, 
   ChevronRight, ChevronDown, Award, Lightbulb, Compass, Send, 
   Calendar, Layers, TrendingUp, AlertCircle, Check, HelpCircle
 } from 'lucide-react';
@@ -155,11 +155,6 @@ export default function EnterpriseDiagnosticModal({
       });
     }
     onClose();
-  };
-
-  // Print Executive Diagnostic Report
-  const handlePrintSummary = () => {
-    window.print();
   };
 
   return (
@@ -780,22 +775,13 @@ export default function EnterpriseDiagnosticModal({
                 {/* Primary Action Buttons Bar */}
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-800">
                   <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <button
-                      onClick={handlePrintSummary}
-                      className="w-full sm:w-auto px-4 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
-                      title="Print Executive Diagnostic Summary"
-                    >
-                      <Printer className="w-4 h-4 text-amber-400" />
-                      <span>Print Summary PDF</span>
-                    </button>
-
                     {onOpenCalendly && (
                       <button
                         onClick={() => {
                           onClose();
                           onOpenCalendly();
                         }}
-                        className="w-full sm:w-auto px-4 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        className="w-full sm:w-auto px-5 py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
                       >
                         <Calendar className="w-4 h-4 text-[#7C5CFC]" />
                         <span>Book Strategy Call</span>
