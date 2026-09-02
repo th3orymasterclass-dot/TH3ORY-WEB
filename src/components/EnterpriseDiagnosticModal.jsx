@@ -24,25 +24,53 @@ export default function EnterpriseDiagnosticModal({
 
   // View state: 'intro' | 'assessment' | 'results'
   const [currentStep, setCurrentStep] = useState('intro');
-  const [activeSectionIndex, setActiveSectionIndex] = useState(0);
+  
+  // Single Question Index (0 to 34)
+  const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
 
   // User responses dictionary: { [questionId]: 1..5 }
   const [responses, setResponses] = useState({});
-  const [expandedPrompt, setExpandedPrompt] = useState(null);
 
-  const activeDimension = DIAGNOSTIC_DIMENSIONS[activeSectionIndex];
+  // Flattened array of all 35 questions with dimension metadata
+  const ALL_QUESTIONS = useMemo(() => {
+    const list = [];
+    DIAGNOSTIC_DIMENSIONS.forEach((dim, dimIdx) => {
+      dim.questions.forEach((q, qIdx) => {
+        list.push({
+          ...q,
+          globalIndex: list.length,
+          questionNumber: list.length + 1,
+          dimensionIndex: dimIdx,
+          dimension: dim
+        });
+      });
+    });
+    return list;
+  }, []);
+
+  const currentQuestion = ALL_QUESTIONS[activeQuestionIndex] || ALL_QUESTIONS[0];
+  const currentDimension = currentQuestion?.dimension || DIAGNOSTIC_DIMENSIONS[0];
 
   // Real-time calculation results
   const diagnosticResults = useMemo(() => {
     return calculateAllScores(responses);
   }, [responses]);
 
-  // Handle setting a single question answer
+  // Handle setting a single question answer with smooth auto-advance
   const handleSelectOption = (questionId, value) => {
     setResponses(prev => ({
       ...prev,
       [questionId]: value
     }));
+
+    // Auto-advance to next question card smoothly if not on last item
+    if (activeQuestionIndex < 34) {
+      setTimeout(() => {
+        setActiveQuestionIndex(prev => Math.min(34, prev + 1));
+        const container = document.getElementById('diagnostic-modal-scroll');
+        if (container) container.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 200);
+    }
   };
 
   // Quick fill preset
@@ -54,26 +82,29 @@ export default function EnterpriseDiagnosticModal({
     }
   };
 
-  // Fill current section with defaults (for rapid tester flow)
-  const handleFillCurrentSection = (defaultVal = 4) => {
+  // Fill current dimension questions with defaults (for rapid testing)
+  const handleFillCurrentDimension = (defaultVal = 4) => {
     const updates = {};
-    activeDimension.questions.forEach(q => {
+    currentDimension.questions.forEach(q => {
       updates[q.id] = defaultVal;
     });
     setResponses(prev => ({ ...prev, ...updates }));
+    
+    // Advance to next dimension's first question if possible
+    const nextDimensionFirstIndex = (currentDimension.sectionNumber) * 5;
+    if (nextDimensionFirstIndex < 35) {
+      setActiveQuestionIndex(nextDimensionFirstIndex);
+    }
   };
 
-  // Section completion check
-  const isCurrentSectionComplete = activeDimension.questions.every(q => responses[q.id] !== undefined);
   const totalCompleted = Object.keys(responses).length;
   const totalQuestions = 35;
   const overallProgressPct = Math.round((totalCompleted / totalQuestions) * 100);
 
   // Navigation handlers
-  const handleNextSection = () => {
-    if (activeSectionIndex < DIAGNOSTIC_DIMENSIONS.length - 1) {
-      setActiveSectionIndex(prev => prev + 1);
-      // Scroll to top of modal container
+  const handleNextQuestion = () => {
+    if (activeQuestionIndex < ALL_QUESTIONS.length - 1) {
+      setActiveQuestionIndex(prev => prev + 1);
       const container = document.getElementById('diagnostic-modal-scroll');
       if (container) container.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
@@ -83,9 +114,9 @@ export default function EnterpriseDiagnosticModal({
     }
   };
 
-  const handlePrevSection = () => {
-    if (activeSectionIndex > 0) {
-      setActiveSectionIndex(prev => prev - 1);
+  const handlePrevQuestion = () => {
+    if (activeQuestionIndex > 0) {
+      setActiveQuestionIndex(prev => prev - 1);
       const container = document.getElementById('diagnostic-modal-scroll');
       if (container) container.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
@@ -93,9 +124,17 @@ export default function EnterpriseDiagnosticModal({
     }
   };
 
+  const handleJumpToQuestion = (idx) => {
+    if (idx >= 0 && idx < 35) {
+      setActiveQuestionIndex(idx);
+      const container = document.getElementById('diagnostic-modal-scroll');
+      if (container) container.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   const handleReset = () => {
     setResponses({});
-    setActiveSectionIndex(0);
+    setActiveQuestionIndex(0);
     setCurrentStep('intro');
   };
 
@@ -118,7 +157,7 @@ export default function EnterpriseDiagnosticModal({
     onClose();
   };
 
-  // Print Executive Diagnostic Report (Page 6 Style)
+  // Print Executive Diagnostic Report
   const handlePrintSummary = () => {
     window.print();
   };
@@ -254,7 +293,7 @@ export default function EnterpriseDiagnosticModal({
                     </div>
                   </div>
                   <div className="text-[11px] text-slate-400">
-                    35 enterprise items across 7 capability dimensions • Approx 4–5 minutes
+                    35 enterprise items across 7 capability dimensions • Card-by-card experience
                   </div>
                 </div>
 
@@ -263,10 +302,13 @@ export default function EnterpriseDiagnosticModal({
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
                 <button
-                  onClick={() => setCurrentStep('assessment')}
+                  onClick={() => {
+                    setCurrentStep('assessment');
+                    setActiveQuestionIndex(0);
+                  }}
                   className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-[#7C5CFC] via-[#9277FF] to-[#7C5CFC] hover:from-[#6c4ce0] hover:to-[#5233d0] text-white font-extrabold text-sm uppercase tracking-wider shadow-xl shadow-[#7C5CFC]/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 cursor-pointer"
                 >
-                  <span>Begin Workforce Assessment (35 Items)</span>
+                  <span>Begin Workforce Assessment (Card View)</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
 
@@ -285,171 +327,222 @@ export default function EnterpriseDiagnosticModal({
           )}
 
           {/* ========================================================================= */}
-          {/* STEP 1..7: ASSESSMENT QUESTIONNAIRE SECTIONS */}
+          {/* STEP 1..35: SINGLE QUESTION CARD EXPERIENCE */}
           {/* ========================================================================= */}
           {currentStep === 'assessment' && (
-            <div className="space-y-6 animate-fade-in max-w-4xl mx-auto">
+            <div className="space-y-6 animate-fade-in max-w-3xl mx-auto">
               
-              {/* Section Progress Navigation Pills */}
-              <div className="flex items-center justify-between gap-2 overflow-x-auto no-scrollbar pb-2 border-b border-slate-800">
-                {DIAGNOSTIC_DIMENSIONS.map((dim, idx) => {
-                  const isComplete = dim.questions.every(q => responses[q.id] !== undefined);
-                  const isCurrent = idx === activeSectionIndex;
+              {/* TOP NAVIGATION: 7 Dimension Section Tabs */}
+              <div className="flex items-center justify-between gap-1.5 overflow-x-auto no-scrollbar pb-1 border-b border-slate-800/80">
+                {DIAGNOSTIC_DIMENSIONS.map((dim, dIdx) => {
+                  const dimQuestionsAnswered = dim.questions.filter(q => responses[q.id] !== undefined).length;
+                  const isDimensionActive = currentDimension.id === dim.id;
+                  const isDimensionComplete = dimQuestionsAnswered === 5;
+                  const dimensionStartIndex = dIdx * 5;
+
                   return (
                     <button
                       key={dim.id}
-                      onClick={() => setActiveSectionIndex(idx)}
+                      onClick={() => handleJumpToQuestion(dimensionStartIndex)}
                       className={`px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
-                        isCurrent
+                        isDimensionActive
                           ? 'bg-gradient-to-r from-[#7C5CFC] to-[#6344E0] text-white shadow-md shadow-[#7C5CFC]/30'
-                          : isComplete
+                          : isDimensionComplete
                           ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
                           : 'bg-slate-900 text-slate-400 border border-slate-800 hover:text-slate-200'
                       }`}
                     >
                       <span>{dim.sectionNumber}. {dim.name}</span>
-                      {isComplete && <Check className="w-3 h-3 text-emerald-400" />}
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                        isDimensionActive ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-400'
+                      }`}>
+                        {dimQuestionsAnswered}/5
+                      </span>
                     </button>
                   );
                 })}
               </div>
 
-              {/* Progress Bar */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs font-medium text-slate-400">
-                  <span>Section {activeDimension.sectionNumber} of 7: <strong className="text-white uppercase">{activeDimension.name}</strong></span>
-                  <span>{totalCompleted} of {totalQuestions} answered ({overallProgressPct}%)</span>
+              {/* Progress Tracker Bar */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs font-semibold">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-0.5 rounded-full bg-[#7C5CFC]/20 text-[#E9E4FF] font-mono text-[11px] font-bold">
+                      Question {activeQuestionIndex + 1} of 35
+                    </span>
+                    <span className="text-slate-400 hidden sm:inline">
+                      Dimension {currentDimension.sectionNumber} of 7: <strong className="text-white">{currentDimension.name}</strong>
+                    </span>
+                  </div>
+                  <span className="text-amber-400 font-mono font-bold">
+                    {totalCompleted} of 35 Answered ({overallProgressPct}%)
+                  </span>
                 </div>
-                <div className="w-full h-2 rounded-full bg-slate-900 overflow-hidden border border-slate-800">
+
+                <div className="w-full h-2.5 rounded-full bg-slate-900 overflow-hidden border border-slate-800 p-0.5">
                   <div 
                     className="h-full bg-gradient-to-r from-[#7C5CFC] via-[#9277FF] to-[#FFC857] transition-all duration-300 rounded-full"
-                    style={{ width: `${overallProgressPct}%` }}
+                    style={{ width: `${Math.max(4, overallProgressPct)}%` }}
                   />
                 </div>
-              </div>
 
-              {/* Active Dimension Header */}
-              <div className="p-5 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-950 border border-[#7C5CFC]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <div className="inline-block px-2.5 py-0.5 rounded-md bg-[#7C5CFC]/20 text-[#E9E4FF] text-[11px] font-mono font-bold uppercase tracking-wider">
-                    SECTION {activeDimension.sectionNumber} — {activeDimension.name.toUpperCase()}
-                  </div>
-                  <h3 className="text-xl font-bold text-white font-heading">{activeDimension.subtitle}</h3>
-                  <div className="text-xs text-amber-400 italic font-serif-luxury">
-                    "{activeDimension.reflection}"
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleFillCurrentSection(4)}
-                    className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition-all cursor-pointer"
-                    title="Quick fill this section for faster testing"
-                  >
-                    ⚡ Quick Fill (Agree)
-                  </button>
+                {/* 35-Item Mini Stepper Pill Dots */}
+                <div className="grid grid-cols-7 gap-1 pt-1 sm:hidden">
+                  {DIAGNOSTIC_DIMENSIONS.map((d, dIdx) => (
+                    <div key={d.id} className="text-center text-[10px] font-mono text-slate-500">
+                      S{d.sectionNumber}
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              {/* 5 Questions in Current Dimension */}
-              <div className="space-y-4">
-                {activeDimension.questions.map((q, qIndex) => {
-                  const currentValue = responses[q.id];
-                  return (
-                    <div 
-                      key={q.id}
-                      className={`p-5 rounded-2xl transition-all border ${
-                        currentValue !== undefined 
-                          ? 'glass-card border-slate-700/80 bg-slate-900/60' 
-                          : 'bg-slate-950/70 border-slate-800/80 hover:border-slate-700'
-                      }`}
-                    >
-                      <div className="flex items-start gap-3.5 mb-3.5">
-                        <span className="px-2.5 py-1 rounded-lg bg-slate-900 text-amber-400 font-mono font-bold text-xs shrink-0 border border-slate-800">
-                          {q.id}
-                        </span>
-                        <div className="flex-1">
-                          <p className="text-sm sm:text-base font-medium text-slate-100 leading-snug">
-                            {q.text}
-                          </p>
-                          {q.isReversed && (
-                            <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">
-                              [Reverse-scored item]
-                            </span>
-                          )}
-                        </div>
+              {/* =============================================================== */}
+              {/* PRIMARY FOCUSED QUESTION CARD */}
+              {/* =============================================================== */}
+              <div className="glass-card rounded-3xl p-6 sm:p-8 border border-[#7C5CFC]/40 bg-gradient-to-b from-slate-900 via-slate-950 to-[#121417] shadow-2xl relative overflow-hidden space-y-6">
+                
+                {/* Background Ambient Glow */}
+                <div className="absolute top-0 right-0 w-48 h-48 bg-[#7C5CFC]/10 rounded-full blur-[70px] pointer-events-none" />
+
+                {/* Card Top Metadata Row */}
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
+                  <div className="flex items-center gap-2.5">
+                    <span className="px-3 py-1 rounded-xl bg-slate-900 text-amber-400 font-mono font-black text-sm border border-amber-500/30 shadow-inner">
+                      {currentQuestion.id}
+                    </span>
+                    <div>
+                      <div className="text-[11px] font-mono font-bold text-slate-400 uppercase tracking-wider">
+                        {currentDimension.name} Capability Dimension
                       </div>
-
-                      {/* 5-Point Likert Options Buttons */}
-                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-1">
-                        {LIKERT_OPTIONS.map(opt => {
-                          const isSelected = currentValue === opt.value;
-                          return (
-                            <button
-                              key={opt.value}
-                              onClick={() => handleSelectOption(q.id, opt.value)}
-                              className={`p-2.5 rounded-xl text-xs font-semibold flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
-                                isSelected
-                                  ? 'bg-gradient-to-tr from-[#7C5CFC] to-[#6344E0] text-white shadow-lg shadow-[#7C5CFC]/30 border border-[#9277FF]'
-                                  : 'bg-slate-900 hover:bg-slate-800/90 text-slate-300 border border-slate-800 hover:border-slate-700'
-                              }`}
-                            >
-                              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold font-mono ${
-                                isSelected ? 'bg-white text-slate-950' : 'bg-slate-800 text-slate-400'
-                              }`}>
-                                {opt.badge}
-                              </span>
-                              <span className="text-[11px] text-center leading-tight">
-                                {opt.shortLabel}
-                              </span>
-                            </button>
-                          );
-                        })}
+                      <div className="text-xs text-slate-300 font-medium">
+                        {currentDimension.subtitle}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+                  </div>
 
-              {/* Subtle Enterprise Impact Context Callout */}
-              <div className="p-4 rounded-2xl bg-slate-900/80 border-l-4 border-amber-400 text-slate-300 space-y-1 text-xs">
-                <div className="font-bold text-white flex items-center gap-1.5 uppercase tracking-wider text-[11px]">
-                  <Crown className="w-3.5 h-3.5 text-amber-400" /> Enterprise Capability Insight: {activeDimension.executiveTheme}
+                  <div className="flex items-center gap-2">
+                    {currentQuestion.isReversed && (
+                      <span className="px-2.5 py-1 rounded-lg bg-orange-500/10 text-orange-400 border border-orange-500/20 text-[10px] font-mono font-bold uppercase tracking-wider">
+                        [Reverse-Scored Indicator]
+                      </span>
+                    )}
+                    <button
+                      onClick={() => handleFillCurrentDimension(4)}
+                      className="px-2.5 py-1 rounded-lg bg-slate-850 hover:bg-slate-800 text-slate-400 hover:text-slate-200 text-[11px] font-semibold border border-slate-800 transition-all cursor-pointer"
+                      title="Quick fill remaining items in this dimension"
+                    >
+                      ⚡ Quick Fill Section
+                    </button>
+                  </div>
                 </div>
-                <p className="text-slate-400 leading-relaxed">
-                  {activeDimension.enterpriseImpact}
-                </p>
+
+                {/* Main Question Statement */}
+                <div className="py-2 space-y-2">
+                  <p className="text-base sm:text-xl md:text-2xl font-bold text-white leading-relaxed font-heading">
+                    {currentQuestion.text}
+                  </p>
+                  <p className="text-xs text-amber-400/90 italic font-serif-luxury">
+                    "{currentDimension.reflection}"
+                  </p>
+                </div>
+
+                {/* 5 Likert Response Option Cards */}
+                <div className="space-y-2.5 pt-2">
+                  <div className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">
+                    Select Organizational Rating:
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-2.5">
+                    {LIKERT_OPTIONS.map(opt => {
+                      const isSelected = responses[currentQuestion.id] === opt.value;
+                      return (
+                        <button
+                          key={opt.value}
+                          onClick={() => handleSelectOption(currentQuestion.id, opt.value)}
+                          className={`w-full p-4 rounded-2xl text-left transition-all flex items-center justify-between gap-4 cursor-pointer border ${
+                            isSelected
+                              ? 'bg-gradient-to-r from-[#7C5CFC]/25 via-[#6344E0]/20 to-slate-900 border-[#9277FF] shadow-lg shadow-[#7C5CFC]/25 scale-[1.01]'
+                              : 'bg-slate-950/80 hover:bg-slate-900/90 border-slate-800/90 hover:border-slate-700'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3.5">
+                            <span className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black font-mono transition-all ${
+                              isSelected
+                                ? 'bg-gradient-to-tr from-[#7C5CFC] to-[#FFC857] text-slate-950 shadow-md'
+                                : 'bg-slate-900 text-slate-400 border border-slate-800'
+                            }`}>
+                              {opt.badge}
+                            </span>
+                            <div>
+                              <div className={`text-sm font-bold ${isSelected ? 'text-white' : 'text-slate-200'}`}>
+                                {opt.shortLabel}
+                              </div>
+                              <div className="text-xs text-slate-400 font-normal">
+                                {opt.label.replace(/^[^(]*\((.*)\)$/, '$1')}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="shrink-0">
+                            {isSelected ? (
+                              <div className="w-6 h-6 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center">
+                                <Check className="w-3.5 h-3.5 stroke-[3]" />
+                              </div>
+                            ) : (
+                              <div className="w-5 h-5 rounded-full border border-slate-700" />
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Subtle Enterprise Capability Callout */}
+                <div className="p-3.5 rounded-2xl bg-slate-950/90 border-l-4 border-amber-400 text-slate-300 text-xs space-y-1">
+                  <div className="font-bold text-white flex items-center gap-1.5 uppercase tracking-wider text-[10px]">
+                    <Crown className="w-3.5 h-3.5 text-amber-400" /> Enterprise Capability Insight: {currentDimension.executiveTheme}
+                  </div>
+                  <p className="text-slate-400 leading-relaxed text-[11px]">
+                    {currentDimension.enterpriseImpact}
+                  </p>
+                </div>
+
               </div>
 
-              {/* Bottom Navigation Buttons */}
-              <div className="flex items-center justify-between pt-4 border-t border-slate-800">
+              {/* CARD BOTTOM NAVIGATION CONTROLS */}
+              <div className="flex items-center justify-between pt-2">
                 <button
-                  onClick={handlePrevSection}
+                  onClick={handlePrevQuestion}
                   className="px-5 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold text-xs transition-all flex items-center gap-2 cursor-pointer border border-slate-800"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  <span>{activeSectionIndex === 0 ? 'Back to Instructions' : 'Previous Section'}</span>
+                  <span>{activeQuestionIndex === 0 ? 'Instructions' : 'Previous Card'}</span>
                 </button>
 
-                <div className="flex items-center gap-3">
-                  {activeSectionIndex === DIAGNOSTIC_DIMENSIONS.length - 1 ? (
-                    <button
-                      onClick={handleNextSection}
-                      className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 transition-all flex items-center gap-2 cursor-pointer"
-                    >
-                      <span>Generate Diagnostic Results</span>
-                      <Sparkles className="w-4 h-4" />
-                    </button>
-                  ) : (
-                    <button
-                      onClick={handleNextSection}
-                      className="px-7 py-3 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#6344E0] hover:from-[#6c4ce0] text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-[#7C5CFC]/20 transition-all flex items-center gap-2 cursor-pointer"
-                    >
-                      <span>Next Section: {DIAGNOSTIC_DIMENSIONS[activeSectionIndex + 1]?.name}</span>
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
-                  )}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-mono text-slate-500 hidden sm:inline">
+                    Item {activeQuestionIndex + 1} / 35
+                  </span>
                 </div>
+
+                {activeQuestionIndex === 34 ? (
+                  <button
+                    onClick={handleNextQuestion}
+                    className="px-7 py-3 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/25 transition-all flex items-center gap-2 cursor-pointer"
+                  >
+                    <span>Generate Results</span>
+                    <Sparkles className="w-4 h-4" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleNextQuestion}
+                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#6344E0] hover:from-[#6c4ce0] text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-[#7C5CFC]/20 transition-all flex items-center gap-2 cursor-pointer"
+                  >
+                    <span>Next Card</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                )}
               </div>
 
             </div>
@@ -470,7 +563,7 @@ export default function EnterpriseDiagnosticModal({
                   EXECUTIVE DIAGNOSTIC <span className="text-gradient-gold">REPORT</span>
                 </h1>
                 <p className="text-slate-400 text-xs sm:text-sm max-w-xl mx-auto">
-                  A snapshot of your self-reported communication and influence profile across the 7 core capability dimensions.
+                  A comprehensive benchmark of your workforce influence and communication profile across the 7 core capability dimensions.
                 </p>
               </div>
 
@@ -481,7 +574,7 @@ export default function EnterpriseDiagnosticModal({
                   {/* Circular / Radial Score Highlight */}
                   <div className="md:col-span-5 text-center p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
                     <div className="text-xs font-mono font-bold text-slate-400 uppercase tracking-widest">
-                      Overall TH3ORY Influence Score
+                      Overall Workforce Influence Score
                     </div>
                     <div className="text-5xl sm:text-6xl font-black font-brand text-gradient-gold tracking-tight py-1">
                       {diagnosticResults.overallScore}
@@ -623,9 +716,9 @@ export default function EnterpriseDiagnosticModal({
                 <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-slate-400 text-xs leading-relaxed space-y-1">
                   <div className="text-slate-300 font-bold uppercase tracking-wider text-[11px]">What your result means:</div>
                   <p>
-                    Your score is not a measure of your worth, personality or potential. It is a snapshot of how you currently describe your 
-                    behaviour across different influence situations. The useful question is not <em>“Is my score good or bad?”</em> but 
-                    <strong className="text-amber-400"> “Which behaviours could I deliberately improve?”</strong>
+                    This capability index represents an organizational benchmark of current communication habits and negotiation dynamics. 
+                    The strategic question is not <em>“Is our score good or bad?”</em> but 
+                    <strong className="text-amber-400"> “Which team behaviors and communication patterns will unlock the greatest leverage when improved?”</strong>
                   </p>
                 </div>
               </div>
