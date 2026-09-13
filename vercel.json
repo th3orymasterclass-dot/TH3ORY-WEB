@@ -8,10 +8,6 @@
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/sitemap.xml",
-      "destination": "/api/sitemap"
-    },
-    {
       "source": "/api/dpdp-consent",
       "destination": "/api/dpdp?action=consent"
     },
