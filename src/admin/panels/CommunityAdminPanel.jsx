@@ -14,7 +14,8 @@ import {
   deleteCommunityPostInSupabase,
   fetchCommunityReactionsFromSupabase,
   fetchCommunityCommentsFromSupabase,
-  deleteCommunityCommentInSupabase
+  deleteCommunityCommentInSupabase,
+  subscribeToCommunityFeed
 } from '../../services/supabaseService';
 import { sendCommunityApprovalEmail } from '../../services/emailService';
 import { parseGoogleDriveUrl, getEmbeddableMediaUrl } from '../../utils/gdriveHelper';
@@ -71,6 +72,12 @@ export default function CommunityAdminPanel({ themeMode = 'dark' }) {
 
   useEffect(() => {
     loadData();
+    const unsubscribe = subscribeToCommunityFeed(() => {
+      loadData();
+    });
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   const handleApproveMember = async (member) => {

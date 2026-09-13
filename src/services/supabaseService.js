@@ -3912,6 +3912,37 @@ export async function registerCommunityMemberInSupabase({ name, email, password,
   }
 }
 
+const COMMUNITY_SYNC_CHANNEL_NAME = 'th3ory_community_sync';
+
+function getCommunityBroadcastChannel() {
+  if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+    try {
+      if (!window.__th3oryCommunityChannel) {
+        window.__th3oryCommunityChannel = new BroadcastChannel(COMMUNITY_SYNC_CHANNEL_NAME);
+      }
+      return window.__th3oryCommunityChannel;
+    } catch {}
+  }
+  return null;
+}
+
+function broadcastCommunityUpdate(eventName, detail) {
+  if (typeof window !== 'undefined') {
+    // 1. In-tab custom event
+    try {
+      window.dispatchEvent(new CustomEvent(eventName, { detail }));
+    } catch {}
+
+    // 2. Cross-tab BroadcastChannel
+    try {
+      const ch = getCommunityBroadcastChannel();
+      if (ch) {
+        ch.postMessage({ type: eventName, detail, timestamp: Date.now() });
+      }
+    } catch {}
+  }
+}
+
 function getCommunityMembersLocal() {
   try {
     const raw = localStorage.getItem('th3ory_community_members');
@@ -3927,7 +3958,7 @@ function syncCommunityMemberLocal(member) {
     if (idx >= 0) existing[idx] = member;
     else existing.unshift(member);
     localStorage.setItem('th3ory_community_members', JSON.stringify(existing));
-    window.dispatchEvent(new CustomEvent('th3ory_community_members_update', { detail: existing }));
+    broadcastCommunityUpdate('th3ory_community_members_update', existing);
   } catch {}
 }
 
@@ -3983,7 +4014,7 @@ export async function approveCommunityMemberInSupabase(memberId, adminName = 'Ad
     if (item) {
       Object.assign(item, updatedData);
       localStorage.setItem('th3ory_community_members', JSON.stringify(existing));
-      window.dispatchEvent(new CustomEvent('th3ory_community_members_update', { detail: existing }));
+      broadcastCommunityUpdate('th3ory_community_members_update', existing);
       return { success: true, member: item };
     }
   } catch {}
@@ -4018,7 +4049,7 @@ export async function rejectCommunityMemberInSupabase(memberId, reason = 'Applic
     if (item) {
       Object.assign(item, updatedData);
       localStorage.setItem('th3ory_community_members', JSON.stringify(existing));
-      window.dispatchEvent(new CustomEvent('th3ory_community_members_update', { detail: existing }));
+      broadcastCommunityUpdate('th3ory_community_members_update', existing);
       return { success: true, member: item };
     }
   } catch {}
@@ -4173,7 +4204,7 @@ function syncPostLocal(post) {
     else posts.unshift(post);
 
     localStorage.setItem('th3ory_community_posts', JSON.stringify(posts));
-    window.dispatchEvent(new CustomEvent('th3ory_community_posts_update', { detail: posts }));
+    broadcastCommunityUpdate('th3ory_community_posts_update', posts);
   } catch {}
 }
 
@@ -4191,7 +4222,7 @@ export async function deleteCommunityPostInSupabase(postId) {
     let posts = raw ? JSON.parse(raw) : [...DEFAULT_COMMUNITY_POSTS];
     posts = posts.filter(p => p.id !== postId);
     localStorage.setItem('th3ory_community_posts', JSON.stringify(posts));
-    window.dispatchEvent(new CustomEvent('th3ory_community_posts_update', { detail: posts }));
+    broadcastCommunityUpdate('th3ory_community_posts_update', posts);
   } catch {}
 
   return { success: true };
@@ -4275,7 +4306,7 @@ export async function toggleCommunityReactionInSupabase(postId, memberId, member
 
   try {
     localStorage.setItem('th3ory_community_reactions', JSON.stringify(reactions));
-    window.dispatchEvent(new CustomEvent('th3ory_community_reactions_update', { detail: reactions }));
+    broadcastCommunityUpdate('th3ory_community_reactions_update', reactions);
   } catch {}
 
   return { success: true, isAdded, reactions: reactions.filter(r => r.post_id === postId) };
@@ -4363,7 +4394,7 @@ function syncCommentLocal(comment) {
     if (raw) comments = JSON.parse(raw);
     comments.push(comment);
     localStorage.setItem('th3ory_community_comments', JSON.stringify(comments));
-    window.dispatchEvent(new CustomEvent('th3ory_community_comments_update', { detail: comments }));
+    broadcastCommunityUpdate('th3ory_community_comments_update', comments);
   } catch {}
 }
 
@@ -4381,7 +4412,7 @@ export async function deleteCommunityCommentInSupabase(commentId) {
     let comments = raw ? JSON.parse(raw) : [];
     comments = comments.filter(c => c.id !== commentId);
     localStorage.setItem('th3ory_community_comments', JSON.stringify(comments));
-    window.dispatchEvent(new CustomEvent('th3ory_community_comments_update', { detail: comments }));
+    broadcastCommunityUpdate('th3ory_community_comments_update', comments);
   } catch {}
 
   return { success: true };
@@ -4391,8 +4422,11 @@ export async function deleteCommunityCommentInSupabase(commentId) {
  * 9. Real-time Subscription Listener for Community Wall
  */
 export function subscribeToCommunityFeed(onFeedChange) {
-  const handler = () => {
-    if (typeof onFeedChange === 'function') onFeedChange();
+  const handler = (e) => {
+    if (typeof onFeedChange === 'function') {
+      const detail = e?.detail || e?.data?.detail || null;
+      onFeedChange(detail);
+    }
   };
 
   window.addEventListener('th3ory_community_posts_update', handler);
@@ -4400,17 +4434,48 @@ export function subscribeToCommunityFeed(onFeedChange) {
   window.addEventListener('th3ory_community_comments_update', handler);
   window.addEventListener('th3ory_community_members_update', handler);
 
+  // Cross-tab broadcast channel listener
+  const ch = getCommunityBroadcastChannel();
+  const bcListener = (e) => {
+    if (typeof onFeedChange === 'function') {
+      onFeedChange(e?.data?.detail || null);
+    }
+  };
+  if (ch) {
+    ch.addEventListener('message', bcListener);
+  }
+
+  // Cross-tab storage event listener
+  const storageListener = (e) => {
+    if (e.key && e.key.startsWith('th3ory_community_')) {
+      if (typeof onFeedChange === 'function') onFeedChange();
+    }
+  };
+  window.addEventListener('storage', storageListener);
+
   let supabaseSub = null;
   if (isSupabaseConfigured && supabase) {
     try {
-      const channelName = `community_wall_${Date.now()}`;
+      const channelName = `community_wall_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
       supabaseSub = supabase
         .channel(channelName)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'community_posts' }, handler)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'community_reactions' }, handler)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'community_comments' }, handler)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'community_members' }, handler)
-        .subscribe();
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'community_posts' }, (payload) => {
+          if (typeof onFeedChange === 'function') onFeedChange({ table: 'community_posts', payload });
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'community_reactions' }, (payload) => {
+          if (typeof onFeedChange === 'function') onFeedChange({ table: 'community_reactions', payload });
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'community_comments' }, (payload) => {
+          if (typeof onFeedChange === 'function') onFeedChange({ table: 'community_comments', payload });
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'community_members' }, (payload) => {
+          if (typeof onFeedChange === 'function') onFeedChange({ table: 'community_members', payload });
+        })
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            console.log('[Supabase Realtime] Community feed channel subscribed successfully');
+          }
+        });
     } catch (err) {
       console.warn('[Supabase] Realtime community subscription failed:', err);
     }
@@ -4421,6 +4486,10 @@ export function subscribeToCommunityFeed(onFeedChange) {
     window.removeEventListener('th3ory_community_reactions_update', handler);
     window.removeEventListener('th3ory_community_comments_update', handler);
     window.removeEventListener('th3ory_community_members_update', handler);
+    window.removeEventListener('storage', storageListener);
+    if (ch) {
+      ch.removeEventListener('message', bcListener);
+    }
     if (supabaseSub && isSupabaseConfigured && supabase) {
       try { supabase.removeChannel(supabaseSub); } catch {}
     }

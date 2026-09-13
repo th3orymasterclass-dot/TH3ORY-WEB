@@ -642,11 +642,93 @@ BEGIN
       public.team_members,
       public.team_shared_assets,
       public.referral_clicks,
-      public.referral_conversions;
+      public.referral_conversions,
+      public.community_members,
+      public.community_posts,
+      public.community_reactions,
+      public.community_comments;
   END IF;
 EXCEPTION WHEN OTHERS THEN
   RAISE NOTICE 'Publication table addition skipped or already present.';
 END $$;
+
+-- ==============================================================================
+-- 18. TH3ORY COMMUNITY HUB SCHEMA (Members, Posts, Reactions, Comments)
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.community_members (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'suspended')),
+    role TEXT NOT NULL DEFAULT 'member' CHECK (role IN ('member', 'moderator', 'admin', 'instructor')),
+    avatar_url TEXT DEFAULT '',
+    bio TEXT DEFAULT '',
+    approved_at TIMESTAMPTZ,
+    approved_by TEXT,
+    rejection_reason TEXT,
+    last_seen_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.community_posts (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    post_type TEXT NOT NULL DEFAULT 'discussion' CHECK (post_type IN ('weekly_video', 'file_resource', 'discussion', 'announcement')),
+    media_url TEXT DEFAULT '',
+    file_name TEXT DEFAULT '',
+    file_url TEXT DEFAULT '',
+    file_size TEXT DEFAULT '',
+    is_pinned BOOLEAN DEFAULT FALSE,
+    author_name TEXT DEFAULT 'TH3ORY Administration',
+    author_role TEXT DEFAULT 'Instructor / Founder',
+    author_id TEXT REFERENCES public.community_members(id) ON DELETE SET NULL,
+    views_count INT DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.community_reactions (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    post_id TEXT NOT NULL REFERENCES public.community_posts(id) ON DELETE CASCADE,
+    member_id TEXT NOT NULL REFERENCES public.community_members(id) ON DELETE CASCADE,
+    member_name TEXT NOT NULL,
+    emoji TEXT NOT NULL CHECK (emoji IN ('👍', '❤️', '🔥', '💡', '🧠', '👏')),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (post_id, member_id, emoji)
+);
+
+CREATE TABLE IF NOT EXISTS public.community_comments (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    post_id TEXT NOT NULL REFERENCES public.community_posts(id) ON DELETE CASCADE,
+    member_id TEXT NOT NULL REFERENCES public.community_members(id) ON DELETE CASCADE,
+    member_name TEXT NOT NULL,
+    comment TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Replica Identity Full for Realtime updates and deletes
+ALTER TABLE public.community_members REPLICA IDENTITY FULL;
+ALTER TABLE public.community_posts REPLICA IDENTITY FULL;
+ALTER TABLE public.community_reactions REPLICA IDENTITY FULL;
+ALTER TABLE public.community_comments REPLICA IDENTITY FULL;
+
+-- Performance Indexes
+CREATE INDEX IF NOT EXISTS idx_community_members_email ON public.community_members(email);
+CREATE INDEX IF NOT EXISTS idx_community_members_status ON public.community_members(status);
+CREATE INDEX IF NOT EXISTS idx_community_posts_created ON public.community_posts(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_community_posts_pinned ON public.community_posts(is_pinned DESC);
+CREATE INDEX IF NOT EXISTS idx_community_reactions_post ON public.community_reactions(post_id);
+CREATE INDEX IF NOT EXISTS idx_community_comments_post ON public.community_comments(post_id, created_at ASC);
+
+-- Row Level Security
+ALTER TABLE public.community_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.community_posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.community_reactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.community_comments ENABLE ROW LEVEL SECURITY;
 
 -- ==============================================================================
 -- OPTIONAL DATA RESET UTILITY (Run in SQL Editor to manually wipe tracker data)

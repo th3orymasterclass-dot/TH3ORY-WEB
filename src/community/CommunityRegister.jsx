@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Shield, Sparkles, User, Mail, Lock, Eye, EyeOff, CheckCircle2, Clock, ArrowRight, AlertCircle, Users } from 'lucide-react';
-import { registerCommunityMemberInSupabase, authenticateCommunityMemberInSupabase } from '../services/supabaseService';
+import { registerCommunityMemberInSupabase, authenticateCommunityMemberInSupabase, subscribeToCommunityFeed } from '../services/supabaseService';
 import Logo from '../components/Logo';
 
 export default function CommunityRegister() {
@@ -42,6 +42,27 @@ export default function CommunityRegister() {
       setLoading(false);
     }
   };
+
+  // Real-time listener for instant approval detection
+  useEffect(() => {
+    if (!registeredMember?.email) return;
+
+    const unsubscribe = subscribeToCommunityFeed(async () => {
+      try {
+        const authRes = await authenticateCommunityMemberInSupabase(registeredMember.email, form.password || 'temp');
+        if (authRes.success) {
+          setStatusNotice('🎉 Excellent news! Your account has been approved by the Administration! Redirecting to login...');
+          setTimeout(() => {
+            window.location.hash = `#/community-login?email=${encodeURIComponent(registeredMember.email)}`;
+          }, 1500);
+        }
+      } catch {}
+    });
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [registeredMember?.email, form.password]);
 
   const handleCheckStatus = async () => {
     if (!registeredMember?.email) return;
