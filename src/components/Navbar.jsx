@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, ShoppingBag, ArrowRight, LogIn, Sun, Moon, Building2, Award, Flame, Menu, X } from 'lucide-react';
+import { ShieldCheck, ShoppingBag, ArrowRight, LogIn, Sun, Moon, Building2, Award, Flame, Menu, X, Users } from 'lucide-react';
 import Logo from './Logo';
 import LaunchCountdownBanner from './LaunchCountdownBanner';
 
@@ -97,6 +97,16 @@ export default function Navbar({ onOpenCheckout, onOpenDashboard, isEnrolled }) 
               <span>Enterprise</span>
             </a>
 
+            {/* Private Community Wall */}
+            <a
+              href="#community"
+              onClick={(e) => { e.preventDefault(); handleNavClick('community'); }}
+              className="px-3.5 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-md cursor-pointer shrink-0"
+            >
+              <Users className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Community</span>
+            </a>
+
             {/* Sign In Button */}
             <a
               href="#student"
@@ -191,6 +201,15 @@ export default function Navbar({ onOpenCheckout, onOpenDashboard, isEnrolled }) 
             >
               <Building2 className="w-4 h-4 text-amber-400" />
               <span>Enterprise &amp; Teams</span>
+            </a>
+
+            <a
+              href="#community"
+              onClick={(e) => { e.preventDefault(); handleNavClick('community'); }}
+              className="w-full p-3 rounded-xl bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 font-bold text-xs uppercase tracking-wider flex items-center gap-2"
+            >
+              <Users className="w-4 h-4 text-cyan-400" />
+              <span>Private Community Wall</span>
             </a>
 
             <a

@@ -149,7 +149,7 @@ export default function EnterprisePage({ onBack }) {
       <SEOHead 
         title="Enterprise Leadership & Corporate Solutions | Influence & Networking Mastery™"
         description="Empower your organization with Influence & Networking Mastery™. Executive corporate training, 3-day corporate intensives, and custom enterprise cohorts for HR, L&D, and CXOs."
-        canonicalUrl="https://th3ory.online/#/enterprise"
+        canonicalUrl="https://th3ory.online/enterprise"
       />
       <StructuredData />
 

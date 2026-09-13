@@ -18,6 +18,9 @@ import AffiliateLandingPage from './components/AffiliateLandingPage.jsx';
 import MasterclassAdvertisingPage from './components/MasterclassAdvertisingPage.jsx';
 import InstitutionalPage from './components/InstitutionalPage.jsx';
 import CertificateVerification from './components/CertificateVerification.jsx';
+import CommunityRegister from './community/CommunityRegister.jsx';
+import CommunityLogin from './community/CommunityLogin.jsx';
+import CommunityPortal from './community/CommunityPortal.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import NotFoundPage from './components/NotFoundPage.jsx';
 import { FeatureFlagProvider } from './context/FeatureFlagContext.jsx';
@@ -45,6 +48,9 @@ function Root() {
     if (h.includes('ambassador-login') || p.includes('ambassador-login')) return 'ambassador-login';
     if (h.includes('ambassador-portal') || p.includes('ambassador-portal') || h.includes('ambassador-dashboard')) return 'ambassador-portal';
     if (h.includes('ambassador') || p.includes('ambassador')) return 'ambassador';
+    if (h.includes('community-register') || p.includes('community-register') || h.includes('community-join') || p.includes('community-join')) return 'community-register';
+    if (h.includes('community-login') || p.includes('community-login')) return 'community-login';
+    if (h.includes('community') || p.includes('community')) return 'community';
     if (h.includes('404')) return '404';
     return 'public';
   };
@@ -60,6 +66,11 @@ function Root() {
   const [studentProfile, setStudentProfile] = useState(() => {
     try {
       return JSON.parse(sessionStorage.getItem('th3ory_student_auth') || localStorage.getItem('th3ory_student_auth_persistent') || 'null');
+    } catch { return null; }
+  });
+  const [communityMember, setCommunityMember] = useState(() => {
+    try {
+      return JSON.parse(sessionStorage.getItem('th3ory_community_member') || localStorage.getItem('th3ory_community_member_persistent') || 'null');
     } catch { return null; }
   });
 
@@ -211,9 +222,46 @@ function Root() {
   // ── Certificate Verification ────────────────────────────────────────────────
   if (view === 'verify') {
     const hash = window.location.hash || '';
-    const parts = hash.split('/');
-    const certIdParam = parts[2] ? parts[2].toUpperCase() : 'TH3ORY-CERT-2026-99';
+    const pathname = window.location.pathname || '';
+    const hashParts = hash ? hash.split('/') : [];
+    const pathParts = pathname ? pathname.split('/') : [];
+    const rawId = hashParts[2] || pathParts[2] || (pathParts[1] && pathParts[1] !== 'verify' ? pathParts[1] : null);
+    const certIdParam = rawId ? rawId.toUpperCase() : 'TH3ORY-CERT-2026-99';
     return <CertificateVerification initialCertId={certIdParam} />;
+  }
+
+  // ── Community Member Registration ─────────────────────────────────────────
+  if (view === 'community-register') {
+    return <CommunityRegister />;
+  }
+
+  // ── Community Member Login ────────────────────────────────────────────────
+  if (view === 'community-login') {
+    return <CommunityLogin onAuthenticated={(member) => {
+      setCommunityMember(member);
+      window.location.hash = '#/community';
+      setView('community');
+    }} />;
+  }
+
+  // ── Community Wall Portal ──────────────────────────────────────────────────
+  if (view === 'community') {
+    if (!communityMember) {
+      return <CommunityLogin onAuthenticated={(member) => {
+        setCommunityMember(member);
+        setView('community');
+      }} />;
+    }
+    return <CommunityPortal
+      member={communityMember}
+      onLogout={() => {
+        sessionStorage.removeItem('th3ory_community_member');
+        localStorage.removeItem('th3ory_community_member_persistent');
+        setCommunityMember(null);
+        window.location.hash = '#/community-login';
+        setView('community-login');
+      }}
+    />;
   }
 
   // ── 404 Page ───────────────────────────────────────────────────────────────

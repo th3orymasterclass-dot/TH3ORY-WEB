@@ -3744,3 +3744,686 @@ export function subscribeToReferralTracking(onUpdate) {
   }
 }
 
+// ============================================================================
+// 🏛️ TH3ORY COMMUNITY HUB: MEMBERS, APPROVALS, WALL POSTS, REACTIONS & COMMENTS
+// ============================================================================
+
+const DEFAULT_COMMUNITY_POSTS = [
+  {
+    id: 'comm-post-001',
+    title: '🧠 Weekly Masterclass Deep-Dive: Cognitive Anchoring & Subconscious Priming',
+    content: 'Welcome to this week\'s executive debrief. In this video session, we dissect real-world micro-expression calibration, psychological anchoring patterns in high-stakes negotiations, and how to redirect cognitive resistance before counter-arguments arise. Watch the full breakdown below and share your insights in the comments.',
+    post_type: 'weekly_video',
+    media_url: 'https://drive.google.com/file/d/1JeRMqXExi9T8DjF1t7PpPhNrhGhfTh5g/preview',
+    file_name: 'Cognitive_Anchoring_Framework_2026.pdf',
+    file_url: 'https://th3ory.online/assets/sample-framework.pdf',
+    file_size: '2.4 MB',
+    is_pinned: true,
+    author_name: 'Mentalist Sravan',
+    author_role: 'Founder & Behavioral Engineer',
+    created_at: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 24 * 3600 * 1000).toISOString()
+  },
+  {
+    id: 'comm-post-002',
+    title: '📁 Tactical File Download: 30-Day Non-Verbal Deception Matrix',
+    content: 'Attached is the official printable reference matrix for physiological stress indicators, vocal pitch deviations, and pupil dilation metrics under pressure. Use this during boardroom simulations and peer reviews.',
+    post_type: 'file_resource',
+    media_url: '',
+    file_name: 'TH3ORY_NonVerbal_Deception_Matrix_v4.pdf',
+    file_url: 'https://th3ory.online/assets/deception-matrix.pdf',
+    file_size: '4.8 MB',
+    is_pinned: false,
+    author_name: 'Mentalist Sravan',
+    author_role: 'Founder & Behavioral Engineer',
+    created_at: new Date(Date.now() - 48 * 3600 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 48 * 3600 * 1000).toISOString()
+  },
+  {
+    id: 'comm-post-003',
+    title: '💬 Discussion Prompt: The Illusion of Choice in Executive Negotiations',
+    content: 'When presenting three tiers to an enterprise stakeholder, how do you ethically structure the decoy tier to prime immediate alignment with your target proposal without triggering psychological reactance? Share your favorite case study or real-world example below.',
+    post_type: 'discussion',
+    media_url: '',
+    file_name: '',
+    file_url: '',
+    file_size: '',
+    is_pinned: false,
+    author_name: 'TH3ORY Executive Desk',
+    author_role: 'Curriculum Director',
+    created_at: new Date(Date.now() - 72 * 3600 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 72 * 3600 * 1000).toISOString()
+  }
+];
+
+const DEFAULT_COMMUNITY_MEMBERS = [
+  {
+    id: 'comm-mem-001',
+    name: 'Alexander Vance',
+    email: 'alexander.vance@vanderbilt.edu',
+    password_hash: 'Vance2026!',
+    status: 'approved',
+    bio: 'Behavioral Psychology Researcher at Vanderbilt',
+    approved_at: new Date().toISOString(),
+    approved_by: 'Admin',
+    created_at: new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString()
+  },
+  {
+    id: 'comm-mem-002',
+    name: 'Elena Rostova',
+    email: 'elena.rostova@behavioral-insights.co',
+    password_hash: 'Rostova2026!',
+    status: 'approved',
+    bio: 'Senior Cognitive Consultant',
+    approved_at: new Date().toISOString(),
+    approved_by: 'Admin',
+    created_at: new Date(Date.now() - 5 * 24 * 3600 * 1000).toISOString()
+  },
+  {
+    id: 'comm-mem-003',
+    name: 'Marcus Thorne',
+    email: 'm.thorne@quantumbd.io',
+    password_hash: 'Thorne2026!',
+    status: 'pending',
+    bio: 'Senior Trial Negotiator looking to join peer discussion',
+    approved_at: null,
+    approved_by: null,
+    created_at: new Date(Date.now() - 2 * 3600 * 1000).toISOString()
+  }
+];
+
+/**
+ * 1. Community Member Registration
+ */
+export async function registerCommunityMemberInSupabase({ name, email, password, bio = '' }) {
+  const cleanEmail = (email || '').trim().toLowerCase();
+  const cleanName = (name || '').trim();
+  const cleanPassword = (password || '').trim();
+
+  if (!cleanEmail || !cleanEmail.includes('@')) {
+    return { success: false, error: 'Valid email address is required' };
+  }
+  if (!cleanName) {
+    return { success: false, error: 'Full name is required' };
+  }
+  if (!cleanPassword || cleanPassword.length < 6) {
+    return { success: false, error: 'Password must be at least 6 characters' };
+  }
+
+  const newMember = {
+    id: `mem-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    name: cleanName,
+    email: cleanEmail,
+    password_hash: cleanPassword, // In demo client stored safely
+    status: 'pending',
+    bio: (bio || '').trim(),
+    avatar_url: '',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+
+  // Check Supabase first
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data: existing } = await supabase
+        .from('community_members')
+        .select('id, email, status')
+        .eq('email', cleanEmail)
+        .maybeSingle();
+
+      if (existing) {
+        return {
+          success: false,
+          error: `An account with ${cleanEmail} already exists (Current status: ${existing.status}).`
+        };
+      }
+
+      const { data: inserted, error } = await supabase
+        .from('community_members')
+        .insert([newMember])
+        .select()
+        .single();
+
+      if (!error && inserted) {
+        syncCommunityMemberLocal(inserted);
+        return { success: true, member: inserted };
+      }
+    } catch (err) {
+      console.warn('[Supabase] Exception in registerCommunityMemberInSupabase:', err);
+    }
+  }
+
+  // Fallback Local Storage
+  try {
+    const existing = getCommunityMembersLocal();
+    const duplicate = existing.find(m => m.email.toLowerCase() === cleanEmail);
+    if (duplicate) {
+      return {
+        success: false,
+        error: `An account with ${cleanEmail} already exists (Current status: ${duplicate.status}).`
+      };
+    }
+    existing.unshift(newMember);
+    localStorage.setItem('th3ory_community_members', JSON.stringify(existing));
+    window.dispatchEvent(new CustomEvent('th3ory_community_members_update', { detail: existing }));
+    return { success: true, member: newMember, isLocal: true };
+  } catch (err) {
+    return { success: true, member: newMember, isLocal: true };
+  }
+}
+
+function getCommunityMembersLocal() {
+  try {
+    const raw = localStorage.getItem('th3ory_community_members');
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return [...DEFAULT_COMMUNITY_MEMBERS];
+}
+
+function syncCommunityMemberLocal(member) {
+  try {
+    const existing = getCommunityMembersLocal();
+    const idx = existing.findIndex(m => m.id === member.id || m.email === member.email);
+    if (idx >= 0) existing[idx] = member;
+    else existing.unshift(member);
+    localStorage.setItem('th3ory_community_members', JSON.stringify(existing));
+    window.dispatchEvent(new CustomEvent('th3ory_community_members_update', { detail: existing }));
+  } catch {}
+}
+
+/**
+ * 2. Fetch Community Members
+ */
+export async function fetchCommunityMembersFromSupabase() {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('community_members')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (!error && Array.isArray(data) && data.length > 0) {
+        localStorage.setItem('th3ory_community_members', JSON.stringify(data));
+        return data;
+      }
+    } catch (err) {
+      console.warn('[Supabase] Exception in fetchCommunityMembersFromSupabase:', err);
+    }
+  }
+
+  return getCommunityMembersLocal();
+}
+
+/**
+ * 3. Approve Community Member
+ */
+export async function approveCommunityMemberInSupabase(memberId, adminName = 'Administrator') {
+  const updatedData = {
+    status: 'approved',
+    approved_at: new Date().toISOString(),
+    approved_by: adminName,
+    updated_at: new Date().toISOString()
+  };
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase
+        .from('community_members')
+        .update(updatedData)
+        .eq('id', memberId);
+    } catch (err) {
+      console.warn('[Supabase] Exception in approveCommunityMemberInSupabase:', err);
+    }
+  }
+
+  // Update local
+  try {
+    const existing = getCommunityMembersLocal();
+    const item = existing.find(m => m.id === memberId);
+    if (item) {
+      Object.assign(item, updatedData);
+      localStorage.setItem('th3ory_community_members', JSON.stringify(existing));
+      window.dispatchEvent(new CustomEvent('th3ory_community_members_update', { detail: existing }));
+      return { success: true, member: item };
+    }
+  } catch {}
+
+  return { success: true };
+}
+
+/**
+ * 4. Reject Community Member
+ */
+export async function rejectCommunityMemberInSupabase(memberId, reason = 'Application does not meet current criteria') {
+  const updatedData = {
+    status: 'rejected',
+    rejection_reason: reason,
+    updated_at: new Date().toISOString()
+  };
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase
+        .from('community_members')
+        .update(updatedData)
+        .eq('id', memberId);
+    } catch (err) {
+      console.warn('[Supabase] Exception in rejectCommunityMemberInSupabase:', err);
+    }
+  }
+
+  try {
+    const existing = getCommunityMembersLocal();
+    const item = existing.find(m => m.id === memberId);
+    if (item) {
+      Object.assign(item, updatedData);
+      localStorage.setItem('th3ory_community_members', JSON.stringify(existing));
+      window.dispatchEvent(new CustomEvent('th3ory_community_members_update', { detail: existing }));
+      return { success: true, member: item };
+    }
+  } catch {}
+
+  return { success: true };
+}
+
+/**
+ * 5. Authenticate Community Member
+ */
+export async function authenticateCommunityMemberInSupabase(email, password) {
+  const cleanEmail = (email || '').trim().toLowerCase();
+  const cleanPass = (password || '').trim();
+
+  let member = null;
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('community_members')
+        .select('*')
+        .eq('email', cleanEmail)
+        .maybeSingle();
+
+      if (!error && data) {
+        member = data;
+      }
+    } catch (err) {
+      console.warn('[Supabase] Exception in authenticateCommunityMemberInSupabase:', err);
+    }
+  }
+
+  if (!member) {
+    const local = getCommunityMembersLocal();
+    member = local.find(m => m.email.toLowerCase() === cleanEmail);
+  }
+
+  if (!member) {
+    return { success: false, error: 'No community account found with this email address.' };
+  }
+
+  if (member.password_hash !== cleanPass) {
+    return { success: false, error: 'Incorrect password. Please try again.' };
+  }
+
+  if (member.status === 'pending') {
+    return {
+      success: false,
+      status: 'pending',
+      error: 'Your registration has been submitted and is currently pending review by TH3ORY Administration. You will receive an official approval email once activated.'
+    };
+  }
+
+  if (member.status === 'rejected') {
+    return {
+      success: false,
+      status: 'rejected',
+      error: `Your application was not approved. ${member.rejection_reason || ''}`
+    };
+  }
+
+  return {
+    success: true,
+    member: {
+      id: member.id,
+      name: member.name,
+      email: member.email,
+      bio: member.bio || '',
+      avatar_url: member.avatar_url || '',
+      status: member.status,
+      approved_at: member.approved_at
+    }
+  };
+}
+
+/**
+ * 6. Community Wall Posts CRUD
+ */
+export async function fetchCommunityPostsFromSupabase() {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('community_posts')
+        .select('*')
+        .order('is_pinned', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      if (!error && Array.isArray(data) && data.length > 0) {
+        localStorage.setItem('th3ory_community_posts', JSON.stringify(data));
+        return data;
+      }
+    } catch (err) {
+      console.warn('[Supabase] Exception in fetchCommunityPostsFromSupabase:', err);
+    }
+  }
+
+  try {
+    const raw = localStorage.getItem('th3ory_community_posts');
+    if (raw) return JSON.parse(raw);
+  } catch {}
+
+  return [...DEFAULT_COMMUNITY_POSTS];
+}
+
+export async function createCommunityPostInSupabase(postData) {
+  const newPost = {
+    id: `post-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    title: (postData.title || '').trim(),
+    content: (postData.content || '').trim(),
+    post_type: postData.post_type || 'discussion',
+    media_url: postData.media_url || '',
+    file_name: postData.file_name || '',
+    file_url: postData.file_url || '',
+    file_size: postData.file_size || '',
+    is_pinned: Boolean(postData.is_pinned),
+    author_name: postData.author_name || 'Mentalist Sravan',
+    author_role: postData.author_role || 'Founder & Behavioral Engineer',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('community_posts')
+        .insert([newPost])
+        .select()
+        .single();
+
+      if (!error && data) {
+        syncPostLocal(data);
+        return { success: true, post: data };
+      }
+    } catch (err) {
+      console.warn('[Supabase] Exception in createCommunityPostInSupabase:', err);
+    }
+  }
+
+  syncPostLocal(newPost);
+  return { success: true, post: newPost, isLocal: true };
+}
+
+function syncPostLocal(post) {
+  try {
+    let posts = [];
+    const raw = localStorage.getItem('th3ory_community_posts');
+    if (raw) posts = JSON.parse(raw);
+    else posts = [...DEFAULT_COMMUNITY_POSTS];
+
+    const idx = posts.findIndex(p => p.id === post.id);
+    if (idx >= 0) posts[idx] = post;
+    else posts.unshift(post);
+
+    localStorage.setItem('th3ory_community_posts', JSON.stringify(posts));
+    window.dispatchEvent(new CustomEvent('th3ory_community_posts_update', { detail: posts }));
+  } catch {}
+}
+
+export async function deleteCommunityPostInSupabase(postId) {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.from('community_posts').delete().eq('id', postId);
+    } catch (err) {
+      console.warn('[Supabase] Exception in deleteCommunityPostInSupabase:', err);
+    }
+  }
+
+  try {
+    const raw = localStorage.getItem('th3ory_community_posts');
+    let posts = raw ? JSON.parse(raw) : [...DEFAULT_COMMUNITY_POSTS];
+    posts = posts.filter(p => p.id !== postId);
+    localStorage.setItem('th3ory_community_posts', JSON.stringify(posts));
+    window.dispatchEvent(new CustomEvent('th3ory_community_posts_update', { detail: posts }));
+  } catch {}
+
+  return { success: true };
+}
+
+/**
+ * 7. Community Post Reactions
+ */
+export async function fetchCommunityReactionsFromSupabase(postId = null) {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      let query = supabase.from('community_reactions').select('*');
+      if (postId) query = query.eq('post_id', postId);
+      const { data, error } = await query;
+      if (!error && Array.isArray(data)) return data;
+    } catch (err) {
+      console.warn('[Supabase] Exception in fetchCommunityReactionsFromSupabase:', err);
+    }
+  }
+
+  try {
+    const raw = localStorage.getItem('th3ory_community_reactions');
+    const all = raw ? JSON.parse(raw) : [];
+    return postId ? all.filter(r => r.post_id === postId) : all;
+  } catch {}
+
+  return [];
+}
+
+export async function toggleCommunityReactionInSupabase(postId, memberId, memberName, emoji) {
+  let reactions = [];
+  try {
+    const raw = localStorage.getItem('th3ory_community_reactions');
+    reactions = raw ? JSON.parse(raw) : [];
+  } catch {}
+
+  const existingIdx = reactions.findIndex(
+    r => r.post_id === postId && r.member_id === memberId && r.emoji === emoji
+  );
+
+  let isAdded = false;
+
+  if (existingIdx >= 0) {
+    // Remove reaction (toggle off)
+    reactions.splice(existingIdx, 1);
+    isAdded = false;
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase
+          .from('community_reactions')
+          .delete()
+          .eq('post_id', postId)
+          .eq('member_id', memberId)
+          .eq('emoji', emoji);
+      } catch (err) {
+        console.warn('[Supabase] Exception in delete reaction:', err);
+      }
+    }
+  } else {
+    // Add reaction (toggle on)
+    const newReaction = {
+      id: `react-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      post_id: postId,
+      member_id: memberId,
+      member_name: memberName,
+      emoji,
+      created_at: new Date().toISOString()
+    };
+    reactions.push(newReaction);
+    isAdded = true;
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('community_reactions').insert([newReaction]);
+      } catch (err) {
+        console.warn('[Supabase] Exception in insert reaction:', err);
+      }
+    }
+  }
+
+  try {
+    localStorage.setItem('th3ory_community_reactions', JSON.stringify(reactions));
+    window.dispatchEvent(new CustomEvent('th3ory_community_reactions_update', { detail: reactions }));
+  } catch {}
+
+  return { success: true, isAdded, reactions: reactions.filter(r => r.post_id === postId) };
+}
+
+/**
+ * 8. Community Post Comments
+ */
+export async function fetchCommunityCommentsFromSupabase(postId = null) {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      let query = supabase.from('community_comments').select('*').order('created_at', { ascending: true });
+      if (postId) query = query.eq('post_id', postId);
+      const { data, error } = await query;
+      if (!error && Array.isArray(data)) return data;
+    } catch (err) {
+      console.warn('[Supabase] Exception in fetchCommunityCommentsFromSupabase:', err);
+    }
+  }
+
+  try {
+    const raw = localStorage.getItem('th3ory_community_comments');
+    const all = raw ? JSON.parse(raw) : [
+      {
+        id: 'comm-c1',
+        post_id: 'comm-post-001',
+        member_id: 'comm-mem-001',
+        member_name: 'Alexander Vance',
+        comment: 'The breakdown at 14:20 on redirecting micro-resistance was phenomenal. Implemented this in our department seminar yesterday with notable clarity.',
+        created_at: new Date(Date.now() - 12 * 3600 * 1000).toISOString()
+      },
+      {
+        id: 'comm-c2',
+        post_id: 'comm-post-001',
+        member_id: 'comm-mem-002',
+        member_name: 'Elena Rostova',
+        comment: 'Excited for next week\'s exercise. The worksheet pairings make the mental models effortless to apply under pressure.',
+        created_at: new Date(Date.now() - 8 * 3600 * 1000).toISOString()
+      }
+    ];
+    return postId ? all.filter(c => c.post_id === postId) : all;
+  } catch {}
+
+  return [];
+}
+
+export async function addCommunityCommentInSupabase(postId, memberId, memberName, commentText) {
+  const cleanComment = (commentText || '').trim();
+  if (!cleanComment) return { success: false, error: 'Comment text cannot be empty' };
+
+  const newComment = {
+    id: `comm-c-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    post_id: postId,
+    member_id: memberId,
+    member_name: memberName || 'Anonymous Member',
+    comment: cleanComment,
+    created_at: new Date().toISOString()
+  };
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('community_comments')
+        .insert([newComment])
+        .select()
+        .single();
+
+      if (!error && data) {
+        syncCommentLocal(data);
+        return { success: true, comment: data };
+      }
+    } catch (err) {
+      console.warn('[Supabase] Exception in addCommunityCommentInSupabase:', err);
+    }
+  }
+
+  syncCommentLocal(newComment);
+  return { success: true, comment: newComment, isLocal: true };
+}
+
+function syncCommentLocal(comment) {
+  try {
+    let comments = [];
+    const raw = localStorage.getItem('th3ory_community_comments');
+    if (raw) comments = JSON.parse(raw);
+    comments.push(comment);
+    localStorage.setItem('th3ory_community_comments', JSON.stringify(comments));
+    window.dispatchEvent(new CustomEvent('th3ory_community_comments_update', { detail: comments }));
+  } catch {}
+}
+
+export async function deleteCommunityCommentInSupabase(commentId) {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.from('community_comments').delete().eq('id', commentId);
+    } catch (err) {
+      console.warn('[Supabase] Exception in deleteCommunityCommentInSupabase:', err);
+    }
+  }
+
+  try {
+    const raw = localStorage.getItem('th3ory_community_comments');
+    let comments = raw ? JSON.parse(raw) : [];
+    comments = comments.filter(c => c.id !== commentId);
+    localStorage.setItem('th3ory_community_comments', JSON.stringify(comments));
+    window.dispatchEvent(new CustomEvent('th3ory_community_comments_update', { detail: comments }));
+  } catch {}
+
+  return { success: true };
+}
+
+/**
+ * 9. Real-time Subscription Listener for Community Wall
+ */
+export function subscribeToCommunityFeed(onFeedChange) {
+  const handler = () => {
+    if (typeof onFeedChange === 'function') onFeedChange();
+  };
+
+  window.addEventListener('th3ory_community_posts_update', handler);
+  window.addEventListener('th3ory_community_reactions_update', handler);
+  window.addEventListener('th3ory_community_comments_update', handler);
+  window.addEventListener('th3ory_community_members_update', handler);
+
+  let supabaseSub = null;
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const channelName = `community_wall_${Date.now()}`;
+      supabaseSub = supabase
+        .channel(channelName)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'community_posts' }, handler)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'community_reactions' }, handler)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'community_comments' }, handler)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'community_members' }, handler)
+        .subscribe();
+    } catch (err) {
+      console.warn('[Supabase] Realtime community subscription failed:', err);
+    }
+  }
+
+  return () => {
+    window.removeEventListener('th3ory_community_posts_update', handler);
+    window.removeEventListener('th3ory_community_reactions_update', handler);
+    window.removeEventListener('th3ory_community_comments_update', handler);
+    window.removeEventListener('th3ory_community_members_update', handler);
+    if (supabaseSub && isSupabaseConfigured && supabase) {
+      try { supabase.removeChannel(supabaseSub); } catch {}
+    }
+  };
+}
+

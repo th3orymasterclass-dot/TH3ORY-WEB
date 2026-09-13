@@ -59,7 +59,7 @@ export default function PrivacyPolicyPage({ onBack }) {
       <SEOHead 
         title="Privacy Policy & Data Protection Declaration | TH3ORY Online"
         description="Comprehensive Privacy Policy & Legal Compliance Declaration for TH3ORY Online. Full compliance with GDPR, CCPA, Indian DPDP Act 2023, and IT Act 2000."
-        canonicalUrl="https://th3ory.online/#/privacy"
+        canonicalUrl="https://th3ory.online/privacy"
       />
       <StructuredData />
 

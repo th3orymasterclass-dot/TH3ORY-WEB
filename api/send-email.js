@@ -20,8 +20,8 @@ export default async function handler(req, res) {
     return res.status(400).json({ success: false, error: 'Missing recipient email in request payload' });
   }
 
-  // Enforce Admin Auth for privileged broadcast & ambassador emails before checking provider keys
-  if (receipt.type === 'BROADCAST_EMAIL' || receipt.type === 'PORTAL_DISPATCH' || receipt.type === 'AMBASSADOR_APPROVAL' || receipt.type === 'AMBASSADOR_INTERVIEW_INVITE') {
+  // Enforce Admin Auth for privileged broadcast, ambassador & community emails before checking provider keys
+  if (receipt.type === 'BROADCAST_EMAIL' || receipt.type === 'PORTAL_DISPATCH' || receipt.type === 'AMBASSADOR_APPROVAL' || receipt.type === 'AMBASSADOR_INTERVIEW_INVITE' || receipt.type === 'COMMUNITY_APPROVAL') {
     const adminUser = requireAdminAuth(req, res);
     if (!adminUser) return; // 401/403 sent
   }
@@ -289,6 +289,96 @@ export default async function handler(req, res) {
 
       if (error) {
         return res.status(400).json({ success: false, error: 'Failed to send approval email' });
+      }
+      return res.status(200).json({ success: true, data });
+    }
+
+    // 1.2. Community Member Approval & Login Link Email
+    if (receipt.type === 'COMMUNITY_APPROVAL') {
+      const recipientEmail = String(receipt.email || '').trim().toLowerCase();
+      const safeName = escapeHtml(String(receipt.name || 'Member').slice(0, 80));
+      const loginUrl = receipt.loginUrl || `https://th3ory.online/#/community-login?email=${encodeURIComponent(recipientEmail)}`;
+
+      const { data, error } = await resend.emails.send({
+        from: 'TH3ORY COMMUNITY <team@th3ory.online>',
+        to: [recipientEmail],
+        subject: `🎉 Access Approved: Welcome to the TH3ORY Private Community!`,
+        headers: {
+          'Bimi-Selector': 'v=BIMI1; s=default',
+          'Bimi-Indicator': 'https://th3ory.online/bimi-logo.svg',
+          'Bimi-Location': 'https://th3ory.online/bimi-logo.svg; a=https://th3ory.online/bimi-vmc.pem',
+          'X-Entity-Ref-ID': `th3ory-comm-appr-${Date.now()}`
+        },
+        html: `
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <script type="application/ld+json">
+            {
+              "@context": "http://schema.org",
+              "@type": "Organization",
+              "name": "TH3ORY MASTERCLASS",
+              "legalName": "Mentalist Sravan Production",
+              "url": "https://th3ory.online",
+              "logo": "https://th3ory.online/logo-transparent.png",
+              "image": "https://th3ory.online/bimi-logo.svg",
+              "email": "team@th3ory.online"
+            }
+            </script>
+          </head>
+          <body style="margin: 0; padding: 0; background-color: #05080f; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #ffffff;">
+          <div style="background-color: #05080f; padding: 40px 20px; text-align: center;">
+            <div style="max-width: 550px; margin: 0 auto; background-color: #0b1120; border: 1px solid #1e293b; border-radius: 20px; padding: 30px; text-align: left; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);">
+              <div style="text-align: center; margin-bottom: 25px; border-bottom: 1px solid #1e293b; padding-bottom: 20px;">
+                <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto 12px auto;">
+                  <tr>
+                    <td style="vertical-align: middle; text-align: center;">
+                      <div style="display: inline-block; width: 68px; height: 68px; border-radius: 50%; background: #05080f; border: 2px solid #f59e0b; padding: 4px; box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);">
+                        <img src="https://th3ory.online/logo-transparent.png" alt="TH3ORY Logo" width="56" height="56" style="width: 56px; height: 56px; object-fit: contain; display: block; border-radius: 50%;" />
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+                <h1 style="color: #f59e0b; font-size: 24px; font-weight: 900; margin: 0; letter-spacing: 2px; text-transform: uppercase;">TH3ORY</h1>
+                <div style="display: inline-block; margin-top: 4px; padding: 2px 10px; border-radius: 20px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3);">
+                  <span style="color: #f59e0b; font-size: 10px; font-weight: 800; letter-spacing: 1px;">✓ VERIFIED OFFICIAL SENDER</span>
+                </div>
+                <p style="color: #64748b; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-top: 6px; letter-spacing: 1.5px;">Private Influence Community</p>
+              </div>
+
+              <div style="background-color: #1e293b33; border: 1px solid #10b98140; border-radius: 14px; padding: 20px; margin-bottom: 25px;">
+                <h2 style="color: #ffffff; font-size: 18px; font-weight: 800; margin-top: 0; margin-bottom: 8px;">Access Approved! 🎉</h2>
+                <p style="color: #cbd5e1; font-size: 14px; margin: 0;">Welcome, <strong>${safeName}</strong>! Your registration for the private TH3ORY Community has been reviewed and approved by the Administration.</p>
+              </div>
+
+              <p style="color: #94a3b8; font-size: 14px; line-height: 1.6;">
+                You now have full access to our interactive Community Wall, weekly executive videos, tactical file downloads, thought leadership discussions, and peer reaction threads.
+              </p>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${loginUrl}" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #000000; padding: 14px 32px; border-radius: 10px; font-weight: 800; text-decoration: none; display: inline-block; text-transform: uppercase; letter-spacing: 1px; font-size: 14px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);">
+                  Enter Community Portal →
+                </a>
+              </div>
+
+              <div style="background-color: #0f172a; border-radius: 10px; padding: 16px; margin-bottom: 25px; border: 1px solid #1e293b;">
+                <p style="color: #94a3b8; font-size: 12px; margin: 0 0 6px 0;"><strong>Your Registered Email:</strong> ${recipientEmail}</p>
+                <p style="color: #64748b; font-size: 11px; margin: 0;">Use your registered email and the password you created during sign-up to log in anytime.</p>
+              </div>
+
+              <div style="text-align: center; border-top: 1px solid #1e293b; padding-top: 20px;">
+                <p style="color: #64748b; font-size: 12px; margin: 0;">Mentalist Sravan Production &copy; 2026. All rights reserved. • BIMI Verified Domain: th3ory.online</p>
+              </div>
+            </div>
+          </div>
+          </body>
+          </html>
+        `
+      });
+
+      if (error) {
+        return res.status(400).json({ success: false, error: 'Failed to send community approval email' });
       }
       return res.status(200).json({ success: true, data });
     }

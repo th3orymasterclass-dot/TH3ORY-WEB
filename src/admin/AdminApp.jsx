@@ -41,6 +41,7 @@ import PillarsPanel from './panels/PillarsPanel';
 import OfflineTrainingsPanel from './panels/OfflineTrainingsPanel';
 import ContactPanel from './panels/ContactPanel';
 import ReferralTrackingPanel from './panels/ReferralTrackingPanel';
+import CommunityAdminPanel from './panels/CommunityAdminPanel';
 import { Share2 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -66,6 +67,7 @@ const NAV_ITEMS = [
   { id: 'content',            label: 'Content Library (PDF/Video)',icon: FolderOpen },
 
   { id: '__divider_db',       divider: true, label: 'SALES & COMMUNICATIONS' },
+  { id: 'community_hub',      label: 'Community Hub & Wall',       icon: MessageSquare },
   { id: 'referral_tracking',  label: 'Referral & Affiliate Tracking', icon: Share2 },
   { id: 'team_roster',        label: 'Team Accounts & Roster',     icon: Users },
   { id: 'email_dispatcher',   label: 'Resend Email System',        icon: Mail },
@@ -165,6 +167,7 @@ export default function AdminApp({ onLogout }) {
       case 'content':            return <ContentPanel {...panelProps} />;
       case 'reviews':            return <ReviewsPanel {...panelProps} />;
       case 'team_roster':        return <TeamManagementPanel themeMode={themeMode} />;
+      case 'community_hub':      return <CommunityAdminPanel themeMode={themeMode} />;
       case 'referral_tracking':  return <ReferralTrackingPanel themeMode={themeMode} />;
       case 'email_dispatcher':   return <PortalEmailDispatcherPanel themeMode={themeMode} />;
       case 'ambassador_apps':    return <AmbassadorApplicationsPanel themeMode={themeMode} />;

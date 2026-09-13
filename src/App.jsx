@@ -65,7 +65,7 @@ export default function App() {
         <SEOHead
           title="Enroll | TH3ORY Masterclass of Influencing"
           description="Complete your enrollment in TH3ORY Masterclass. Secure instant 30-day access to all 50 video modules, workbooks, and cognitive resources."
-          canonicalUrl="https://th3ory.online/#/enroll"
+          canonicalUrl="https://th3ory.online/enroll"
         />
         <StructuredData />
         <EnrollmentPage

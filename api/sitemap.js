@@ -1,4 +1,12 @@
-<?xml version="1.0" encoding="UTF-8"?>
+import fs from 'fs';
+import path from 'path';
+
+/**
+ * Serverless / Edge API handler for /sitemap.xml
+ * Returns valid XML sitemap with secured caching and bot-indexing headers
+ */
+export default function handler(req, res) {
+  const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <!-- 1. Home / Primary Landing Page -->
@@ -87,4 +95,14 @@
     <changefreq>monthly</changefreq>
     <priority>0.50</priority>
   </url>
-</urlset>
+</urlset>`;
+
+  // Explicit secured headers for Google Search Console & Search Crawlers
+  res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400');
+  res.setHeader('X-Robots-Tag', 'all');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  
+  return res.status(200).send(xmlContent);
+}

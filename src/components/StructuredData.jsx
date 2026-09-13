@@ -37,7 +37,7 @@ export default function StructuredData() {
         "price": mainPlan.priceFull || "149",
         "priceCurrency": "USD",
         "availability": "https://schema.org/InStock",
-        "url": "https://th3ory.online/#/enroll"
+        "url": "https://th3ory.online/enroll"
       },
       {
         "@type": "Offer",
@@ -45,7 +45,7 @@ export default function StructuredData() {
         "price": mainPlan.priceINR || "11999",
         "priceCurrency": "INR",
         "availability": "https://schema.org/InStock",
-        "url": "https://th3ory.online/#/enroll"
+        "url": "https://th3ory.online/enroll"
       }
     ]
   };
@@ -147,7 +147,7 @@ export default function StructuredData() {
         "@type": "ListItem",
         "position": 4,
         "name": "Enrollment",
-        "item": "https://th3ory.online/#/enroll"
+        "item": "https://th3ory.online/enroll"
       }
     ]
   };

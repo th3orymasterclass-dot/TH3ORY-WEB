@@ -1,6 +1,28 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /admin/
 Disallow: /#/admin-th3ory-x9k2
+Disallow: /team
+Disallow: /team/
+Disallow: /team-register
 Disallow: /api/
+Disallow: /scratch/
+Disallow: /student
+Disallow: /ambassador-login
+Disallow: /ambassador-portal
+Disallow: /community-login
+
+User-agent: Googlebot
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /team
+Disallow: /team/
+Disallow: /team-register
+Disallow: /api/
+Disallow: /student
+Disallow: /ambassador-login
+Disallow: /ambassador-portal
 
 Sitemap: https://th3ory.online/sitemap.xml

@@ -24,3 +24,4 @@ scratch/
 .env*
 mcp.json
 .mcp.json
+.agents/
