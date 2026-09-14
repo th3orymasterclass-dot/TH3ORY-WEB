@@ -2,7 +2,7 @@
 
 **Project Name**: TH3ORY — Masterclass of Influencing  
 **Production Domains**: [https://th3ory.online](https://th3ory.online) | [https://www.th3ory.online](https://www.th3ory.online)  
-**Primary Stack**: React + Vite, TailwindCSS, Supabase PostgreSQL, Vercel Serverless Functions  
+**Primary Stack**: React + Vite, TailwindCSS, Supabase PostgreSQL, Vercel Serverless Functions, Visual Studio Code  
 **System QA Test Coverage**: **119 / 119 Passed (100% Pass Rate)**  
 **Mobile Layout Simulations**: **10 / 10 Passed (100% Pass Rate)**
 
@@ -64,6 +64,10 @@ graph TD
   - `api/update-student-profile.js` — Student profile updates.
   - `api/upload-blob.js` — Vercel Blob storage asset uploads.
 - **Vercel Web Security Headers**: Configured HSTS, `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, and `Referrer-Policy: strict-origin-when-cross-origin` in `vercel.json`.
+
+### 6. Visual Studio Code Workspace & In-Module IDE Lab
+- **In-App Visual Studio Code Module** (`VSCodeModule.jsx`): Embedded code lab directly inside the Student Learning Portal's "Day Modules" (`CoursePanel.jsx`). Supports in-app JavaScript/Markdown script editing, behavioral calibration templates, live console execution, script download, and one-click launch to `vscode.dev`.
+- **Repository `.vscode/` Module Standardization**: Configured `.vscode/settings.json`, `.vscode/extensions.json`, `.vscode/launch.json`, and `.vscode/tasks.json` with Prettier formatting on save, Tailwind CSS v4 class completion rules, multi-browser debugging targets, and npm task automation.
 
 ---
 

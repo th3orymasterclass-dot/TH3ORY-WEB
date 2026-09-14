@@ -290,6 +290,10 @@ const htmlContent = `<!DOCTYPE html>
           <span class="meta-value">Vercel Serverless API Functions & Node Services</span>
         </div>
         <div class="meta-item">
+          <span class="meta-label">Development Environment</span>
+          <span class="meta-value">Visual Studio Code (v1.93+) & Node.js v20</span>
+        </div>
+        <div class="meta-item">
           <span class="meta-label">Production Domains</span>
           <span class="meta-value">https://th3ory.online | https://www.th3ory.online</span>
         </div>
@@ -298,12 +302,8 @@ const htmlContent = `<!DOCTYPE html>
           <span class="meta-value">119 / 119 Passed (100% Pass Rate)</span>
         </div>
         <div class="meta-item">
-          <span class="meta-label">Mobile Controls QA</span>
-          <span class="meta-value">10 / 10 Simulations Passed (100%)</span>
-        </div>
-        <div class="meta-item">
           <span class="meta-label">Report Date</span>
-          <span class="meta-value">August 22, 2026</span>
+          <span class="meta-value">August 2026 • Verified Build</span>
         </div>
       </div>
     </div>
@@ -365,6 +365,43 @@ const htmlContent = `<!DOCTYPE html>
             - Razorpay Payment Gateway
             - Resend Transactional Email Engine
     </div>
+
+    <h2 class="subsection-header">2.2 Development Environment & Workspace Modules (<code>.vscode/</code>)</h2>
+    <p>
+      The platform codebase is engineered, profiled, and maintained using <strong>Visual Studio Code</strong>. The repository is configured with dedicated workspace modules standardizing code formatting, TailwindCSS completion, debugging sessions, and automation tasks:
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Configuration Module</th>
+          <th>Type / Role</th>
+          <th>Specification & Engineering Capabilities</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>.vscode/settings.json</code></td>
+          <td><span class="badge badge-purple">IDE Config</span></td>
+          <td>Enforces Prettier code formatting on save, Tailwind CSS v4 class completion rules (<code>clsx</code>, <code>cva</code>), 2-space indentation, and search index exclusions.</td>
+        </tr>
+        <tr>
+          <td><code>.vscode/extensions.json</code></td>
+          <td><span class="badge badge-blue">Extensions</span></td>
+          <td>Standardizes team extension modules: Tailwind CSS IntelliSense, ESLint, Prettier, Auto Rename Tag, Path IntelliSense, and ES7+ React Snippets.</td>
+        </tr>
+        <tr>
+          <td><code>.vscode/launch.json</code></td>
+          <td><span class="badge badge-green">Debugging</span></td>
+          <td>Pre-configured multi-browser debugging targets for Microsoft Edge and Google Chrome directly linked to the local Vite development server.</td>
+        </tr>
+        <tr>
+          <td><code>.vscode/tasks.json</code></td>
+          <td><span class="badge badge-amber">Automation</span></td>
+          <td>Automates background development server startup (<code>npm run dev</code>), production bundle builds, and comprehensive regression test suites.</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 
   <!-- FRONTEND COMPONENT CATALOG -->
@@ -488,6 +525,11 @@ const htmlContent = `<!DOCTYPE html>
           <td><code>QueryPanel.jsx</code></td>
           <td style="white-space: nowrap;"><span class="badge badge-blue">Student Support</span></td>
           <td>Interactive support thread interface connecting students directly with instruction staff for Q&A and technical help.</td>
+        </tr>
+        <tr>
+          <td><code>VSCodeModule.jsx</code></td>
+          <td style="white-space: nowrap;"><span class="badge badge-purple">Code Lab Module</span></td>
+          <td>Embedded Visual Studio Code workspace for Day Modules. Features an in-app JavaScript/Markdown code editor with live execution console, template library, file download, and one-click launch to <code>vscode.dev</code>.</td>
         </tr>
       </tbody>
     </table>

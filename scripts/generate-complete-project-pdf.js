@@ -1,6 +1,10 @@
-const puppeteer = require('puppeteer-core');
-const fs = require('fs');
-const path = require('path');
+import puppeteer from 'puppeteer-core';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const htmlContent = `<!DOCTYPE html>
 <html lang="en">
@@ -302,6 +306,10 @@ const htmlContent = `<!DOCTYPE html>
           <span class="meta-value">Vercel Serverless API Functions & Node Services</span>
         </div>
         <div class="meta-item">
+          <span class="meta-label">Development Environment</span>
+          <span class="meta-value">Visual Studio Code (v1.93+) & Node.js v20</span>
+        </div>
+        <div class="meta-item">
           <span class="meta-label">Production Domains</span>
           <span class="meta-value">https://th3ory.online | https://www.th3ory.online</span>
         </div>
@@ -310,12 +318,8 @@ const htmlContent = `<!DOCTYPE html>
           <span class="meta-value">119 / 119 Passed (100% Pass Rate)</span>
         </div>
         <div class="meta-item">
-          <span class="meta-label">Mobile Controls QA</span>
-          <span class="meta-value">10 / 10 Simulations Passed (100%)</span>
-        </div>
-        <div class="meta-item">
           <span class="meta-label">Report Date</span>
-          <span class="meta-value">August 22, 2026</span>
+          <span class="meta-value">August 2026 • Verified Build</span>
         </div>
       </div>
     </div>
@@ -339,7 +343,7 @@ const htmlContent = `<!DOCTYPE html>
         • <strong>Zero-Downtime Data Architecture:</strong> Migrated from volatile local state storage to Supabase PostgreSQL real-time database sync.<br>
         • <strong>Cross-Device Synchronization:</strong> Live Supabase channels and visibility API listeners sync student course completion, notes, and profile modifications seamlessly across devices.<br>
         • <strong>Protected Streaming Engine:</strong> Proprietary Google Drive video URL parser converts standard drive share links into responsive embed streams with mobile fallback support.<br>
-        • <strong>Feature Flag System:</strong> Dynamic flag evaluation engine (`api/feature-flags.js`) allowing real-time toggle of promotional banners, maintenance mode, sandbox payments, and community features.
+        • <strong>Feature Flag System:</strong> Dynamic flag evaluation engine (<code>api/feature-flags.js</code>) allowing real-time toggle of promotional banners, maintenance mode, sandbox payments, and community features.
       </p>
     </div>
   </div>
@@ -377,13 +381,50 @@ const htmlContent = `<!DOCTYPE html>
             - Razorpay Payment Gateway
             - Resend Transactional Email Engine
     </div>
+
+    <h2 class="subsection-header">2.2 Development Environment & Workspace Modules (<code>.vscode/</code>)</h2>
+    <p>
+      The platform codebase is engineered, profiled, and maintained using <strong>Visual Studio Code</strong>. The repository is configured with dedicated workspace modules standardizing code formatting, TailwindCSS completion, debugging sessions, and automation tasks:
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Configuration Module</th>
+          <th>Type / Role</th>
+          <th>Specification & Engineering Capabilities</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>.vscode/settings.json</code></td>
+          <td><span class="badge badge-purple">IDE Config</span></td>
+          <td>Enforces Prettier code formatting on save, Tailwind CSS v4 class completion rules (<code>clsx</code>, <code>cva</code>), 2-space indentation, and search index exclusions.</td>
+        </tr>
+        <tr>
+          <td><code>.vscode/extensions.json</code></td>
+          <td><span class="badge badge-blue">Extensions</span></td>
+          <td>Standardizes team extension modules: Tailwind CSS IntelliSense, ESLint, Prettier, Auto Rename Tag, Path IntelliSense, and ES7+ React Snippets.</td>
+        </tr>
+        <tr>
+          <td><code>.vscode/launch.json</code></td>
+          <td><span class="badge badge-green">Debugging</span></td>
+          <td>Pre-configured multi-browser debugging targets for Microsoft Edge and Google Chrome directly linked to the local Vite development server.</td>
+        </tr>
+        <tr>
+          <td><code>.vscode/tasks.json</code></td>
+          <td><span class="badge badge-amber">Automation</span></td>
+          <td>Automates background development server startup (<code>npm run dev</code>), production bundle builds, and comprehensive regression test suites.</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 
   <!-- FRONTEND COMPONENT CATALOG -->
   <div class="section">
     <h1 class="section-header">3. Detailed Frontend Component Catalog</h1>
 
-    <h2 class="subsection-header">3.1 Public Marketing Site Components (`src/components/`)</h2>
+    <h2 class="subsection-header">3.1 Public Marketing Site Components (<code>src/components/</code>)</h2>
     <table>
       <thead>
         <tr>
@@ -456,7 +497,7 @@ const htmlContent = `<!DOCTYPE html>
       </tbody>
     </table>
 
-    <h2 class="subsection-header">3.2 Student Learning Portal (`src/student/`)</h2>
+    <h2 class="subsection-header">3.2 Student Learning Portal (<code>src/student/</code>)</h2>
     <table>
       <thead>
         <tr>
@@ -501,10 +542,15 @@ const htmlContent = `<!DOCTYPE html>
           <td style="white-space: nowrap;"><span class="badge badge-blue">Student Support</span></td>
           <td>Interactive support thread interface connecting students directly with instruction staff for Q&A and technical help.</td>
         </tr>
+        <tr>
+          <td><code>VSCodeModule.jsx</code></td>
+          <td style="white-space: nowrap;"><span class="badge badge-purple">Code Lab Module</span></td>
+          <td>Embedded Visual Studio Code workspace for Day Modules. Features an in-app JavaScript/Markdown code editor with live execution console, template library, file download, and one-click launch to <code>vscode.dev</code>.</td>
+        </tr>
       </tbody>
     </table>
 
-    <h2 class="subsection-header">3.3 Admin Control Center (`src/admin/`)</h2>
+    <h2 class="subsection-header">3.3 Admin Control Center (<code>src/admin/</code>)</h2>
     <table>
       <thead>
         <tr>
@@ -543,7 +589,7 @@ const htmlContent = `<!DOCTYPE html>
 
   <!-- SERVERLESS API ENDPOINTS -->
   <div class="section">
-    <h1 class="section-header">4. Serverless API Endpoints (`api/`)</h1>
+    <h1 class="section-header">4. Serverless API Endpoints (<code>api/</code>)</h1>
     <p>
       The platform features 12 serverless Vercel API functions executing secure backend operations, signature checks, and third-party integrations:
     </p>
@@ -625,7 +671,7 @@ const htmlContent = `<!DOCTYPE html>
   <div class="section">
     <h1 class="section-header">5. Supabase Database Schema & Real-Time Sync</h1>
 
-    <h2 class="subsection-header">5.1 Database Table Overview (`supabase_schema.sql`)</h2>
+    <h2 class="subsection-header">5.1 Database Table Overview (<code>supabase_schema.sql</code>)</h2>
     <p>
       The relational PostgreSQL database hosted on Supabase consists of 14 optimized tables enforcing Row Level Security (RLS) and custom performance indexes:
     </p>
@@ -783,7 +829,7 @@ async function generateReportPDF() {
   await page.goto('file:///' + htmlPath.replace(/\\/g, '/'), { waitUntil: 'networkidle0' });
 
   const rootPdfPath = path.join(__dirname, '../TH3ORY_Masterclass_Complete_Project_Report.pdf');
-  const artifactDir = 'C:\\Users\\menta\\.gemini\\antigravity-ide\\brain\\4063d0a8-38cd-41ca-8312-cd42c01f5bdc';
+  const artifactDir = 'C:\\Users\\menta\\.gemini\\antigravity-ide\\brain\\12c98854-1a43-41b9-a5c4-457442d0532d';
   const artifactPdfPath = path.join(artifactDir, 'TH3ORY_Masterclass_Complete_Project_Report.pdf');
 
   await page.pdf({

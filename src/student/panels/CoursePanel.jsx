@@ -15,6 +15,7 @@ import {
   subscribeToStudentProgress
 } from '../../services/supabaseService';
 import DayTasksTracker from '../components/DayTasksTracker';
+import VSCodeModule from '../components/VSCodeModule';
 
 // Plan access hierarchy: vip > enrolled > free
 const PLAN_RANK = { free: 0, enrolled: 1, vip: 2 };
@@ -536,6 +537,13 @@ export default function CoursePanel({ profile, initialLevelId, initialLessonId, 
                   />
                 );
               })()}
+
+              {/* Visual Studio Code Interactive Module Lab */}
+              <VSCodeModule
+                lessonId={activeLesson.lesson.id}
+                lessonTitle={activeLesson.lesson.title}
+                isLight={isLight}
+              />
 
               {/* Notes */}
               <div className={`border rounded-2xl p-5 ${
