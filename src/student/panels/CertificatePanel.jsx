@@ -66,82 +66,96 @@ export default function CertificatePanel({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header Banner */}
-      <div className={`border rounded-2xl p-6 sm:p-8 space-y-4 ${
-        isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-900 border-slate-800'
+      <div className={`relative overflow-hidden rounded-3xl p-6 sm:p-8 space-y-5 border transition-all duration-300 ${
+        isLight 
+          ? 'bg-gradient-to-br from-white via-slate-50 to-amber-50/30 border-slate-200/80 shadow-lg' 
+          : 'glass-card-luxury border-white/10 shadow-2xl shadow-black/50'
       }`}>
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-500 font-bold shadow-md">
-            <Award className="w-6 h-6" />
+        <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-[#FFC857]/15 to-transparent blur-3xl pointer-events-none rounded-full -mr-20 -mt-20" />
+
+        <div className="relative z-10 flex items-start sm:items-center gap-4 sm:gap-5">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#FFC857] to-[#FFAA00] flex items-center justify-center text-slate-950 font-black shadow-xl shadow-[#FFC857]/20 shrink-0 ring-4 ring-[#FFC857]/20">
+            <Award className="w-7 h-7" />
           </div>
           <div>
-            <div className="flex items-center gap-2 mb-0.5">
-              <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-500 font-black text-[10px] uppercase tracking-wider">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="px-3 py-0.5 rounded-full bg-[#FFC857]/20 border border-[#FFC857]/40 text-[#FFC857] font-black text-[10px] uppercase tracking-widest">
                 Official Credential
               </span>
-              <span className={`text-xs font-bold ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
-                Verified Certification
+              <span className={`text-xs font-semibold ${isLight ? 'text-slate-500' : 'text-[#8F94A3]'}`}>
+                Blockchain-Hash Verifiable
               </span>
             </div>
-            <h2 className={`font-black text-2xl tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
-              TH3ORY Masterclass Certificate of Mastery
+            <h2 className={`font-black text-2xl sm:text-3xl tracking-tight font-serif ${isLight ? 'text-slate-900' : 'text-[#FAFAF7]'}`}>
+              Certificate of Mastery &amp; Executive Embodiment
             </h2>
           </div>
         </div>
 
-        <p className={`text-sm leading-relaxed max-w-2xl ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
-          Earn your official gold-embossed <strong>Certificate of Mastery in Influencing &amp; Executive Embodiment</strong> upon completing all 30 course modules. Print a high-resolution version or download your official PDF / PNG credential.
+        <p className={`relative z-10 text-xs sm:text-sm leading-relaxed max-w-3xl ${isLight ? 'text-slate-600' : 'text-[#8F94A3]'}`}>
+          Issued by TH3ORY Executive Faculty. Complete all 30 foundational modules to unlock and mint your official high-resolution, gold-embossed Certificate of Mastery, complete with verified unique Credential ID and permanent digital archival.
         </p>
 
         {/* Course Completion Status Card */}
-        <div className={`p-4 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
+        <div className={`relative z-10 p-5 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 transition-all duration-300 ${
           isCourseCompleted
-            ? isLight ? 'bg-green-50 border-green-200 text-green-900' : 'bg-green-950/40 border-green-500/30 text-green-300'
-            : isLight ? 'bg-amber-50 border-amber-200 text-slate-900' : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+            ? isLight 
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-950 shadow-sm' 
+              : 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300 shadow-xl shadow-emerald-950/20'
+            : isLight 
+              ? 'bg-amber-500/10 border-amber-500/30 text-slate-900' 
+              : 'glass-card-gold border-[#FFC857]/30 text-[#FFC857]'
         }`}>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             {isCourseCompleted ? (
-              <CheckCircle2 className="w-6 h-6 text-green-500 shrink-0" />
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
             ) : (
-              <Lock className="w-6 h-6 text-amber-500 shrink-0" />
+              <div className="w-10 h-10 rounded-xl bg-[#FFC857]/20 border border-[#FFC857]/40 flex items-center justify-center text-[#FFC857] shrink-0">
+                <Lock className="w-5 h-5" />
+              </div>
             )}
             <div>
-              <span className="font-extrabold text-sm block">
+              <span className="font-black text-sm sm:text-base block font-serif tracking-tight">
                 {isCourseCompleted
-                  ? '🎉 Congratulations! Your Certificate is Ready'
-                  : '🔒 Certificate Unlocks at 100% Course Completion'}
+                  ? 'Distinction Achieved: Credential Ready for Download'
+                  : 'Credential Locked — Complete All 30 Modules'}
               </span>
-              <span className="text-xs opacity-90">
-                Progress: {completedCount} of {totalLessons} Lessons Completed ({totalLessons ? Math.round((completedCount/totalLessons)*100) : 0}%)
+              <span className={`text-xs ${isLight ? 'text-slate-600' : 'text-[#8F94A3]'}`}>
+                Current Milestone: {completedCount} of {totalLessons} Modules Completed ({totalLessons ? Math.round((completedCount/totalLessons)*100) : 0}%)
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2.5 flex-wrap w-full sm:w-auto justify-end">
             {isCourseCompleted ? (
               <button
                 onClick={() => openCertificate(false)}
-                className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center gap-2 shadow-md transition-all"
+                className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-[#FFC857] to-[#FFAA00] text-slate-950 font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-xl shadow-[#FFC857]/25 hover:scale-105 active:scale-95 transition-all"
               >
                 <Award className="w-4 h-4" />
-                <span>View &amp; Print Certificate</span>
+                <span>View &amp; Print Credential</span>
               </button>
             ) : (
               <>
                 <button
                   onClick={() => openCertificate(true)}
-                  className={`px-4 py-2 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all ${
-                    isLight ? 'border-amber-400 text-amber-900 hover:bg-amber-100' : 'border-amber-500/40 text-amber-300 hover:bg-amber-500/20'
+                  className={`px-4 py-2.5 rounded-xl border text-xs font-bold flex items-center gap-2 transition-all ${
+                    isLight 
+                      ? 'border-amber-400 text-amber-900 hover:bg-amber-100' 
+                      : 'border-[#FFC857]/40 text-[#FFC857] hover:bg-[#FFC857]/15'
                   }`}
                 >
-                  <Eye className="w-4 h-4 text-amber-500" />
+                  <Eye className="w-4 h-4 text-[#FFC857]" />
                   <span>Preview Template</span>
                 </button>
                 {onNavigate && (
                   <button
                     onClick={() => onNavigate('course')}
-                    className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider transition-all shadow-md"
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#FFC857] to-[#FFAA00] text-slate-950 font-black text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-md shadow-[#FFC857]/20"
                   >
                     Continue Course
                   </button>
@@ -153,25 +167,30 @@ export default function CertificatePanel({
       </div>
 
       {/* Embedded Certificate Template Preview */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className={`font-black text-lg ${isLight ? 'text-slate-900' : 'text-white'}`}>
-            Certificate Template Preview
-          </h3>
+          <div>
+            <h3 className={`font-black text-xl tracking-tight font-serif ${isLight ? 'text-slate-900' : 'text-[#FAFAF7]'}`}>
+              Digital Credential Foil Rendering
+            </h3>
+            <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-[#8F94A3]'}`}>
+              Dynamic high-resolution template rendered with personalized cryptographic student ID
+            </p>
+          </div>
           <button
             onClick={() => openCertificate(true)}
-            className="text-xs font-bold text-amber-500 hover:underline flex items-center gap-1"
+            className="text-xs font-bold text-[#FFC857] hover:underline flex items-center gap-1.5 transition-colors"
           >
-            <Eye className="w-4 h-4" /> View Fullscreen
+            <Eye className="w-4 h-4" /> <span>Fullscreen Inspection</span>
           </button>
         </div>
 
-        {/* Embedded Certificate Template Preview */}
-        <div className="relative w-full aspect-[1024/723] max-w-2xl mx-auto rounded-2xl overflow-hidden border border-amber-500/40 shadow-xl group cursor-pointer" onClick={() => openCertificate(true)}>
+        {/* Embedded Certificate Template Preview Card */}
+        <div className="relative w-full aspect-[1024/723] max-w-3xl mx-auto rounded-3xl overflow-hidden border border-[#FFC857]/40 shadow-2xl shadow-black/80 group cursor-pointer transition-transform duration-300 hover:scale-[1.01]" onClick={() => openCertificate(true)}>
           <img
             src="/certificate_template.png"
             alt="TH3ORY Masterclass Certificate Template Preview"
-            className="w-full h-full object-cover block group-hover:scale-[1.01] transition-transform duration-300"
+            className="w-full h-full object-cover block"
           />
 
           {/* DYNAMIC OVERLAY 1: STUDENT NAME PREVIEW */}
@@ -204,9 +223,9 @@ export default function CertificatePanel({
             </span>
           </div>
 
-          <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 backdrop-blur-xs flex items-center justify-center transition-all duration-300">
-            <span className="px-5 py-2.5 rounded-xl bg-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center gap-2 shadow-xl">
-              <Eye className="w-4 h-4" /> Click to View &amp; Download PDF
+          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 backdrop-blur-xs flex items-center justify-center transition-all duration-300">
+            <span className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#FFC857] to-[#FFAA00] text-slate-950 font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-2xl">
+              <Eye className="w-4 h-4" /> Click to Inspect &amp; Download High-Res PDF
             </span>
           </div>
         </div>

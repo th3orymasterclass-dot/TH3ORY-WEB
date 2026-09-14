@@ -86,17 +86,17 @@ function StepBar({ current }) {
       {STEPS.map((s, i) => (
         <React.Fragment key={s.id}>
           <div className="flex flex-col items-center">
-            <div className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-sm transition-all ${
-              current > s.id ? 'bg-amber-500 text-slate-950' :
-              current === s.id ? 'bg-amber-500/20 border-2 border-amber-500 text-amber-400' :
-              'bg-slate-800 border border-slate-700 text-slate-500'
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm transition-all shadow-md ${
+              current > s.id ? 'bg-gradient-to-br from-[#10B981] to-[#059669] text-white shadow-emerald-900/30' :
+              current === s.id ? 'bg-[#7C5CFC]/20 border-2 border-[#7C5CFC] text-[#FFC857] shadow-lg shadow-[#7C5CFC]/30' :
+              'bg-[#0B0F19] border border-[#E9E4FF]/15 text-[#555A66]'
             }`}>
               {current > s.id ? <Check className="w-4 h-4"/> : s.id}
             </div>
-            <p className={`text-[10px] mt-1.5 font-bold uppercase tracking-wider hidden sm:block ${current >= s.id ? 'text-amber-400' : 'text-slate-600'}`}>{s.label}</p>
+            <p className={`text-[10px] mt-1.5 font-extrabold uppercase tracking-wider hidden sm:block ${current >= s.id ? 'text-[#E9E4FF]' : 'text-[#555A66]'}`}>{s.label}</p>
           </div>
           {i < STEPS.length - 1 && (
-            <div className={`h-0.5 w-12 sm:w-20 mx-1 transition-all ${current > s.id ? 'bg-amber-500' : 'bg-slate-800'}`}/>
+            <div className={`h-0.5 w-12 sm:w-20 mx-1.5 transition-all ${current > s.id ? 'bg-gradient-to-r from-[#10B981] to-[#7C5CFC]' : 'bg-[#555A66]/30'}`}/>
           )}
         </React.Fragment>
       ))}
@@ -108,22 +108,22 @@ function StepBar({ current }) {
 function Field({ label, error, required, children, hint }) {
   return (
     <div>
-      <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">
-        {label}{required && <span className="text-amber-500 ml-0.5">*</span>}
+      <label className="block text-xs font-bold text-[#E9E4FF]/70 uppercase tracking-widest mb-1.5 font-brand">
+        {label}{required && <span className="text-[#FFC857] ml-0.5">*</span>}
       </label>
-      {hint && <p className="text-slate-600 text-xs mb-1.5">{hint}</p>}
+      {hint && <p className="text-[#555A66] text-xs mb-1.5">{hint}</p>}
       {children}
       {error && (
         <p className="flex items-center gap-1 text-red-400 text-xs mt-1.5">
-          <AlertCircle className="w-3 h-3"/> {error}
+          <AlertCircle className="w-3.5 h-3.5"/> {error}
         </p>
       )}
     </div>
   );
 }
 
-const inputClass = "w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/20 transition-all text-sm";
-const errInput  = "border-red-500/60 focus:border-red-500/60 focus:ring-red-500/10";
+const inputClass = "w-full bg-[#070A11]/85 border border-[#E9E4FF]/15 rounded-xl px-4 py-3 text-[#FAFAF7] placeholder-[#555A66] focus:outline-hidden focus:border-[#7C5CFC] focus:ring-2 focus:ring-[#7C5CFC]/25 transition-all text-sm shadow-inner";
+const errInput  = "border-red-500/70 focus:border-red-500 focus:ring-red-500/20";
 
 // ─── Step 1: Personal Details ──────────────────────────────────────────────────
 function Step1({ form, setForm, onNext }) {
@@ -914,8 +914,11 @@ export default function EnrollmentPage({ initialPlan, onBack }) {
   const details = getCourseDetails();
 
   return (
-    <div className="min-h-screen bg-[#05080f] text-slate-100"
-      style={{backgroundImage:'radial-gradient(ellipse at 50% 0%, rgba(245,158,11,0.07) 0%, transparent 50%)', fontFamily:"'Plus Jakarta Sans', system-ui, sans-serif"}}>
+    <div className="min-h-screen bg-[#070A11] text-[#FAFAF7] relative overflow-hidden"
+      style={{fontFamily:"'Plus Jakarta Sans', system-ui, sans-serif"}}>
+
+      {/* Dynamic Background Ambient Glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-gradient-to-b from-[#7C5CFC]/20 via-[#6344E0]/10 to-transparent rounded-full blur-[180px] pointer-events-none -z-10" />
 
       {/* System Maintenance Banner */}
       {isMaintenanceMode && (
@@ -926,30 +929,30 @@ export default function EnrollmentPage({ initialPlan, onBack }) {
       )}
 
       {/* Top bar */}
-      <div className="sticky top-0 z-20 bg-slate-950/80 backdrop-blur-sm border-b border-slate-800/60 px-4 py-3 flex items-center gap-4">
+      <div className="sticky top-0 z-30 glass-specular backdrop-blur-xl border-b border-[#E9E4FF]/15 px-4 sm:px-6 py-3.5 flex items-center gap-4">
         <button onClick={onBack}
-          className="flex items-center gap-1.5 text-slate-400 hover:text-white text-sm font-medium transition-colors">
-          <ArrowLeft className="w-4 h-4"/> Back to Course
+          className="flex items-center gap-2 text-[#E9E4FF]/80 hover:text-white text-sm font-semibold transition-colors cursor-pointer">
+          <ArrowLeft className="w-4 h-4 text-[#FFC857]"/> <span>Back to Course</span>
         </button>
         <div className="flex-1"/>
         {isSandboxEnabled && (
-          <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
+          <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono">
             TEST / SANDBOX GATEWAY
           </span>
         )}
-        <div className="flex items-center gap-2">
-          <Lock className="w-3.5 h-3.5 text-green-400"/>
-          <span className="text-green-400 text-xs font-medium">SSL Secured Checkout</span>
+        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25">
+          <Lock className="w-3.5 h-3.5 text-emerald-400"/>
+          <span className="text-emerald-400 text-xs font-bold font-mono">SSL Secured Checkout</span>
         </div>
       </div>
 
-      <div ref={topRef} className="max-w-2xl mx-auto px-4 py-10">
+      <div ref={topRef} className="max-w-2xl mx-auto px-4 py-8 sm:py-12">
         {/* Heading */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-full text-amber-400 text-xs font-bold uppercase tracking-wider mb-4">
-            <Crown className="w-3.5 h-3.5"/> Secure Enrollment — {details?.title || 'TH3ORY Masterclass'}
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 glass-specular border border-[#FFC857]/30 rounded-full text-[#FFC857] text-xs font-extrabold uppercase tracking-wider mb-4 shadow-lg">
+            <Crown className="w-3.5 h-3.5 text-[#FFC857] fill-[#FFC857]"/> Secure Enrollment — {details?.title || 'TH3ORY Masterclass'}
           </div>
-          <h1 className="text-3xl font-black text-white">
+          <h1 className="text-3xl sm:text-4xl font-black font-heading text-white tracking-tight">
             {step === 4 ? 'You\'re In! 🎉' : `Step ${step} of 3`}
           </h1>
         </div>
@@ -957,8 +960,8 @@ export default function EnrollmentPage({ initialPlan, onBack }) {
         {/* Step bar */}
         <StepBar current={step}/>
 
-        {/* Panel */}
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 lg:p-8 backdrop-blur-sm shadow-2xl">
+        {/* Panel Container */}
+        <div className="glass-specular rounded-3xl p-6 sm:p-9 backdrop-blur-2xl shadow-2xl border border-[#E9E4FF]/16">
           {step === 1 && <Step1 form={form} setForm={setForm} onNext={next}/>}
           {step === 2 && <Step2 form={form} setForm={setForm} onNext={next} onBack={back}/>}
           {step === 3 && <Step3 form={form} setForm={setForm} onNext={next} onBack={back}/>}
@@ -967,10 +970,10 @@ export default function EnrollmentPage({ initialPlan, onBack }) {
 
         {/* Trust badges */}
         {step < 4 && (
-          <div className="flex items-center justify-center gap-6 flex-wrap mt-6">
+          <div className="flex items-center justify-center gap-6 flex-wrap mt-8">
             {['14-Day Money Back Guarantee', '256-bit SSL Encryption', 'Lifetime Access'].map(t => (
-              <span key={t} className="flex items-center gap-1.5 text-slate-600 text-xs">
-                <Shield className="w-3 h-3"/> {t}
+              <span key={t} className="flex items-center gap-1.5 text-[#555A66] text-xs font-medium">
+                <Shield className="w-3.5 h-3.5 text-[#FFC857]"/> <span>{t}</span>
               </span>
             ))}
           </div>

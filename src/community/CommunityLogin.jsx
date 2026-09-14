@@ -67,48 +67,50 @@ export default function CommunityLogin({ onAuthenticated }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#070a11] text-slate-100 flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden selection:bg-amber-500 selection:text-black">
+    <div className="min-h-screen bg-[#070A11] text-[#FAFAF7] flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden selection:bg-[#FFC857] selection:text-[#070A11]">
       {/* Ambient background glows */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[550px] h-[320px] bg-amber-500/10 blur-[130px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-10 left-10 w-[400px] h-[250px] bg-cyan-500/10 blur-[130px] rounded-full pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[550px] h-[320px] bg-[#7C5CFC]/15 blur-[140px] rounded-full pointer-events-none -z-10" />
+      <div className="absolute bottom-10 left-10 w-[400px] h-[250px] bg-[#FFC857]/10 blur-[150px] rounded-full pointer-events-none -z-10" />
 
       {/* Header Branding */}
       <div className="relative z-10 mb-6 text-center">
-        <a href="#/" className="inline-flex items-center gap-2 mb-3 cursor-pointer group">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 p-0.5 shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-all">
-            <div className="w-full h-full bg-[#070a11] rounded-[10px] flex items-center justify-center">
-              <span className="text-amber-400 font-black text-sm tracking-wider font-brand">T3</span>
+        <a href="#/" className="inline-flex items-center gap-2.5 mb-3 cursor-pointer group">
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#FFC857] via-[#FFAE19] to-[#7C5CFC] p-0.5 shadow-xl shadow-[#FFC857]/20 group-hover:scale-105 transition-all">
+            <div className="w-full h-full bg-[#070A11] rounded-[14px] flex items-center justify-center">
+              <span className="text-[#FFC857] font-black text-sm tracking-wider font-heading">T3</span>
             </div>
           </div>
-          <span className="text-xl font-bold tracking-wider text-white font-brand">TH3ORY</span>
+          <span className="text-2xl font-bold tracking-wider text-white font-heading">TH3ORY</span>
         </a>
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold tracking-wide">
-          <Users className="w-3.5 h-3.5" />
-          <span>Private Community Portal</span>
+        <div className="block">
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#FFC857]/10 border border-[#FFC857]/30 text-[#FFC857] text-xs font-semibold tracking-wide shadow-sm shadow-[#FFC857]/10">
+            <Users className="w-3.5 h-3.5 text-[#FFC857]" />
+            <span>Private Community Portal</span>
+          </div>
         </div>
       </div>
 
       {/* Login Card */}
-      <div className="relative z-10 w-full max-w-md bg-[#0c121e]/90 backdrop-blur-xl border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl shadow-black/80">
+      <div className="relative z-10 w-full max-w-md glass-card-luxury rounded-2xl p-6 sm:p-8 shadow-2xl">
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-white tracking-tight">Community Log In</h1>
-          <p className="text-xs text-slate-400 mt-1.5">
+          <h1 className="text-2xl font-bold font-serif-luxury text-white tracking-tight">Community Log In</h1>
+          <p className="text-xs sm:text-sm text-slate-300 mt-1.5">
             Enter your approved credentials to access weekly sessions, files, and discussion threads.
           </p>
         </div>
 
         {error && (
-          <div className="mb-5 p-3 rounded-xl bg-red-500/10 border border-red-500/30 flex items-start gap-2.5 text-red-400 text-xs leading-relaxed animate-fade-in">
+          <div className="mb-5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 flex items-start gap-2.5 text-red-400 text-xs leading-relaxed animate-fade-in">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
         )}
 
         {statusNotice && (
-          <div className="mb-5 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-2.5 text-amber-300 text-xs leading-relaxed animate-fade-in">
-            <Sparkles className="w-4 h-4 shrink-0 mt-0.5 text-amber-400" />
+          <div className="mb-5 p-3.5 rounded-xl bg-[#FFC857]/10 border border-[#FFC857]/30 flex items-start gap-2.5 text-[#FFC857] text-xs leading-relaxed animate-fade-in">
+            <Sparkles className="w-4 h-4 shrink-0 mt-0.5 text-[#FFC857]" />
             <div>
-              <p className="font-semibold text-amber-400">Account Review In Progress</p>
+              <p className="font-semibold text-[#FFC857]">Account Review In Progress</p>
               <p className="mt-1 text-slate-300">{statusNotice}</p>
             </div>
           </div>
@@ -128,7 +130,7 @@ export default function CommunityLogin({ onAuthenticated }) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@organization.com"
-                className="w-full bg-[#070a11] border border-white/10 focus:border-amber-500/60 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-amber-500/40 transition-all"
+                className="w-full bg-black/40 border border-white/10 focus:border-[#FFC857]/60 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#FFC857]/40 transition-all glass-specular"
               />
             </div>
           </div>
@@ -146,7 +148,7 @@ export default function CommunityLogin({ onAuthenticated }) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••••••"
-                className="w-full bg-[#070a11] border border-white/10 focus:border-amber-500/60 rounded-xl pl-10 pr-11 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-amber-500/40 transition-all"
+                className="w-full bg-black/40 border border-white/10 focus:border-[#FFC857]/60 rounded-xl pl-10 pr-11 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#FFC857]/40 transition-all glass-specular"
               />
               <button
                 type="button"
@@ -162,10 +164,10 @@ export default function CommunityLogin({ onAuthenticated }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-sm rounded-xl shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50 cursor-pointer"
+              className="w-full py-3 px-4 bg-gradient-to-r from-[#FFC857] via-[#FFAE19] to-[#FFC857] hover:brightness-110 text-[#070A11] font-bold text-sm rounded-xl shadow-lg shadow-[#FFC857]/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50 cursor-pointer"
             >
               {loading ? (
-                <div className="w-5 h-5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-[#070A11] border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
                   <span>Sign In to Community</span>
@@ -180,7 +182,7 @@ export default function CommunityLogin({ onAuthenticated }) {
           <span>Received an invite link?</span>
           <a
             href="#/community-register"
-            className="text-amber-400 hover:text-amber-300 font-semibold transition-colors cursor-pointer"
+            className="text-[#FFC857] hover:underline font-semibold transition-colors cursor-pointer"
           >
             Apply for Access &rarr;
           </a>
@@ -188,7 +190,7 @@ export default function CommunityLogin({ onAuthenticated }) {
       </div>
 
       <div className="relative z-10 mt-6 text-center">
-        <a href="#/" className="text-xs text-slate-500 hover:text-slate-300 transition-colors">
+        <a href="#/" className="text-xs text-slate-400 hover:text-white transition-colors">
           &larr; Return to TH3ORY Home
         </a>
       </div>

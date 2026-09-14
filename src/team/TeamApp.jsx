@@ -204,79 +204,85 @@ export default function TeamApp({ onLogout }) {
 
   return (
     <div className={`min-h-screen flex relative transition-colors duration-200 ${
-      isDark ? 'bg-[#05080F] text-[#FAFAF7]' : 'bg-[#F8FAFC] text-[#0F172A]'
+      isDark ? 'bg-[#070A11] text-[#FAFAF7]' : 'bg-[#F8FAFC] text-[#0F172A]'
     }`} style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
 
       {/* Mobile Drawer Overlay */}
       {sidebarOpen && (
         <div
           onClick={() => setSidebarOpen(false)}
-          className={`fixed inset-0 backdrop-blur-xs z-40 md:hidden ${
-            isDark ? 'bg-[#05080F]/80' : 'bg-slate-900/40'
-          }`}
+          className="fixed inset-0 bg-black/80 backdrop-blur-xs z-40 md:hidden"
         />
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed md:static inset-y-0 left-0 z-50 w-64 shrink-0 transition-all duration-300 flex flex-col border-r shadow-2xl md:shadow-none ${
-        isDark ? 'bg-[#0B0F19] border-slate-800' : 'bg-white border-slate-200/80 shadow-md'
+      <aside className={`fixed md:static inset-y-0 left-0 z-50 w-68 shrink-0 transition-all duration-300 flex flex-col border-r shadow-2xl md:shadow-none ${
+        isDark ? 'bg-[#070A11]/95 border-white/10' : 'bg-white border-slate-200/80 shadow-md'
       } ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:w-0 md:overflow-hidden'
       }`}>
         {/* Brand Header */}
-        <div className={`px-5 py-5 border-b ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>
+        <div className={`px-5 py-5 border-b ${isDark ? 'border-white/10' : 'border-slate-200'}`}>
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shrink-0 shadow-md">
-              <Shield className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#7C5CFC] to-[#FFC857] flex items-center justify-center shrink-0 shadow-lg shadow-[#7C5CFC]/20 ring-2 ring-white/10">
+              <Shield className="w-5 h-5 text-slate-950 font-black" />
             </div>
             <div>
-              <p className={`font-black text-sm tracking-tight font-heading ${isDark ? 'text-white' : 'text-slate-900'}`}>TH3ORY</p>
-              <p className={`text-xs font-semibold ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>Team Operational Portal</p>
+              <div className="flex items-center gap-1.5">
+                <p className={`font-black text-base tracking-tight font-serif ${isDark ? 'text-[#FAFAF7]' : 'text-slate-900'}`}>TH3ORY</p>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              </div>
+              <p className={`text-[10px] uppercase tracking-[0.16em] font-extrabold ${isDark ? 'text-[#FFC857]' : 'text-indigo-600'}`}>Team Operations</p>
             </div>
           </div>
         </div>
 
         {/* Active Person Profile Card in Sidebar */}
-        <div className={`p-3.5 mx-3 mt-3 rounded-2xl border ${
-          isDark ? 'bg-slate-950/70 border-slate-800/80' : 'bg-indigo-50/60 border-indigo-100'
+        <div className={`p-4 mx-3.5 mt-4 rounded-2xl border transition-all ${
+          isDark ? 'glass-card-luxury border-white/10' : 'bg-indigo-50/60 border-indigo-100 shadow-xs'
         }`}>
-          <div className="flex items-center gap-2.5">
-            <ProfileAvatar
-              src={avatarUrl}
-              name={teamProfile.name || 'Team Officer'}
-              role="team"
-              size="md"
-              editable={true}
-              onClick={() => setShowProfileModal(true)}
-            />
+          <div className="flex items-center gap-3">
+            <div className="relative group shrink-0">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-[#7C5CFC] to-[#FFC857] rounded-full blur opacity-50 group-hover:opacity-100 transition duration-300" />
+              <div className="relative">
+                <ProfileAvatar
+                  src={avatarUrl}
+                  name={teamProfile.name || 'Team Officer'}
+                  role="team"
+                  size="md"
+                  editable={true}
+                  onClick={() => setShowProfileModal(true)}
+                />
+              </div>
+            </div>
             <div className="min-w-0 flex-1">
-              <p className={`font-bold text-xs truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{teamProfile.name}</p>
-              <p className="text-[10px] text-indigo-400 font-semibold truncate">{teamProfile.role}</p>
+              <p className={`font-bold text-xs truncate ${isDark ? 'text-[#FAFAF7]' : 'text-slate-900'}`}>{teamProfile.name}</p>
+              <p className={`text-[10px] font-semibold truncate ${isDark ? 'text-[#8F94A3]' : 'text-indigo-600'}`}>{teamProfile.role}</p>
               <button
                 onClick={() => setShowProfileModal(true)}
-                className="text-[10px] text-indigo-400 hover:text-indigo-300 font-semibold cursor-pointer underline mt-0.5 block"
+                className="text-[10px] text-[#FFC857] hover:underline font-bold cursor-pointer mt-0.5 block"
               >
-                Change Photo
+                Change Avatar Photo
               </button>
             </div>
           </div>
 
-          <div className="mt-2 pt-2 border-t border-slate-800/60 flex items-center justify-between text-[10px]">
-            <span className="font-mono text-purple-400 font-bold">{teamProfile.repCode || 'REP-TEAM'}</span>
+          <div className="mt-3 pt-2.5 border-t border-white/5 flex items-center justify-between text-[10px]">
+            <span className="font-mono text-[#FFC857] font-black px-2 py-0.5 rounded-md bg-[#FFC857]/10 border border-[#FFC857]/30">{teamProfile.repCode || 'REP-TEAM'}</span>
             <button
               onClick={() => setShowAccountSwitcher(true)}
-              className="text-indigo-400 hover:text-indigo-300 font-semibold cursor-pointer underline"
+              className="text-xs font-bold text-[#8F94A3] hover:text-[#FAFAF7] transition-colors cursor-pointer"
             >
-              Switch Account
+              Switch Officer ⇄
             </button>
           </div>
         </div>
 
         {/* Operational Nav */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto">
           <div className="pb-2 px-2">
-            <p className={`text-[10px] font-black uppercase tracking-[0.15em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-              ACCOUNT WORKSPACE MODULES
+            <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${isDark ? 'text-[#8F94A3]' : 'text-slate-400'}`}>
+              CRM Workspaces
             </p>
           </div>
           {TEAM_NAV.map(item => {
@@ -286,24 +292,24 @@ export default function TeamApp({ onLogout }) {
               <button
                 key={item.id}
                 onClick={() => { setActive(item.id); if (window.innerWidth < 768) setSidebarOpen(false); }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group ${
+                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all group cursor-pointer ${
                   isActive
                     ? isDark
-                      ? 'bg-indigo-600/25 text-white border border-indigo-500/40 font-bold'
+                      ? 'bg-gradient-to-r from-[#7C5CFC]/25 to-[#FFC857]/10 text-[#FFC857] border border-[#FFC857]/40 shadow-lg shadow-[#FFC857]/5 font-black'
                       : 'bg-indigo-50 text-indigo-900 border border-indigo-200 font-bold shadow-xs'
                     : isDark
-                      ? 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                      ? 'text-[#8F94A3] hover:text-[#FAFAF7] hover:bg-white/[0.04]'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
               >
                 <Icon className={`w-4 h-4 shrink-0 ${
                   isActive 
-                    ? isDark ? 'text-indigo-400' : 'text-indigo-600' 
-                    : isDark ? 'text-slate-500 group-hover:text-slate-300' : 'text-slate-400 group-hover:text-slate-700'
+                    ? isDark ? 'text-[#FFC857]' : 'text-indigo-600' 
+                    : isDark ? 'text-[#8F94A3] group-hover:text-white' : 'text-slate-400 group-hover:text-slate-700'
                 }`} />
                 <span className="truncate">{item.label}</span>
                 {isActive && (
-                  <ChevronRight className={`w-3.5 h-3.5 ml-auto ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} />
+                  <ChevronRight className={`w-3.5 h-3.5 ml-auto ${isDark ? 'text-[#FFC857]' : 'text-indigo-600'}`} />
                 )}
               </button>
             );
@@ -311,15 +317,15 @@ export default function TeamApp({ onLogout }) {
         </nav>
 
         {/* Footer actions */}
-        <div className={`px-3 pb-4 space-y-2 border-t pt-4 ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>
+        <div className={`px-3 pb-4 space-y-2 border-t pt-4 ${isDark ? 'border-white/10' : 'border-slate-200'}`}>
           <button
             onClick={() => { window.location.hash = '#/team-register'; window.dispatchEvent(new Event('hashchange')); }}
             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
-              isDark ? 'text-indigo-400 hover:text-white hover:bg-indigo-950/40 border border-indigo-900/60' : 'text-indigo-700 hover:bg-indigo-50 border border-indigo-200'
+              isDark ? 'text-[#FFC857] hover:text-white hover:bg-[#FFC857]/10 border border-[#FFC857]/30' : 'text-indigo-700 hover:bg-indigo-50 border border-indigo-200'
             }`}
           >
             <UserPlus className="w-3.5 h-3.5" />
-            Register Team Account
+            <span>Register Team Account</span>
           </button>
 
           <a
@@ -327,20 +333,20 @@ export default function TeamApp({ onLogout }) {
             target="_blank"
             rel="noreferrer"
             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
-              isDark ? 'text-slate-400 hover:text-white hover:bg-slate-800/60' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              isDark ? 'text-[#8F94A3] hover:text-white hover:bg-white/[0.04]' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
-            <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
-            View Public Site
+            <ExternalLink className="w-3.5 h-3.5 text-[#8F94A3]" />
+            <span>View Public Portal</span>
           </a>
           <button
             onClick={onLogout}
-            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
-              isDark ? 'text-slate-400 hover:text-rose-400 hover:bg-rose-950/30' : 'text-slate-600 hover:text-rose-600 hover:bg-rose-50'
+            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+              isDark ? 'text-rose-400 hover:text-rose-300 hover:bg-rose-950/30 border border-rose-900/30' : 'text-rose-600 hover:bg-rose-50 border border-rose-200'
             }`}
           >
             <LogOut className="w-3.5 h-3.5" />
-            Sign Out ({teamProfile.name.split(' ')[0]})
+            <span>Sign Out ({teamProfile.name.split(' ')[0]})</span>
           </button>
         </div>
       </aside>
@@ -348,31 +354,31 @@ export default function TeamApp({ onLogout }) {
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
-        <header className={`h-16 border-b flex items-center px-4 sm:px-6 gap-3 sm:gap-4 shrink-0 backdrop-blur-sm sticky top-0 z-10 transition-colors ${
-          isDark ? 'bg-[#0B0F19]/90 border-slate-800 text-white' : 'bg-white/90 border-slate-200/80 text-slate-900 shadow-xs'
+        <header className={`h-16 border-b flex items-center px-4 sm:px-6 gap-3 sm:gap-4 shrink-0 backdrop-blur-md sticky top-0 z-10 transition-colors ${
+          isDark ? 'bg-[#070A11]/80 border-white/10 text-white shadow-xl shadow-black/40' : 'bg-white/90 border-slate-200/80 text-slate-900 shadow-xs'
         }`}>
           <button
             onClick={() => setSidebarOpen(o => !o)}
-            className={`p-1.5 rounded-lg transition-colors ${
-              isDark ? 'text-slate-400 hover:text-white hover:bg-slate-800/50' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            className={`p-2 rounded-xl transition-colors ${
+              isDark ? 'text-[#8F94A3] hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
 
-          <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm min-w-0 truncate">
-            <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>Team Portal</span>
-            <ChevronRight className={`w-3.5 h-3.5 ${isDark ? 'text-[#555A66]' : 'text-slate-300'}`} />
-            <span className="font-semibold truncate">{currentNav?.label}</span>
+          <div className="flex items-center gap-2 text-xs sm:text-sm min-w-0 truncate">
+            <span className={isDark ? 'text-[#8F94A3]' : 'text-slate-400'}>CRM Ops</span>
+            <ChevronRight className={`w-3.5 h-3.5 ${isDark ? 'text-white/20' : 'text-slate-300'}`} />
+            <span className="font-bold truncate text-[#FFC857]">{currentNav?.label}</span>
           </div>
 
-          <div className="ml-auto flex items-center gap-2 sm:gap-3">
+          <div className="ml-auto flex items-center gap-2.5">
             {/* Account Switcher Header Pill */}
             <button
               onClick={() => setShowAccountSwitcher(true)}
               className={`p-1.5 rounded-xl border text-xs font-bold flex items-center gap-2 px-3 transition-all cursor-pointer ${
                 isDark 
-                  ? 'bg-slate-950 border-indigo-500/40 text-indigo-300 hover:border-indigo-400' 
+                  ? 'glass-card border-white/10 text-[#FAFAF7] hover:border-[#FFC857]/40' 
                   : 'bg-indigo-50 border-indigo-200 text-indigo-800 hover:bg-indigo-100'
               }`}
             >
@@ -383,7 +389,7 @@ export default function TeamApp({ onLogout }) {
                 size="xs"
               />
               <span className="hidden sm:inline font-semibold">{teamProfile.name}</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400 font-mono">
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#FFC857]/20 text-[#FFC857] font-mono font-bold">
                 {teamProfile.repCode || 'REP'}
               </span>
             </button>
@@ -392,13 +398,13 @@ export default function TeamApp({ onLogout }) {
             <button
               onClick={toggleTheme}
               title={`Switch to ${isDark ? 'Light' : 'Dark'} Mode`}
-              className={`p-1.5 rounded-xl border font-bold text-xs flex items-center gap-1.5 px-3 transition-all cursor-pointer ${
+              className={`p-2 rounded-xl border font-bold text-xs flex items-center gap-1.5 px-3 transition-all cursor-pointer ${
                 isDark
-                  ? 'bg-slate-900 border-slate-700 text-amber-400 hover:bg-slate-800'
+                  ? 'bg-white/5 border-white/10 text-[#FFC857] hover:bg-white/10'
                   : 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100'
               }`}
             >
-              {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-600" />}
+              {isDark ? <Sun className="w-4 h-4 text-[#FFC857]" /> : <Moon className="w-4 h-4 text-indigo-600" />}
               <span className="hidden md:inline">{isDark ? 'Light' : 'Dark'}</span>
             </button>
           </div>
@@ -406,7 +412,7 @@ export default function TeamApp({ onLogout }) {
 
         {/* Panel content */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-          <div className="max-w-6xl mx-auto">
+          <div className="max-w-7xl mx-auto">
             {renderPanel()}
           </div>
         </main>

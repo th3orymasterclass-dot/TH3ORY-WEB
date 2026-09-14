@@ -88,18 +88,21 @@ export default function PricingSection({ onSelectPlan, couponCode, setCouponCode
   };
 
   return (
-    <section id="pricing" className="py-24 relative bg-[#15171A] border-t border-[#555A66]/30">
+    <section id="pricing" className="py-24 sm:py-28 relative bg-[#15171A] border-t border-[#E9E4FF]/10 overflow-hidden">
+      {/* Background ambient spotlight */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[550px] bg-gradient-to-r from-[#7C5CFC]/15 to-[#FFC857]/10 rounded-full blur-[180px] pointer-events-none -z-10" />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#7C5CFC]/10 text-[#FFC857] text-xs font-bold uppercase tracking-widest border border-[#7C5CFC]/30">
-            <Crown className="w-4 h-4 text-[#FFC857]" /> Transparent Pricing & Enterprise Access
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-specular text-[#FFC857] text-xs font-extrabold uppercase tracking-widest border border-[#FFC857]/30 shadow-lg">
+            <Crown className="w-4 h-4 text-[#FFC857]" /> Transparent Pricing &amp; Enterprise Access
           </div>
-          <h2 className="text-3xl sm:text-5xl font-extrabold font-heading text-[#FAFAF7]">
+          <h2 className="text-3xl sm:text-5xl font-black font-heading text-[#FAFAF7] tracking-tight">
             CHOOSE YOUR <span className="text-gradient-violet">PASS</span>
           </h2>
-          <p className="text-[#555A66] text-base sm:text-lg">
+          <p className="text-[#FAFAF7]/80 text-base sm:text-lg font-serif-luxury italic">
             Get full lifetime-access single pass to the flagship 30-day masterclass, or request a custom enterprise quote for your pupils.
           </p>
 
@@ -107,16 +110,16 @@ export default function PricingSection({ onSelectPlan, couponCode, setCouponCode
           <div className="flex flex-wrap items-center justify-center gap-6 pt-4">
             
             {/* Currency Switcher */}
-            <div className="flex items-center gap-1.5 bg-[#15171A] border border-[#E9E4FF]/15 rounded-xl p-1 text-xs font-bold">
+            <div className="flex items-center gap-1.5 glass-specular border border-[#E9E4FF]/15 rounded-2xl p-1.5 text-xs font-extrabold shadow-lg">
               <button
                 onClick={() => setCurrency('USD')}
-                className={`px-3.5 py-1.5 rounded-lg transition-all ${currency === 'USD' ? 'bg-[#7C5CFC] text-[#FAFAF7] shadow-md' : 'text-[#555A66] hover:text-[#FAFAF7]'}`}
+                className={`px-4 py-2 rounded-xl transition-all cursor-pointer ${currency === 'USD' ? 'btn-luxury-primary shadow-md' : 'text-[#555A66] hover:text-[#FAFAF7]'}`}
               >
                 🇺🇸 USD ($149)
               </button>
               <button
                 onClick={() => setCurrency('INR')}
-                className={`px-3.5 py-1.5 rounded-lg transition-all ${currency === 'INR' ? 'bg-[#7C5CFC] text-[#FAFAF7] shadow-md' : 'text-[#555A66] hover:text-[#FAFAF7]'}`}
+                className={`px-4 py-2 rounded-xl transition-all cursor-pointer ${currency === 'INR' ? 'btn-luxury-primary shadow-md' : 'text-[#555A66] hover:text-[#FAFAF7]'}`}
               >
                 🇮🇳 INR (₹11,999)
               </button>
@@ -134,12 +137,12 @@ export default function PricingSection({ onSelectPlan, couponCode, setCouponCode
                   placeholder="Enter Promo Code (Try 'TH3ORY20')"
                   value={couponInput}
                   onChange={(e) => setCouponInput(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-[#15171A] border border-[#E9E4FF]/15 text-xs sm:text-sm text-[#FAFAF7] placeholder-[#555A66] focus:outline-none focus:border-[#7C5CFC]"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-[#0B0F19] border border-[#E9E4FF]/15 text-xs sm:text-sm text-[#FAFAF7] placeholder-[#555A66] focus:outline-hidden focus:border-[#7C5CFC] transition-colors"
                 />
               </div>
               <button
                 type="submit"
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#7C5CFC] hover:bg-[#6344E0] text-[#FAFAF7] font-extrabold text-xs sm:text-sm transition-colors cursor-pointer"
+                className="w-full sm:w-auto px-5 py-2.5 btn-luxury-primary text-xs sm:text-sm cursor-pointer"
               >
                 Apply
               </button>
@@ -176,34 +179,34 @@ export default function PricingSection({ onSelectPlan, couponCode, setCouponCode
             return (
               <div
                 key={plan.id}
-                className={`relative rounded-3xl p-8 flex flex-col justify-between transition-all duration-300 ${
+                className={`relative rounded-3xl p-8 sm:p-9 flex flex-col justify-between transition-all duration-300 ${
                   plan.popular
-                    ? 'glass-panel border-2 border-[#7C5CFC] shadow-2xl shadow-[#7C5CFC]/20 scale-[1.02] z-10'
-                    : 'glass-card border border-[#E9E4FF]/15 hover:border-[#7C5CFC]/40'
+                    ? 'glass-specular border-2 border-[#7C5CFC] shadow-2xl shadow-[#7C5CFC]/30 scale-[1.02] z-10'
+                    : 'glass-card-luxury border border-[#E9E4FF]/15 hover:border-[#FFC857]/40'
                 }`}
               >
                 {/* Popular Badge */}
                 {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-[#7C5CFC] via-[#9277FF] to-[#7C5CFC] text-[#FAFAF7] text-xs font-black shadow-lg flex items-center gap-1 uppercase tracking-wider">
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-gradient-to-r from-[#7C5CFC] via-[#9277FF] to-[#7C5CFC] text-[#FAFAF7] text-xs font-black shadow-lg flex items-center gap-1.5 uppercase tracking-wider border border-[#FAFAF7]/30">
                     <Crown className="w-3.5 h-3.5 text-[#FFC857] fill-[#FFC857]" /> Flagship Single Pass
                   </div>
                 )}
 
                 <div>
-                  <div className="text-xs font-bold text-[#FFC857] uppercase tracking-widest mb-2 font-brand">{plan.badge}</div>
-                  <h3 className="text-2xl font-bold font-brand text-[#FAFAF7]">{plan.name}</h3>
+                  <div className="text-xs font-extrabold text-[#FFC857] uppercase tracking-widest mb-2 font-brand">{plan.badge}</div>
+                  <h3 className="text-2xl sm:text-3xl font-black font-brand text-[#FAFAF7]">{plan.name}</h3>
 
                   {/* Price Tag */}
                   <div className="my-6 min-h-[70px] flex flex-col justify-center">
                     {isEnt ? (
                       <div>
-                        <span className="text-3xl sm:text-4xl font-extrabold font-brand text-[#FFC857]">Custom Quote</span>
-                        <p className="text-[#555A66] text-xs mt-1">Tailored pricing for pupils (Students & Professionals)</p>
+                        <span className="text-3xl sm:text-4xl font-black font-brand text-[#FFC857]">Custom Quote</span>
+                        <p className="text-[#555A66] text-xs mt-1">Tailored pricing for pupils (Students &amp; Professionals)</p>
                       </div>
                     ) : (
                       <div>
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-4xl sm:text-5xl font-extrabold font-brand text-[#FAFAF7]">{displayPriceStr}</span>
+                        <div className="flex items-baseline gap-2.5">
+                          <span className="text-4xl sm:text-5xl font-black font-brand text-[#FAFAF7]">{displayPriceStr}</span>
                           {couponDiscount > 0 && (
                             <span className="text-lg text-[#555A66] line-through">
                               {currency === 'INR' ? `₹${rawPrice}` : `$${rawPrice}`}
@@ -214,7 +217,7 @@ export default function PricingSection({ onSelectPlan, couponCode, setCouponCode
                           </span>
                         </div>
                         {couponDiscount > 0 && (
-                          <div className="flex items-center gap-1.5 mt-1 text-xs font-bold text-emerald-400">
+                          <div className="flex items-center gap-1.5 mt-1.5 text-xs font-bold text-emerald-400">
                             <Sparkles className="w-3.5 h-3.5" />
                             <span>{couponCode === 'EARLYBIRD20' ? '20% Early Bird Launch Discount Directly Applied' : `${couponDiscount}% Promo Discount Applied`}</span>
                           </div>
@@ -224,10 +227,10 @@ export default function PricingSection({ onSelectPlan, couponCode, setCouponCode
                   </div>
 
                   {/* Features List */}
-                  <ul className="space-y-3 my-6 text-xs sm:text-sm text-[#FAFAF7]/90 border-t border-[#555A66]/30 pt-6">
+                  <ul className="space-y-3 my-6 text-xs sm:text-sm text-[#FAFAF7]/90 border-t border-[#E9E4FF]/12 pt-6">
                     {plan.features.map((feat, idx) => (
                       <li key={idx} className="flex items-start gap-2.5">
-                        <Check className="w-4 h-4 text-[#FFC857] flex-shrink-0 mt-0.5" />
+                        <Check className="w-4 h-4 text-[#FFC857] shrink-0 mt-0.5" />
                         <span>{feat}</span>
                       </li>
                     ))}
@@ -235,31 +238,30 @@ export default function PricingSection({ onSelectPlan, couponCode, setCouponCode
                 </div>
 
                 {/* Plan Action Button */}
-                <div className="pt-6 border-t border-[#555A66]/30">
+                <div className="pt-6 border-t border-[#E9E4FF]/12">
                   {isEnt ? (
                     <button
                       onClick={() => { window.location.hash = 'enterprise'; window.dispatchEvent(new Event('hashchange')); }}
-                      className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#7C5CFC] to-[#6344E0] hover:from-[#6c4ce0] hover:to-[#5233d0] text-[#FAFAF7] font-extrabold text-xs uppercase tracking-wider shadow-xl shadow-[#7C5CFC]/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      className="w-full py-4 rounded-2xl btn-luxury-ghost text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer hover:border-[#FFC857] hover:text-[#FFC857]"
                     >
-                      <Building2 className="w-4 h-4" />
+                      <Building2 className="w-4 h-4 text-[#FFC857]" />
                       <span>View Enterprise Programs</span>
                     </button>
                   ) : (
                     <button
                       onClick={() => onSelectPlan(plan, false)}
-                      className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#7C5CFC] via-[#9277FF] to-[#7C5CFC] hover:from-[#6c4ce0] hover:to-[#5233d0] text-[#FAFAF7] font-extrabold text-xs uppercase tracking-wider shadow-xl shadow-[#7C5CFC]/30 transition-all flex items-center justify-center gap-2"
+                      className="w-full py-4 rounded-2xl btn-luxury-primary text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-xl shadow-[#7C5CFC]/30"
                     >
                       <span>Enroll in Masterclass ({displayPriceStr})</span>
                       <ArrowRight className="w-4 h-4" />
                     </button>
                   )}
                   
-                  <p className="text-[11px] text-center text-slate-500 mt-2 flex items-center justify-center gap-1">
-                    <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-                    {isEnt ? 'Instant Enterprise SLA & Bulk Support' : '14-Day 100% Money-Back Guarantee'}
+                  <p className="text-[11px] text-center text-[#555A66] mt-3 flex items-center justify-center gap-1.5">
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#FFC857]" />
+                    <span>{isEnt ? 'Instant Enterprise SLA & Bulk Support' : '14-Day 100% Money-Back Guarantee'}</span>
                   </p>
                 </div>
-
               </div>
             );
           })}

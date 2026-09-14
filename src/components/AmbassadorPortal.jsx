@@ -357,7 +357,7 @@ export default function AmbassadorPortal() {
 
   return (
     <div className={`min-h-screen relative transition-colors duration-300 font-sans ${
-      isLight ? 'bg-slate-100 text-slate-900' : 'bg-[#15171A] text-[#FAFAF7]'
+      isLight ? 'bg-slate-100 text-slate-900' : 'bg-[#070A11] text-[#FAFAF7]'
     }`} style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
 
       <SEOHead 
@@ -377,36 +377,38 @@ export default function AmbassadorPortal() {
           {sidebarOpen && (
             <div
               onClick={() => setSidebarOpen(false)}
-              className={`fixed inset-0 backdrop-blur-xs z-40 md:hidden ${isLight ? 'bg-slate-900/40' : 'bg-[#15171A]/80'}`}
+              className={`fixed inset-0 backdrop-blur-xs z-40 md:hidden ${isLight ? 'bg-slate-900/40' : 'bg-[#070A11]/80'}`}
             />
           )}
 
           {/* SIDEBAR NAVIGATION (Matching StudentApp.jsx) */}
           <aside className={`fixed md:static inset-y-0 left-0 z-50 w-64 shrink-0 transition-transform duration-300 flex flex-col shadow-2xl md:shadow-none ${
-            isLight ? 'bg-white border-r border-slate-200 text-slate-900' : 'bg-[#15171A] border-r border-[#555A66]/30 text-[#FAFAF7]'
+            isLight ? 'bg-white border-r border-slate-200 text-slate-900' : 'bg-[#070A11]/95 border-r border-white/10 text-[#FAFAF7] backdrop-blur-xl'
           } ${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:w-0 md:overflow-hidden'
           }`}>
             {/* Brand Logo Header */}
-            <div className={`px-5 py-5 border-b ${isLight ? 'border-slate-200' : 'border-[#555A66]/30'}`}>
+            <div className={`px-5 py-5 border-b ${isLight ? 'border-slate-200' : 'border-white/10'}`}>
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-500 flex items-center justify-center shrink-0 shadow-md">
-                    <Trophy className="w-5 h-5 text-slate-950" />
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FFC857] via-[#FFAE19] to-[#7C5CFC] p-0.5 flex items-center justify-center shrink-0 shadow-lg shadow-[#FFC857]/20">
+                    <div className="w-full h-full bg-[#070A11] rounded-[10px] flex items-center justify-center">
+                      <Trophy className="w-5 h-5 text-[#FFC857]" />
+                    </div>
                   </div>
                   <div className="min-w-0">
                     <p className={`font-black text-sm tracking-tight font-heading truncate ${isLight ? 'text-slate-900' : 'text-[#FAFAF7]'}`}>TH3ORY</p>
-                    <p className={`text-xs font-semibold ${isLight ? 'text-amber-700' : 'text-amber-400'}`}>Ambassador Portal</p>
+                    <p className={`text-xs font-semibold ${isLight ? 'text-amber-700' : 'text-[#FFC857]'}`}>Ambassador Portal</p>
                   </div>
                 </div>
 
                 {/* Theme Mode Toggle Button */}
                 <button
                   onClick={toggleTheme}
-                  className={`p-2 rounded-xl border transition-all shrink-0 ${
+                  className={`p-2 rounded-xl border transition-all shrink-0 cursor-pointer ${
                     isLight
                       ? 'bg-slate-100 border-slate-300 text-amber-700 hover:bg-slate-200'
-                      : 'bg-slate-900 border-slate-800 text-amber-400 hover:bg-slate-800'
+                      : 'bg-white/5 border-white/10 text-[#FFC857] hover:bg-white/10 glass-specular'
                   }`}
                   title={`Switch to ${isLight ? 'Dark' : 'Light'} Mode`}
                 >
@@ -416,8 +418,8 @@ export default function AmbassadorPortal() {
             </div>
 
             {/* Ambassador Profile Summary Card */}
-            <div className={`px-4 py-4 border-b ${isLight ? 'border-slate-200' : 'border-[#555A66]/30'}`}>
-              <div className={`border rounded-xl p-3 ${isLight ? 'bg-amber-50/70 border-amber-200' : 'bg-amber-500/10 border-amber-500/20'}`}>
+            <div className={`px-4 py-4 border-b ${isLight ? 'border-slate-200' : 'border-white/10'}`}>
+              <div className={`border rounded-2xl p-3.5 ${isLight ? 'bg-amber-50/70 border-amber-200' : 'glass-card-luxury'}`}>
                 <div className="flex items-center gap-2.5 mb-2.5">
                   <ProfileAvatar
                     src={avatarUrl}
@@ -429,10 +431,10 @@ export default function AmbassadorPortal() {
                   />
                   <div className="min-w-0 flex-1">
                     <p className={`font-bold text-sm truncate ${isLight ? 'text-slate-900' : 'text-[#FAFAF7]'}`}>{ambassador.name}</p>
-                    <p className={`text-xs truncate font-semibold ${isLight ? 'text-amber-800' : 'text-amber-400'}`}>{ambassador.collegeName || 'Stanford University'}</p>
+                    <p className={`text-xs truncate font-semibold ${isLight ? 'text-amber-800' : 'text-[#FFC857]'}`}>{ambassador.collegeName || 'Stanford University'}</p>
                     <button
                       onClick={() => setShowProfileModal(true)}
-                      className="text-[10px] text-amber-500 hover:text-amber-400 font-semibold cursor-pointer underline mt-0.5 block"
+                      className="text-[10px] text-[#FFC857] hover:underline font-semibold cursor-pointer mt-0.5 block"
                     >
                       Change Photo
                     </button>
@@ -441,23 +443,23 @@ export default function AmbassadorPortal() {
 
                 {/* Tier Progress Bar */}
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className={`text-[11px] font-medium ${isLight ? 'text-slate-600' : 'text-[#555A66]'}`}>Tier Level</span>
-                    <span className="text-amber-500 text-xs font-bold">{ambassador.tier || 'Tier 1'}</span>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className={`text-[11px] font-medium ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>Tier Level</span>
+                    <span className="text-[#FFC857] text-xs font-bold">{ambassador.tier || 'Tier 1'}</span>
                   </div>
-                  <div className={`h-1.5 rounded-full border ${isLight ? 'bg-slate-200 border-slate-300' : 'bg-[#15171A] border-[#555A66]/20'}`}>
+                  <div className={`h-2 rounded-full border overflow-hidden ${isLight ? 'bg-slate-200 border-slate-300' : 'bg-black/60 border-white/10'}`}>
                     <div 
-                      className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full transition-all duration-700"
+                      className="h-full bg-gradient-to-r from-[#FFC857] via-[#FFAE19] to-[#FFC857] rounded-full transition-all duration-700"
                       style={{ width: `${tierProgressPct}%` }}
                     />
                   </div>
-                  <p className={`text-[10px] mt-1 font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{currentPoints} / {nextTierPoints} Points</p>
+                  <p className={`text-[10px] mt-1.5 font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{currentPoints} / {nextTierPoints} Points</p>
                 </div>
               </div>
             </div>
 
             {/* Sidebar Navigation Items */}
-            <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+            <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
               {AMB_NAV.map(item => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
@@ -468,32 +470,32 @@ export default function AmbassadorPortal() {
                       setActiveTab(item.id);
                       if (window.innerWidth < 768) setSidebarOpen(false);
                     }}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group ${
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all group cursor-pointer ${
                       isActive
                         ? isLight
-                          ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20'
-                          : 'bg-amber-500/20 text-[#FAFAF7] border border-amber-500/30 font-bold'
+                          ? 'bg-[#FFC857] text-slate-950 font-bold shadow-md shadow-[#FFC857]/20'
+                          : 'bg-[#FFC857] text-[#070A11] font-bold shadow-lg shadow-[#FFC857]/20 scale-102'
                         : isLight
                         ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                        : 'text-[#555A66] hover:text-[#FAFAF7] hover:bg-amber-500/10'
+                        : 'text-slate-400 hover:text-white hover:bg-white/5'
                     }`}
                   >
-                    <Icon className={`w-4 h-4 shrink-0 ${isActive ? (isLight ? 'text-slate-950' : 'text-amber-400') : (isLight ? 'text-slate-500 group-hover:text-slate-800' : 'text-[#555A66] group-hover:text-[#E9E4FF]')}`} />
+                    <Icon className={`w-4 h-4 shrink-0 ${isActive ? (isLight ? 'text-slate-950' : 'text-[#070A11]') : (isLight ? 'text-slate-500 group-hover:text-slate-800' : 'text-slate-400 group-hover:text-[#FFC857]')}`} />
                     <span className="truncate">{item.label}</span>
-                    {isActive && <ChevronRight className={`w-3.5 h-3.5 ml-auto ${isLight ? 'text-slate-950' : 'text-amber-400'}`} />}
+                    {isActive && <ChevronRight className={`w-3.5 h-3.5 ml-auto ${isLight ? 'text-slate-950' : 'text-[#070A11]'}`} />}
                   </button>
                 );
               })}
             </nav>
 
             {/* Logout Button Footer */}
-            <div className={`p-4 border-t ${isLight ? 'border-slate-200' : 'border-[#555A66]/30'}`}>
+            <div className={`p-4 border-t ${isLight ? 'border-slate-200' : 'border-white/10'}`}>
               <button
                 onClick={handleLogout}
-                className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
+                className={`w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
                   isLight 
                     ? 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100' 
-                    : 'bg-red-950/30 border-red-500/30 text-red-400 hover:bg-red-900/40'
+                    : 'bg-red-950/20 border-red-500/30 text-red-400 hover:bg-red-900/30'
                 }`}
               >
                 <LogOut className="w-3.5 h-3.5" />
@@ -506,14 +508,14 @@ export default function AmbassadorPortal() {
           <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
             {/* Top Navbar Header */}
-            <header className={`sticky top-0 z-30 py-4 px-4 sm:px-8 border-b backdrop-blur-md flex items-center justify-between gap-4 ${
-              isLight ? 'bg-white/80 border-slate-200' : 'bg-[#15171A]/80 border-[#555A66]/30'
+            <header className={`sticky top-0 z-30 py-4 px-4 sm:px-8 border-b backdrop-blur-xl flex items-center justify-between gap-4 ${
+              isLight ? 'bg-white/80 border-slate-200' : 'bg-[#070A11]/90 border-white/10'
             }`}>
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setSidebarOpen(!sidebarOpen)}
-                  className={`p-2 rounded-xl border md:hidden ${
-                    isLight ? 'bg-slate-100 border-slate-300 text-slate-700' : 'bg-slate-900 border-slate-800 text-slate-300'
+                  className={`p-2 rounded-xl border md:hidden cursor-pointer ${
+                    isLight ? 'bg-slate-100 border-slate-300 text-slate-700' : 'bg-white/5 border-white/10 text-slate-300'
                   }`}
                 >
                   {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -523,7 +525,7 @@ export default function AmbassadorPortal() {
                     {AMB_NAV.find(n => n.id === activeTab)?.label || 'Ambassador Dashboard'}
                   </h2>
                   <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                    Campus Ambassador ID: <span className="font-mono font-bold text-amber-500">{ambassador.ambassadorCode}</span>
+                    Campus Ambassador ID: <span className="font-mono font-bold text-[#FFC857]">{ambassador.ambassadorCode}</span>
                   </p>
                 </div>
               </div>
@@ -540,7 +542,7 @@ export default function AmbassadorPortal() {
 
                 <button
                   onClick={() => setShowReportModal(true)}
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-extrabold text-xs uppercase tracking-wider transition-all shadow-md shadow-amber-500/20 flex items-center gap-1.5 cursor-pointer shrink-0"
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#FFC857] via-[#FFAE19] to-[#FFC857] hover:brightness-110 text-[#070A11] font-extrabold text-xs uppercase tracking-wider transition-all shadow-lg shadow-[#FFC857]/20 flex items-center gap-1.5 cursor-pointer shrink-0"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Friday Report</span>
@@ -549,7 +551,7 @@ export default function AmbassadorPortal() {
             </header>
 
             {/* MAIN WORKSPACE PANELS */}
-            <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 text-left">
+            <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 text-left relative z-10">
 
               {/* 1. DASHBOARD TAB */}
               {activeTab === 'dashboard' && (
@@ -557,9 +559,14 @@ export default function AmbassadorPortal() {
                   
                   {/* Ambassador Header Card */}
                   <div className={`p-6 sm:p-8 rounded-3xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden ${
-                    isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-[#1C1F24] border-[#555A66]/30'
+                    isLight ? 'bg-white border-slate-200 shadow-sm' : 'glass-card-luxury border-white/10 shadow-2xl'
                   }`}>
-                    <div className="flex items-center gap-4">
+                    {/* Ambient Glow */}
+                    {!isLight && (
+                      <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-[#7C5CFC]/15 via-[#FFC857]/10 to-transparent rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+                    )}
+
+                    <div className="flex items-center gap-4 relative z-10">
                       <ProfileAvatar
                         src={avatarUrl}
                         name={ambassador?.name || 'Ambassador'}
@@ -571,42 +578,43 @@ export default function AmbassadorPortal() {
                       />
                       <div>
                         <div className="flex items-center gap-2">
-                          <h1 className={`text-xl sm:text-2xl font-bold font-heading ${isLight ? 'text-slate-900' : 'text-white'}`}>{ambassador.name}</h1>
-                          <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-500 border border-emerald-500/30 text-[10px] font-mono font-bold uppercase">
-                            ● Active
+                          <h1 className={`text-xl sm:text-2xl font-black font-heading tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>{ambassador.name}</h1>
+                          <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold uppercase flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                            Active
                           </span>
                         </div>
-                        <p className={`text-xs mt-1 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                        <p className={`text-xs mt-1 font-medium ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
                           🎓 {ambassador.collegeName || 'Stanford University'} • {ambassador.degree || 'Computer Science'} ({ambassador.yearOfStudy || '3rd Year'})
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      <div className={`px-4 py-2 rounded-2xl border text-xs font-bold flex items-center gap-2 ${
-                        isLight ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                    <div className="flex items-center gap-3 relative z-10">
+                      <div className={`px-4 py-2.5 rounded-2xl border text-xs font-black tracking-wide flex items-center gap-2 shadow-lg ${
+                        isLight ? 'bg-amber-50 border-amber-200 text-amber-800' : 'glass-card-gold text-[#FFC857] border-[#FFC857]/30'
                       }`}>
-                        <Trophy className="w-4 h-4 text-amber-500" />
+                        <Trophy className="w-4 h-4 text-[#FFC857]" />
                         <span>{ambassador.tier || 'Tier 1 Ambassador'}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Referral Code & Multi-Destination Smart Link Generator */}
-                  <div className={`p-6 rounded-3xl border space-y-4 ${
-                    isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-[#1C1F24] border-[#555A66]/30'
+                  <div className={`p-6 sm:p-8 rounded-3xl border space-y-5 relative overflow-hidden ${
+                    isLight ? 'bg-white border-slate-200 shadow-sm' : 'glass-card-luxury border-white/10 shadow-2xl'
                   }`}>
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b pb-3 border-slate-200 dark:border-slate-800">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b pb-4 border-slate-200 dark:border-white/10">
                       <div>
-                        <h3 className={`text-sm font-bold font-heading uppercase tracking-wider flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                          <Share2 className="w-4 h-4 text-amber-500" /> Multi-Destination Referral Link Generator
+                        <h3 className={`text-sm sm:text-base font-black font-heading uppercase tracking-wider flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                          <Share2 className="w-4 h-4 text-[#FFC857]" /> Multi-Destination Referral Link Generator
                         </h3>
-                        <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                        <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                           Share your referral link with students. Every visit is tracked with real-time conversion attribution earning ₹1,000 cash.
                         </p>
                       </div>
-                      <span className={`text-xs font-mono font-bold text-amber-500 px-3 py-1 rounded-xl border ${
-                        isLight ? 'bg-amber-50 border-amber-200' : 'bg-slate-950 border-amber-500/30'
+                      <span className={`text-xs font-mono font-black text-[#FFC857] px-3.5 py-1.5 rounded-xl border ${
+                        isLight ? 'bg-amber-50 border-amber-200' : 'bg-[#070A11] border-[#FFC857]/30 shadow-inner'
                       }`}>
                         CODE: {ambassador.ambassadorCode}
                       </span>
@@ -617,10 +625,10 @@ export default function AmbassadorPortal() {
                       <button
                         type="button"
                         onClick={() => setSelectedLinkType('enrollPage')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        className={`px-3.5 py-2 rounded-xl text-xs font-black tracking-wide transition-all cursor-pointer ${
                           selectedLinkType === 'enrollPage'
-                            ? 'bg-amber-500 text-slate-950 shadow-md'
-                            : (isLight ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-slate-900 text-slate-400 hover:bg-slate-800')
+                            ? 'bg-gradient-to-r from-[#FFC857] via-[#FFAE19] to-[#FFC857] text-[#070A11] shadow-md shadow-[#FFC857]/20'
+                            : (isLight ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10')
                         }`}
                       >
                         Direct Enrollment Page (/#/enroll)
@@ -628,10 +636,10 @@ export default function AmbassadorPortal() {
                       <button
                         type="button"
                         onClick={() => setSelectedLinkType('rootHome')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        className={`px-3.5 py-2 rounded-xl text-xs font-black tracking-wide transition-all cursor-pointer ${
                           selectedLinkType === 'rootHome'
-                            ? 'bg-amber-500 text-slate-950 shadow-md'
-                            : (isLight ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-slate-900 text-slate-400 hover:bg-slate-800')
+                            ? 'bg-gradient-to-r from-[#FFC857] via-[#FFAE19] to-[#FFC857] text-[#070A11] shadow-md shadow-[#FFC857]/20'
+                            : (isLight ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10')
                         }`}
                       >
                         Homepage Brand Link (/?ref=...)
@@ -639,10 +647,10 @@ export default function AmbassadorPortal() {
                       <button
                         type="button"
                         onClick={() => setSelectedLinkType('directCheckout')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        className={`px-3.5 py-2 rounded-xl text-xs font-black tracking-wide transition-all cursor-pointer ${
                           selectedLinkType === 'directCheckout'
-                            ? 'bg-amber-500 text-slate-950 shadow-md'
-                            : (isLight ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-slate-900 text-slate-400 hover:bg-slate-800')
+                            ? 'bg-gradient-to-r from-[#FFC857] via-[#FFAE19] to-[#FFC857] text-[#070A11] shadow-md shadow-[#FFC857]/20'
+                            : (isLight ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10')
                         }`}
                       >
                         Auto-Applied Coupon Link
@@ -651,16 +659,16 @@ export default function AmbassadorPortal() {
 
                     <div className="flex flex-col sm:flex-row gap-3">
                       <div className={`flex-1 px-4 py-3 rounded-xl border text-xs font-mono truncate flex items-center justify-between ${
-                        isLight ? 'bg-slate-50 border-slate-300 text-slate-800' : 'bg-slate-950 border-slate-800 text-slate-300'
+                        isLight ? 'bg-slate-50 border-slate-300 text-slate-800' : 'bg-[#070A11]/80 border-white/10 text-slate-300 shadow-inner'
                       }`}>
                         <span className="truncate">{activeReferralUrl}</span>
-                        <span className="text-[10px] text-emerald-400 font-bold ml-2 shrink-0 flex items-center gap-1">
+                        <span className="text-[10px] text-emerald-400 font-bold ml-2 shrink-0 flex items-center gap-1.5">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Realtime Active
                         </span>
                       </div>
                       <button
                         onClick={() => handleCopyCustomLink(activeReferralUrl)}
-                        className="px-5 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0 shadow-md shadow-amber-500/20"
+                        className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#FFC857] via-[#FFAE19] to-[#FFC857] hover:brightness-110 text-[#070A11] font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0 shadow-lg shadow-[#FFC857]/20"
                       >
                         {copiedLink ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                         <span>{copiedLink ? 'Link Copied!' : 'Copy Link'}</span>
@@ -670,59 +678,59 @@ export default function AmbassadorPortal() {
 
                   {/* 6-Card Realtime Performance Metrics Grid */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-                    <div className={`p-4 rounded-2xl border space-y-1 ${isLight ? 'bg-white border-slate-200' : 'bg-[#1C1F24] border-[#555A66]/30'}`}>
-                      <div className="text-slate-400 text-[11px] uppercase font-mono font-bold">Total Points</div>
-                      <div className="text-xl font-black text-amber-500 font-mono">{currentPoints} pts</div>
+                    <div className={`p-4 rounded-2xl border space-y-1 ${isLight ? 'bg-white border-slate-200' : 'glass-card-luxury border-white/10 hover:border-[#FFC857]/30 transition-all shadow-xl'}`}>
+                      <div className="text-slate-400 text-[11px] uppercase font-mono font-bold tracking-wider">Total Points</div>
+                      <div className="text-xl font-black text-[#FFC857] font-mono">{currentPoints} pts</div>
                       <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Leader Score</div>
                     </div>
 
-                    <div className={`p-4 rounded-2xl border space-y-1 relative overflow-hidden ${isLight ? 'bg-white border-slate-200' : 'bg-[#1C1F24] border-[#555A66]/30'}`}>
+                    <div className={`p-4 rounded-2xl border space-y-1 relative overflow-hidden ${isLight ? 'bg-white border-slate-200' : 'glass-card-luxury border-white/10 hover:border-blue-500/30 transition-all shadow-xl'}`}>
                       <div className="flex items-center justify-between">
-                        <div className="text-slate-400 text-[11px] uppercase font-mono font-bold">Total Clicks</div>
+                        <div className="text-slate-400 text-[11px] uppercase font-mono font-bold tracking-wider">Total Clicks</div>
                         <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                       </div>
                       <div className="text-xl font-black text-blue-400 font-mono">{totalClicksCount}</div>
                       <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Realtime Visits</div>
                     </div>
 
-                    <div className={`p-4 rounded-2xl border space-y-1 ${isLight ? 'bg-white border-slate-200' : 'bg-[#1C1F24] border-[#555A66]/30'}`}>
-                      <div className="text-slate-400 text-[11px] uppercase font-mono font-bold">Student Leads</div>
+                    <div className={`p-4 rounded-2xl border space-y-1 ${isLight ? 'bg-white border-slate-200' : 'glass-card-luxury border-white/10 hover:border-indigo-500/30 transition-all shadow-xl'}`}>
+                      <div className="text-slate-400 text-[11px] uppercase font-mono font-bold tracking-wider">Student Leads</div>
                       <div className="text-xl font-black text-indigo-400 font-mono">{leadsList.length}</div>
                       <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Registered Inquiries</div>
                     </div>
 
-                    <div className={`p-4 rounded-2xl border space-y-1 ${isLight ? 'bg-white border-slate-200' : 'bg-[#1C1F24] border-[#555A66]/30'}`}>
-                      <div className="text-slate-400 text-[11px] uppercase font-mono font-bold">Enrollments</div>
+                    <div className={`p-4 rounded-2xl border space-y-1 ${isLight ? 'bg-white border-slate-200' : 'glass-card-luxury border-white/10 hover:border-emerald-500/30 transition-all shadow-xl'}`}>
+                      <div className="text-slate-400 text-[11px] uppercase font-mono font-bold tracking-wider">Enrollments</div>
                       <div className="text-xl font-black text-emerald-400 font-mono">{totalEnrollmentsCount}</div>
                       <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Driven Purchases</div>
                     </div>
 
-                    <div className={`p-4 rounded-2xl border space-y-1 ${isLight ? 'bg-white border-slate-200' : 'bg-[#1C1F24] border-[#555A66]/30'}`}>
-                      <div className="text-slate-400 text-[11px] uppercase font-mono font-bold">Conv. Rate</div>
+                    <div className={`p-4 rounded-2xl border space-y-1 ${isLight ? 'bg-white border-slate-200' : 'glass-card-luxury border-white/10 hover:border-purple-500/30 transition-all shadow-xl'}`}>
+                      <div className="text-slate-400 text-[11px] uppercase font-mono font-bold tracking-wider">Conv. Rate</div>
                       <div className="text-xl font-black text-purple-400 font-mono">{conversionRatePct}%</div>
                       <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Click to Sale</div>
                     </div>
 
-                    <div className={`p-4 rounded-2xl border space-y-1 ${isLight ? 'bg-white border-slate-200' : 'bg-[#1C1F24] border-[#555A66]/30'}`}>
-                      <div className="text-slate-400 text-[11px] uppercase font-mono font-bold">Commission</div>
-                      <div className="text-xl font-black text-amber-400 font-mono">₹{(ambassador.totalCommission || (totalEnrollmentsCount * 1000)).toLocaleString('en-IN')}</div>
+                    <div className={`p-4 rounded-2xl border space-y-1 ${isLight ? 'bg-white border-slate-200' : 'glass-card-luxury border-white/10 hover:border-[#FFC857]/30 transition-all shadow-xl'}`}>
+                      <div className="text-slate-400 text-[11px] uppercase font-mono font-bold tracking-wider">Commission</div>
+                      <div className="text-xl font-black text-[#FFC857] font-mono">₹{(ambassador.totalCommission || (totalEnrollmentsCount * 1000)).toLocaleString('en-IN')}</div>
                       <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>₹1,000 / Sale</div>
                     </div>
                   </div>
 
                   {/* Tier Progress Bar Card */}
-                  <div className={`p-6 rounded-3xl border space-y-3 ${
-                    isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-[#1C1F24] border-[#555A66]/30'
+                  <div className={`p-6 sm:p-8 rounded-3xl border space-y-4 ${
+                    isLight ? 'bg-white border-slate-200 shadow-sm' : 'glass-card-luxury border-white/10 shadow-2xl'
                   }`}>
                     <div className="flex items-center justify-between text-xs font-bold">
-                      <span className={isLight ? 'text-slate-800' : 'text-slate-300'}>Progress to Next Tier Level</span>
-                      <span className="text-amber-500 font-mono">{currentPoints} / {nextTierPoints} Points ({tierProgressPct}%)</span>
+                      <span className={isLight ? 'text-slate-800' : 'text-slate-200'}>Progress to Next Tier Level</span>
+                      <span className="text-[#FFC857] font-mono font-black">{currentPoints} / {nextTierPoints} Points ({tierProgressPct}%)</span>
                     </div>
-                    <div className={`h-3 w-full rounded-full overflow-hidden p-0.5 border ${
-                      isLight ? 'bg-slate-100 border-slate-300' : 'bg-slate-950 border-slate-800'
+                    <div className={`h-3.5 w-full rounded-full overflow-hidden p-0.5 border ${
+                      isLight ? 'bg-slate-100 border-slate-300' : 'bg-[#070A11] border-white/10 shadow-inner'
                     }`}>
                       <div 
-                        className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full transition-all duration-500"
+                        className="h-full bg-gradient-to-r from-[#FFC857] to-[#FFAE19] rounded-full transition-all duration-500 shadow-lg shadow-[#FFC857]/30"
                         style={{ width: `${tierProgressPct}%` }}
                       />
                     </div>
@@ -735,7 +743,7 @@ export default function AmbassadorPortal() {
                 <div className="space-y-6 animate-fade-in">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
-                      <h3 className={`text-lg font-bold font-heading ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                      <h3 className={`text-lg sm:text-xl font-black font-heading tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
                         Referred Student Leads &amp; Conversions
                       </h3>
                       <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
@@ -751,31 +759,31 @@ export default function AmbassadorPortal() {
                         value={leadSearch}
                         onChange={e => setLeadSearch(e.target.value)}
                         placeholder="Search student or email..."
-                        className={`w-full pl-9 pr-4 py-2 rounded-xl border text-xs ${
-                          isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-slate-900 border-slate-800 text-white'
+                        className={`w-full pl-9 pr-4 py-2.5 rounded-xl border text-xs ${
+                          isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#070A11]/80 border-white/10 text-white focus:border-[#FFC857]/50 focus:outline-none'
                         }`}
                       />
                     </div>
                   </div>
 
                   <div className={`rounded-3xl border overflow-hidden ${
-                    isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-[#1C1F24] border-[#555A66]/30'
+                    isLight ? 'bg-white border-slate-200 shadow-sm' : 'glass-card-luxury border-white/10 shadow-2xl'
                   }`}>
                     {/* Leads Table */}
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse">
                         <thead>
                           <tr className={`border-b text-[11px] font-bold uppercase tracking-wider ${
-                            isLight ? 'bg-slate-50 border-slate-200 text-slate-500' : 'bg-slate-950/60 border-slate-800 text-slate-400'
+                            isLight ? 'bg-slate-50 border-slate-200 text-slate-500' : 'bg-[#070A11]/80 border-white/10 text-slate-400'
                           }`}>
-                            <th className="py-3.5 px-4">Student Name</th>
-                            <th className="py-3.5 px-4">Email Address</th>
-                            <th className="py-3.5 px-4">College / Univ</th>
-                            <th className="py-3.5 px-4">Status</th>
-                            <th className="py-3.5 px-4">Commission</th>
+                            <th className="py-4 px-5">Student Name</th>
+                            <th className="py-4 px-5">Email Address</th>
+                            <th className="py-4 px-5">College / Univ</th>
+                            <th className="py-4 px-5">Status</th>
+                            <th className="py-4 px-5">Commission</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-xs font-mono">
+                        <tbody className="divide-y divide-slate-200 dark:divide-white/5 text-xs font-mono">
                           {filteredLeads.length === 0 ? (
                             <tr>
                               <td colSpan={5} className="py-8 text-center text-slate-400 text-xs">
@@ -784,22 +792,22 @@ export default function AmbassadorPortal() {
                             </tr>
                           ) : (
                             filteredLeads.map(lead => (
-                              <tr key={lead.id} className={isLight ? 'hover:bg-slate-50' : 'hover:bg-slate-900/50'}>
-                                <td className={`py-3.5 px-4 font-bold font-sans ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                              <tr key={lead.id} className={isLight ? 'hover:bg-slate-50' : 'hover:bg-white/[0.03] transition-colors'}>
+                                <td className={`py-4 px-5 font-bold font-sans ${isLight ? 'text-slate-900' : 'text-white'}`}>
                                   {lead.student_name}
                                 </td>
-                                <td className="py-3.5 px-4 text-slate-400">{lead.student_email}</td>
-                                <td className="py-3.5 px-4 text-slate-400 font-sans">{lead.college_name || 'N/A'}</td>
-                                <td className="py-3.5 px-4">
+                                <td className="py-4 px-5 text-slate-400">{lead.student_email}</td>
+                                <td className="py-4 px-5 text-slate-400 font-sans">{lead.college_name || 'N/A'}</td>
+                                <td className="py-4 px-5">
                                   <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border ${
                                     lead.status === 'ENROLLED'
                                       ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                                      : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                                      : 'bg-amber-500/20 text-[#FFC857] border-amber-500/30'
                                   }`}>
                                     {lead.status}
                                   </span>
                                 </td>
-                                <td className="py-3.5 px-4 font-bold text-amber-500">
+                                <td className="py-4 px-5 font-bold text-[#FFC857]">
                                   ₹{lead.commission_earned ? lead.commission_earned.toLocaleString('en-IN') : '0'}
                                 </td>
                               </tr>
@@ -811,19 +819,19 @@ export default function AmbassadorPortal() {
                   </div>
 
                   {/* Real-time Click Stream Ledger */}
-                  <div className={`p-6 rounded-3xl border space-y-4 ${
-                    isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-[#1C1F24] border-[#555A66]/30'
+                  <div className={`p-6 sm:p-8 rounded-3xl border space-y-4 ${
+                    isLight ? 'bg-white border-slate-200 shadow-sm' : 'glass-card-luxury border-white/10 shadow-2xl'
                   }`}>
                     <div className="flex items-center justify-between">
                       <div>
-                        <h4 className={`text-sm font-bold font-heading uppercase tracking-wider flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                          <Sparkles className="w-4 h-4 text-amber-500" /> Live Referral Link Click Stream
+                        <h4 className={`text-sm sm:text-base font-black font-heading uppercase tracking-wider flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                          <Sparkles className="w-4 h-4 text-[#FFC857]" /> Live Referral Link Click Stream
                         </h4>
-                        <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                        <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                           Real-time stream of incoming visitors clicking your unique referral link (Protected by DPDP &amp; anti-fraud hashing)
                         </p>
                       </div>
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                      <span className="px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">
                         {clicksList.length} Clicks Logged
                       </span>
                     </div>
@@ -832,16 +840,16 @@ export default function AmbassadorPortal() {
                       <table className="w-full text-left border-collapse text-xs font-mono">
                         <thead>
                           <tr className={`border-b text-[10px] font-bold uppercase tracking-wider ${
-                            isLight ? 'bg-slate-50 border-slate-200 text-slate-500' : 'bg-slate-950/60 border-slate-800 text-slate-400'
+                            isLight ? 'bg-slate-50 border-slate-200 text-slate-500' : 'bg-[#070A11]/80 border-white/10 text-slate-400'
                           }`}>
-                            <th className="py-2.5 px-3">Click ID</th>
-                            <th className="py-2.5 px-3">Landing Destination</th>
-                            <th className="py-2.5 px-3">Campaign Source</th>
-                            <th className="py-2.5 px-3">Status</th>
-                            <th className="py-2.5 px-3">Timestamp</th>
+                            <th className="py-3 px-4">Click ID</th>
+                            <th className="py-3 px-4">Landing Destination</th>
+                            <th className="py-3 px-4">Campaign Source</th>
+                            <th className="py-3 px-4">Status</th>
+                            <th className="py-3 px-4">Timestamp</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                        <tbody className="divide-y divide-slate-200 dark:divide-white/5">
                           {clicksList.length === 0 ? (
                             <tr>
                               <td colSpan={5} className="py-6 text-center text-slate-400 text-xs">
@@ -850,12 +858,12 @@ export default function AmbassadorPortal() {
                             </tr>
                           ) : (
                             clicksList.slice(0, 10).map((clk, idx) => (
-                              <tr key={clk.click_id || clk.clickId || idx} className={isLight ? 'hover:bg-slate-50' : 'hover:bg-slate-900/50'}>
-                                <td className="py-2.5 px-3 text-amber-500 font-bold">{clk.click_id || clk.clickId}</td>
-                                <td className="py-2.5 px-3 text-slate-400 truncate max-w-[200px]">{clk.landing_url || clk.landingUrl || '/#/enroll'}</td>
-                                <td className="py-2.5 px-3 text-slate-400">{clk.utm_source || clk.utmSource || 'Direct / Social'}</td>
-                                <td className="py-2.5 px-3">
-                                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                              <tr key={clk.click_id || clk.clickId || idx} className={isLight ? 'hover:bg-slate-50' : 'hover:bg-white/[0.03] transition-colors'}>
+                                <td className="py-3 px-4 text-[#FFC857] font-bold">{clk.click_id || clk.clickId}</td>
+                                <td className="py-3 px-4 text-slate-400 truncate max-w-[200px]">{clk.landing_url || clk.landingUrl || '/#/enroll'}</td>
+                                <td className="py-3 px-4 text-slate-400">{clk.utm_source || clk.utmSource || 'Direct / Social'}</td>
+                                <td className="py-3 px-4">
+                                  <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold uppercase ${
                                     clk.converted || clk.conversion_id
                                       ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                                       : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
@@ -863,7 +871,7 @@ export default function AmbassadorPortal() {
                                     {clk.converted || clk.conversion_id ? 'CONVERTED' : 'VISITED'}
                                   </span>
                                 </td>
-                                <td className="py-2.5 px-3 text-slate-500">
+                                <td className="py-3 px-4 text-slate-500">
                                   {clk.created_at || clk.timestamp ? new Date(clk.created_at || clk.timestamp).toLocaleTimeString() : 'Just now'}
                                 </td>
                               </tr>
@@ -880,7 +888,7 @@ export default function AmbassadorPortal() {
               {activeTab === 'toolkit' && (
                 <div className="space-y-6 animate-fade-in">
                   <div>
-                    <h3 className={`text-lg font-bold font-heading ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                    <h3 className={`text-lg sm:text-xl font-black font-heading tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
                       Ambassador Marketing &amp; Sales Toolkit
                     </h3>
                     <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
@@ -890,10 +898,10 @@ export default function AmbassadorPortal() {
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* MARKETING ASSETS */}
-                    <div className={`p-6 rounded-3xl border space-y-4 ${
-                      isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-[#1C1F24] border-[#555A66]/30'
+                    <div className={`p-6 sm:p-7 rounded-3xl border space-y-4 ${
+                      isLight ? 'bg-white border-slate-200 shadow-sm' : 'glass-card-luxury border-white/10 hover:border-[#FFC857]/30 transition-all shadow-2xl'
                     }`}>
-                      <div className="flex items-center gap-2 text-amber-500 text-xs font-bold uppercase tracking-wider">
+                      <div className="flex items-center gap-2 text-[#FFC857] text-xs font-black uppercase tracking-wider">
                         <Sparkles className="w-4 h-4" /> Marketing Assets
                       </div>
                       <h4 className={`text-base font-bold font-heading ${isLight ? 'text-slate-900' : 'text-white'}`}>
@@ -904,10 +912,10 @@ export default function AmbassadorPortal() {
                       </p>
                       <button
                         onClick={() => alert('Downloading TH3ORY Campus Marketing Toolkit zip archive...')}
-                        className={`w-full py-2.5 rounded-xl border font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                        className={`w-full py-3 rounded-xl border font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${
                           isLight
                             ? 'bg-amber-50 border-amber-300 text-amber-800 hover:bg-amber-100'
-                            : 'bg-slate-900 border-amber-500/30 text-amber-400 hover:bg-slate-800'
+                            : 'bg-[#070A11]/80 border-amber-500/30 text-[#FFC857] hover:bg-amber-500/10'
                         }`}
                       >
                         <Download className="w-4 h-4" /> Download Marketing Kit (.ZIP)
@@ -915,10 +923,10 @@ export default function AmbassadorPortal() {
                     </div>
 
                     {/* SALES ASSETS */}
-                    <div className={`p-6 rounded-3xl border space-y-4 ${
-                      isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-[#1C1F24] border-[#555A66]/30'
+                    <div className={`p-6 sm:p-7 rounded-3xl border space-y-4 ${
+                      isLight ? 'bg-white border-slate-200 shadow-sm' : 'glass-card-luxury border-white/10 hover:border-indigo-500/30 transition-all shadow-2xl'
                     }`}>
-                      <div className="flex items-center gap-2 text-indigo-400 text-xs font-bold uppercase tracking-wider">
+                      <div className="flex items-center gap-2 text-indigo-400 text-xs font-black uppercase tracking-wider">
                         <FileText className="w-4 h-4" /> Sales &amp; Pitch Assets
                       </div>
                       <h4 className={`text-base font-bold font-heading ${isLight ? 'text-slate-900' : 'text-white'}`}>
@@ -929,10 +937,10 @@ export default function AmbassadorPortal() {
                       </p>
                       <button
                         onClick={() => alert('Downloading TH3ORY Campus Pitch Deck & FAQ documentation...')}
-                        className={`w-full py-2.5 rounded-xl border font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                        className={`w-full py-3 rounded-xl border font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${
                           isLight
                             ? 'bg-indigo-50 border-indigo-200 text-indigo-800 hover:bg-indigo-100'
-                            : 'bg-slate-900 border-indigo-500/30 text-indigo-400 hover:bg-slate-800'
+                            : 'bg-[#070A11]/80 border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/10'
                         }`}
                       >
                         <Download className="w-4 h-4" /> Download Sales Kit (.PDF)
@@ -940,10 +948,10 @@ export default function AmbassadorPortal() {
                     </div>
 
                     {/* EVENT KITS */}
-                    <div className={`p-6 rounded-3xl border space-y-4 ${
-                      isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-[#1C1F24] border-[#555A66]/30'
+                    <div className={`p-6 sm:p-7 rounded-3xl border space-y-4 ${
+                      isLight ? 'bg-white border-slate-200 shadow-sm' : 'glass-card-luxury border-white/10 hover:border-emerald-500/30 transition-all shadow-2xl'
                     }`}>
-                      <div className="flex items-center gap-2 text-emerald-500 text-xs font-bold uppercase tracking-wider">
+                      <div className="flex items-center gap-2 text-emerald-400 text-xs font-black uppercase tracking-wider">
                         <Calendar className="w-4 h-4" /> Event &amp; Workshop Kit
                       </div>
                       <h4 className={`text-base font-bold font-heading ${isLight ? 'text-slate-900' : 'text-white'}`}>
@@ -954,10 +962,10 @@ export default function AmbassadorPortal() {
                       </p>
                       <button
                         onClick={() => alert('Downloading Campus Workshop Event Kit slides...')}
-                        className={`w-full py-2.5 rounded-xl border font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                        className={`w-full py-3 rounded-xl border font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${
                           isLight
                             ? 'bg-emerald-50 border-emerald-200 text-emerald-800 hover:bg-emerald-100'
-                            : 'bg-slate-900 border-emerald-500/30 text-emerald-400 hover:bg-slate-800'
+                            : 'bg-[#070A11]/80 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10'
                         }`}
                       >
                         <Download className="w-4 h-4" /> Download Event Kit (.PPTX)
@@ -972,7 +980,7 @@ export default function AmbassadorPortal() {
                 <div className="space-y-6 animate-fade-in">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
-                      <h3 className={`text-lg font-bold font-heading ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                      <h3 className={`text-lg sm:text-xl font-black font-heading tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
                         Friday Weekly Activity Reports
                       </h3>
                       <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
@@ -982,7 +990,7 @@ export default function AmbassadorPortal() {
 
                     <button
                       onClick={() => setShowReportModal(true)}
-                      className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs uppercase tracking-wider transition-all shadow-md flex items-center gap-2 cursor-pointer"
+                      className="px-5 py-3 rounded-xl bg-gradient-to-r from-[#FFC857] via-[#FFAE19] to-[#FFC857] hover:brightness-110 text-[#070A11] font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-[#FFC857]/20 flex items-center gap-2 cursor-pointer"
                     >
                       <Send className="w-4 h-4" />
                       <span>Submit New Weekly Report</span>
@@ -990,8 +998,8 @@ export default function AmbassadorPortal() {
                   </div>
 
                   {/* Previous Reports History Card */}
-                  <div className={`p-6 rounded-3xl border space-y-4 ${
-                    isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-[#1C1F24] border-[#555A66]/30'
+                  <div className={`p-6 sm:p-8 rounded-3xl border space-y-4 ${
+                    isLight ? 'bg-white border-slate-200 shadow-sm' : 'glass-card-luxury border-white/10 shadow-2xl'
                   }`}>
                     <h4 className={`text-sm font-bold uppercase tracking-wider font-heading ${isLight ? 'text-slate-900' : 'text-white'}`}>
                       Report History
@@ -1001,11 +1009,11 @@ export default function AmbassadorPortal() {
                       <div className="space-y-3">
                         {ambassador.weeklyReports.map((rep, i) => (
                           <div key={rep.id || i} className={`p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${
-                            isLight ? 'bg-slate-50 border-slate-200' : 'bg-slate-950 border-slate-800'
+                            isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#070A11]/80 border-white/10'
                           }`}>
                             <div>
                               <div className="flex items-center gap-2">
-                                <span className="font-bold text-xs text-amber-500">Report #{ambassador.weeklyReports.length - i}</span>
+                                <span className="font-black text-xs text-[#FFC857]">Report #{ambassador.weeklyReports.length - i}</span>
                                 <span className="text-xs text-slate-400">• {new Date(rep.submittedAt || Date.now()).toLocaleDateString()}</span>
                               </div>
                               <p className={`text-xs mt-1 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
@@ -1032,7 +1040,7 @@ export default function AmbassadorPortal() {
                 <div className="space-y-6 animate-fade-in">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                      <h3 className={`text-lg font-bold font-heading ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                      <h3 className={`text-lg sm:text-xl font-black font-heading tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
                         Commission Payouts &amp; Direct Offline Ledger
                       </h3>
                       <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
@@ -1043,18 +1051,18 @@ export default function AmbassadorPortal() {
                     <div className="flex items-center gap-3">
                       <button
                         onClick={() => setShowPayoutModal(true)}
-                        className={`px-4 py-2 rounded-xl border text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-                          isLight ? 'bg-slate-100 border-slate-300 text-slate-800 hover:bg-slate-200' : 'bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700'
+                        className={`px-4 py-2.5 rounded-xl border text-xs font-black tracking-wide transition-all flex items-center gap-2 cursor-pointer ${
+                          isLight ? 'bg-slate-100 border-slate-300 text-slate-800 hover:bg-slate-200' : 'glass-card-luxury border-white/10 text-white hover:border-[#FFC857]/40 shadow-lg'
                         }`}
                       >
-                        <CreditCard className="w-4 h-4 text-amber-500" />
+                        <CreditCard className="w-4 h-4 text-[#FFC857]" />
                         <span>{payoutDetailsForm.upiId || payoutDetailsForm.bankAccountNumber ? 'Edit Payment Account' : 'Set Up Payment Account'}</span>
                       </button>
                     </div>
                   </div>
 
                   {payoutNotice && (
-                    <div className="p-4 rounded-2xl bg-indigo-950/60 border border-indigo-500/40 text-indigo-200 text-xs font-semibold flex items-center justify-between gap-3">
+                    <div className="p-4 rounded-2xl bg-indigo-950/60 border border-indigo-500/40 text-indigo-200 text-xs font-semibold flex items-center justify-between gap-3 shadow-xl">
                       <div className="flex items-center gap-2">
                         <CheckCircle2 className="w-5 h-5 text-indigo-400 shrink-0" />
                         <span>{payoutNotice}</span>
@@ -1064,24 +1072,24 @@ export default function AmbassadorPortal() {
                   )}
 
                   {/* CURRENT PAYOUT ACCOUNT SUMMARY */}
-                  <div className={`p-5 rounded-3xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
-                    isLight ? 'bg-amber-50/60 border-amber-200' : 'bg-amber-500/10 border-amber-500/30'
+                  <div className={`p-6 rounded-3xl border flex flex-col sm:flex-row sm:items-center justify-between gap-5 relative overflow-hidden ${
+                    isLight ? 'bg-amber-50/60 border-amber-200' : 'glass-card-gold border-[#FFC857]/30 shadow-2xl'
                   }`}>
-                    <div className="space-y-1">
+                    <div className="space-y-1.5 relative z-10">
                       <div className="flex items-center gap-2">
-                        <ShieldCheck className="w-4 h-4 text-amber-500" />
-                        <span className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-amber-900' : 'text-amber-300'}`}>
+                        <ShieldCheck className="w-4 h-4 text-[#FFC857]" />
+                        <span className={`text-xs font-black uppercase tracking-wider ${isLight ? 'text-amber-900' : 'text-[#FFC857]'}`}>
                           Configured Offline Payout Destination
                         </span>
                       </div>
                       <div className="text-sm font-mono font-extrabold text-white">
                         {payoutDetailsForm.method === 'UPI' ? (
-                          <span>UPI VPA: <strong className="text-amber-400">{payoutDetailsForm.upiId || 'Not Configured (Click Set Up)'}</strong></span>
+                          <span>UPI VPA: <strong className="text-[#FFC857]">{payoutDetailsForm.upiId || 'Not Configured (Click Set Up)'}</strong></span>
                         ) : (
-                          <span>Bank A/C: <strong className="text-amber-400">{payoutDetailsForm.bankAccountNumber || 'Not Configured'}</strong> ({payoutDetailsForm.bankName || 'IFSC: ' + (payoutDetailsForm.bankIfscCode || 'N/A')})</span>
+                          <span>Bank A/C: <strong className="text-[#FFC857]">{payoutDetailsForm.bankAccountNumber || 'Not Configured'}</strong> ({payoutDetailsForm.bankName || 'IFSC: ' + (payoutDetailsForm.bankIfscCode || 'N/A')})</span>
                         )}
                       </div>
-                      <p className={`text-[11px] ${isLight ? 'text-amber-800' : 'text-slate-400'}`}>
+                      <p className={`text-[11px] ${isLight ? 'text-amber-800' : 'text-slate-300'}`}>
                         Account Holder: {payoutDetailsForm.accountHolderName || ambassador.name}
                       </p>
                     </div>
@@ -1089,7 +1097,7 @@ export default function AmbassadorPortal() {
                     <button
                       onClick={handleRequestPayout}
                       disabled={requestingPayout}
-                      className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-extrabold text-xs uppercase tracking-wider transition-all shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer shrink-0 disabled:opacity-60"
+                      className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer shrink-0 disabled:opacity-60 relative z-10"
                     >
                       <DollarSign className="w-4 h-4" />
                       <span>{requestingPayout ? 'Submitting Request...' : 'Request Cash Payout Transfer'}</span>
@@ -1097,22 +1105,22 @@ export default function AmbassadorPortal() {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className={`p-5 rounded-2xl border space-y-1 ${isLight ? 'bg-white border-slate-200' : 'bg-[#1C1F24] border-[#555A66]/30'}`}>
-                      <div className="text-slate-400 text-xs uppercase font-mono font-bold">Total Lifetime Earnings</div>
-                      <div className="text-2xl font-black text-amber-500 font-mono">₹{(ambassador.totalCommission || 8000).toLocaleString('en-IN')}</div>
+                    <div className={`p-5 rounded-2xl border space-y-1 ${isLight ? 'bg-white border-slate-200' : 'glass-card-luxury border-white/10 shadow-xl'}`}>
+                      <div className="text-slate-400 text-xs uppercase font-mono font-bold tracking-wider">Total Lifetime Earnings</div>
+                      <div className="text-2xl font-black text-[#FFC857] font-mono">₹{(ambassador.totalCommission || 8000).toLocaleString('en-IN')}</div>
                       <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>₹1,000 / Qualified Enrollment</div>
                     </div>
 
-                    <div className={`p-5 rounded-2xl border space-y-1 ${isLight ? 'bg-white border-slate-200' : 'bg-[#1C1F24] border-[#555A66]/30'}`}>
-                      <div className="text-slate-400 text-xs uppercase font-mono font-bold">Cleared &amp; Settled</div>
+                    <div className={`p-5 rounded-2xl border space-y-1 ${isLight ? 'bg-white border-slate-200' : 'glass-card-luxury border-white/10 shadow-xl'}`}>
+                      <div className="text-slate-400 text-xs uppercase font-mono font-bold tracking-wider">Cleared &amp; Settled</div>
                       <div className="text-2xl font-black text-emerald-400 font-mono">
                         ₹{payoutsList.filter(p => p.status === 'PAID').reduce((sum, p) => sum + (p.amount || 0), 0).toLocaleString('en-IN')}
                       </div>
                       <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Transferred to UPI/Bank</div>
                     </div>
 
-                    <div className={`p-5 rounded-2xl border space-y-1 ${isLight ? 'bg-white border-slate-200' : 'bg-[#1C1F24] border-[#555A66]/30'}`}>
-                      <div className="text-slate-400 text-xs uppercase font-mono font-bold">Pending Clearance</div>
+                    <div className={`p-5 rounded-2xl border space-y-1 ${isLight ? 'bg-white border-slate-200' : 'glass-card-luxury border-white/10 shadow-xl'}`}>
+                      <div className="text-slate-400 text-xs uppercase font-mono font-bold tracking-wider">Pending Clearance</div>
                       <div className="text-2xl font-black text-indigo-400 font-mono">
                         ₹{payoutsList.filter(p => p.status === 'PENDING').reduce((sum, p) => sum + (p.amount || 0), 0).toLocaleString('en-IN')}
                       </div>
@@ -1121,9 +1129,9 @@ export default function AmbassadorPortal() {
                   </div>
 
                   <div className={`rounded-3xl border overflow-hidden ${
-                    isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-[#1C1F24] border-[#555A66]/30'
+                    isLight ? 'bg-white border-slate-200 shadow-sm' : 'glass-card-luxury border-white/10 shadow-2xl'
                   }`}>
-                    <div className="p-4 border-b border-slate-200 dark:border-slate-800 font-bold text-xs uppercase tracking-wider flex items-center justify-between">
+                    <div className="p-4 border-b border-slate-200 dark:border-white/10 font-black text-xs uppercase tracking-wider flex items-center justify-between">
                       <span>Payout Transaction Ledger &amp; Requests</span>
                       <span className="text-slate-400 font-mono font-normal text-[11px]">{payoutsList.length} Statements</span>
                     </div>
@@ -1131,30 +1139,30 @@ export default function AmbassadorPortal() {
                       <table className="w-full text-left border-collapse">
                         <thead>
                           <tr className={`border-b text-[11px] font-bold uppercase tracking-wider ${
-                            isLight ? 'bg-slate-50 border-slate-200 text-slate-500' : 'bg-slate-950/60 border-slate-800 text-slate-400'
+                            isLight ? 'bg-slate-50 border-slate-200 text-slate-500' : 'bg-[#070A11]/80 border-white/10 text-slate-400'
                           }`}>
-                            <th className="py-3.5 px-4">Amount</th>
-                            <th className="py-3.5 px-4">Payment Destination</th>
-                            <th className="py-3.5 px-4">Transaction Ref</th>
-                            <th className="py-3.5 px-4">Date</th>
-                            <th className="py-3.5 px-4">Status</th>
+                            <th className="py-4 px-5">Amount</th>
+                            <th className="py-4 px-5">Payment Destination</th>
+                            <th className="py-4 px-5">Transaction Ref</th>
+                            <th className="py-4 px-5">Date</th>
+                            <th className="py-4 px-5">Status</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-xs font-mono">
+                        <tbody className="divide-y divide-slate-200 dark:divide-white/5 text-xs font-mono">
                           {payoutsList.map(pay => (
-                            <tr key={pay.id} className={isLight ? 'hover:bg-slate-50' : 'hover:bg-slate-900/50'}>
-                              <td className="py-3.5 px-4 font-black text-emerald-500 text-sm">
+                            <tr key={pay.id} className={isLight ? 'hover:bg-slate-50' : 'hover:bg-white/[0.03] transition-colors'}>
+                              <td className="py-4 px-5 font-black text-emerald-400 text-sm">
                                 ₹{pay.amount ? pay.amount.toLocaleString('en-IN') : '0'}
                               </td>
-                              <td className={`py-3.5 px-4 font-sans ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
+                              <td className={`py-4 px-5 font-sans ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
                                 {pay.payment_method}
                               </td>
-                              <td className="py-3.5 px-4 text-slate-400">{pay.transaction_reference || 'N/A'}</td>
-                              <td className="py-3.5 px-4 text-slate-400">{new Date(pay.created_at || Date.now()).toLocaleDateString()}</td>
-                              <td className="py-3.5 px-4">
+                              <td className="py-4 px-5 text-slate-400">{pay.transaction_reference || 'N/A'}</td>
+                              <td className="py-4 px-5 text-slate-400">{new Date(pay.created_at || Date.now()).toLocaleDateString()}</td>
+                              <td className="py-4 px-5">
                                 <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
                                   pay.status === 'PAID' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
-                                  'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                  'bg-amber-500/20 text-[#FFC857] border border-amber-500/30'
                                 }`}>
                                   {pay.status}
                                 </span>
@@ -1175,13 +1183,13 @@ export default function AmbassadorPortal() {
 
       {/* WEEKLY REPORT SUBMISSION MODAL */}
       {showReportModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
-          <div className={`relative w-full max-w-lg border rounded-3xl shadow-2xl overflow-hidden p-6 text-left space-y-6 ${
-            isLight ? 'bg-white border-slate-300' : 'bg-slate-900 border-slate-800'
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#070A11]/80 backdrop-blur-xl animate-fade-in">
+          <div className={`relative w-full max-w-lg border rounded-3xl shadow-2xl overflow-hidden p-6 sm:p-8 text-left space-y-6 ${
+            isLight ? 'bg-white border-slate-300' : 'bg-[#0B0F19] border-white/15'
           }`}>
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-4">
               <div>
-                <h3 className={`text-lg font-bold font-heading ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                <h3 className={`text-lg font-black font-heading tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
                   Friday Weekly Activity Report
                 </h3>
                 <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
@@ -1190,7 +1198,7 @@ export default function AmbassadorPortal() {
               </div>
               <button
                 onClick={() => setShowReportModal(false)}
-                className={`p-2 rounded-xl ${isLight ? 'bg-slate-100 text-slate-600' : 'bg-slate-800 text-slate-400 hover:text-white'}`}
+                className={`p-2 rounded-xl cursor-pointer ${isLight ? 'bg-slate-100 text-slate-600' : 'bg-white/5 text-slate-400 hover:text-white'}`}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1198,78 +1206,78 @@ export default function AmbassadorPortal() {
 
             {reportSuccess ? (
               <div className="py-8 text-center space-y-3">
-                <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
+                <div className="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/30">
                   <CheckCircle2 className="w-8 h-8" />
                 </div>
-                <h4 className={`text-lg font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>Report Submitted! 🎉</h4>
+                <h4 className={`text-lg font-black font-heading ${isLight ? 'text-slate-900' : 'text-white'}`}>Report Submitted! 🎉</h4>
                 <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>+50 Points awarded to your ambassador profile.</p>
               </div>
             ) : (
               <form onSubmit={handleWeeklyReportSubmit} className="space-y-4">
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className={`block text-[10px] font-bold uppercase mb-1 ${isLight ? 'text-slate-700' : 'text-slate-400'}`}>Posts</label>
+                    <label className={`block text-[10px] font-bold uppercase mb-1 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Posts</label>
                     <input
                       type="number"
                       required
                       min={0}
                       value={reportForm.postsCount}
                       onChange={e => setReportForm({ ...reportForm, postsCount: parseInt(e.target.value) || 0 })}
-                      className={`w-full px-3 py-2 rounded-xl border text-xs font-mono ${
-                        isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-slate-950 border-slate-800 text-white'
+                      className={`w-full px-3.5 py-2.5 rounded-xl border text-xs font-mono ${
+                        isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#070A11] border-white/10 text-white focus:border-[#FFC857]/50 focus:outline-none'
                       }`}
                     />
                   </div>
                   <div>
-                    <label className={`block text-[10px] font-bold uppercase mb-1 ${isLight ? 'text-slate-700' : 'text-slate-400'}`}>Stories</label>
+                    <label className={`block text-[10px] font-bold uppercase mb-1 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Stories</label>
                     <input
                       type="number"
                       required
                       min={0}
                       value={reportForm.storiesCount}
                       onChange={e => setReportForm({ ...reportForm, storiesCount: parseInt(e.target.value) || 0 })}
-                      className={`w-full px-3 py-2 rounded-xl border text-xs font-mono ${
-                        isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-slate-950 border-slate-800 text-white'
+                      className={`w-full px-3.5 py-2.5 rounded-xl border text-xs font-mono ${
+                        isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#070A11] border-white/10 text-white focus:border-[#FFC857]/50 focus:outline-none'
                       }`}
                     />
                   </div>
                   <div>
-                    <label className={`block text-[10px] font-bold uppercase mb-1 ${isLight ? 'text-slate-700' : 'text-slate-400'}`}>Leads</label>
+                    <label className={`block text-[10px] font-bold uppercase mb-1 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Leads</label>
                     <input
                       type="number"
                       required
                       min={0}
                       value={reportForm.leadsGenerated}
                       onChange={e => setReportForm({ ...reportForm, leadsGenerated: parseInt(e.target.value) || 0 })}
-                      className={`w-full px-3 py-2 rounded-xl border text-xs font-mono ${
-                        isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-slate-950 border-slate-800 text-white'
+                      className={`w-full px-3.5 py-2.5 rounded-xl border text-xs font-mono ${
+                        isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#070A11] border-white/10 text-white focus:border-[#FFC857]/50 focus:outline-none'
                       }`}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className={`block text-[10px] font-bold uppercase mb-1 ${isLight ? 'text-slate-700' : 'text-slate-400'}`}>Campus Event / Workshop Activity</label>
+                  <label className={`block text-[10px] font-bold uppercase mb-1 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Campus Event / Workshop Activity</label>
                   <textarea
                     rows={2}
                     value={reportForm.eventNotes}
                     onChange={e => setReportForm({ ...reportForm, eventNotes: e.target.value })}
                     placeholder="Details on campus info sessions or student discussions..."
-                    className={`w-full px-3 py-2 rounded-xl border text-xs resize-none ${
-                      isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-slate-950 border-slate-800 text-white'
+                    className={`w-full px-3.5 py-2.5 rounded-xl border text-xs resize-none ${
+                      isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#070A11] border-white/10 text-white focus:border-[#FFC857]/50 focus:outline-none'
                     }`}
                   />
                 </div>
 
                 <div>
-                  <label className={`block text-[10px] font-bold uppercase mb-1 ${isLight ? 'text-slate-700' : 'text-slate-400'}`}>Next Week's Action Plan</label>
+                  <label className={`block text-[10px] font-bold uppercase mb-1 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Next Week's Action Plan</label>
                   <textarea
                     rows={2}
                     value={reportForm.nextWeekPlan}
                     onChange={e => setReportForm({ ...reportForm, nextWeekPlan: e.target.value })}
                     placeholder="Planned posts, student group outreach, or club partnerships..."
-                    className={`w-full px-3 py-2 rounded-xl border text-xs resize-none ${
-                      isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-slate-950 border-slate-800 text-white'
+                    className={`w-full px-3.5 py-2.5 rounded-xl border text-xs resize-none ${
+                      isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#070A11] border-white/10 text-white focus:border-[#FFC857]/50 focus:outline-none'
                     }`}
                   />
                 </div>
@@ -1277,7 +1285,7 @@ export default function AmbassadorPortal() {
                 <button
                   type="submit"
                   disabled={submittingReport}
-                  className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs uppercase tracking-wider transition-all cursor-pointer"
+                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#FFC857] via-[#FFAE19] to-[#FFC857] hover:brightness-110 text-[#070A11] font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-[#FFC857]/20"
                 >
                   {submittingReport ? 'Submitting...' : 'Submit Weekly Activity Report'}
                 </button>
@@ -1289,16 +1297,16 @@ export default function AmbassadorPortal() {
 
       {/* PAYOUT DETAILS COLLECTION MODAL */}
       {showPayoutModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in text-left">
-          <div className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl p-6 space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#070A11]/80 backdrop-blur-xl animate-fade-in text-left">
+          <div className="relative w-full max-w-md bg-[#0B0F19] border border-white/15 rounded-3xl shadow-2xl p-6 sm:p-8 space-y-6">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
               <div>
-                <h3 className="text-lg font-bold text-white font-heading">Payout Account Settings</h3>
+                <h3 className="text-lg font-black text-white font-heading tracking-tight">Payout Account Settings</h3>
                 <p className="text-xs text-slate-400">Specify details for offline UPI or Bank transfers</p>
               </div>
               <button
                 onClick={() => setShowPayoutModal(false)}
-                className="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white"
+                className="p-2 rounded-xl bg-white/5 text-slate-400 hover:text-white cursor-pointer"
               >
                 ✕
               </button>
@@ -1306,11 +1314,11 @@ export default function AmbassadorPortal() {
 
             <form onSubmit={handleSavePayoutDetails} className="space-y-4">
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Preferred Payout Method</label>
+                <label className="block text-[10px] font-bold text-slate-300 uppercase mb-1">Preferred Payout Method</label>
                 <select
                   value={payoutDetailsForm.method}
                   onChange={e => setPayoutDetailsForm({ ...payoutDetailsForm, method: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs font-mono"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#070A11] border border-white/10 text-white text-xs font-mono focus:border-[#FFC857]/50 focus:outline-none"
                 >
                   <option value="UPI">UPI Direct (Google Pay, PhonePe, Paytm)</option>
                   <option value="Bank Transfer">Direct Bank NEFT / IMPS Transfer</option>
@@ -1318,62 +1326,62 @@ export default function AmbassadorPortal() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Account Holder Name *</label>
+                <label className="block text-[10px] font-bold text-slate-300 uppercase mb-1">Account Holder Name *</label>
                 <input
                   type="text"
                   required
                   value={payoutDetailsForm.accountHolderName}
                   onChange={e => setPayoutDetailsForm({ ...payoutDetailsForm, accountHolderName: e.target.value })}
                   placeholder="Official Name matching Bank / UPI"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#070A11] border border-white/10 text-white text-xs focus:border-[#FFC857]/50 focus:outline-none"
                 />
               </div>
 
               {payoutDetailsForm.method === 'UPI' ? (
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">UPI ID (VPA) *</label>
+                  <label className="block text-[10px] font-bold text-slate-300 uppercase mb-1">UPI ID (VPA) *</label>
                   <input
                     type="text"
                     required
                     value={payoutDetailsForm.upiId}
                     onChange={e => setPayoutDetailsForm({ ...payoutDetailsForm, upiId: e.target.value })}
                     placeholder="e.g. name@okhdfcbank or 9876543210@paytm"
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-amber-400 font-mono text-xs font-bold"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#070A11] border border-white/10 text-[#FFC857] font-mono text-xs font-bold focus:border-[#FFC857]/50 focus:outline-none"
                   />
                 </div>
               ) : (
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Bank Account Number *</label>
+                    <label className="block text-[10px] font-bold text-slate-300 uppercase mb-1">Bank Account Number *</label>
                     <input
                       type="text"
                       required
                       value={payoutDetailsForm.bankAccountNumber}
                       onChange={e => setPayoutDetailsForm({ ...payoutDetailsForm, bankAccountNumber: e.target.value })}
                       placeholder="e.g. 50100234912384"
-                      className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono text-xs"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#070A11] border border-white/10 text-white font-mono text-xs focus:border-[#FFC857]/50 focus:outline-none"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">IFSC Code *</label>
+                      <label className="block text-[10px] font-bold text-slate-300 uppercase mb-1">IFSC Code *</label>
                       <input
                         type="text"
                         required
                         value={payoutDetailsForm.bankIfscCode}
                         onChange={e => setPayoutDetailsForm({ ...payoutDetailsForm, bankIfscCode: e.target.value })}
                         placeholder="HDFC0001234"
-                        className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-amber-400 font-mono text-xs uppercase font-bold"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#070A11] border border-white/10 text-[#FFC857] font-mono text-xs uppercase font-bold focus:border-[#FFC857]/50 focus:outline-none"
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Bank Name</label>
+                      <label className="block text-[10px] font-bold text-slate-300 uppercase mb-1">Bank Name</label>
                       <input
                         type="text"
                         value={payoutDetailsForm.bankName}
                         onChange={e => setPayoutDetailsForm({ ...payoutDetailsForm, bankName: e.target.value })}
                         placeholder="HDFC Bank"
-                        className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#070A11] border border-white/10 text-white text-xs focus:border-[#FFC857]/50 focus:outline-none"
                       />
                     </div>
                   </div>
@@ -1383,7 +1391,7 @@ export default function AmbassadorPortal() {
               <button
                 type="submit"
                 disabled={savingPayoutDetails}
-                className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs uppercase tracking-wider transition-all cursor-pointer"
+                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#FFC857] via-[#FFAE19] to-[#FFC857] hover:brightness-110 text-[#070A11] font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-[#FFC857]/20"
               >
                 {savingPayoutDetails ? 'Saving Account...' : 'Save Payout Destination Details'}
               </button>

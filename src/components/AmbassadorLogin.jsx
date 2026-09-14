@@ -66,29 +66,34 @@ export default function AmbassadorLogin({ onAuthenticated, expiredNotice = false
   };
 
   return (
-    <div className="min-h-screen bg-[#05080f] flex items-center justify-center p-4"
-      style={{ backgroundImage: 'radial-gradient(ellipse at 50% 20%, rgba(245,158,11,0.08) 0%, transparent 60%)' }}>
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-[#070A11] text-[#FAFAF7] flex items-center justify-center p-4 relative overflow-hidden selection:bg-[#FFC857] selection:text-[#070A11]">
+      {/* Ambient spotlights */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[550px] h-[320px] bg-[#7C5CFC]/15 blur-[140px] rounded-full pointer-events-none -z-10" />
+      <div className="absolute bottom-10 right-10 w-[450px] h-[300px] bg-[#FFC857]/10 blur-[150px] rounded-full pointer-events-none -z-10" />
+
+      <div className="w-full max-w-md relative z-10">
         
         {/* LOGO & BRAND HEADER */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-600 shadow-2xl shadow-amber-500/30 mb-4 border border-amber-400/40">
-            <Award className="w-8 h-8 text-slate-950" />
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-[#FFC857] via-[#FFAE19] to-[#7C5CFC] shadow-2xl shadow-[#FFC857]/20 mb-3.5 p-0.5">
+            <div className="w-full h-full bg-[#070A11] rounded-[14px] flex items-center justify-center">
+              <Award className="w-7 h-7 text-[#FFC857]" />
+            </div>
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight font-heading">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight font-heading">
             TH3ORY Ambassador Portal
           </h1>
-          <p className="text-slate-400 text-xs mt-1 font-semibold">
+          <p className="text-slate-300 text-xs mt-1.5 font-medium">
             Campus Leadership &amp; Student Outreach Network
           </p>
         </div>
 
         {/* LOGIN CARD */}
-        <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-md space-y-6 text-left">
+        <div className="glass-card-luxury rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 text-left">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-xs font-bold text-slate-300 uppercase tracking-widest mb-2 flex items-center gap-1.5 font-sans">
-                <UserCheck className="w-3.5 h-3.5 text-amber-500" /> Ambassador Code or Email *
+                <UserCheck className="w-3.5 h-3.5 text-[#FFC857]" /> Ambassador Code or Email *
               </label>
               <input
                 type="text"
@@ -97,13 +102,13 @@ export default function AmbassadorLogin({ onAuthenticated, expiredNotice = false
                 autoFocus
                 required
                 placeholder="e.g. AMB-STAN-712"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30 transition-all text-sm font-mono tracking-wider"
+                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-[#FFC857]/60 focus:ring-1 focus:ring-[#FFC857]/30 transition-all text-sm font-mono tracking-wider glass-specular"
               />
             </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-300 uppercase tracking-widest mb-2 flex items-center gap-1.5 font-sans">
-                <KeyRound className="w-3.5 h-3.5 text-amber-500" /> Access Password *
+                <KeyRound className="w-3.5 h-3.5 text-[#FFC857]" /> Access Password *
               </label>
               <div className="relative">
                 <input
@@ -112,23 +117,23 @@ export default function AmbassadorLogin({ onAuthenticated, expiredNotice = false
                   onChange={e => setPassword(e.target.value)}
                   required
                   placeholder="Enter your assigned password"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 pr-11 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30 transition-all text-sm font-mono"
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 pr-11 text-white placeholder-slate-500 focus:outline-none focus:border-[#FFC857]/60 focus:ring-1 focus:ring-[#FFC857]/30 transition-all text-sm font-mono glass-specular"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-amber-400 p-1"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-[#FFC857] p-1 transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              <p className="text-[11px] text-slate-500 mt-1.5">
+              <p className="text-[11px] text-slate-400 mt-1.5">
                 Sent to your registered email upon official selection approval.
               </p>
             </div>
 
             {error && (
-              <div className="flex items-center gap-2 bg-red-950/60 border border-red-500/30 rounded-xl px-4 py-3 text-red-300 text-xs font-semibold leading-relaxed">
+              <div className="flex items-center gap-2 bg-red-950/60 border border-red-500/30 rounded-xl px-4 py-3 text-red-300 text-xs font-semibold leading-relaxed animate-fade-in">
                 <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
                 <span>{error}</span>
               </div>
@@ -137,10 +142,10 @@ export default function AmbassadorLogin({ onAuthenticated, expiredNotice = false
             <button
               type="submit"
               disabled={loading || !code}
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 font-extrabold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 cursor-pointer"
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#FFC857] via-[#FFAE19] to-[#FFC857] hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed text-[#070A11] font-extrabold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#FFC857]/20 cursor-pointer"
             >
               {loading ? (
-                <span className="inline-block w-4 h-4 border-2 border-slate-950/40 border-t-slate-950 rounded-full animate-spin" />
+                <span className="inline-block w-4 h-4 border-2 border-[#070A11]/40 border-t-[#070A11] rounded-full animate-spin" />
               ) : (
                 <LogIn className="w-4 h-4" />
               )}
@@ -151,12 +156,12 @@ export default function AmbassadorLogin({ onAuthenticated, expiredNotice = false
 
         {/* BOTTOM HELPER LINKS */}
         <div className="mt-6 text-center space-y-2">
-          <p className="text-slate-500 text-xs">
+          <p className="text-slate-400 text-xs">
             Want to join our Campus Ambassador Network?{' '}
             <a
               href="#ambassador"
               onClick={(e) => { e.preventDefault(); window.location.hash = '#/ambassador'; window.dispatchEvent(new Event('hashchange')); }}
-              className="text-amber-400 hover:underline font-bold inline-flex items-center gap-1"
+              className="text-[#FFC857] hover:underline font-bold inline-flex items-center gap-1"
             >
               Apply Now <ArrowRight className="w-3 h-3" />
             </a>

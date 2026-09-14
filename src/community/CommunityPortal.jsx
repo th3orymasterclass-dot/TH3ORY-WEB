@@ -119,34 +119,38 @@ export default function CommunityPortal({ member, onLogout }) {
   });
 
   return (
-    <div className="min-h-screen bg-[#070a11] text-slate-100 selection:bg-amber-500 selection:text-black">
+    <div className="min-h-screen bg-[#070A11] text-[#FAFAF7] selection:bg-[#FFC857] selection:text-[#070A11] relative overflow-x-hidden">
+      {/* Ambient background spotlights */}
+      <div className="fixed top-0 left-1/4 w-[600px] h-[400px] bg-[#7C5CFC]/10 rounded-full blur-[140px] pointer-events-none -z-10" />
+      <div className="fixed bottom-10 right-1/4 w-[500px] h-[350px] bg-[#FFC857]/5 rounded-full blur-[160px] pointer-events-none -z-10" />
+
       {/* Top Navigation Bar */}
-      <header className="sticky top-0 z-40 bg-[#0c121e]/90 backdrop-blur-xl border-b border-white/10 px-4 sm:px-8 py-3.5 flex items-center justify-between gap-4">
+      <header className="sticky top-0 z-40 bg-[#070A11]/90 backdrop-blur-xl border-b border-white/10 px-4 sm:px-8 py-3.5 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <a href="#/" className="flex items-center gap-2 cursor-pointer group">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 p-0.5 shadow-md shadow-amber-500/20 group-hover:scale-105 transition-all">
-              <div className="w-full h-full bg-[#070a11] rounded-[6px] flex items-center justify-center">
-                <span className="text-amber-400 font-black text-xs tracking-wider font-brand">T3</span>
+          <a href="#/" className="flex items-center gap-2.5 cursor-pointer group">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#FFC857] via-[#FFAE19] to-[#7C5CFC] p-0.5 shadow-lg shadow-[#FFC857]/20 group-hover:scale-105 transition-all">
+              <div className="w-full h-full bg-[#070A11] rounded-[10px] flex items-center justify-center">
+                <span className="text-[#FFC857] font-black text-xs tracking-wider font-heading">T3</span>
               </div>
             </div>
-            <span className="text-base font-bold tracking-wider text-white font-brand hidden sm:inline">TH3ORY</span>
+            <span className="text-base font-bold tracking-wider text-white font-heading hidden sm:inline">TH3ORY</span>
           </a>
-          <span className="text-slate-600 font-light">|</span>
-          <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-400 text-xs font-semibold">
-            <Sparkles className="w-3 h-3" />
+          <span className="text-white/20 font-light">|</span>
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFC857]/10 border border-[#FFC857]/30 text-[#FFC857] text-xs font-semibold shadow-sm shadow-[#FFC857]/10">
+            <Sparkles className="w-3.5 h-3.5 text-[#FFC857]" />
             <span>Community Wall</span>
           </div>
         </div>
 
         {/* Member Profile Badge & Logout */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2.5 bg-white/5 border border-white/10 rounded-xl px-3 py-1.5">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 font-black text-[11px] flex items-center justify-center">
+          <div className="flex items-center gap-2.5 bg-white/5 border border-white/10 rounded-xl px-3 py-1.5 glass-specular">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#FFC857] to-[#FFAE19] text-[#070A11] font-black text-xs flex items-center justify-center shadow-md">
               {currentMember.name?.slice(0, 1).toUpperCase() || 'M'}
             </div>
             <div className="text-left hidden sm:block">
               <p className="text-xs font-bold text-white truncate max-w-[140px]">{currentMember.name}</p>
-              <p className="text-[10px] text-amber-400 font-medium">Verified Member</p>
+              <p className="text-[10px] text-[#FFC857] font-medium tracking-wide">Verified Member</p>
             </div>
           </div>
 
@@ -163,18 +167,18 @@ export default function CommunityPortal({ member, onLogout }) {
       {/* Main Container */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
         {/* Welcome Banner */}
-        <div className="relative rounded-2xl bg-gradient-to-br from-[#101726] to-[#0a0f1d] border border-white/10 p-6 shadow-2xl overflow-hidden">
-          <div className="absolute -top-12 -right-12 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative rounded-2xl glass-card-luxury p-6 sm:p-8 shadow-2xl overflow-hidden">
+          <div className="absolute -top-12 -right-12 w-48 h-48 bg-[#FFC857]/10 rounded-full blur-3xl pointer-events-none" />
           <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <div className="inline-flex items-center gap-1.5 text-xs text-amber-400 font-semibold mb-1">
+              <div className="inline-flex items-center gap-1.5 text-xs text-[#FFC857] font-semibold mb-1 tracking-wide">
                 <Shield className="w-3.5 h-3.5" />
                 <span>Executive Psychological Mastermind</span>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white">
+              <h1 className="text-2xl sm:text-3xl font-bold font-serif-luxury text-white">
                 Welcome, {currentMember.name}
               </h1>
-              <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-xl leading-relaxed">
+              <p className="text-xs sm:text-sm text-slate-300 mt-1.5 max-w-xl leading-relaxed">
                 Explore weekly cognitive breakdowns, downloadable tactical frameworks, and collaborative peer discussions. React to insights and share your field observations below.
               </p>
             </div>
@@ -200,8 +204,8 @@ export default function CommunityPortal({ member, onLogout }) {
                   onClick={() => setActiveTab(tab.id)}
                   className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap cursor-pointer ${
                     isActive
-                      ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                      : 'bg-[#0c121e] text-slate-400 hover:text-white border border-white/5 hover:border-white/10'
+                      ? 'bg-[#FFC857] text-[#070A11] font-bold shadow-lg shadow-[#FFC857]/20 scale-102'
+                      : 'bg-white/5 text-slate-400 hover:text-white border border-white/10 hover:border-white/20 glass-specular'
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -219,7 +223,7 @@ export default function CommunityPortal({ member, onLogout }) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search posts or files..."
-              className="w-full bg-[#0c121e] border border-white/10 focus:border-amber-500/50 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-amber-500/30 transition-all"
+              className="w-full bg-[#0c121e]/90 border border-white/10 focus:border-[#FFC857]/60 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#FFC857]/30 transition-all glass-specular"
             />
           </div>
         </div>
@@ -227,11 +231,11 @@ export default function CommunityPortal({ member, onLogout }) {
         {/* Community Wall Feed */}
         {loading ? (
           <div className="py-20 text-center space-y-3">
-            <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-xs text-slate-500">Loading community wall updates...</p>
+            <div className="w-8 h-8 border-2 border-[#FFC857] border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-xs text-slate-400">Loading community wall updates...</p>
           </div>
         ) : filteredPosts.length === 0 ? (
-          <div className="py-16 text-center bg-[#0c121e] border border-white/5 rounded-2xl p-8">
+          <div className="py-16 text-center glass-card-luxury rounded-2xl p-8">
             <MessageSquare className="w-10 h-10 text-slate-600 mx-auto mb-3" />
             <h3 className="text-base font-semibold text-white">No posts found</h3>
             <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
@@ -249,24 +253,24 @@ export default function CommunityPortal({ member, onLogout }) {
               return (
                 <article
                   key={post.id}
-                  className="bg-[#0c121e]/90 backdrop-blur-xl border border-white/10 rounded-2xl p-5 sm:p-6 shadow-xl transition-all space-y-4"
+                  className="glass-card-luxury rounded-2xl p-5 sm:p-7 shadow-2xl transition-all space-y-4 hover:border-white/20"
                 >
                   {/* Post Header */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-slate-950 font-black text-sm flex items-center justify-center shadow-md shadow-amber-500/20">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FFC857] via-[#FFAE19] to-[#7C5CFC] text-[#070A11] font-black text-sm flex items-center justify-center shadow-lg shadow-[#FFC857]/20">
                         {post.author_name?.slice(0, 1) || 'T'}
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-bold text-white">{post.author_name}</span>
                           {post.author_role && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/30 font-medium">
+                            <span className="text-[10px] px-2 py-0.5 rounded-md bg-[#FFC857]/10 text-[#FFC857] border border-[#FFC857]/30 font-medium">
                               {post.author_role}
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5">
+                        <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5">
                           <Clock className="w-3 h-3" />
                           <span>{new Date(post.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                           <span>•</span>
@@ -276,8 +280,8 @@ export default function CommunityPortal({ member, onLogout }) {
                     </div>
 
                     {post.is_pinned && (
-                      <div className="flex items-center gap-1 text-[11px] font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded-full shrink-0">
-                        <Pin className="w-3 h-3 fill-amber-400" />
+                      <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#FFC857] bg-[#FFC857]/10 border border-[#FFC857]/30 px-3 py-1 rounded-full shrink-0 shadow-sm shadow-[#FFC857]/10">
+                        <Pin className="w-3 h-3 fill-[#FFC857]" />
                         <span>Pinned Update</span>
                       </div>
                     )}
@@ -285,17 +289,17 @@ export default function CommunityPortal({ member, onLogout }) {
 
                   {/* Post Content */}
                   <div>
-                    <h2 className="text-lg font-bold text-white tracking-tight leading-snug">
+                    <h2 className="text-lg font-bold text-white tracking-tight leading-snug font-heading">
                       {post.title}
                     </h2>
-                    <p className="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed whitespace-pre-line">
+                    <p className="text-xs sm:text-sm text-slate-300 mt-2.5 leading-relaxed whitespace-pre-line">
                       {post.content}
                     </p>
                   </div>
 
                   {/* Media Embed (Weekly Video) */}
                   {post.post_type === 'weekly_video' && embedUrl && (
-                    <div className="relative rounded-xl overflow-hidden bg-black border border-white/10 aspect-video shadow-2xl">
+                    <div className="relative rounded-2xl overflow-hidden bg-black border border-white/15 aspect-video shadow-2xl">
                       <iframe
                         src={embedUrl}
                         title={post.title}
@@ -308,7 +312,7 @@ export default function CommunityPortal({ member, onLogout }) {
 
                   {/* File / Resource Attachment */}
                   {post.file_name && (
-                    <div className="p-3.5 rounded-xl bg-slate-900/90 border border-white/10 flex items-center justify-between gap-3">
+                    <div className="p-3.5 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between gap-3 glass-specular">
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="w-10 h-10 rounded-lg bg-red-500/10 border border-red-500/25 flex items-center justify-center text-red-400 shrink-0">
                           <FileText className="w-5 h-5" />
@@ -324,7 +328,7 @@ export default function CommunityPortal({ member, onLogout }) {
                           href={post.file_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:text-amber-300 text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
+                          className="px-3.5 py-1.5 rounded-lg bg-[#FFC857]/15 hover:bg-[#FFC857]/25 border border-[#FFC857]/40 text-[#FFC857] hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 cursor-pointer shadow-sm shadow-[#FFC857]/10"
                         >
                           <Download className="w-3.5 h-3.5" />
                           <span>Download</span>
@@ -351,8 +355,8 @@ export default function CommunityPortal({ member, onLogout }) {
                             onClick={() => handleToggleReaction(post.id, def.emoji)}
                             className={`px-2.5 py-1 rounded-xl text-xs flex items-center gap-1.5 border transition-all cursor-pointer ${
                               hasReacted
-                                ? 'bg-amber-500/20 border-amber-500/60 text-amber-300 shadow-sm shadow-amber-500/10 scale-105'
-                                : 'bg-[#070a11] hover:bg-white/5 border-white/10 text-slate-400 hover:text-white'
+                                ? 'bg-[#FFC857]/20 border-[#FFC857]/60 text-[#FFC857] shadow-sm shadow-[#FFC857]/20 scale-105 font-bold'
+                                : 'bg-white/5 hover:bg-white/10 border-white/10 text-slate-400 hover:text-white'
                             }`}
                             title={def.label}
                           >
@@ -367,9 +371,9 @@ export default function CommunityPortal({ member, onLogout }) {
                     <button
                       type="button"
                       onClick={() => toggleCommentsDrawer(post.id)}
-                      className="px-3 py-1 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-400 hover:text-white text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer"
+                      className="px-3 py-1 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer glass-specular"
                     >
-                      <MessageSquare className="w-3.5 h-3.5" />
+                      <MessageSquare className="w-3.5 h-3.5 text-[#FFC857]" />
                       <span>{postComments.length} {postComments.length === 1 ? 'Comment' : 'Comments'}</span>
                     </button>
                   </div>
@@ -381,15 +385,15 @@ export default function CommunityPortal({ member, onLogout }) {
                       {postComments.length > 0 ? (
                         <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
                           {postComments.map(c => (
-                            <div key={c.id} className="p-3 rounded-xl bg-[#070a11] border border-white/5 space-y-1">
+                            <div key={c.id} className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1 glass-specular">
                               <div className="flex items-center justify-between text-[11px]">
                                 <span className="font-bold text-white flex items-center gap-1">
                                   <span>{c.member_name}</span>
                                   {c.member_id === currentMember.id && (
-                                    <span className="text-[10px] text-amber-400 font-normal">(You)</span>
+                                    <span className="text-[10px] text-[#FFC857] font-normal">(You)</span>
                                   )}
                                 </span>
-                                <span className="text-slate-500">
+                                <span className="text-slate-400 text-[10px]">
                                   {new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </span>
                               </div>
@@ -414,13 +418,13 @@ export default function CommunityPortal({ member, onLogout }) {
                             }
                           }}
                           placeholder="Add your observation or response..."
-                          className="flex-1 bg-[#070a11] border border-white/10 focus:border-amber-500/60 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-amber-500/30 transition-all"
+                          className="flex-1 bg-black/40 border border-white/10 focus:border-[#FFC857]/60 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#FFC857]/30 transition-all glass-specular"
                         />
                         <button
                           type="button"
                           onClick={() => handleAddComment(post.id)}
                           disabled={submittingComment[post.id] || !(commentInputs[post.id] || '').trim()}
-                          className="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs rounded-xl shadow-md shadow-amber-500/20 disabled:opacity-40 transition-all flex items-center gap-1 cursor-pointer"
+                          className="px-3.5 py-2 bg-gradient-to-r from-[#FFC857] via-[#FFAE19] to-[#FFC857] hover:brightness-110 text-[#070A11] font-bold text-xs rounded-xl shadow-lg shadow-[#FFC857]/20 disabled:opacity-40 transition-all flex items-center gap-1.5 cursor-pointer"
                         >
                           <Send className="w-3.5 h-3.5" />
                           <span className="hidden sm:inline">Reply</span>

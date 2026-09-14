@@ -103,72 +103,122 @@ export default function DashboardHome({ profile, onNavigate, themeMode = 'dark' 
   return (
     <div className="space-y-8">
       {/* Welcome Banner with Avatar */}
-      <div className={`relative rounded-2xl overflow-hidden p-7 border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 ${
-        isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-gradient-to-br from-slate-900 to-slate-950 border-slate-800'
-      }`}
-        style={{backgroundImage: isLight ? 'none' : 'radial-gradient(ellipse at 80% 0%, rgba(245,158,11,0.12) 0%, transparent 60%)'}}>
-        <div className="relative z-10 flex items-center gap-5 min-w-0">
-          <ProfileAvatar
-            src={avatar}
-            name={profile?.name || 'Student'}
-            role="student"
-            size="xl"
-            showStatus={true}
-          />
-          <div className="min-w-0">
-            <p className={`text-xs font-semibold uppercase tracking-wider mb-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Welcome back,</p>
-            <h2 className={`text-2xl sm:text-3xl font-black mb-2 truncate ${isLight ? 'text-slate-900' : 'text-white'}`}>{profile.name} 👋</h2>
-            <div className="flex flex-wrap items-center gap-2.5">
-              <span className="px-3 py-1 bg-amber-500/15 border border-amber-500/30 rounded-full text-amber-600 dark:text-amber-400 text-xs font-extrabold">{profile.plan}</span>
-              <span className={`text-xs ${isLight ? 'text-slate-600' : 'text-slate-500'}`}>Enrolled {daysSince === 0 ? 'today' : `${daysSince} day${daysSince!==1?'s':''} ago`}</span>
+      <div className={`relative rounded-3xl overflow-hidden p-6 sm:p-8 border transition-all duration-300 ${
+        isLight 
+          ? 'bg-gradient-to-br from-white via-slate-50 to-amber-50/30 border-slate-200/80 shadow-lg shadow-slate-200/40' 
+          : 'glass-card-luxury border-white/10 shadow-2xl shadow-black/60'
+      }`}>
+        {/* Ambient background aura */}
+        <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-[#7C5CFC]/15 via-[#FFC857]/10 to-transparent blur-3xl pointer-events-none rounded-full -mr-20 -mt-20" />
+        <div className="absolute bottom-0 left-1/3 w-60 h-60 bg-[#FFC857]/5 blur-2xl pointer-events-none rounded-full" />
+
+        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+          <div className="flex items-center gap-5 min-w-0">
+            <div className="relative group shrink-0">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-[#7C5CFC] to-[#FFC857] rounded-full blur opacity-60 group-hover:opacity-100 transition duration-300"></div>
+              <div className="relative rounded-full ring-2 ring-white/10">
+                <ProfileAvatar
+                  src={avatar}
+                  name={profile?.name || 'Student'}
+                  role="student"
+                  size="xl"
+                  showStatus={true}
+                />
+              </div>
             </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <p className={`text-[11px] font-black uppercase tracking-[0.2em] ${isLight ? 'text-slate-500' : 'text-[#7C5CFC]'}`}>Active Session</p>
+              </div>
+              <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-black font-serif tracking-tight mb-2 truncate ${isLight ? 'text-slate-900' : 'text-[#FAFAF7]'}`}>
+                {profile.name} <span className="font-sans font-normal text-amber-400">👋</span>
+              </h2>
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className="px-3.5 py-1 bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border border-[#FFC857]/40 rounded-full text-[#FFC857] text-xs font-black uppercase tracking-wider shadow-sm">
+                  {profile.plan} Member
+                </span>
+                <span className={`text-xs font-medium ${isLight ? 'text-slate-600' : 'text-[#8F94A3]'}`}>
+                  Enrolled {daysSince === 0 ? 'today' : `${daysSince} day${daysSince!==1?'s':''} ago`}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="w-full sm:w-auto flex items-center gap-3 shrink-0">
+            <button
+              onClick={() => onNavigate && onNavigate('character_code')}
+              className="w-full sm:w-auto px-5 py-3 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#9B7DFF] hover:from-[#6B4BE8] hover:to-[#8B6DF0] text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-[#7C5CFC]/25 transition-all duration-300 hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
+            >
+              <Zap className="w-4 h-4 text-[#FFC857] fill-[#FFC857]" />
+              <span>Character Code™</span>
+            </button>
           </div>
         </div>
       </div>
 
       {/* THE CHARACTER CODE™ Assessment Quick Launch Banner */}
-      <div className={`p-6 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all ${
-        isLight ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200' : 'bg-gradient-to-r from-slate-900 via-slate-950 to-[#0A0D14] border-amber-500/30'
+      <div className={`relative overflow-hidden p-6 sm:p-7 rounded-3xl border transition-all duration-300 ${
+        isLight 
+          ? 'bg-gradient-to-r from-amber-500/10 via-purple-500/5 to-transparent border-amber-500/30 shadow-md' 
+          : 'glass-card-luxury border-[#FFC857]/20 hover:border-[#FFC857]/40'
       }`}>
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 text-slate-950 flex items-center justify-center font-black shrink-0 shadow-lg shadow-amber-500/20">
-            <Zap className="w-6 h-6 fill-slate-950" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-black text-amber-500 uppercase tracking-widest">Psychology Engine</span>
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+          <div className="flex items-start sm:items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#FFC857] to-[#FFAA00] text-slate-950 flex items-center justify-center font-black shrink-0 shadow-xl shadow-[#FFC857]/20 ring-4 ring-[#FFC857]/20">
+              <Zap className="w-7 h-7 fill-slate-950 text-slate-950" />
             </div>
-            <h3 className={`text-xl font-black font-serif ${isLight ? 'text-slate-900' : 'text-white'}`}>THE CHARACTER CODE™ Assessment</h3>
-            <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
-              Discover your dominant character identity, 4 influence dimensions, stress shadow, and counter-growth evolution.
-            </p>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest bg-amber-500/20 text-[#FFC857] border border-[#FFC857]/30">
+                  Proprietary Diagnostic
+                </span>
+                <span className={`text-[11px] font-bold ${isLight ? 'text-slate-500' : 'text-[#8F94A3]'}`}>
+                  5 Pillars of Executive Mastery
+                </span>
+              </div>
+              <h3 className={`text-xl sm:text-2xl font-black font-serif tracking-tight ${isLight ? 'text-slate-900' : 'text-[#FAFAF7]'}`}>
+                THE CHARACTER CODE™ Assessment
+              </h3>
+              <p className={`text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed ${isLight ? 'text-slate-600' : 'text-[#8F94A3]'}`}>
+                Pinpoint your dominant executive identity, stress shadow, and counter-growth evolutionary pathway to command any room.
+              </p>
+            </div>
           </div>
-        </div>
 
-        <button
-          onClick={() => onNavigate && onNavigate('character_code')}
-          className="px-5 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg transition-all active:scale-95 shrink-0 flex items-center gap-2"
-        >
-          <span>Launch Assessment ⚡</span>
-        </button>
+          <button
+            onClick={() => onNavigate && onNavigate('character_code')}
+            className="w-full lg:w-auto px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#FFC857] to-[#FFAA00] hover:brightness-110 text-slate-950 font-black text-xs uppercase tracking-widest shadow-xl shadow-[#FFC857]/20 transition-all active:scale-95 shrink-0 flex items-center justify-center gap-2.5"
+          >
+            <span>Launch Matrix Diagnostic</span>
+            <span className="text-base">⚡</span>
+          </button>
+        </div>
       </div>
 
-      {/* Big stats */}
+      {/* Big stats grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Overall Progress', value: `${overallPct}%`, icon: TrendingUp, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-          { label: 'Lessons Done', value: `${completedCount} / ${totalLessons}`, icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-500/10' },
-          { label: 'Day Streak', value: `${streak}`, icon: Flame, color: 'text-orange-500', bg: 'bg-orange-500/10' },
-          { label: 'Levels Complete', value: levels.filter(l => l.lessons.every(ls => isLessonDone(ls.id))).length, icon: Award, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+          { label: 'Overall Progress', value: `${overallPct}%`, icon: TrendingUp, color: 'text-[#FFC857]', bg: 'bg-[#FFC857]/15', border: 'border-[#FFC857]/30' },
+          { label: 'Lessons Completed', value: `${completedCount} / ${totalLessons}`, icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/15', border: 'border-emerald-500/30' },
+          { label: 'Day Streak', value: `${streak} Days`, icon: Flame, color: 'text-orange-400', bg: 'bg-orange-500/15', border: 'border-orange-500/30' },
+          { label: 'Levels Mastered', value: `${levels.filter(l => l.lessons.every(ls => isLessonDone(ls.id))).length} / ${levels.length}`, icon: Award, color: 'text-[#7C5CFC]', bg: 'bg-[#7C5CFC]/15', border: 'border-[#7C5CFC]/30' },
         ].map((s, i) => (
-          <div key={i} className={`border rounded-2xl p-5 ${
-            isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-900 border-slate-800'
+          <div key={i} className={`p-5 sm:p-6 rounded-2xl border transition-all duration-300 hover:scale-[1.02] ${
+            isLight 
+              ? 'bg-white border-slate-200/80 shadow-md shadow-slate-200/50' 
+              : 'glass-card-luxury border-white/10 hover:border-white/20'
           }`}>
-            <div className={`inline-flex p-2 rounded-xl ${s.bg} mb-3`}>
-              <s.icon className={`w-4 h-4 ${s.color}`}/>
+            <div className="flex items-center justify-between mb-3">
+              <div className={`p-2.5 rounded-xl ${s.bg} border ${s.border}`}>
+                <s.icon className={`w-4 h-4 ${s.color}`}/>
+              </div>
+              <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${s.bg} ${s.color}`}>
+                Live
+              </span>
             </div>
-            <div className={`text-2xl font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>{s.value}</div>
-            <div className={`text-xs mt-1 uppercase tracking-wide font-bold ${isLight ? 'text-slate-600' : 'text-slate-500'}`}>{s.label}</div>
+            <div className={`text-2xl sm:text-3xl font-black font-sans tracking-tight ${isLight ? 'text-slate-900' : 'text-[#FAFAF7]'}`}>{s.value}</div>
+            <div className={`text-[11px] mt-1.5 uppercase tracking-wider font-extrabold ${isLight ? 'text-slate-500' : 'text-[#8F94A3]'}`}>{s.label}</div>
           </div>
         ))}
       </div>
@@ -190,31 +240,41 @@ export default function DashboardHome({ profile, onNavigate, themeMode = 'dark' 
         themeMode={themeMode}
       />
 
-
       {/* Level progress rings */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className={`font-black text-lg tracking-tight font-serif ${isLight ? 'text-slate-900' : 'text-[#FAFAF7]'}`}>
+              Mastery Progress by Level
+            </h3>
+            <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-[#8F94A3]'}`}>
+              5 progressive tiers of executive embodiment and elite behavioral influence
+            </p>
+          </div>
+        </div>
 
-      <div>
-        <h3 className={`font-bold text-sm uppercase tracking-wider mb-4 ${isLight ? 'text-slate-900' : 'text-white'}`}>Level Progress</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
           {levels.map((lvl, i) => {
             const done = lvl.lessons.filter(ls => isLessonDone(ls.id)).length;
             const pct  = lvl.lessons.length ? Math.round((done / lvl.lessons.length) * 100) : 0;
             const lc   = LEVEL_COLORS[i % LEVEL_COLORS.length];
             return (
-              <div key={lvl.id} className={`rounded-2xl p-4 flex flex-col items-center gap-3 cursor-pointer hover:scale-[1.02] transition-transform ${
-                isLight ? 'bg-white border border-slate-200 shadow-sm' : `bg-gradient-to-b ${lc.bg} border ${lc.border}`
+              <div key={lvl.id} className={`rounded-2xl p-4 sm:p-5 flex flex-col items-center gap-3 cursor-pointer hover:scale-[1.03] transition-all duration-300 ${
+                isLight 
+                  ? 'bg-white border border-slate-200 shadow-sm hover:shadow-md' 
+                  : `glass-card-luxury border ${lc.border} hover:border-white/30`
               }`}
                 onClick={() => onNavigate('course', { levelId: lvl.id })}>
                 <div className="relative">
-                  <CircleProgress pct={pct} size={72} stroke={7} color={lc.ring}/>
+                  <CircleProgress pct={pct} size={76} stroke={7} color={lc.ring}/>
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <span className={`text-sm font-black ${lc.text}`}>{pct}%</span>
+                    <span className={`text-sm font-black font-sans ${lc.text}`}>{pct}%</span>
                   </div>
                 </div>
-                <div className="text-center">
-                  <p className={`text-xs font-extrabold uppercase tracking-wider ${lc.text}`}>{lvl.levelNumber}</p>
-                  <p className={`font-bold text-sm ${isLight ? 'text-slate-900' : 'text-white'}`}>{lvl.name}</p>
-                  <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-slate-500'}`}>{done}/{lvl.lessons.length} lessons</p>
+                <div className="text-center w-full">
+                  <p className={`text-[10px] font-black uppercase tracking-widest ${lc.text}`}>{lvl.levelNumber}</p>
+                  <p className={`font-bold text-xs sm:text-sm mt-0.5 truncate ${isLight ? 'text-slate-900' : 'text-[#FAFAF7]'}`}>{lvl.name}</p>
+                  <p className={`text-[11px] mt-1 font-medium ${isLight ? 'text-slate-500' : 'text-[#8F94A3]'}`}>{done}/{lvl.lessons.length} done</p>
                 </div>
               </div>
             );
@@ -224,47 +284,66 @@ export default function DashboardHome({ profile, onNavigate, themeMode = 'dark' 
 
       {/* Continue learning */}
       {nextLesson && (
-        <div className={`border rounded-2xl p-6 ${
-          isLight ? 'bg-white border-amber-500/40 shadow-sm' : 'bg-gradient-to-r from-amber-500/10 to-yellow-500/5 border-amber-500/30'
+        <div className={`relative overflow-hidden rounded-3xl p-6 sm:p-7 border transition-all duration-300 ${
+          isLight 
+            ? 'bg-gradient-to-r from-amber-500/15 via-yellow-500/5 to-transparent border-amber-500/40 shadow-lg' 
+            : 'glass-card-gold border-[#FFC857]/30'
         }`}>
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
-              <p className="text-amber-600 text-xs font-extrabold uppercase tracking-wider mb-1">▶ Continue Where You Left Off</p>
-              <h4 className={`font-bold text-lg leading-tight mb-1 ${isLight ? 'text-slate-900' : 'text-white'}`}>{nextLesson.lesson.title}</h4>
-              <p className={`text-sm ${isLight ? 'text-slate-600' : 'text-slate-500'}`}>{nextLesson.level.levelNumber}: {nextLesson.level.name} · {nextLesson.lesson.duration}</p>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="w-2 h-2 rounded-full bg-[#FFC857] animate-pulse" />
+                <p className="text-[#FFC857] text-[11px] font-black uppercase tracking-[0.2em]">Next Recommended Step</p>
+              </div>
+              <h4 className={`font-black text-xl sm:text-2xl font-serif tracking-tight mb-1 truncate ${isLight ? 'text-slate-900' : 'text-[#FAFAF7]'}`}>
+                {nextLesson.lesson.title}
+              </h4>
+              <p className={`text-xs sm:text-sm ${isLight ? 'text-slate-600' : 'text-[#8F94A3]'}`}>
+                {nextLesson.level.levelNumber}: {nextLesson.level.name} · {nextLesson.lesson.duration}
+              </p>
             </div>
             <button
               onClick={() => onNavigate('course', { levelId: nextLesson.level.id, lessonId: nextLesson.lesson.id })}
-              className="shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition-all shadow-md"
+              className="w-full sm:w-auto shrink-0 flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#FFC857] to-[#FFAA00] text-slate-950 font-black text-xs uppercase tracking-widest shadow-xl shadow-[#FFC857]/20 transition-all hover:scale-105 active:scale-95"
             >
-              <Play className="w-4 h-4 fill-slate-950"/> Resume
+              <Play className="w-4 h-4 fill-slate-950"/> <span>Resume Module</span>
             </button>
           </div>
         </div>
       )}
 
-      {/* Direct Instructor Support via Email */}
-      <div className={`border rounded-2xl p-6 ${
-        isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-900 border-slate-800'
+      {/* Direct Instructor Concierge Support */}
+      <div className={`rounded-3xl p-6 sm:p-7 border transition-all duration-300 ${
+        isLight ? 'bg-white border-slate-200/80 shadow-md' : 'glass-card-luxury border-white/10'
       }`}>
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center shrink-0 text-amber-500">
-              <Mail className="w-5 h-5"/>
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="w-12 h-12 rounded-2xl bg-[#7C5CFC]/15 border border-[#7C5CFC]/30 flex items-center justify-center shrink-0 text-[#7C5CFC] shadow-lg shadow-[#7C5CFC]/10">
+              <Mail className="w-6 h-6"/>
             </div>
             <div>
-              <h4 className={`font-bold text-base ${isLight ? 'text-slate-900' : 'text-white'}`}>Instructor Team Support</h4>
-              <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-600' : 'text-slate-500'}`}>Have a question or need assistance with your course? Reach out directly via email at <span className="font-mono font-bold text-amber-500">team@th3ory.online</span>.</p>
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-[#7C5CFC]/20 text-[#7C5CFC]">
+                  Direct Channel
+                </span>
+                <span className={`text-[11px] font-bold ${isLight ? 'text-slate-500' : 'text-[#8F94A3]'}`}>Executive Faculty</span>
+              </div>
+              <h4 className={`font-black text-lg font-serif tracking-tight ${isLight ? 'text-slate-900' : 'text-[#FAFAF7]'}`}>
+                Executive Faculty Concierge
+              </h4>
+              <p className={`text-xs mt-1 leading-relaxed ${isLight ? 'text-slate-600' : 'text-[#8F94A3]'}`}>
+                Inquiries, feedback, or coaching guidance: write directly to <span className="font-mono font-bold text-[#FFC857]">team@th3ory.online</span>.
+              </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+          <div className="flex items-center gap-2.5 shrink-0 w-full md:w-auto">
             <button
               onClick={() => {
                 navigator.clipboard.writeText('team@th3ory.online');
                 alert('Copied team@th3ory.online to clipboard!');
               }}
-              className={`px-3 py-2.5 rounded-xl border text-xs font-bold transition-all ${
-                isLight ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700' : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300'
+              className={`flex-1 md:flex-none px-4 py-3 rounded-xl border text-xs font-bold transition-all ${
+                isLight ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-800' : 'bg-white/5 hover:bg-white/10 border-white/10 text-slate-200'
               }`}
             >
               Copy Email
@@ -272,24 +351,40 @@ export default function DashboardHome({ profile, onNavigate, themeMode = 'dark' 
             <a
               href="mailto:team@th3ory.online?subject=Student%20Query%20-%20TH3ORY%20Masterclass"
               onClick={(e) => {
-                // Ensure mailto client triggers smoothly on mobile and desktop
                 window.location.href = "mailto:team@th3ory.online?subject=Student%20Query%20-%20TH3ORY%20Masterclass";
               }}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs uppercase tracking-widest transition-all shadow-md cursor-pointer"
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#7C5CFC] hover:bg-[#6B4BE8] text-white font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-[#7C5CFC]/20 cursor-pointer"
             >
-              <Mail className="w-4 h-4"/> Email Support
+              <Mail className="w-4 h-4"/> <span>Email Concierge</span>
             </a>
           </div>
         </div>
       </div>
 
       {overallPct === 100 && (
-        <div className={`text-center py-10 border rounded-2xl ${
-          isLight ? 'bg-amber-50 border-amber-200' : 'bg-gradient-to-b from-amber-500/10 to-transparent border-amber-500/30'
+        <div className={`text-center py-12 px-6 border rounded-3xl transition-all duration-500 ${
+          isLight ? 'bg-gradient-to-b from-amber-50 to-white border-amber-300 shadow-xl' : 'glass-card-gold border-[#FFC857]/40 shadow-2xl shadow-[#FFC857]/10'
         }`}>
-          <div className="text-5xl mb-3">🎓</div>
-          <h3 className={`text-2xl font-black mb-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>Congratulations!</h3>
-          <p className={isLight ? 'text-slate-700' : 'text-slate-400'}>You've completed the full TH3ORY Masterclass. Your certificate is ready.</p>
+          <div className="w-20 h-20 mx-auto mb-4 rounded-3xl bg-gradient-to-br from-[#FFC857] to-[#FFAA00] flex items-center justify-center shadow-xl shadow-[#FFC857]/30 text-3xl">
+            👑
+          </div>
+          <span className="px-3 py-1 rounded-full bg-[#FFC857]/20 border border-[#FFC857]/30 text-[#FFC857] text-[11px] font-black uppercase tracking-widest">
+            Distinguished Alumni
+          </span>
+          <h3 className={`text-3xl sm:text-4xl font-black font-serif tracking-tight mt-3 mb-2 ${isLight ? 'text-slate-900' : 'text-[#FAFAF7]'}`}>
+            The Masterclass is Complete
+          </h3>
+          <p className={`max-w-md mx-auto text-sm ${isLight ? 'text-slate-700' : 'text-[#8F94A3]'}`}>
+            You have mastered all 30 foundational executive influence modules. Your verified gold-embossed credential has been minted.
+          </p>
+          <div className="mt-6">
+            <button
+              onClick={() => onNavigate && onNavigate('certificate')}
+              className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#FFC857] to-[#FFAA00] text-slate-950 font-black text-xs uppercase tracking-widest shadow-xl shadow-[#FFC857]/30 hover:scale-105 active:scale-95 transition-all"
+            >
+              Access Official Credential 🏆
+            </button>
+          </div>
         </div>
       )}
     </div>
