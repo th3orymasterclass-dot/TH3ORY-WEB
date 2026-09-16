@@ -6,6 +6,8 @@ import {
 import Logo from './Logo';
 import SEOHead from './SEOHead';
 import StructuredData from './StructuredData';
+import PhilosophicalBackground from './PhilosophicalBackground';
+import InteractiveCard from './InteractiveCard';
 import { saveAffiliateApplicationToSupabase } from '../services/supabaseService';
 
 export default function AffiliateLandingPage({ onBack }) {
@@ -56,6 +58,9 @@ export default function AffiliateLandingPage({ onBack }) {
         description="Partner with TH3ORY Masterclass. Share flagship human influence & executive demeanor masterclasses with your audience and earn up to ₹1,800 cash commission per enrollment."
       />
       <StructuredData type="Course" />
+
+      {/* Symbolic Background Scroll & Synaptic Matrix Animation */}
+      <PhilosophicalBackground />
 
       {/* STICKY HEADER */}
       <header className="sticky top-0 z-40 bg-[#0B0F19]/90 backdrop-blur-md border-b border-[#E9E4FF]/10 py-4 px-4 sm:px-8">
@@ -184,16 +189,18 @@ export default function AffiliateLandingPage({ onBack }) {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                  { step: "01", title: "Apply & Get Verified", desc: "Submit your channel or audience details. Quick 24-hour verification." },
-                  { step: "02", title: "Receive Custom Links", desc: "Get unique referral URL + custom discount promo code for your followers." },
-                  { step: "03", title: "Promote & Recommend", desc: "Share TH3ORY Masterclass via YouTube, LinkedIn, Instagram, or newsletter." },
-                  { step: "04", title: "Weekly Bank Payouts", desc: "Track conversions in real-time and get automated weekly UPI/Bank payouts." }
+                  { step: "01", title: "Apply & Get Verified", desc: "Submit your channel or audience details. Quick 24-hour verification.", glow: "violet" },
+                  { step: "02", title: "Receive Custom Links", desc: "Get unique referral URL + custom discount promo code for your followers.", glow: "gold" },
+                  { step: "03", title: "Promote & Recommend", desc: "Share TH3ORY Masterclass via YouTube, LinkedIn, Instagram, or newsletter.", glow: "amber" },
+                  { step: "04", title: "Weekly Bank Payouts", desc: "Track conversions in real-time and get automated weekly UPI/Bank payouts.", glow: "emerald" }
                 ].map((item, idx) => (
-                  <div key={idx} className="glass-panel p-6 rounded-3xl border border-[#E9E4FF]/15 space-y-3 relative hover:border-[#7C5CFC] transition-all bg-[#0B0F19]/80">
-                    <div className="text-3xl font-black font-mono text-[#7C5CFC]">{item.step}</div>
-                    <h3 className="text-lg font-bold text-[#FAFAF7] font-heading">{item.title}</h3>
-                    <p className="text-xs text-[#FAFAF7]/70 leading-relaxed">{item.desc}</p>
-                  </div>
+                  <InteractiveCard key={idx} glowColor={item.glow} className="rounded-3xl">
+                    <div className="glass-panel p-6 rounded-3xl border border-[#E9E4FF]/15 space-y-3 relative hover:border-[#7C5CFC] transition-all bg-[#0B0F19]/80 h-full">
+                      <div className="text-3xl font-black font-mono text-[#7C5CFC]">{item.step}</div>
+                      <h3 className="text-lg font-bold text-[#FAFAF7] font-heading">{item.title}</h3>
+                      <p className="text-xs text-[#FAFAF7]/70 leading-relaxed">{item.desc}</p>
+                    </div>
+                  </InteractiveCard>
                 ))}
               </div>
             </div>
@@ -204,18 +211,24 @@ export default function AffiliateLandingPage({ onBack }) {
                 <Gift className="w-5 h-5 text-[#FFC857]" /> Turnkey Affiliate Marketing Kit Provided
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-[#FAFAF7]/80">
-                <div className="p-4 rounded-2xl bg-[#15171A] border border-[#E9E4FF]/10 space-y-2">
-                  <strong className="text-[#FAFAF7] block text-sm font-heading">🎨 High-Res Banners &amp; Social Assets</strong>
-                  <p>Ready-to-use story templates, carousel graphics, and banner ads optimized for LinkedIn, Instagram, and web.</p>
-                </div>
-                <div className="p-4 rounded-2xl bg-[#15171A] border border-[#E9E4FF]/10 space-y-2">
-                  <strong className="text-[#FAFAF7] block text-sm font-heading">📝 Email &amp; Newsletter Copies</strong>
-                  <p>High-converting email sequences written by top copywriters to introduce TH3ORY to your subscribers.</p>
-                </div>
-                <div className="p-4 rounded-2xl bg-[#15171A] border border-[#E9E4FF]/10 space-y-2">
-                  <strong className="text-[#FAFAF7] block text-sm font-heading">🏷️ Exclusive Custom Promo Code</strong>
-                  <p>Offer your audience an exclusive 10% OFF discount code tied specifically to your partner account.</p>
-                </div>
+                <InteractiveCard glowColor="violet" className="rounded-2xl">
+                  <div className="p-4 rounded-2xl bg-[#15171A] border border-[#E9E4FF]/10 space-y-2 h-full">
+                    <strong className="text-[#FAFAF7] block text-sm font-heading">🎨 High-Res Banners &amp; Social Assets</strong>
+                    <p>Ready-to-use story templates, carousel graphics, and banner ads optimized for LinkedIn, Instagram, and web.</p>
+                  </div>
+                </InteractiveCard>
+                <InteractiveCard glowColor="gold" className="rounded-2xl">
+                  <div className="p-4 rounded-2xl bg-[#15171A] border border-[#E9E4FF]/10 space-y-2 h-full">
+                    <strong className="text-[#FAFAF7] block text-sm font-heading">📝 Email &amp; Newsletter Copies</strong>
+                    <p>High-converting email sequences written by top copywriters to introduce TH3ORY to your subscribers.</p>
+                  </div>
+                </InteractiveCard>
+                <InteractiveCard glowColor="amber" className="rounded-2xl">
+                  <div className="p-4 rounded-2xl bg-[#15171A] border border-[#E9E4FF]/10 space-y-2 h-full">
+                    <strong className="text-[#FAFAF7] block text-sm font-heading">🏷️ Exclusive Custom Promo Code</strong>
+                    <p>Offer your audience an exclusive 10% OFF discount code tied specifically to your partner account.</p>
+                  </div>
+                </InteractiveCard>
               </div>
             </div>
 

@@ -8,6 +8,8 @@ import {
 import Logo from './Logo';
 import SEOHead from './SEOHead';
 import StructuredData from './StructuredData';
+import PhilosophicalBackground from './PhilosophicalBackground';
+import InteractiveCard from './InteractiveCard';
 import { saveAmbassadorApplicationToSupabase } from '../services/supabaseService';
 
 export default function AmbassadorLandingPage() {
@@ -83,9 +85,8 @@ export default function AmbassadorLandingPage() {
       />
       <StructuredData type="Course" />
 
-      {/* Ambient background spotlights */}
-      <div className="fixed top-0 left-1/3 w-[800px] h-[500px] bg-[#7C5CFC]/15 rounded-full blur-[160px] pointer-events-none -z-10 animate-pulse-glow" />
-      <div className="fixed bottom-1/4 right-10 w-[600px] h-[400px] bg-[#FFC857]/10 rounded-full blur-[180px] pointer-events-none -z-10" />
+      {/* Symbolic Background Scroll & Synaptic Matrix Animation */}
+      <PhilosophicalBackground />
 
       {/* HEADER NAVBAR */}
       <header className="sticky top-0 z-40 bg-[#070A11]/90 backdrop-blur-xl border-b border-white/10 py-4 px-4 sm:px-8">
@@ -226,29 +227,37 @@ export default function AmbassadorLandingPage() {
 
           {/* 4 Core Poster Stats Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-16 max-w-5xl mx-auto">
-            <div className="glass-card-luxury rounded-2xl p-6 text-center hover:translate-y-[-2px] transition-all shadow-xl">
-              <div className="text-3xl sm:text-4xl font-black font-brand text-[#FFC857] uppercase">₹1,000</div>
-              <div className="text-sm font-extrabold text-[#FAFAF7] mt-1 uppercase tracking-wider">Per Enrollment</div>
-              <div className="text-xs text-slate-400 mt-0.5">Direct bank / UPI payout</div>
-            </div>
+            <InteractiveCard glowColor="gold" intensity={12} className="rounded-2xl">
+              <div className="glass-card-luxury rounded-2xl p-6 text-center h-full shadow-xl">
+                <div className="text-3xl sm:text-4xl font-black font-brand text-[#FFC857] uppercase">₹1,000</div>
+                <div className="text-sm font-extrabold text-[#FAFAF7] mt-1 uppercase tracking-wider">Per Enrollment</div>
+                <div className="text-xs text-slate-400 mt-0.5">Direct bank / UPI payout</div>
+              </div>
+            </InteractiveCard>
 
-            <div className="glass-card-luxury rounded-2xl p-6 text-center hover:translate-y-[-2px] transition-all shadow-xl">
-              <div className="text-3xl sm:text-4xl font-black font-brand text-gradient-violet uppercase">12 Weeks</div>
-              <div className="text-sm font-extrabold text-[#FAFAF7] mt-1 uppercase tracking-wider">Term Duration</div>
-              <div className="text-xs text-slate-400 mt-0.5">Hands-on campus leadership</div>
-            </div>
+            <InteractiveCard glowColor="violet" intensity={12} className="rounded-2xl">
+              <div className="glass-card-luxury rounded-2xl p-6 text-center h-full shadow-xl">
+                <div className="text-3xl sm:text-4xl font-black font-brand text-gradient-violet uppercase">12 Weeks</div>
+                <div className="text-sm font-extrabold text-[#FAFAF7] mt-1 uppercase tracking-wider">Term Duration</div>
+                <div className="text-xs text-slate-400 mt-0.5">Hands-on campus leadership</div>
+              </div>
+            </InteractiveCard>
 
-            <div className="glass-card-luxury rounded-2xl p-6 text-center hover:translate-y-[-2px] transition-all shadow-xl">
-              <div className="text-3xl sm:text-4xl font-black font-brand text-[#FFC857] uppercase">Top 5%</div>
-              <div className="text-sm font-extrabold text-[#FAFAF7] mt-1 uppercase tracking-wider">Cash Bonuses</div>
-              <div className="text-xs text-slate-400 mt-0.5">Performance milestone tiers</div>
-            </div>
+            <InteractiveCard glowColor="amber" intensity={12} className="rounded-2xl">
+              <div className="glass-card-luxury rounded-2xl p-6 text-center h-full shadow-xl">
+                <div className="text-3xl sm:text-4xl font-black font-brand text-[#FFC857] uppercase">Top 5%</div>
+                <div className="text-sm font-extrabold text-[#FAFAF7] mt-1 uppercase tracking-wider">Cash Bonuses</div>
+                <div className="text-xs text-slate-400 mt-0.5">Performance milestone tiers</div>
+              </div>
+            </InteractiveCard>
 
-            <div className="glass-card-luxury rounded-2xl p-6 text-center hover:translate-y-[-2px] transition-all shadow-xl">
-              <div className="text-3xl sm:text-4xl font-black font-brand text-gradient-violet uppercase">Verified</div>
-              <div className="text-sm font-extrabold text-[#FAFAF7] mt-1 uppercase tracking-wider">Credentials</div>
-              <div className="text-xs text-slate-400 mt-0.5">LOR &amp; Leadership Certificate</div>
-            </div>
+            <InteractiveCard glowColor="indigo" intensity={12} className="rounded-2xl">
+              <div className="glass-card-luxury rounded-2xl p-6 text-center h-full shadow-xl">
+                <div className="text-3xl sm:text-4xl font-black font-brand text-gradient-violet uppercase">Verified</div>
+                <div className="text-sm font-extrabold text-[#FAFAF7] mt-1 uppercase tracking-wider">Credentials</div>
+                <div className="text-xs text-slate-400 mt-0.5">LOR &amp; Leadership Certificate</div>
+              </div>
+            </InteractiveCard>
           </div>
 
         </div>
@@ -262,35 +271,41 @@ export default function AmbassadorLandingPage() {
             
             {/* PROGRAM HIGHLIGHTS GRID */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="glass-card-luxury p-7 rounded-3xl space-y-3.5 shadow-2xl">
-                <div className="w-12 h-12 rounded-2xl bg-[#FFC857]/15 border border-[#FFC857]/30 text-[#FFC857] flex items-center justify-center font-bold shadow-lg shadow-[#FFC857]/10">
-                  <Calendar className="w-6 h-6 text-[#FFC857]" />
+              <InteractiveCard glowColor="gold" className="rounded-3xl">
+                <div className="glass-card-luxury p-7 rounded-3xl space-y-3.5 shadow-2xl h-full">
+                  <div className="w-12 h-12 rounded-2xl bg-[#FFC857]/15 border border-[#FFC857]/30 text-[#FFC857] flex items-center justify-center font-bold shadow-lg shadow-[#FFC857]/10">
+                    <Calendar className="w-6 h-6 text-[#FFC857]" />
+                  </div>
+                  <h3 className="text-lg font-bold text-white font-heading">12-Week Term</h3>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    Structured 12-week leadership term with flexible hours. Top performers are eligible for term renewal and senior leadership promotions.
+                  </p>
                 </div>
-                <h3 className="text-lg font-bold text-white font-heading">12-Week Term</h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Structured 12-week leadership term with flexible hours. Top performers are eligible for term renewal and senior leadership promotions.
-                </p>
-              </div>
+              </InteractiveCard>
 
-              <div className="glass-card-luxury p-7 rounded-3xl space-y-3.5 shadow-2xl">
-                <div className="w-12 h-12 rounded-2xl bg-[#7C5CFC]/15 border border-[#7C5CFC]/30 text-[#7C5CFC] flex items-center justify-center font-bold shadow-lg shadow-[#7C5CFC]/10">
-                  <Users className="w-6 h-6 text-[#7C5CFC]" />
+              <InteractiveCard glowColor="violet" className="rounded-3xl">
+                <div className="glass-card-luxury p-7 rounded-3xl space-y-3.5 shadow-2xl h-full">
+                  <div className="w-12 h-12 rounded-2xl bg-[#7C5CFC]/15 border border-[#7C5CFC]/30 text-[#7C5CFC] flex items-center justify-center font-bold shadow-lg shadow-[#7C5CFC]/10">
+                    <Users className="w-6 h-6 text-[#7C5CFC]" />
+                  </div>
+                  <h3 className="text-lg font-bold text-white font-heading">1–3 Per College</h3>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    Exclusive appointment limit of 1 to 3 ambassadors per campus to maintain high cohort selectivity and high commission potential.
+                  </p>
                 </div>
-                <h3 className="text-lg font-bold text-white font-heading">1–3 Per College</h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Exclusive appointment limit of 1 to 3 ambassadors per campus to maintain high cohort selectivity and high commission potential.
-                </p>
-              </div>
+              </InteractiveCard>
 
-              <div className="glass-card-luxury p-7 rounded-3xl space-y-3.5 shadow-2xl">
-                <div className="w-12 h-12 rounded-2xl bg-[#FFC857]/15 border border-[#FFC857]/30 text-[#FFC857] flex items-center justify-center font-bold shadow-lg shadow-[#FFC857]/10">
-                  <DollarSign className="w-6 h-6 text-[#FFC857]" />
+              <InteractiveCard glowColor="amber" className="rounded-3xl">
+                <div className="glass-card-luxury p-7 rounded-3xl space-y-3.5 shadow-2xl h-full">
+                  <div className="w-12 h-12 rounded-2xl bg-[#FFC857]/15 border border-[#FFC857]/30 text-[#FFC857] flex items-center justify-center font-bold shadow-lg shadow-[#FFC857]/10">
+                    <DollarSign className="w-6 h-6 text-[#FFC857]" />
+                  </div>
+                  <h3 className="text-lg font-bold text-white font-heading">₹1,000 / Enrollment</h3>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    Direct cash commission on every successful student referral driven via your unique referral code or QR link.
+                  </p>
                 </div>
-                <h3 className="text-lg font-bold text-white font-heading">₹1,000 / Enrollment</h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Direct cash commission on every successful student referral driven via your unique referral code or QR link.
-                </p>
-              </div>
+              </InteractiveCard>
             </div>
 
             {/* 3-TIER INCENTIVE HIERARCHY */}
@@ -303,52 +318,58 @@ export default function AmbassadorLandingPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 
                 {/* TIER 1 */}
-                <div className="p-7 rounded-3xl glass-card-luxury space-y-4 text-left relative overflow-hidden shadow-2xl">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-extrabold uppercase tracking-widest text-slate-400 font-mono">Tier 1 • Active</span>
-                    <Award className="w-5 h-5 text-slate-400" />
+                <InteractiveCard glowColor="indigo" className="rounded-3xl">
+                  <div className="p-7 rounded-3xl glass-card-luxury space-y-4 text-left relative overflow-hidden shadow-2xl h-full">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-extrabold uppercase tracking-widest text-slate-400 font-mono">Tier 1 • Active</span>
+                      <Award className="w-5 h-5 text-slate-400" />
+                    </div>
+                    <h3 className="text-xl font-bold text-white font-serif-luxury">Starter Ambassador</h3>
+                    <p className="text-xs text-slate-300">Awarded upon completing onboarding &amp; remaining active.</p>
+                    
+                    <ul className="space-y-2.5 text-xs text-slate-300 border-t border-white/10 pt-4">
+                      <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-slate-400 shrink-0" /> Digital Certificate of Appointment</li>
+                      <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-slate-400 shrink-0" /> Campus Ambassador Badge</li>
+                      <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-slate-400 shrink-0" /> Official LinkedIn Recommendation</li>
+                    </ul>
                   </div>
-                  <h3 className="text-xl font-bold text-white font-serif-luxury">Starter Ambassador</h3>
-                  <p className="text-xs text-slate-300">Awarded upon completing onboarding &amp; remaining active.</p>
-                  
-                  <ul className="space-y-2.5 text-xs text-slate-300 border-t border-white/10 pt-4">
-                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-slate-400 shrink-0" /> Digital Certificate of Appointment</li>
-                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-slate-400 shrink-0" /> Campus Ambassador Badge</li>
-                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-slate-400 shrink-0" /> Official LinkedIn Recommendation</li>
-                  </ul>
-                </div>
+                </InteractiveCard>
 
                 {/* TIER 2 */}
-                <div className="p-7 rounded-3xl glass-card-gold space-y-4 text-left relative overflow-hidden shadow-2xl">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-extrabold uppercase tracking-widest text-[#FFC857] font-mono">Tier 2 • 300 Points</span>
-                    <Gift className="w-5 h-5 text-[#FFC857]" />
+                <InteractiveCard glowColor="gold" className="rounded-3xl">
+                  <div className="p-7 rounded-3xl glass-card-gold space-y-4 text-left relative overflow-hidden shadow-2xl h-full">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-extrabold uppercase tracking-widest text-[#FFC857] font-mono">Tier 2 • 300 Points</span>
+                      <Gift className="w-5 h-5 text-[#FFC857]" />
+                    </div>
+                    <h3 className="text-xl font-bold text-white font-serif-luxury">Achiever Ambassador</h3>
+                    <p className="text-xs text-slate-300">Unlocked at 300 Ambassador Points.</p>
+                    
+                    <ul className="space-y-2.5 text-xs text-slate-200 border-t border-[#FFC857]/20 pt-4">
+                      <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#FFC857] shrink-0" /> Full TH3ORY Masterclass Course Access Pass</li>
+                      <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#FFC857] shrink-0" /> Official TH3ORY Merchandise Kit</li>
+                      <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#FFC857] shrink-0" /> ₹2,000 Gift Vouchers</li>
+                    </ul>
                   </div>
-                  <h3 className="text-xl font-bold text-white font-serif-luxury">Achiever Ambassador</h3>
-                  <p className="text-xs text-slate-300">Unlocked at 300 Ambassador Points.</p>
-                  
-                  <ul className="space-y-2.5 text-xs text-slate-200 border-t border-[#FFC857]/20 pt-4">
-                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#FFC857] shrink-0" /> Full TH3ORY Masterclass Course Access Pass</li>
-                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#FFC857] shrink-0" /> Official TH3ORY Merchandise Kit</li>
-                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#FFC857] shrink-0" /> ₹2,000 Gift Vouchers</li>
-                  </ul>
-                </div>
+                </InteractiveCard>
 
                 {/* TIER 3 */}
-                <div className="p-7 rounded-3xl glass-card-luxury space-y-4 text-left relative overflow-hidden shadow-2xl border-[#7C5CFC]/40">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-extrabold uppercase tracking-widest text-[#9277FF] font-mono">Tier 3 • 700 Points</span>
-                    <Trophy className="w-5 h-5 text-[#9277FF]" />
+                <InteractiveCard glowColor="violet" className="rounded-3xl">
+                  <div className="p-7 rounded-3xl glass-card-luxury space-y-4 text-left relative overflow-hidden shadow-2xl border-[#7C5CFC]/40 h-full">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-extrabold uppercase tracking-widest text-[#9277FF] font-mono">Tier 3 • 700 Points</span>
+                      <Trophy className="w-5 h-5 text-[#9277FF]" />
+                    </div>
+                    <h3 className="text-xl font-bold text-white font-serif-luxury">Executive Leader</h3>
+                    <p className="text-xs text-slate-300">Unlocked at 700 Ambassador Points.</p>
+                    
+                    <ul className="space-y-2.5 text-xs text-slate-200 border-t border-white/10 pt-4">
+                      <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#7C5CFC] shrink-0" /> Cash Performance Bonus</li>
+                      <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#7C5CFC] shrink-0" /> Premium Executive Merch Box</li>
+                      <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#7C5CFC] shrink-0" /> 1-on-1 Mentorship with Sravan Sudhakaran</li>
+                    </ul>
                   </div>
-                  <h3 className="text-xl font-bold text-white font-serif-luxury">Executive Leader</h3>
-                  <p className="text-xs text-slate-300">Unlocked at 700 Ambassador Points.</p>
-                  
-                  <ul className="space-y-2.5 text-xs text-slate-200 border-t border-white/10 pt-4">
-                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#7C5CFC] shrink-0" /> Cash Performance Bonus</li>
-                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#7C5CFC] shrink-0" /> Premium Executive Merch Box</li>
-                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#7C5CFC] shrink-0" /> 1-on-1 Mentorship with Sravan Sudhakaran</li>
-                  </ul>
-                </div>
+                </InteractiveCard>
 
               </div>
             </section>

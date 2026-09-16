@@ -1,5 +1,6 @@
 import React from 'react';
 import { Eye, Zap, Heart, Users, Award, CheckCircle2, GraduationCap, Briefcase, TrendingUp, Star, ShieldCheck, Sparkles } from 'lucide-react';
+import InteractiveCard from './InteractiveCard';
 import { useTh3oryLive } from '../data/adminData';
 
 export default function PillarsSection() {
@@ -39,21 +40,27 @@ export default function PillarsSection() {
             {courseDetails.pillars.map((pillar, idx) => {
               const IconComp = iconMap[pillar.icon] || Sparkles;
               return (
-                <div
+                <InteractiveCard
                   key={pillar.id}
-                  className="glass-panel rounded-2xl p-6 text-center space-y-4 border border-amber-500/20 hover:border-amber-400/60 hover:translate-y-[-4px] transition-all duration-300 group"
+                  glowColor={idx % 2 === 0 ? "gold" : "violet"}
+                  maxTilt={9}
+                  className="h-full"
                 >
-                  <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <IconComp className="w-6 h-6" />
+                  <div className="glass-panel rounded-2xl p-6 text-center space-y-4 border border-amber-500/20 h-full flex flex-col justify-between group">
+                    <div className="space-y-3">
+                      <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <IconComp className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-mono font-bold text-amber-400 uppercase tracking-widest block">PILLAR 0{idx + 1}</span>
+                        <h3 className="text-xl font-extrabold font-brand text-white mt-0.5">{pillar.name}</h3>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-300 font-medium leading-relaxed mt-2">
+                      {pillar.tagline}
+                    </p>
                   </div>
-                  <div>
-                    <span className="text-[10px] font-mono font-bold text-amber-400 uppercase tracking-widest block">PILLAR 0{idx + 1}</span>
-                    <h3 className="text-xl font-extrabold font-brand text-white mt-0.5">{pillar.name}</h3>
-                  </div>
-                  <p className="text-xs text-slate-300 font-medium leading-relaxed">
-                    {pillar.tagline}
-                  </p>
-                </div>
+                </InteractiveCard>
               );
             })}
           </div>
@@ -97,13 +104,23 @@ export default function PillarsSection() {
             {courseDetails.whoIsThisFor.map((target, idx) => {
               const IconComp = iconMap[target.icon] || Users;
               return (
-                <div key={idx} className="glass-card rounded-2xl p-5 text-center space-y-3 border border-slate-800 hover:border-amber-500/40 transition-all">
-                  <div className="w-10 h-10 mx-auto rounded-xl bg-slate-900 text-amber-400 flex items-center justify-center border border-amber-500/20">
-                    <IconComp className="w-5 h-5" />
+                <InteractiveCard
+                  key={idx}
+                  glowColor="gold"
+                  maxTilt={6}
+                  scale={1.02}
+                  className="h-full"
+                >
+                  <div className="glass-card rounded-2xl p-5 text-center space-y-3 border border-slate-800 h-full flex flex-col justify-between">
+                    <div>
+                      <div className="w-10 h-10 mx-auto rounded-xl bg-slate-900 text-amber-400 flex items-center justify-center border border-amber-500/20 mb-3">
+                        <IconComp className="w-5 h-5" />
+                      </div>
+                      <h4 className="text-sm font-bold font-brand text-white">{target.title}</h4>
+                    </div>
+                    <p className="text-xs text-slate-400">{target.description}</p>
                   </div>
-                  <h4 className="text-sm font-bold font-brand text-white">{target.title}</h4>
-                  <p className="text-xs text-slate-400">{target.description}</p>
-                </div>
+                </InteractiveCard>
               );
             })}
           </div>

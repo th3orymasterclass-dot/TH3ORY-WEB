@@ -349,3 +349,61 @@ html, body {
   );
 }
 
+/* 3D Perspective & Touch Responsive Card Tokens */
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.will-change-transform {
+  will-change: transform;
+}
+
+/* Subtle Specular Sheen & Border Illumination */
+.card-specular-glow {
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
+}
+
+.card-specular-glow:hover,
+.card-specular-glow:active {
+  border-color: rgba(255, 200, 87, 0.4);
+  box-shadow: 0 16px 40px -10px rgba(124, 92, 252, 0.25), 0 0 20px -2px rgba(255, 200, 87, 0.15);
+}
+
+/* Scroll-Driven Philosophical Reveal (Progressive Enhancement) */
+@media (prefers-reduced-motion: no-preference) {
+  @supports ((animation-timeline: view()) and (animation-range: entry)) {
+    @keyframes subtleReveal {
+      from {
+        opacity: 0.7;
+        transform: translateY(16px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .scroll-reveal-card {
+      animation: subtleReveal auto linear backwards;
+      animation-timeline: view(block);
+      animation-range: entry 10% cover 35%;
+    }
+  }
+}
+
+/* Reduced Motion Safety */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+

@@ -6,6 +6,8 @@ import {
 import Logo from './Logo';
 import SEOHead from './SEOHead';
 import StructuredData from './StructuredData';
+import PhilosophicalBackground from './PhilosophicalBackground';
+import InteractiveCard from './InteractiveCard';
 
 export default function MasterclassAdvertisingPage({ onOpenCheckout, onOpenVideo, onBack }) {
   const [activeLevel, setActiveLevel] = useState(0);
@@ -74,7 +76,10 @@ export default function MasterclassAdvertisingPage({ onOpenCheckout, onOpenVideo
   ];
 
   return (
-    <div className="min-h-screen bg-[#15171A] text-[#FAFAF7] font-sans relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#070A11]/80 text-[#FAFAF7] font-sans relative overflow-x-hidden">
+      {/* Symbolic Background Scroll & Synaptic Matrix Animation */}
+      <PhilosophicalBackground />
+
       <SEOHead 
         title="30-Day Masterclass Program Architecture • TH3ORY"
         description="Explore the complete 30-Day Human Influence System by Mentalist Sravan Sudhakaran. Level-by-level curriculum breakdown, 5-Pillar framework, and daily habit tracking."
@@ -241,38 +246,54 @@ export default function MasterclassAdvertisingPage({ onOpenCheckout, onOpenVideo
 
           <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 text-left font-mono text-xs">
             {[
-              { pillar: "01", title: "PRESENCE", color: "text-[#7C5CFC]", desc: "Physical space, posture, vocal resonance, non-verbal confidence." },
-              { pillar: "02", title: "POWER", color: "text-[#FFC857]", desc: "Conviction, authority levers, boundary setting, decision control." },
-              { pillar: "03", title: "WARMTH", color: "text-[#3B82F6]", desc: "Empathy, active listening, rapid rapport, emotional safety." },
-              { pillar: "04", title: "CONNECTION", color: "text-[#10B981]", desc: "Strategic networking, trust architecture, relationship capital." },
-              { pillar: "05", title: "LEGACY", color: "text-[#F472B6]", desc: "Long-term influence systems, ethical leadership, mentor status." }
+              { pillar: "01", title: "PRESENCE", color: "text-[#7C5CFC]", glow: "violet", desc: "Physical space, posture, vocal resonance, non-verbal confidence." },
+              { pillar: "02", title: "POWER", color: "text-[#FFC857]", glow: "gold", desc: "Conviction, authority levers, boundary setting, decision control." },
+              { pillar: "03", title: "WARMTH", color: "text-[#3B82F6]", glow: "indigo", desc: "Empathy, active listening, rapid rapport, emotional safety." },
+              { pillar: "04", title: "CONNECTION", color: "text-[#10B981]", glow: "emerald", desc: "Strategic networking, trust architecture, relationship capital." },
+              { pillar: "05", title: "LEGACY", color: "text-[#F472B6]", glow: "violet", desc: "Long-term influence systems, ethical leadership, mentor status." }
             ].map((p, idx) => (
-              <div key={idx} className="glass-panel p-5 rounded-2xl border border-[#E9E4FF]/10 space-y-2 bg-[#0B0F19]/80">
-                <div className={`text-2xl font-black ${p.color}`}>{p.pillar}</div>
-                <strong className="block text-sm font-bold text-[#FAFAF7] font-heading">{p.title}</strong>
-                <p className="text-[11px] text-[#555A66] font-sans leading-relaxed">{p.desc}</p>
-              </div>
+              <InteractiveCard
+                key={idx}
+                glowColor={p.glow}
+                maxTilt={8}
+                className="h-full"
+              >
+                <div className="glass-panel p-5 rounded-2xl border border-[#E9E4FF]/10 space-y-2 bg-[#0B0F19]/80 h-full flex flex-col justify-between">
+                  <div>
+                    <div className={`text-2xl font-black ${p.color}`}>{p.pillar}</div>
+                    <strong className="block text-sm font-bold text-[#FAFAF7] font-heading mt-1">{p.title}</strong>
+                  </div>
+                  <p className="text-[11px] text-[#555A66] font-sans leading-relaxed">{p.desc}</p>
+                </div>
+              </InteractiveCard>
             ))}
           </div>
         </div>
 
         {/* INSTRUCTOR SPOTLIGHT */}
-        <div className="p-8 sm:p-12 rounded-3xl bg-[#0B0F19] border border-[#555A66]/30 flex flex-col sm:flex-row items-center gap-8">
-          <div className="w-32 h-32 sm:w-44 sm:h-44 rounded-full bg-gradient-to-tr from-[#7C5CFC] to-[#FFC857] p-1 shrink-0 shadow-2xl">
-            <div className="w-full h-full rounded-full bg-[#15171A] flex items-center justify-center font-black font-brand text-3xl text-[#FFC857]">
-              SS
+        <InteractiveCard
+          glowColor="gold"
+          maxTilt={4}
+          scale={1.01}
+          className="w-full"
+        >
+          <div className="p-8 sm:p-12 rounded-3xl bg-[#0B0F19]/90 border border-[#555A66]/30 flex flex-col sm:flex-row items-center gap-8 shadow-2xl">
+            <div className="w-32 h-32 sm:w-44 sm:h-44 rounded-full bg-gradient-to-tr from-[#7C5CFC] to-[#FFC857] p-1 shrink-0 shadow-2xl">
+              <div className="w-full h-full rounded-full bg-[#15171A] flex items-center justify-center font-black font-brand text-3xl text-[#FFC857]">
+                SS
+              </div>
+            </div>
+            <div className="space-y-3 text-center sm:text-left">
+              <div className="inline-block px-3 py-1 rounded-full bg-[#FFC857]/10 text-[#FFC857] text-xs font-bold uppercase tracking-wider">
+                Lead Masterclass Instructor
+              </div>
+              <h3 className="text-2xl sm:text-3xl font-black font-heading text-[#FAFAF7]">Mentalist Sravan Sudhakaran</h3>
+              <p className="text-sm text-[#FAFAF7]/80 leading-relaxed font-serif-luxury italic">
+                Renowned mentalist, behavioral perception strategist, and executive influence coach. Sravan has trained high-net-worth founders, corporate leaders, and elite professionals in the science of subtle human influence.
+              </p>
             </div>
           </div>
-          <div className="space-y-3 text-center sm:text-left">
-            <div className="inline-block px-3 py-1 rounded-full bg-[#FFC857]/10 text-[#FFC857] text-xs font-bold uppercase tracking-wider">
-              Lead Masterclass Instructor
-            </div>
-            <h3 className="text-2xl sm:text-3xl font-black font-heading text-[#FAFAF7]">Mentalist Sravan Sudhakaran</h3>
-            <p className="text-sm text-[#FAFAF7]/80 leading-relaxed font-serif-luxury italic">
-              Renowned mentalist, behavioral perception strategist, and executive influence coach. Sravan has trained high-net-worth founders, corporate leaders, and elite professionals in the science of subtle human influence.
-            </p>
-          </div>
-        </div>
+        </InteractiveCard>
 
       </div>
     </div>

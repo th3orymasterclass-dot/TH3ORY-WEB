@@ -6,6 +6,8 @@ import {
 import Logo from './Logo';
 import SEOHead from './SEOHead';
 import StructuredData from './StructuredData';
+import PhilosophicalBackground from './PhilosophicalBackground';
+import InteractiveCard from './InteractiveCard';
 import { saveContactInquiryToSupabase } from '../services/supabaseService';
 
 export default function InstitutionalPage({ onBack }) {
@@ -99,6 +101,9 @@ export default function InstitutionalPage({ onBack }) {
         description="Bring TH3ORY Masterclass to your university campus. High-impact leadership workshops, placement interview demeanor bootcamps, and keynotes by Sravan Sudhakaran."
       />
       <StructuredData type="Course" />
+
+      {/* Symbolic Background Scroll & Synaptic Matrix Animation */}
+      <PhilosophicalBackground />
 
       {/* STICKY HEADER */}
       <header className="sticky top-0 z-40 bg-[#0B0F19]/90 backdrop-blur-md border-b border-[#E9E4FF]/10 py-4 px-4 sm:px-8">
@@ -197,33 +202,35 @@ export default function InstitutionalPage({ onBack }) {
           </div>
 
           {/* Active Format Showcase Box */}
-          <div className="glass-panel p-8 sm:p-12 rounded-3xl border border-[#7C5CFC]/30 bg-[#0B0F19]/90 space-y-6 shadow-2xl">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#555A66]/30 pb-6">
-              <div>
-                <span className="text-xs font-mono text-[#FFC857] uppercase font-bold">{formats[activeFormat].target}</span>
-                <h3 className="text-2xl font-black font-heading text-[#FAFAF7] uppercase mt-1">{formats[activeFormat].title}</h3>
+          <InteractiveCard glowColor="violet" className="rounded-3xl">
+            <div className="glass-panel p-8 sm:p-12 rounded-3xl border border-[#7C5CFC]/30 bg-[#0B0F19]/90 space-y-6 shadow-2xl h-full">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#555A66]/30 pb-6">
+                <div>
+                  <span className="text-xs font-mono text-[#FFC857] uppercase font-bold">{formats[activeFormat].target}</span>
+                  <h3 className="text-2xl font-black font-heading text-[#FAFAF7] uppercase mt-1">{formats[activeFormat].title}</h3>
+                </div>
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#15171A] border border-[#555A66]/30 text-xs font-mono text-[#FAFAF7]">
+                  <Clock className="w-4 h-4 text-[#7C5CFC]" /> {formats[activeFormat].duration}
+                </div>
               </div>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#15171A] border border-[#555A66]/30 text-xs font-mono text-[#FAFAF7]">
-                <Clock className="w-4 h-4 text-[#7C5CFC]" /> {formats[activeFormat].duration}
+
+              <p className="text-base text-[#FAFAF7]/90 font-serif-luxury italic leading-relaxed">
+                "{formats[activeFormat].description}"
+              </p>
+
+              <div className="space-y-3 pt-2">
+                <h4 className="text-xs font-extrabold uppercase tracking-widest text-[#555A66]">Key Curriculum Modules Included</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {formats[activeFormat].features.map((feat, fIdx) => (
+                    <div key={fIdx} className="flex items-center gap-2 text-sm text-[#FAFAF7]/90 bg-[#15171A] p-3 rounded-xl border border-[#E9E4FF]/10">
+                      <CheckCircle2 className="w-4 h-4 text-[#10B981] shrink-0" />
+                      <span>{feat}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-
-            <p className="text-base text-[#FAFAF7]/90 font-serif-luxury italic leading-relaxed">
-              "{formats[activeFormat].description}"
-            </p>
-
-            <div className="space-y-3 pt-2">
-              <h4 className="text-xs font-extrabold uppercase tracking-widest text-[#555A66]">Key Curriculum Modules Included</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {formats[activeFormat].features.map((feat, fIdx) => (
-                  <div key={fIdx} className="flex items-center gap-2 text-sm text-[#FAFAF7]/90 bg-[#15171A] p-3 rounded-xl border border-[#E9E4FF]/10">
-                    <CheckCircle2 className="w-4 h-4 text-[#10B981] shrink-0" />
-                    <span>{feat}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          </InteractiveCard>
         </div>
 
         {/* INQUIRY FORM */}

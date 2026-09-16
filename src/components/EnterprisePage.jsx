@@ -11,6 +11,8 @@ import StructuredData from './StructuredData';
 import { saveEnterpriseQuoteToSupabase } from '../services/supabaseService';
 import CalendlyModal from './CalendlyModal';
 import EnterpriseDiagnosticModal from './EnterpriseDiagnosticModal';
+import PhilosophicalBackground from './PhilosophicalBackground';
+import InteractiveCard from './InteractiveCard';
 
 export default function EnterprisePage({ onBack }) {
   // Carousel State
@@ -152,6 +154,9 @@ export default function EnterprisePage({ onBack }) {
         canonicalUrl="https://th3ory.online/enterprise"
       />
       <StructuredData />
+
+      {/* Symbolic Background Scroll & Synaptic Matrix Animation */}
+      <PhilosophicalBackground />
 
       {/* TOP NAVIGATION BAR */}
       <header className="fixed top-0 left-0 right-0 z-40 glass-panel py-3.5 shadow-2xl border-b border-[#E9E4FF]/15">
@@ -296,29 +301,37 @@ export default function EnterprisePage({ onBack }) {
 
           {/* 4 Core Poster Stats Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-16 max-w-5xl mx-auto">
-            <div className="glass-card rounded-2xl p-6 text-center hover:translate-y-[-2px] transition-all border border-[#E9E4FF]/15">
-              <div className="text-2xl sm:text-3xl md:text-4xl font-black font-brand text-gradient-violet uppercase">5 Pillars</div>
-              <div className="text-sm font-extrabold text-[#FAFAF7] mt-1 uppercase tracking-wider">Leadership System</div>
-              <div className="text-xs text-[#555A66] mt-0.5">Complete behavioral architecture</div>
-            </div>
+            <InteractiveCard glowColor="violet" intensity={12} className="rounded-2xl">
+              <div className="glass-card rounded-2xl p-6 text-center border border-[#E9E4FF]/15 h-full">
+                <div className="text-2xl sm:text-3xl md:text-4xl font-black font-brand text-gradient-violet uppercase">5 Pillars</div>
+                <div className="text-sm font-extrabold text-[#FAFAF7] mt-1 uppercase tracking-wider">Leadership System</div>
+                <div className="text-xs text-[#555A66] mt-0.5">Complete behavioral architecture</div>
+              </div>
+            </InteractiveCard>
 
-            <div className="glass-card rounded-2xl p-6 text-center hover:translate-y-[-2px] transition-all border border-[#E9E4FF]/15">
-              <div className="text-2xl sm:text-3xl md:text-4xl font-black font-brand text-gradient-violet uppercase">4 Formats</div>
-              <div className="text-sm font-extrabold text-[#FAFAF7] mt-1 uppercase tracking-wider">Flexible Delivery</div>
-              <div className="text-xs text-[#555A66] mt-0.5">Intensive, Cohort, Accelerator, Academy</div>
-            </div>
+            <InteractiveCard glowColor="gold" intensity={12} className="rounded-2xl">
+              <div className="glass-card rounded-2xl p-6 text-center border border-[#E9E4FF]/15 h-full">
+                <div className="text-2xl sm:text-3xl md:text-4xl font-black font-brand text-gradient-violet uppercase">4 Formats</div>
+                <div className="text-sm font-extrabold text-[#FAFAF7] mt-1 uppercase tracking-wider">Flexible Delivery</div>
+                <div className="text-xs text-[#555A66] mt-0.5">Intensive, Cohort, Accelerator, Academy</div>
+              </div>
+            </InteractiveCard>
 
-            <div className="glass-card rounded-2xl p-6 text-center hover:translate-y-[-2px] transition-all border border-[#E9E4FF]/15">
-              <div className="text-2xl sm:text-3xl md:text-4xl font-black font-brand text-gradient-violet uppercase">4 Principles</div>
-              <div className="text-sm font-extrabold text-[#FAFAF7] mt-1 uppercase tracking-wider">Ethical Influence</div>
-              <div className="text-xs text-[#555A66] mt-0.5">Transparency, Respect, Mutual Benefit</div>
-            </div>
+            <InteractiveCard glowColor="amber" intensity={12} className="rounded-2xl">
+              <div className="glass-card rounded-2xl p-6 text-center border border-[#E9E4FF]/15 h-full">
+                <div className="text-2xl sm:text-3xl md:text-4xl font-black font-brand text-gradient-violet uppercase">4 Principles</div>
+                <div className="text-sm font-extrabold text-[#FAFAF7] mt-1 uppercase tracking-wider">Ethical Influence</div>
+                <div className="text-xs text-[#555A66] mt-0.5">Transparency, Respect, Mutual Benefit</div>
+              </div>
+            </InteractiveCard>
 
-            <div className="glass-card rounded-2xl p-6 text-center hover:translate-y-[-2px] transition-all border border-[#E9E4FF]/15">
-              <div className="text-2xl sm:text-3xl md:text-4xl font-black font-brand text-gradient-violet uppercase">90-Day</div>
-              <div className="text-sm font-extrabold text-[#FAFAF7] mt-1 uppercase tracking-wider">Impact Audit</div>
-              <div className="text-xs text-[#555A66] mt-0.5">Pre &amp; post leadership review</div>
-            </div>
+            <InteractiveCard glowColor="indigo" intensity={12} className="rounded-2xl">
+              <div className="glass-card rounded-2xl p-6 text-center border border-[#E9E4FF]/15 h-full">
+                <div className="text-2xl sm:text-3xl md:text-4xl font-black font-brand text-gradient-violet uppercase">90-Day</div>
+                <div className="text-sm font-extrabold text-[#FAFAF7] mt-1 uppercase tracking-wider">Impact Audit</div>
+                <div className="text-xs text-[#555A66] mt-0.5">Pre &amp; post leadership review</div>
+              </div>
+            </InteractiveCard>
           </div>
 
         </div>
@@ -689,79 +702,89 @@ export default function EnterprisePage({ onBack }) {
           <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
             
             {/* Pillar: Presence */}
-            <div className="glass-panel rounded-3xl p-6 border border-[#7C5CFC]/30 space-y-4 hover:border-[#7C5CFC] transition-all flex flex-col justify-between">
-              <div className="space-y-3">
-                <h3 className="text-xl font-bold text-white font-brand">Presence</h3>
-                <p className="text-slate-300 text-xs leading-relaxed">
-                  Professional confidence and executive presence. Master non-verbal posture, executive vocal resonance, and commanding room authority.
-                </p>
+            <InteractiveCard glowColor="violet" className="rounded-3xl">
+              <div className="glass-panel rounded-3xl p-6 border border-[#7C5CFC]/30 space-y-4 hover:border-[#7C5CFC] transition-all flex flex-col justify-between h-full">
+                <div className="space-y-3">
+                  <h3 className="text-xl font-bold text-white font-brand">Presence</h3>
+                  <p className="text-slate-300 text-xs leading-relaxed">
+                    Professional confidence and executive presence. Master non-verbal posture, executive vocal resonance, and commanding room authority.
+                  </p>
+                </div>
+                <ul className="text-[11px] text-slate-400 space-y-1.5 border-t border-slate-800 pt-3">
+                  <li>• Executive Voice &amp; Body Language</li>
+                  <li>• Professional Confidence</li>
+                  <li>• Relationship Foundations</li>
+                </ul>
               </div>
-              <ul className="text-[11px] text-slate-400 space-y-1.5 border-t border-slate-800 pt-3">
-                <li>• Executive Voice &amp; Body Language</li>
-                <li>• Professional Confidence</li>
-                <li>• Relationship Foundations</li>
-              </ul>
-            </div>
+            </InteractiveCard>
 
             {/* Pillar: Power */}
-            <div className="glass-panel rounded-3xl p-6 border border-[#7C5CFC]/30 space-y-4 hover:border-[#7C5CFC] transition-all flex flex-col justify-between">
-              <div className="space-y-3">
-                <h3 className="text-xl font-bold text-white font-brand">Power</h3>
-                <p className="text-slate-300 text-xs leading-relaxed">
-                  Influence, negotiation, and decision-making. Lead under pressure, influence without formal authority, and steer critical conversations.
-                </p>
+            <InteractiveCard glowColor="gold" className="rounded-3xl">
+              <div className="glass-panel rounded-3xl p-6 border border-[#7C5CFC]/30 space-y-4 hover:border-[#7C5CFC] transition-all flex flex-col justify-between h-full">
+                <div className="space-y-3">
+                  <h3 className="text-xl font-bold text-white font-brand">Power</h3>
+                  <p className="text-slate-300 text-xs leading-relaxed">
+                    Influence, negotiation, and decision-making. Lead under pressure, influence without formal authority, and steer critical conversations.
+                  </p>
+                </div>
+                <ul className="text-[11px] text-slate-400 space-y-1.5 border-t border-slate-800 pt-3">
+                  <li>• Power Without Authority</li>
+                  <li>• Negotiation Tactics</li>
+                  <li>• Strategic Decision Conversations</li>
+                </ul>
               </div>
-              <ul className="text-[11px] text-slate-400 space-y-1.5 border-t border-slate-800 pt-3">
-                <li>• Power Without Authority</li>
-                <li>• Negotiation Tactics</li>
-                <li>• Strategic Decision Conversations</li>
-              </ul>
-            </div>
+            </InteractiveCard>
 
             {/* Pillar: Warmth */}
-            <div className="glass-panel rounded-3xl p-6 border border-[#7C5CFC]/30 space-y-4 hover:border-[#7C5CFC] transition-all flex flex-col justify-between">
-              <div className="space-y-3">
-                <h3 className="text-xl font-bold text-white font-brand">Warmth</h3>
-                <p className="text-slate-300 text-xs leading-relaxed">
-                  Trust, empathy, and emotional intelligence. Build deep psychological safety, defuse conflict early, and earn genuine rapport.
-                </p>
+            <InteractiveCard glowColor="amber" className="rounded-3xl">
+              <div className="glass-panel rounded-3xl p-6 border border-[#7C5CFC]/30 space-y-4 hover:border-[#7C5CFC] transition-all flex flex-col justify-between h-full">
+                <div className="space-y-3">
+                  <h3 className="text-xl font-bold text-white font-brand">Warmth</h3>
+                  <p className="text-slate-300 text-xs leading-relaxed">
+                    Trust, empathy, and emotional intelligence. Build deep psychological safety, defuse conflict early, and earn genuine rapport.
+                  </p>
+                </div>
+                <ul className="text-[11px] text-slate-400 space-y-1.5 border-t border-slate-800 pt-3">
+                  <li>• Conflict De-escalation</li>
+                  <li>• Emotional Intelligence</li>
+                  <li>• Rapport &amp; Empathy Building</li>
+                </ul>
               </div>
-              <ul className="text-[11px] text-slate-400 space-y-1.5 border-t border-slate-800 pt-3">
-                <li>• Conflict De-escalation</li>
-                <li>• Emotional Intelligence</li>
-                <li>• Rapport &amp; Empathy Building</li>
-              </ul>
-            </div>
+            </InteractiveCard>
 
             {/* Pillar: Strategic Connections */}
-            <div className="glass-panel rounded-3xl p-6 border border-[#7C5CFC]/30 space-y-4 hover:border-[#7C5CFC] transition-all flex flex-col justify-between">
-              <div className="space-y-3">
-                <h3 className="text-xl font-bold text-white font-brand">Strategic Connections</h3>
-                <p className="text-slate-300 text-xs leading-relaxed">
-                  Networking and relationship capital. Develop high-yield internal and external professional relationship systems.
-                </p>
+            <InteractiveCard glowColor="indigo" className="rounded-3xl">
+              <div className="glass-panel rounded-3xl p-6 border border-[#7C5CFC]/30 space-y-4 hover:border-[#7C5CFC] transition-all flex flex-col justify-between h-full">
+                <div className="space-y-3">
+                  <h3 className="text-xl font-bold text-white font-brand">Strategic Connections</h3>
+                  <p className="text-slate-300 text-xs leading-relaxed">
+                    Networking and relationship capital. Develop high-yield internal and external professional relationship systems.
+                  </p>
+                </div>
+                <ul className="text-[11px] text-slate-400 space-y-1.5 border-t border-slate-800 pt-3">
+                  <li>• Stakeholder Mapping</li>
+                  <li>• High-Yield Networking</li>
+                  <li>• Strategic Relationship Capital</li>
+                </ul>
               </div>
-              <ul className="text-[11px] text-slate-400 space-y-1.5 border-t border-slate-800 pt-3">
-                <li>• Stakeholder Mapping</li>
-                <li>• High-Yield Networking</li>
-                <li>• Strategic Relationship Capital</li>
-              </ul>
-            </div>
+            </InteractiveCard>
 
             {/* Pillar: Legacy */}
-            <div className="glass-panel rounded-3xl p-6 border border-[#7C5CFC]/30 space-y-4 hover:border-[#7C5CFC] transition-all flex flex-col justify-between">
-              <div className="space-y-3">
-                <h3 className="text-xl font-bold text-white font-brand">Legacy</h3>
-                <p className="text-slate-300 text-xs leading-relaxed">
-                  Leadership and long-term influence. Cultivate a sustainable personal brand, mentor future managers, and leave lasting impact.
-                </p>
+            <InteractiveCard glowColor="violet" className="rounded-3xl">
+              <div className="glass-panel rounded-3xl p-6 border border-[#7C5CFC]/30 space-y-4 hover:border-[#7C5CFC] transition-all flex flex-col justify-between h-full">
+                <div className="space-y-3">
+                  <h3 className="text-xl font-bold text-white font-brand">Legacy</h3>
+                  <p className="text-slate-300 text-xs leading-relaxed">
+                    Leadership and long-term influence. Cultivate a sustainable personal brand, mentor future managers, and leave lasting impact.
+                  </p>
+                </div>
+                <ul className="text-[11px] text-slate-400 space-y-1.5 border-t border-slate-800 pt-3">
+                  <li>• Executive Personal Branding</li>
+                  <li>• Leadership Pipeline Building</li>
+                  <li>• Long-Term Career Systems</li>
+                </ul>
               </div>
-              <ul className="text-[11px] text-slate-400 space-y-1.5 border-t border-slate-800 pt-3">
-                <li>• Executive Personal Branding</li>
-                <li>• Leadership Pipeline Building</li>
-                <li>• Long-Term Career Systems</li>
-              </ul>
-            </div>
+            </InteractiveCard>
 
           </div>
 
@@ -784,40 +807,46 @@ export default function EnterprisePage({ onBack }) {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Day One */}
-            <div className="glass-panel rounded-3xl p-8 border border-slate-800 space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 text-xs font-extrabold uppercase">Day One</span>
-                <span className="text-slate-500 text-xs font-mono">Module 01 - 03</span>
+            <InteractiveCard glowColor="amber" className="rounded-3xl">
+              <div className="glass-panel rounded-3xl p-8 border border-slate-800 space-y-4 h-full">
+                <div className="flex items-center justify-between">
+                  <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 text-xs font-extrabold uppercase">Day One</span>
+                  <span className="text-slate-500 text-xs font-mono">Module 01 - 03</span>
+                </div>
+                <h3 className="text-xl font-bold text-white">Executive Presence &amp; Psychology</h3>
+                <p className="text-slate-400 text-xs leading-relaxed">
+                  Executive Presence, Communication Psychology, Body Language, Professional Confidence, Executive Voice, and Relationship Foundations.
+                </p>
               </div>
-              <h3 className="text-xl font-bold text-white">Executive Presence &amp; Psychology</h3>
-              <p className="text-slate-400 text-xs leading-relaxed">
-                Executive Presence, Communication Psychology, Body Language, Professional Confidence, Executive Voice, and Relationship Foundations.
-              </p>
-            </div>
+            </InteractiveCard>
 
             {/* Day Two */}
-            <div className="glass-panel rounded-3xl p-8 border border-slate-800 space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="px-3 py-1 rounded-full bg-[#7C5CFC]/20 text-[#E9E4FF] text-xs font-extrabold uppercase">Day Two</span>
-                <span className="text-slate-500 text-xs font-mono">Module 04 - 06</span>
+            <InteractiveCard glowColor="violet" className="rounded-3xl">
+              <div className="glass-panel rounded-3xl p-8 border border-slate-800 space-y-4 h-full">
+                <div className="flex items-center justify-between">
+                  <span className="px-3 py-1 rounded-full bg-[#7C5CFC]/20 text-[#E9E4FF] text-xs font-extrabold uppercase">Day Two</span>
+                  <span className="text-slate-500 text-xs font-mono">Module 04 - 06</span>
+                </div>
+                <h3 className="text-xl font-bold text-white">Influence &amp; Negotiation</h3>
+                <p className="text-slate-400 text-xs leading-relaxed">
+                  Strategic Communication, Negotiation Frameworks, Conflict Management, Power Without Authority, and High-Stakes Decision Conversations.
+                </p>
               </div>
-              <h3 className="text-xl font-bold text-white">Influence &amp; Negotiation</h3>
-              <p className="text-slate-400 text-xs leading-relaxed">
-                Strategic Communication, Negotiation Frameworks, Conflict Management, Power Without Authority, and High-Stakes Decision Conversations.
-              </p>
-            </div>
+            </InteractiveCard>
 
             {/* Day Three */}
-            <div className="glass-panel rounded-3xl p-8 border border-slate-800 space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-extrabold uppercase">Day Three</span>
-                <span className="text-slate-500 text-xs font-mono">Module 07 - 10</span>
+            <InteractiveCard glowColor="emerald" className="rounded-3xl">
+              <div className="glass-panel rounded-3xl p-8 border border-slate-800 space-y-4 h-full">
+                <div className="flex items-center justify-between">
+                  <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-extrabold uppercase">Day Three</span>
+                  <span className="text-slate-500 text-xs font-mono">Module 07 - 10</span>
+                </div>
+                <h3 className="text-xl font-bold text-white">Networking &amp; Leadership Integration</h3>
+                <p className="text-slate-400 text-xs leading-relaxed">
+                  Networking Systems, Stakeholder Management, Personal Branding, Relationship Systems, 90-Day Action Planning, and Leadership Integration.
+                </p>
               </div>
-              <h3 className="text-xl font-bold text-white">Networking &amp; Leadership Integration</h3>
-              <p className="text-slate-400 text-xs leading-relaxed">
-                Networking Systems, Stakeholder Management, Personal Branding, Relationship Systems, 90-Day Action Planning, and Leadership Integration.
-              </p>
-            </div>
+            </InteractiveCard>
           </div>
 
         </div>

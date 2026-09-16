@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Tag, Check, Crown, ShieldCheck, ArrowRight, Building2, Globe2, Users, Sparkles, Send, X, Flame, Rocket } from 'lucide-react';
+import InteractiveCard from './InteractiveCard';
 import { useTh3oryLive, isEarlyBirdActive, validateCoupon } from '../data/adminData';
 import { useFeatureFlags } from '../context/FeatureFlagContext';
 import { saveEnterpriseQuoteToSupabase } from '../services/supabaseService';
@@ -177,92 +178,99 @@ export default function PricingSection({ onSelectPlan, couponCode, setCouponCode
             }
 
             return (
-              <div
+              <InteractiveCard
                 key={plan.id}
-                className={`relative rounded-3xl p-8 sm:p-9 flex flex-col justify-between transition-all duration-300 ${
-                  plan.popular
-                    ? 'glass-specular border-2 border-[#7C5CFC] shadow-2xl shadow-[#7C5CFC]/30 scale-[1.02] z-10'
-                    : 'glass-card-luxury border border-[#E9E4FF]/15 hover:border-[#FFC857]/40'
-                }`}
+                glowColor={plan.popular ? "violet" : "gold"}
+                maxTilt={6}
+                scale={plan.popular ? 1.02 : 1.015}
+                className="h-full"
               >
-                {/* Popular Badge */}
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-gradient-to-r from-[#7C5CFC] via-[#9277FF] to-[#7C5CFC] text-[#FAFAF7] text-xs font-black shadow-lg flex items-center gap-1.5 uppercase tracking-wider border border-[#FAFAF7]/30">
-                    <Crown className="w-3.5 h-3.5 text-[#FFC857] fill-[#FFC857]" /> Flagship Single Pass
-                  </div>
-                )}
-
-                <div>
-                  <div className="text-xs font-extrabold text-[#FFC857] uppercase tracking-widest mb-2 font-brand">{plan.badge}</div>
-                  <h3 className="text-2xl sm:text-3xl font-black font-brand text-[#FAFAF7]">{plan.name}</h3>
-
-                  {/* Price Tag */}
-                  <div className="my-6 min-h-[70px] flex flex-col justify-center">
-                    {isEnt ? (
-                      <div>
-                        <span className="text-3xl sm:text-4xl font-black font-brand text-[#FFC857]">Custom Quote</span>
-                        <p className="text-[#555A66] text-xs mt-1">Tailored pricing for pupils (Students &amp; Professionals)</p>
-                      </div>
-                    ) : (
-                      <div>
-                        <div className="flex items-baseline gap-2.5">
-                          <span className="text-4xl sm:text-5xl font-black font-brand text-[#FAFAF7]">{displayPriceStr}</span>
-                          {couponDiscount > 0 && (
-                            <span className="text-lg text-[#555A66] line-through">
-                              {currency === 'INR' ? `₹${rawPrice}` : `$${rawPrice}`}
-                            </span>
-                          )}
-                          <span className="text-[#555A66] text-xs font-semibold">
-                            one-time ({currency})
-                          </span>
-                        </div>
-                        {couponDiscount > 0 && (
-                          <div className="flex items-center gap-1.5 mt-1.5 text-xs font-bold text-emerald-400">
-                            <Sparkles className="w-3.5 h-3.5" />
-                            <span>{couponCode === 'EARLYBIRD20' ? '20% Early Bird Launch Discount Directly Applied' : `${couponDiscount}% Promo Discount Applied`}</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Features List */}
-                  <ul className="space-y-3 my-6 text-xs sm:text-sm text-[#FAFAF7]/90 border-t border-[#E9E4FF]/12 pt-6">
-                    {plan.features.map((feat, idx) => (
-                      <li key={idx} className="flex items-start gap-2.5">
-                        <Check className="w-4 h-4 text-[#FFC857] shrink-0 mt-0.5" />
-                        <span>{feat}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Plan Action Button */}
-                <div className="pt-6 border-t border-[#E9E4FF]/12">
-                  {isEnt ? (
-                    <button
-                      onClick={() => { window.location.hash = 'enterprise'; window.dispatchEvent(new Event('hashchange')); }}
-                      className="w-full py-4 rounded-2xl btn-luxury-ghost text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer hover:border-[#FFC857] hover:text-[#FFC857]"
-                    >
-                      <Building2 className="w-4 h-4 text-[#FFC857]" />
-                      <span>View Enterprise Programs</span>
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => onSelectPlan(plan, false)}
-                      className="w-full py-4 rounded-2xl btn-luxury-primary text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-xl shadow-[#7C5CFC]/30"
-                    >
-                      <span>Enroll in Masterclass ({displayPriceStr})</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
+                <div
+                  className={`relative rounded-3xl p-8 sm:p-9 flex flex-col justify-between h-full transition-all duration-300 ${
+                    plan.popular
+                      ? 'glass-specular border-2 border-[#7C5CFC] shadow-2xl shadow-[#7C5CFC]/30 z-10'
+                      : 'glass-card-luxury border border-[#E9E4FF]/15'
+                  }`}
+                >
+                  {/* Popular Badge */}
+                  {plan.popular && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-gradient-to-r from-[#7C5CFC] via-[#9277FF] to-[#7C5CFC] text-[#FAFAF7] text-xs font-black shadow-lg flex items-center gap-1.5 uppercase tracking-wider border border-[#FAFAF7]/30">
+                      <Crown className="w-3.5 h-3.5 text-[#FFC857] fill-[#FFC857]" /> Flagship Single Pass
+                    </div>
                   )}
-                  
-                  <p className="text-[11px] text-center text-[#555A66] mt-3 flex items-center justify-center gap-1.5">
-                    <ShieldCheck className="w-3.5 h-3.5 text-[#FFC857]" />
-                    <span>{isEnt ? 'Instant Enterprise SLA & Bulk Support' : '14-Day 100% Money-Back Guarantee'}</span>
-                  </p>
+
+                  <div>
+                    <div className="text-xs font-extrabold text-[#FFC857] uppercase tracking-widest mb-2 font-brand">{plan.badge}</div>
+                    <h3 className="text-2xl sm:text-3xl font-black font-brand text-[#FAFAF7]">{plan.name}</h3>
+
+                    {/* Price Tag */}
+                    <div className="my-6 min-h-[70px] flex flex-col justify-center">
+                      {isEnt ? (
+                        <div>
+                          <span className="text-3xl sm:text-4xl font-black font-brand text-[#FFC857]">Custom Quote</span>
+                          <p className="text-[#555A66] text-xs mt-1">Tailored pricing for pupils (Students &amp; Professionals)</p>
+                        </div>
+                      ) : (
+                        <div>
+                          <div className="flex items-baseline gap-2.5">
+                            <span className="text-4xl sm:text-5xl font-black font-brand text-[#FAFAF7]">{displayPriceStr}</span>
+                            {couponDiscount > 0 && (
+                              <span className="text-lg text-[#555A66] line-through">
+                                {currency === 'INR' ? `₹${rawPrice}` : `$${rawPrice}`}
+                              </span>
+                            )}
+                            <span className="text-[#555A66] text-xs font-semibold">
+                              one-time ({currency})
+                            </span>
+                          </div>
+                          {couponDiscount > 0 && (
+                            <div className="flex items-center gap-1.5 mt-1.5 text-xs font-bold text-emerald-400">
+                              <Sparkles className="w-3.5 h-3.5" />
+                              <span>{couponCode === 'EARLYBIRD20' ? '20% Early Bird Launch Discount Directly Applied' : `${couponDiscount}% Promo Discount Applied`}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Features List */}
+                    <ul className="space-y-3 my-6 text-xs sm:text-sm text-[#FAFAF7]/90 border-t border-[#E9E4FF]/12 pt-6">
+                      {plan.features.map((feat, idx) => (
+                        <li key={idx} className="flex items-start gap-2.5">
+                          <Check className="w-4 h-4 text-[#FFC857] shrink-0 mt-0.5" />
+                          <span>{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Plan Action Button */}
+                  <div className="pt-6 border-t border-[#E9E4FF]/12">
+                    {isEnt ? (
+                      <button
+                        onClick={() => { window.location.hash = 'enterprise'; window.dispatchEvent(new Event('hashchange')); }}
+                        className="w-full py-4 rounded-2xl btn-luxury-ghost text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer hover:border-[#FFC857] hover:text-[#FFC857]"
+                      >
+                        <Building2 className="w-4 h-4 text-[#FFC857]" />
+                        <span>View Enterprise Programs</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => onSelectPlan(plan, false)}
+                        className="w-full py-4 rounded-2xl btn-luxury-primary text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-xl shadow-[#7C5CFC]/30"
+                      >
+                        <span>Enroll in Masterclass ({displayPriceStr})</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                    )}
+                    
+                    <p className="text-[11px] text-center text-[#555A66] mt-3 flex items-center justify-center gap-1.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-[#FFC857]" />
+                      <span>{isEnt ? 'Instant Enterprise SLA & Bulk Support' : '14-Day 100% Money-Back Guarantee'}</span>
+                    </p>
+                  </div>
                 </div>
-              </div>
+              </InteractiveCard>
             );
           })}
         </div>

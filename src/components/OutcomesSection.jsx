@@ -1,5 +1,6 @@
 import React from 'react';
 import { Crown, Zap, Heart, Share2, TrendingUp, Award, FileText, BookMarked, Users, CheckCircle2, Sparkles } from 'lucide-react';
+import InteractiveCard from './InteractiveCard';
 import { useTh3oryLive } from '../data/adminData';
 
 export default function OutcomesSection() {
@@ -38,18 +39,24 @@ export default function OutcomesSection() {
             {courseDetails.outcomes.map((item, idx) => {
               const IconComp = iconMap[item.icon] || Award;
               return (
-                <div
+                <InteractiveCard
                   key={idx}
-                  className="glass-card rounded-3xl p-6 sm:p-8 space-y-4 border border-slate-800 hover:border-amber-500/40 transition-all duration-300 group"
+                  glowColor={idx % 2 === 0 ? "gold" : "violet"}
+                  maxTilt={8}
+                  className="h-full"
                 >
-                  <div className="w-12 h-12 rounded-2xl bg-slate-900 border border-amber-500/30 text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <IconComp className="w-6 h-6" />
+                  <div className="glass-card rounded-3xl p-6 sm:p-8 space-y-4 border border-slate-800 h-full flex flex-col justify-between group">
+                    <div className="space-y-4">
+                      <div className="w-12 h-12 rounded-2xl bg-slate-900 border border-amber-500/30 text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <IconComp className="w-6 h-6" />
+                      </div>
+                      <h3 className="text-lg font-extrabold font-brand text-white">{item.title}</h3>
+                    </div>
+                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal mt-2">
+                      {item.description}
+                    </p>
                   </div>
-                  <h3 className="text-lg font-extrabold font-brand text-white">{item.title}</h3>
-                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
-                    {item.description}
-                  </p>
-                </div>
+                </InteractiveCard>
               );
             })}
           </div>
@@ -68,13 +75,23 @@ export default function OutcomesSection() {
             {courseDetails.bonuses.map((bonus, idx) => {
               const IconComp = iconMap[bonus.icon] || FileText;
               return (
-                <div key={idx} className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 text-center space-y-3 hover:border-amber-500/40 transition-all">
-                  <div className="w-12 h-12 mx-auto rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center border border-amber-500/30">
-                    <IconComp className="w-6 h-6" />
+                <InteractiveCard
+                  key={idx}
+                  glowColor="amber"
+                  maxTilt={6}
+                  scale={1.02}
+                  className="h-full"
+                >
+                  <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 text-center space-y-3 h-full flex flex-col justify-between">
+                    <div>
+                      <div className="w-12 h-12 mx-auto rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center border border-amber-500/30 mb-3">
+                        <IconComp className="w-6 h-6" />
+                      </div>
+                      <h4 className="text-sm font-extrabold font-brand text-white uppercase">{bonus.name}</h4>
+                    </div>
+                    <p className="text-xs text-slate-400 leading-relaxed">{bonus.description}</p>
                   </div>
-                  <h4 className="text-sm font-extrabold font-brand text-white uppercase">{bonus.name}</h4>
-                  <p className="text-xs text-slate-400 leading-relaxed">{bonus.description}</p>
-                </div>
+                </InteractiveCard>
               );
             })}
           </div>
