@@ -1,13 +1,11 @@
 import React from 'react';
 
-export default function Logo({ className = "h-12", alt = "TH3ORY Logo", lightMode = false, src = "/logo-transparent.png" }) {
-  const hasMixBlend = className.includes('mix-blend');
-  const blendClass = hasMixBlend ? '' : (lightMode ? '' : 'mix-blend-screen');
+export default function Logo({ className = "h-12" }) {
   return (
     <img
-      src={src}
-      alt={alt}
-      className={`object-contain ${blendClass} ${className}`.trim()}
+      src="/logo-transparent.png"
+      alt="TH3ORY Logo"
+      className={`object-contain mix-blend-screen ${className}`}
     />
   );
 }

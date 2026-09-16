@@ -13,7 +13,6 @@ import AmbassadorApplicationsPanel from '../admin/panels/AmbassadorApplicationsP
 import TeamAnalyticsDashboard from './panels/TeamAnalyticsDashboard';
 import ProfileAvatar from '../components/ProfileAvatar';
 import ProfilePictureModal from '../components/ProfilePictureModal';
-import Logo from '../components/Logo';
 import { getTeamMemberAvatar } from '../utils/profileStorageEngine';
 import { fetchAllTeamMembersFromSupabase } from '../services/supabaseService';
 
@@ -224,14 +223,16 @@ export default function TeamApp({ onLogout }) {
       }`}>
         {/* Brand Header */}
         <div className={`px-5 py-5 border-b ${isDark ? 'border-white/10' : 'border-slate-200'}`}>
-          <div className="flex items-center gap-3 min-w-0">
-            <Logo className={`h-8 shrink-0 ${isDark ? '' : 'mix-blend-normal'}`} />
-            <div className="min-w-0">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#7C5CFC] to-[#FFC857] flex items-center justify-center shrink-0 shadow-lg shadow-[#7C5CFC]/20 ring-2 ring-white/10">
+              <Shield className="w-5 h-5 text-slate-950 font-black" />
+            </div>
+            <div>
               <div className="flex items-center gap-1.5">
                 <p className={`font-black text-base tracking-tight font-serif ${isDark ? 'text-[#FAFAF7]' : 'text-slate-900'}`}>TH3ORY</p>
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               </div>
-              <p className={`text-[10px] uppercase tracking-[0.16em] font-extrabold truncate ${isDark ? 'text-[#FFC857]' : 'text-indigo-600'}`}>Team Operations</p>
+              <p className={`text-[10px] uppercase tracking-[0.16em] font-extrabold ${isDark ? 'text-[#FFC857]' : 'text-indigo-600'}`}>Team Operations</p>
             </div>
           </div>
         </div>

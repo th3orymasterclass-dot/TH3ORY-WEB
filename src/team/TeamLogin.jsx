@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Shield, Lock, Eye, EyeOff, AlertCircle, Users, ArrowRight, UserPlus, Sparkles, CheckCircle2, ChevronRight, Check } from 'lucide-react';
-import Logo from '../components/Logo';
 import { fetchTeamMemberByCredentialsFromSupabase, fetchAllTeamMembersFromSupabase } from '../services/supabaseService';
 
 export default function TeamLogin({ onAuthenticated }) {
@@ -114,8 +113,8 @@ export default function TeamLogin({ onAuthenticated }) {
         
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="flex justify-center mb-3">
-            <Logo className="h-12 hover:scale-105 transition-transform" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-500/20 border border-indigo-500/40 shadow-2xl shadow-indigo-500/10">
+            <Users className="w-8 h-8 text-indigo-400" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">TH3ORY Team Portal</h1>
           <p className="text-slate-400 text-xs sm:text-sm">

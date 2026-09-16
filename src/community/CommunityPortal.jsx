@@ -13,7 +13,6 @@ import {
   subscribeToCommunityFeed
 } from '../services/supabaseService';
 import { getEmbeddableMediaUrl } from '../utils/gdriveHelper';
-import Logo from '../components/Logo';
 
 const EMOJI_DEFINITIONS = [
   { emoji: '👍', label: 'Insightful', icon: ThumbsUp },
@@ -129,7 +128,11 @@ export default function CommunityPortal({ member, onLogout }) {
       <header className="sticky top-0 z-40 bg-[#070A11]/90 backdrop-blur-xl border-b border-white/10 px-4 sm:px-8 py-3.5 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <a href="#/" className="flex items-center gap-2.5 cursor-pointer group">
-            <Logo className="h-7 sm:h-8 transition-transform group-hover:scale-105" />
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#FFC857] via-[#FFAE19] to-[#7C5CFC] p-0.5 shadow-lg shadow-[#FFC857]/20 group-hover:scale-105 transition-all">
+              <div className="w-full h-full bg-[#070A11] rounded-[10px] flex items-center justify-center">
+                <span className="text-[#FFC857] font-black text-xs tracking-wider font-heading">T3</span>
+              </div>
+            </div>
             <span className="text-base font-bold tracking-wider text-white font-heading hidden sm:inline">TH3ORY</span>
           </a>
           <span className="text-white/20 font-light">|</span>

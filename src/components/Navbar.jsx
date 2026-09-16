@@ -175,20 +175,6 @@ export default function Navbar({ onOpenCheckout, onOpenDashboard, isEnrolled }) 
         <div className="lg:hidden px-4 sm:px-6 pb-4 animate-fade-in">
           <div className="glass-specular rounded-2xl p-4 sm:p-5 border border-[#E9E4FF]/20 space-y-3 shadow-2xl backdrop-blur-2xl">
             
-            {/* Mobile Menu Brand Header */}
-            <div className="flex items-center justify-between pb-3 mb-1 border-b border-[#E9E4FF]/10">
-              <a
-                href="#"
-                onClick={(e) => { e.preventDefault(); handleNavClick(''); }}
-                className="flex items-center gap-2.5"
-              >
-                <Logo className="h-7" />
-              </a>
-              <span className="text-[10px] uppercase font-bold tracking-widest text-[#FFC857] px-2.5 py-0.5 rounded-full bg-[#FFC857]/10 border border-[#FFC857]/20">
-                Masterclass
-              </span>
-            </div>
-
             {/* VIP Special Link */}
             <div className="space-y-1">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#555A66] px-1">Special Launch Access</span>

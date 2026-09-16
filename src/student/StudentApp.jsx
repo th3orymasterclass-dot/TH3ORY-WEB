@@ -15,7 +15,6 @@ import CharacterCodePortal from './components/CharacterCodePortal';
 import PrivacyRightsPanel from './panels/PrivacyRightsPanel';
 import ProfileAvatar from '../components/ProfileAvatar';
 import ProfilePictureModal from '../components/ProfilePictureModal';
-import Logo from '../components/Logo';
 import { getStudentAvatar } from '../utils/profileStorageEngine';
 import { getProgress, getBookmarks } from './studentData';
 import { useTh3oryLive } from '../data/adminData';
@@ -253,18 +252,15 @@ export default function StudentApp({ profile: initialProfile, onLogout }) {
         {/* Brand */}
         <div className={`px-5 py-5 border-b ${isLight ? 'border-slate-200' : 'border-[#E9E4FF]/10'}`}>
           <div className="flex items-center justify-between gap-2">
-            <a
-              href="#"
-              onClick={(e) => { e.preventDefault(); navigate('home'); }}
-              className="flex items-center gap-3 min-w-0 group cursor-pointer"
-              title="TH3ORY Student Dashboard"
-            >
-              <Logo className={`h-8 transition-transform group-hover:scale-105 shrink-0 ${isLight ? 'mix-blend-normal' : ''}`} />
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#7C5CFC] to-[#6344E0] flex items-center justify-center shrink-0 shadow-md">
+                <GraduationCap className="w-5 h-5 text-[#FAFAF7]"/>
+              </div>
               <div className="min-w-0">
                 <p className={`font-black text-sm tracking-tight font-heading truncate ${isLight ? 'text-slate-900' : 'text-[#FAFAF7]'}`}>TH3ORY</p>
-                <p className={`text-[10px] uppercase font-extrabold tracking-wider ${isLight ? 'text-purple-700' : 'text-[#FFC857]'}`}>Student Portal</p>
+                <p className={`text-xs font-semibold ${isLight ? 'text-slate-500' : 'text-[#555A66]'}`}>Student Portal</p>
               </div>
-            </a>
+            </div>
             
             {/* Sidebar Theme Mode Button */}
             <button

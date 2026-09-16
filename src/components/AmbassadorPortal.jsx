@@ -390,18 +390,17 @@ export default function AmbassadorPortal() {
             {/* Brand Logo Header */}
             <div className={`px-5 py-5 border-b ${isLight ? 'border-slate-200' : 'border-white/10'}`}>
               <div className="flex items-center justify-between gap-2">
-                <a
-                  href="#"
-                  onClick={(e) => { e.preventDefault(); setActiveTab('dashboard'); }}
-                  className="flex items-center gap-3 min-w-0 group cursor-pointer"
-                  title="TH3ORY Ambassador Portal"
-                >
-                  <Logo className={`h-8 transition-transform group-hover:scale-105 shrink-0 ${isLight ? 'mix-blend-normal' : ''}`} />
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FFC857] via-[#FFAE19] to-[#7C5CFC] p-0.5 flex items-center justify-center shrink-0 shadow-lg shadow-[#FFC857]/20">
+                    <div className="w-full h-full bg-[#070A11] rounded-[10px] flex items-center justify-center">
+                      <Trophy className="w-5 h-5 text-[#FFC857]" />
+                    </div>
+                  </div>
                   <div className="min-w-0">
                     <p className={`font-black text-sm tracking-tight font-heading truncate ${isLight ? 'text-slate-900' : 'text-[#FAFAF7]'}`}>TH3ORY</p>
-                    <p className={`text-[10px] uppercase font-extrabold tracking-wider ${isLight ? 'text-amber-700' : 'text-[#FFC857]'}`}>Ambassador Portal</p>
+                    <p className={`text-xs font-semibold ${isLight ? 'text-amber-700' : 'text-[#FFC857]'}`}>Ambassador Portal</p>
                   </div>
-                </a>
+                </div>
 
                 {/* Theme Mode Toggle Button */}
                 <button
