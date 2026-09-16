@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Lock, CreditCard, ShieldCheck, CheckCircle2, QrCode, Sparkles, Loader2, Download, ArrowRight, ArrowLeft, Mail, Tag, Percent, ShieldAlert, TestTube } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import Logo from './Logo';
 import { validateCoupon, incrementCouponUsage, getAddons, isEarlyBirdActive } from '../data/adminData';
 import { saveEnrollmentToSupabase, generateUniqueStudentCredentials } from '../services/supabaseService';
 import { sendEnrollmentEmail } from '../services/emailService';
@@ -411,11 +412,9 @@ export default function CheckoutModal({
         {/* Modal Top Header */}
         <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-800 bg-slate-900/80 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-400">
-              <Lock className="w-5 h-5" />
-            </div>
+            <Logo className="h-8 shrink-0" />
             <div>
-              <h3 className="text-base sm:text-lg font-bold font-heading text-white">Interactive Enrollment &amp; Payment</h3>
+              <h3 className="text-base sm:text-lg font-bold font-heading text-white">TH3ORY Enrollment &amp; Payment</h3>
               <p className="text-[11px] sm:text-xs text-slate-400">Step {step} of 3 • 256-Bit SSL Encrypted Checkout</p>
             </div>
           </div>
@@ -706,8 +705,11 @@ export default function CheckoutModal({
 
                   {receiptData && (
                     <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 text-left space-y-3 text-xs font-mono text-slate-300">
-                      <div className="flex justify-between pb-2 border-b border-slate-800">
-                        <span className="text-slate-500">Order ID:</span>
+                      <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                        <div className="flex items-center gap-2">
+                          <Logo className="h-5" />
+                          <span className="font-heading font-bold text-white text-[11px] tracking-wider uppercase">Official Receipt</span>
+                        </div>
                         <span className="text-indigo-400 font-bold">{receiptData.orderId}</span>
                       </div>
                       <div className="flex justify-between">

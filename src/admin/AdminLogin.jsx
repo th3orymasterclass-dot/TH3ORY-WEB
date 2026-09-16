@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { Lock, Eye, EyeOff, Shield, AlertCircle } from 'lucide-react';
+import Logo from '../components/Logo';
 
 // SHA-256 of "TH3ORY@admin2026"
 const EXPECTED_HASH = 'f6466f320754b3cd62e30929cc18e7a14be8fcf8da8667a3e4f50922c788329b';
@@ -67,12 +68,12 @@ export default function AdminLogin({ onAuthenticated }) {
     <div className="min-h-screen bg-[#05080f] flex items-center justify-center p-4" style={{backgroundImage: 'radial-gradient(ellipse at 50% 30%, rgba(245,158,11,0.08) 0%, transparent 60%)'}}>
       <div className="w-full max-w-md">
         {/* Logo */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-600 shadow-2xl shadow-amber-500/30 mb-4">
-            <Shield className="w-8 h-8 text-slate-950" />
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-3">
+            <Logo className="h-12 hover:scale-105 transition-transform" />
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight">TH3ORY Admin</h1>
-          <p className="text-slate-500 text-sm mt-1">Restricted Access — Authorised Personnel Only</p>
+          <h1 className="text-2xl font-black text-white tracking-tight font-heading">TH3ORY Admin</h1>
+          <p className="text-slate-400 text-sm mt-1">Restricted Access — Authorised Personnel Only</p>
         </div>
 
         {/* Card */}

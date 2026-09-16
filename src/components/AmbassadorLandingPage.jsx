@@ -95,12 +95,11 @@ export default function AmbassadorLandingPage() {
             onClick={(e) => { e.preventDefault(); window.location.hash = ''; window.dispatchEvent(new Event('hashchange')); }}
             className="flex items-center gap-3 group cursor-pointer"
           >
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FFC857] via-[#FFAE19] to-[#7C5CFC] p-0.5 shadow-lg shadow-[#FFC857]/20 group-hover:scale-105 transition-all">
-              <div className="w-full h-full bg-[#070A11] rounded-[10px] flex items-center justify-center">
-                <span className="text-[#FFC857] font-black text-sm tracking-wider font-heading">T3</span>
-              </div>
+            <Logo className="h-8 group-hover:scale-105 transition-transform" />
+            <div className="hidden sm:block">
+              <span className="text-lg font-black tracking-tight text-white font-heading block leading-none">TH3ORY</span>
+              <span className="text-[10px] uppercase font-extrabold tracking-wider text-[#FFC857]">Ambassadors</span>
             </div>
-            <span className="text-xl font-bold tracking-wider text-white font-heading">TH3ORY</span>
           </a>
 
           <div className="flex items-center gap-3">

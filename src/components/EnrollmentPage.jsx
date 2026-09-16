@@ -5,6 +5,7 @@ import {
   Sparkles, Crown, Lock, ChevronDown, Globe, Loader2,
   CheckCircle2, Receipt, Download, ExternalLink, Zap
 } from 'lucide-react';
+import Logo from './Logo';
 import { getCourseDetails, getPlans, validateCoupon, incrementCouponUsage, isEarlyBirdActive } from '../data/adminData';
 import { saveEnrollmentToSupabase, generateUniqueStudentCredentials } from '../services/supabaseService';
 import { sendEnrollmentEmail } from '../services/emailService';
@@ -822,9 +823,12 @@ function Step4({ form }) {
 
       {/* Receipt card */}
       <div className="bg-slate-900 border border-amber-500/30 rounded-2xl p-6 text-left space-y-3 shadow-xl shadow-amber-500/10">
-        <div className="flex items-center gap-2 mb-4">
-          <Receipt className="w-4 h-4 text-amber-400"/>
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Order Receipt</p>
+        <div className="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-800">
+          <div className="flex items-center gap-2">
+            <Receipt className="w-4 h-4 text-amber-400"/>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Official Order Receipt</p>
+          </div>
+          <Logo className="h-6 opacity-90" />
         </div>
         {[
           ['Order ID', receipt?.orderId],
@@ -929,20 +933,28 @@ export default function EnrollmentPage({ initialPlan, onBack }) {
       )}
 
       {/* Top bar */}
-      <div className="sticky top-0 z-30 glass-specular backdrop-blur-xl border-b border-[#E9E4FF]/15 px-4 sm:px-6 py-3.5 flex items-center gap-4">
-        <button onClick={onBack}
-          className="flex items-center gap-2 text-[#E9E4FF]/80 hover:text-white text-sm font-semibold transition-colors cursor-pointer">
-          <ArrowLeft className="w-4 h-4 text-[#FFC857]"/> <span>Back to Course</span>
-        </button>
-        <div className="flex-1"/>
-        {isSandboxEnabled && (
-          <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono">
-            TEST / SANDBOX GATEWAY
-          </span>
-        )}
-        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25">
-          <Lock className="w-3.5 h-3.5 text-emerald-400"/>
-          <span className="text-emerald-400 text-xs font-bold font-mono">SSL Secured Checkout</span>
+      <div className="sticky top-0 z-30 glass-specular backdrop-blur-xl border-b border-[#E9E4FF]/15 px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3 sm:gap-6">
+          <button onClick={onBack}
+            className="flex items-center gap-2 text-[#E9E4FF]/80 hover:text-white text-sm font-semibold transition-colors cursor-pointer">
+            <ArrowLeft className="w-4 h-4 text-[#FFC857]"/> <span className="hidden sm:inline">Back to Course</span>
+          </button>
+          <div className="h-4 w-px bg-white/20 hidden sm:block" />
+          <div className="flex items-center gap-2.5">
+            <Logo className="h-7 shrink-0" />
+            <span className="font-heading font-black text-sm tracking-tight text-white hidden md:inline">TH3ORY</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          {isSandboxEnabled && (
+            <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono">
+              TEST GATEWAY
+            </span>
+          )}
+          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25">
+            <Lock className="w-3.5 h-3.5 text-emerald-400"/>
+            <span className="text-emerald-400 text-xs font-bold font-mono">SSL Secured</span>
+          </div>
         </div>
       </div>
 

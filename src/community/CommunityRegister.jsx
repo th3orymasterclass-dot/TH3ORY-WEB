@@ -98,13 +98,8 @@ export default function CommunityRegister() {
 
       {/* Header Branding */}
       <div className="relative z-10 mb-6 text-center">
-        <a href="#/" className="inline-flex items-center gap-2.5 mb-3 cursor-pointer group">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#FFC857] via-[#FFAE19] to-[#7C5CFC] p-0.5 shadow-xl shadow-[#FFC857]/20 group-hover:scale-105 transition-all">
-            <div className="w-full h-full bg-[#070A11] rounded-[14px] flex items-center justify-center">
-              <span className="text-[#FFC857] font-black text-sm tracking-wider font-heading">T3</span>
-            </div>
-          </div>
-          <span className="text-2xl font-bold tracking-wider text-white font-heading">TH3ORY</span>
+        <a href="#/" className="inline-block mb-3 cursor-pointer group" title="Return to TH3ORY Home">
+          <Logo className="h-10 sm:h-11 mx-auto transition-transform group-hover:scale-105" />
         </a>
         <div className="block">
           <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#FFC857]/10 border border-[#FFC857]/30 text-[#FFC857] text-xs font-semibold tracking-wide shadow-sm shadow-[#FFC857]/10">

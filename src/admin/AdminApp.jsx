@@ -9,6 +9,7 @@ import {
 import useAdminData from './useAdminData';
 import OverviewPanel       from './panels/OverviewPanel';
 import CalendlyModal       from '../components/CalendlyModal';
+import Logo                from '../components/Logo';
 
 const isAdminAuthenticated = () => (
   typeof window !== 'undefined' && (sessionStorage.getItem('th3ory_admin_auth') === '1' || localStorage.getItem('th3ory_admin_auth') === '1')
@@ -329,16 +330,14 @@ export default function AdminApp({ onLogout }) {
       } ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:w-0 md:overflow-hidden'}`}>
         {/* Brand Header */}
         <div className={`p-4 border-b flex items-center justify-between ${isDark ? 'border-white/10' : 'border-slate-200'}`}>
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#7C5CFC] to-[#FFC857] flex items-center justify-center font-black text-slate-950 shadow-lg shadow-[#7C5CFC]/25 ring-2 ring-white/10">
-              ⚡
-            </div>
-            <div>
+          <div className="flex items-center gap-3 min-w-0">
+            <Logo className={`h-8 shrink-0 ${isDark ? '' : 'mix-blend-normal'}`} />
+            <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <h1 className={`font-black text-base tracking-tight font-serif ${isDark ? 'text-[#FAFAF7]' : 'text-slate-900'}`}>TH3ORY</h1>
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               </div>
-              <p className={`text-[10px] uppercase tracking-[0.18em] font-extrabold ${isDark ? 'text-[#FFC857]' : 'text-indigo-600'}`}>Executive Command</p>
+              <p className={`text-[10px] uppercase tracking-[0.18em] font-extrabold truncate ${isDark ? 'text-[#FFC857]' : 'text-indigo-600'}`}>Executive Command</p>
             </div>
           </div>
           <button

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { GraduationCap, Eye, EyeOff, AlertCircle, LogIn, Sparkles, Mail, Lock } from 'lucide-react';
+import Logo from '../components/Logo';
 import { verifyStudentCodeWithSupabase, generateEnrollmentCode } from '../services/supabaseService';
 
 // Default fallback codes for local testing
@@ -106,12 +107,12 @@ export default function StudentLogin({ onAuthenticated, expiredNotice = false })
       style={{backgroundImage:'radial-gradient(ellipse at 60% 20%, rgba(245,158,11,0.07) 0%, transparent 55%)'}}>
       <div className="w-full max-w-md">
         {/* Logo area */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-600 shadow-2xl shadow-amber-500/30 mb-4">
-            <GraduationCap className="w-8 h-8 text-slate-950" />
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-3">
+            <Logo className="h-12 hover:scale-105 transition-transform" />
           </div>
           <h1 className="text-2xl font-black text-white tracking-tight">TH3ORY Student Portal</h1>
-          <p className="text-slate-500 text-sm mt-1">Access your enrolled course dashboard</p>
+          <p className="text-slate-400 text-sm mt-1">Access your enrolled course dashboard</p>
         </div>
 
         <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-5 sm:p-8 shadow-2xl backdrop-blur-sm">

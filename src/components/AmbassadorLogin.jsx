@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ShieldCheck, Eye, EyeOff, AlertCircle, LogIn, Sparkles, Award, Lock, UserCheck, KeyRound, ArrowRight } from 'lucide-react';
+import Logo from './Logo';
 import { fetchAmbassadorByCodeFromSupabase } from '../services/supabaseService';
 
 export default function AmbassadorLogin({ onAuthenticated, expiredNotice = false }) {
@@ -75,10 +76,8 @@ export default function AmbassadorLogin({ onAuthenticated, expiredNotice = false
         
         {/* LOGO & BRAND HEADER */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-[#FFC857] via-[#FFAE19] to-[#7C5CFC] shadow-2xl shadow-[#FFC857]/20 mb-3.5 p-0.5">
-            <div className="w-full h-full bg-[#070A11] rounded-[14px] flex items-center justify-center">
-              <Award className="w-7 h-7 text-[#FFC857]" />
-            </div>
+          <div className="flex justify-center mb-3">
+            <Logo className="h-12 hover:scale-105 transition-transform" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight font-heading">
             TH3ORY Ambassador Portal

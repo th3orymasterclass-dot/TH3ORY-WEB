@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Lock, Mail, Eye, EyeOff, AlertCircle, ArrowRight, ShieldCheck, Sparkles, Users } from 'lucide-react';
+import Logo from '../components/Logo';
 import { authenticateCommunityMemberInSupabase } from '../services/supabaseService';
 
 export default function CommunityLogin({ onAuthenticated }) {
@@ -74,12 +75,8 @@ export default function CommunityLogin({ onAuthenticated }) {
 
       {/* Header Branding */}
       <div className="relative z-10 mb-6 text-center">
-        <a href="#/" className="inline-flex items-center gap-2.5 mb-3 cursor-pointer group">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#FFC857] via-[#FFAE19] to-[#7C5CFC] p-0.5 shadow-xl shadow-[#FFC857]/20 group-hover:scale-105 transition-all">
-            <div className="w-full h-full bg-[#070A11] rounded-[14px] flex items-center justify-center">
-              <span className="text-[#FFC857] font-black text-sm tracking-wider font-heading">T3</span>
-            </div>
-          </div>
+        <a href="#/" className="inline-flex items-center gap-3 mb-3 cursor-pointer group">
+          <Logo className="h-10 group-hover:scale-105 transition-transform" />
           <span className="text-2xl font-bold tracking-wider text-white font-heading">TH3ORY</span>
         </a>
         <div className="block">

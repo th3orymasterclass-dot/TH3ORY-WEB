@@ -4,6 +4,7 @@ import {
   Calendar, CheckCircle2, DollarSign, Award, Sparkles, Printer, Lock, 
   PieChart, TrendingUp, ShieldCheck, Scale, Leaf, FileCheck, Landmark, Globe
 } from 'lucide-react';
+import Logo from './Logo';
 import { sendEnterpriseQuotePdfEmail } from '../services/emailService';
 import { calculateEnterpriseRoi } from '../utils/roiCalculatorEngine';
 import { 
@@ -200,9 +201,7 @@ export function EnterprisePdfQuoteModal({
           isDark ? 'border-slate-800 bg-slate-900/80' : 'border-slate-200 bg-slate-50'
         }`}>
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-600 to-emerald-500 text-white shadow-md">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
+            <Logo className="h-8 shrink-0" lightMode={!isDark} />
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base sm:text-lg font-black tracking-tight">Executive PDF Quote Generator</h3>
@@ -302,21 +301,24 @@ export function EnterprisePdfQuoteModal({
             {/* SECTION 1: Corporate Header & Legal Entity Information */}
             <div style={{ borderBottom: '2px solid #3730a3', paddingBottom: '1.25rem' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <h1 style={{ fontSize: '22px', fontWeight: 900, letterSpacing: '2px', color: '#1e1b4b', fontFamily: 'monospace', margin: 0 }}>
-                      TH3ORY MASTERCLASS
-                    </h1>
-                    <span style={{ padding: '2px 8px', borderRadius: '4px', background: '#e0e7ff', color: '#3730a3', fontSize: '9px', fontFamily: 'monospace', fontWeight: 900, textTransform: 'uppercase' }}>
-                      Official Proposal
-                    </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  <Logo className="h-12 w-auto shrink-0 mix-blend-normal" lightMode={true} />
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <h1 style={{ fontSize: '22px', fontWeight: 900, letterSpacing: '2px', color: '#1e1b4b', fontFamily: 'monospace', margin: 0 }}>
+                        TH3ORY MASTERCLASS
+                      </h1>
+                      <span style={{ padding: '2px 8px', borderRadius: '4px', background: '#e0e7ff', color: '#3730a3', fontSize: '9px', fontFamily: 'monospace', fontWeight: 900, textTransform: 'uppercase' }}>
+                        Official Proposal
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '10px', fontWeight: 900, color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '3px', margin: '4px 0 0' }}>
+                      Corporate Leadership &amp; Demeanor Accelerator
+                    </p>
+                    <p style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, margin: '4px 0 0' }}>
+                      Mentalist Sravan Productions Pvt. Ltd. | GSTIN: 36AAACM1234F1Z8
+                    </p>
                   </div>
-                  <p style={{ fontSize: '10px', fontWeight: 900, color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '3px', margin: '4px 0 0' }}>
-                    Corporate Leadership &amp; Demeanor Accelerator
-                  </p>
-                  <p style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, margin: '4px 0 0' }}>
-                    Mentalist Sravan Productions Pvt. Ltd. | GSTIN: 36AAACM1234F1Z8
-                  </p>
                 </div>
 
                 <div style={{ textAlign: 'right', fontFamily: 'monospace' }}>
