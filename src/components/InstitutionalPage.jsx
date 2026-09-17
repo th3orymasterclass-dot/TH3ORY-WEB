@@ -8,6 +8,7 @@ import SEOHead from './SEOHead';
 import StructuredData from './StructuredData';
 import PhilosophicalBackground from './PhilosophicalBackground';
 import InteractiveCard from './InteractiveCard';
+import Footer from './Footer';
 import { saveContactInquiryToSupabase } from '../services/supabaseService';
 
 export default function InstitutionalPage({ onBack }) {
@@ -365,6 +366,7 @@ export default function InstitutionalPage({ onBack }) {
         </div>
 
       </div>
+      <Footer />
     </div>
   );
 }

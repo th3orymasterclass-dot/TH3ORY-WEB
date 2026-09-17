@@ -8,6 +8,7 @@ import SEOHead from './SEOHead';
 import StructuredData from './StructuredData';
 import PhilosophicalBackground from './PhilosophicalBackground';
 import InteractiveCard from './InteractiveCard';
+import Footer from './Footer';
 
 export default function MasterclassAdvertisingPage({ onOpenCheckout, onOpenVideo, onBack }) {
   const [activeLevel, setActiveLevel] = useState(0);
@@ -296,6 +297,7 @@ export default function MasterclassAdvertisingPage({ onOpenCheckout, onOpenVideo
         </InteractiveCard>
 
       </div>
+      <Footer onOpenCheckout={onOpenCheckout} />
     </div>
   );
 }

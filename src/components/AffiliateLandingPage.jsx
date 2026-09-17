@@ -8,6 +8,7 @@ import SEOHead from './SEOHead';
 import StructuredData from './StructuredData';
 import PhilosophicalBackground from './PhilosophicalBackground';
 import InteractiveCard from './InteractiveCard';
+import Footer from './Footer';
 import { saveAffiliateApplicationToSupabase } from '../services/supabaseService';
 
 export default function AffiliateLandingPage({ onBack }) {
@@ -351,6 +352,7 @@ export default function AffiliateLandingPage({ onBack }) {
         )}
 
       </div>
+      <Footer />
     </div>
   );
 }

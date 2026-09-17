@@ -10,7 +10,7 @@ export default function Footer({ onOpenCheckout }) {
   const [legalModalTab, setLegalModalTab] = useState(null);
 
   return (
-    <footer className="bg-slate-950 border-t border-amber-500/20 pt-16 pb-12 text-slate-400 text-xs sm:text-sm">
+    <footer className="relative z-10 bg-slate-950/95 backdrop-blur-xl border-t border-amber-500/20 pt-16 pb-28 text-slate-400 text-xs sm:text-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         
         {/* Main Footer Grid */}

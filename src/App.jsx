@@ -189,11 +189,11 @@ export default function App() {
         {sectionVisibility.faqs !== false && (
           <FAQSection />
         )}
-      </main>
 
-      <Footer
-        onOpenCheckout={() => handleOpenCheckoutWithPlan(mainPlan, false)}
-      />
+        <Footer
+          onOpenCheckout={() => handleOpenCheckoutWithPlan(mainPlan, false)}
+        />
+      </main>
 
       {/* Interactive Modals */}
       <VideoModal

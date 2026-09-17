@@ -9,6 +9,7 @@ import SEOHead from './SEOHead';
 import StructuredData from './StructuredData';
 import { saveEnterpriseQuoteToSupabase } from '../services/supabaseService';
 import DPDPUserRightsPortal from './dpdp/DPDPUserRightsPortal';
+import Footer from './Footer';
 
 export default function PrivacyPolicyPage({ onBack }) {
   const [activeTab, setActiveTab] = useState('policy'); // 'policy' | 'rights'
@@ -404,9 +405,7 @@ export default function PrivacyPolicyPage({ onBack }) {
       </div>
 
       {/* FOOTER */}
-      <footer className="py-8 bg-slate-950 border-t border-slate-900 text-center text-xs text-slate-500">
-        &copy; 2026 Mentalist Sravan Production. TH3ORY Online Platform Privacy &amp; Legal Compliance.
-      </footer>
+      <Footer />
     </div>
   );
 }

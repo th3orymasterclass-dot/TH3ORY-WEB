@@ -10,6 +10,7 @@ import SEOHead from './SEOHead';
 import StructuredData from './StructuredData';
 import PhilosophicalBackground from './PhilosophicalBackground';
 import InteractiveCard from './InteractiveCard';
+import Footer from './Footer';
 import { saveAmbassadorApplicationToSupabase } from '../services/supabaseService';
 
 export default function AmbassadorLandingPage() {
@@ -644,6 +645,7 @@ export default function AmbassadorLandingPage() {
         )}
 
       </div>
+      <Footer />
     </div>
   );
 }

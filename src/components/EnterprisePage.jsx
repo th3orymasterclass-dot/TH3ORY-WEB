@@ -13,6 +13,7 @@ import CalendlyModal from './CalendlyModal';
 import EnterpriseDiagnosticModal from './EnterpriseDiagnosticModal';
 import PhilosophicalBackground from './PhilosophicalBackground';
 import InteractiveCard from './InteractiveCard';
+import Footer from './Footer';
 
 export default function EnterprisePage({ onBack }) {
   // Carousel State
@@ -1273,9 +1274,7 @@ export default function EnterprisePage({ onBack }) {
       </section>
 
       {/* FOOTER */}
-      <footer className="py-8 bg-slate-950 border-t border-slate-900 text-center text-xs text-slate-500">
-        &copy; 2026 Mentalist Sravan Production. Influence &amp; Networking Mastery™ Enterprise Solutions.
-      </footer>
+      <Footer />
 
       {/* Sticky Floating Diagnostic Index Launcher Pill */}
       <div className="fixed bottom-6 right-6 z-30 animate-fade-in">
