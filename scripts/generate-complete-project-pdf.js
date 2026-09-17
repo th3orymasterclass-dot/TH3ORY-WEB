@@ -470,11 +470,6 @@ const htmlContent = `<!DOCTYPE html>
           <td>Explores the 5 foundational pillars of non-verbal communication and cognitive influence taught throughout the curriculum.</td>
         </tr>
         <tr>
-          <td><code>ProjectShowcase.jsx</code></td>
-          <td style="white-space: nowrap;"><span class="badge badge-blue">UI Component</span></td>
-          <td>Interactive gallery of practical cognitive experiments, behavioral case studies, and real-world application frameworks.</td>
-        </tr>
-        <tr>
           <td><code>InstructorSection.jsx</code></td>
           <td style="white-space: nowrap;"><span class="badge badge-blue">UI Component</span></td>
           <td>Presents lead instructor background, research credentials, published works, and academic focus areas.</td>
