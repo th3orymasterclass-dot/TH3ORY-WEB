@@ -84,7 +84,7 @@ export default function App() {
   const quickINR = couponDiscount > 0 ? Math.round(baseFullINR * (1 - couponDiscount / 100)) : baseFullINR;
 
   return (
-    <div className="min-h-screen bg-[#070A11]/80 text-[#FAFAF7] relative selection:bg-[#7C5CFC] selection:text-[#FAFAF7]">
+    <div className="min-h-screen bg-transparent text-[#FAFAF7] relative selection:bg-[#7C5CFC] selection:text-[#FAFAF7]">
       {/* Symbolic Background Scroll & Synaptic Matrix Animation */}
       <PhilosophicalBackground />
 
@@ -127,7 +127,7 @@ export default function App() {
       />
 
       {/* Main Page Layout Sections */}
-      <main>
+      <main className="relative z-10">
         {sectionVisibility.hero !== false && (
           <HeroSection
             onOpenVideo={() => setIsVideoModalOpen(true)}

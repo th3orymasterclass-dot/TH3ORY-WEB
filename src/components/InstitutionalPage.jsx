@@ -95,7 +95,7 @@ export default function InstitutionalPage({ onBack }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#15171A] text-[#FAFAF7] font-sans relative overflow-x-hidden">
+    <div className="min-h-screen bg-transparent text-[#FAFAF7] font-sans relative overflow-x-hidden">
       <SEOHead 
         title="College & Institutional Workshops • TH3ORY Masterclass"
         description="Bring TH3ORY Masterclass to your university campus. High-impact leadership workshops, placement interview demeanor bootcamps, and keynotes by Sravan Sudhakaran."

@@ -78,7 +78,7 @@ export default function AmbassadorLandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#070A11] text-[#FAFAF7] font-sans relative overflow-x-hidden selection:bg-[#FFC857] selection:text-[#070A11]">
+    <div className="min-h-screen bg-transparent text-[#FAFAF7] font-sans relative overflow-x-hidden selection:bg-[#FFC857] selection:text-[#070A11]">
       <SEOHead 
         title="Campus Ambassador Program • TH3ORY Masterclass"
         description="Join the official TH3ORY Campus Ambassador Program. Lead peer marketing in your college, gain leadership skills, earn ₹1,000/enrollment commissions + cash bonuses & certificates."

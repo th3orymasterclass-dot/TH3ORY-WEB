@@ -89,7 +89,7 @@ export default function PricingSection({ onSelectPlan, couponCode, setCouponCode
   };
 
   return (
-    <section id="pricing" className="py-24 sm:py-28 relative bg-[#15171A] border-t border-[#E9E4FF]/10 overflow-hidden">
+    <section id="pricing" className="py-24 sm:py-28 relative bg-transparent border-t border-[#E9E4FF]/10 overflow-hidden">
       {/* Background ambient spotlight */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[550px] bg-gradient-to-r from-[#7C5CFC]/15 to-[#FFC857]/10 rounded-full blur-[180px] pointer-events-none -z-10" />
 

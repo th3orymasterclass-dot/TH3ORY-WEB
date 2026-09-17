@@ -52,7 +52,7 @@ export default function OfflineTrainingsMarquee({ onOpenEnroll }) {
   return (
     <section 
       id="offline-trainings" 
-      className="py-20 bg-[#0E1015] relative overflow-hidden border-t border-b border-[#555A66]/25"
+      className="py-20 bg-transparent relative overflow-hidden border-t border-b border-white/10"
       aria-label="Previous Offline Trainings and Masterclasses"
     >
       {/* Ambient decorative glow */}

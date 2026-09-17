@@ -147,7 +147,7 @@ export default function EnterprisePage({ onBack }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#15171A] text-[#FAFAF7] relative selection:bg-[#7C5CFC] selection:text-[#FAFAF7]">
+    <div className="min-h-screen bg-transparent text-[#FAFAF7] relative selection:bg-[#7C5CFC] selection:text-[#FAFAF7]">
       <SEOHead 
         title="Enterprise Leadership & Corporate Solutions | Influence & Networking Mastery™"
         description="Empower your organization with Influence & Networking Mastery™. Executive corporate training, 3-day corporate intensives, and custom enterprise cohorts for HR, L&D, and CXOs."

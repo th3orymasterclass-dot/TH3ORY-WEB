@@ -76,7 +76,7 @@ export default function MasterclassAdvertisingPage({ onOpenCheckout, onOpenVideo
   ];
 
   return (
-    <div className="min-h-screen bg-[#070A11]/80 text-[#FAFAF7] font-sans relative overflow-x-hidden">
+    <div className="min-h-screen bg-transparent text-[#FAFAF7] font-sans relative overflow-x-hidden">
       {/* Symbolic Background Scroll & Synaptic Matrix Animation */}
       <PhilosophicalBackground />
 

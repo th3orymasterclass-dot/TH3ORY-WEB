@@ -11,7 +11,7 @@ export default function CampaignSection({ campaign: propCampaign }) {
   const RZP_LINK = c.rzpLink || "https://rzp.io/rzp/th3orylaunch";
 
   return (
-    <section id="launch-campaign" className="relative py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-[#070A11] via-[#0D0B14] to-[#070A11] border-y border-red-900/30 overflow-hidden">
+    <section id="launch-campaign" className="relative py-20 px-4 sm:px-6 lg:px-8 bg-transparent border-y border-red-900/30 overflow-hidden">
       
       {/* Background Decorative Ambient Glows */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-red-600/10 rounded-full blur-[140px] pointer-events-none" />

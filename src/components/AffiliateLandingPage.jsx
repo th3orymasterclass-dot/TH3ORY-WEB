@@ -52,7 +52,7 @@ export default function AffiliateLandingPage({ onBack }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#15171A] text-[#FAFAF7] font-sans relative overflow-x-hidden">
+    <div className="min-h-screen bg-transparent text-[#FAFAF7] font-sans relative overflow-x-hidden">
       <SEOHead 
         title="Affiliate & Influencer Partner Network • TH3ORY Masterclass"
         description="Partner with TH3ORY Masterclass. Share flagship human influence & executive demeanor masterclasses with your audience and earn up to ₹1,800 cash commission per enrollment."

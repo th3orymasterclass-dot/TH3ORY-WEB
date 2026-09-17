@@ -29,7 +29,7 @@ html, body {
 @layer base {
   body {
     font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-    background-color: var(--color-primary-bg);
+    background-color: var(--color-deep-void);
     color: var(--color-primary-text);
   }
   

@@ -18,7 +18,7 @@ export default function InstructorSection({ onOpenCheckout }) {
   const avatarSrc = (inst?.avatar && !inst.avatar.includes('unsplash.com')) ? inst.avatar : "/instructor.png";
 
   return (
-    <section id="instructor" className="py-20 bg-[#15171A] border-t border-[#555A66]/30">
+    <section id="instructor" className="py-20 bg-transparent border-t border-white/10">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Minimalist Card Container */}

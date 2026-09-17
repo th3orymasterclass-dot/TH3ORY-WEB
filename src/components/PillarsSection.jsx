@@ -18,7 +18,7 @@ export default function PillarsSection() {
   };
 
   return (
-    <section id="pillars" className="py-24 relative bg-slate-950/70 border-t border-slate-900">
+    <section id="pillars" className="py-24 relative bg-transparent border-t border-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-24">
         
         {/* SECTION 1: THE 5 PILLARS OF INFLUENCE */}

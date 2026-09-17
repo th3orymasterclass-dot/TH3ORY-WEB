@@ -12,7 +12,7 @@ export default function Testimonials() {
     : reviews.filter(r => r.category === filterCategory);
 
   return (
-    <section id="reviews" className="py-24 relative bg-slate-950 border-t border-slate-900">
+    <section id="reviews" className="py-24 relative bg-transparent border-t border-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}

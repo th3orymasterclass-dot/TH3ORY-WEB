@@ -18,7 +18,7 @@ export default function OutcomesSection() {
   };
 
   return (
-    <section id="outcomes" className="py-24 relative bg-slate-950/90 border-t border-slate-900">
+    <section id="outcomes" className="py-24 relative bg-transparent border-t border-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-24">
         
         {/* SECTION 1: BY THE END OF 30 DAYS, YOU WILL */}

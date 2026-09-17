@@ -15,7 +15,7 @@ export default function CurriculumExplorer({ onOpenVideo }) {
   };
 
   return (
-    <section id="roadmap" className="py-24 sm:py-28 relative bg-gradient-to-b from-[#15171A] via-[#0B0F19] to-[#15171A] border-t border-[#E9E4FF]/10 overflow-hidden">
+    <section id="roadmap" className="py-24 sm:py-28 relative bg-transparent border-t border-[#E9E4FF]/10 overflow-hidden">
       {/* Background ambient spotlight */}
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-[#7C5CFC]/10 rounded-full blur-[160px] pointer-events-none -z-10" />
 
