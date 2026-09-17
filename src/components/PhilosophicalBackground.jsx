@@ -7,13 +7,12 @@ import React, { useEffect, useRef, useState } from 'react';
  * of TH3ORY Masterclass: The Architecture of Influence, Sacred Cognitive Ciphers, and
  * Synaptic Resonance.
  * 
- * Architecture:
+ * Configured purely as an autonomous background animation without cursor or touch-responsive tracking:
  * - Positioned at `fixed inset-0 pointer-events-none z-0` so it sits directly beneath page content
  * - 1. Sacred Perception Cipher: Concentric golden ratio rings with cardinal ticks and rotating triad
- * - 2. Synaptic Neural Constellation: Crisp glowing nodes (gold/violet) with traveling energy pulses
+ * - 2. Synaptic Neural Constellation: Glowing nodes (gold/violet) with traveling energy pulses
  * - 3. Quantum Stardust Embers: Parallax floating particles drifting with scroll velocity
- * - 4. Interactive Pointer / Touch Gravitational Field: Dynamic luminous aura attracting neural nodes
- * - 5. Ambient Nebulae: Pulsing deep violet and golden atmosphere
+ * - 4. Ambient Nebulae: Pulsing deep violet and golden atmosphere
  */
 export default function PhilosophicalBackground({
   variant = 'default',
@@ -21,15 +20,6 @@ export default function PhilosophicalBackground({
 }) {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
-
-  const pointerRef = useRef({
-    x: -1000,
-    y: -1000,
-    targetX: -1000,
-    targetY: -1000,
-    active: false,
-    radius: 200
-  });
 
   const scrollRef = useRef({
     progress: 0,
@@ -68,43 +58,6 @@ export default function PhilosophicalBackground({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Track pointer / touch coordinates
-  useEffect(() => {
-    const handlePointerMove = (e) => {
-      pointerRef.current.targetX = e.clientX;
-      pointerRef.current.targetY = e.clientY;
-      pointerRef.current.active = true;
-    };
-
-    const handlePointerLeave = () => {
-      pointerRef.current.active = false;
-    };
-
-    const handleTouchMove = (e) => {
-      if (e.touches && e.touches.length > 0) {
-        pointerRef.current.targetX = e.touches[0].clientX;
-        pointerRef.current.targetY = e.touches[0].clientY;
-        pointerRef.current.active = true;
-      }
-    };
-
-    const handleTouchEnd = () => {
-      pointerRef.current.active = false;
-    };
-
-    window.addEventListener('mousemove', handlePointerMove, { passive: true });
-    document.addEventListener('mouseleave', handlePointerLeave);
-    window.addEventListener('touchmove', handleTouchMove, { passive: true });
-    window.addEventListener('touchend', handleTouchEnd);
-
-    return () => {
-      window.removeEventListener('mousemove', handlePointerMove);
-      document.removeEventListener('mouseleave', handlePointerLeave);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, []);
-
   // Main Canvas Rendering Engine
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -124,7 +77,7 @@ export default function PhilosophicalBackground({
       canvas.height = height * dpr;
       canvas.style.width = `${width}px`;
       canvas.style.height = `${height}px`;
-      ctx.setTransform(1, 0, 0, 1, 0, 0); // reset transform
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.scale(dpr, dpr);
     };
     resize();
@@ -189,23 +142,11 @@ export default function PhilosophicalBackground({
       scrollRef.current.progress += (scrollRef.current.targetProgress - scrollRef.current.progress) * 0.1;
       const progress = scrollRef.current.progress;
 
-      // Smooth lerp for pointer
-      if (pointerRef.current.active) {
-        pointerRef.current.x += (pointerRef.current.targetX - pointerRef.current.x) * 0.14;
-        pointerRef.current.y += (pointerRef.current.targetY - pointerRef.current.y) * 0.14;
-      } else {
-        // Idle gentle float if pointer is inactive
-        const idleTargetX = width * 0.5 + Math.cos(time * 0.5) * (width * 0.22);
-        const idleTargetY = height * 0.4 + Math.sin(time * 0.7) * (height * 0.16);
-        pointerRef.current.x += (idleTargetX - pointerRef.current.x) * 0.025;
-        pointerRef.current.y += (idleTargetY - pointerRef.current.y) * 0.025;
-      }
-
       ctx.clearRect(0, 0, width, height);
 
       // ─── 1. DRAW SACRED PERCEPTION CIPHER RINGS (High Visibility) ────────
-      const centerX = width * 0.5 + (pointerRef.current.x - width * 0.5) * 0.05;
-      const centerY = height * 0.45 + (pointerRef.current.y - height * 0.5) * 0.05;
+      const centerX = width * 0.5;
+      const centerY = height * 0.45;
       const baseRadius = Math.min(width, height) * 0.36;
 
       // Dynamic rotation with scroll speed
@@ -322,9 +263,6 @@ export default function PhilosophicalBackground({
 
       // ─── 3. SYNAPTIC NEURAL MATRIX NODES & CONNECTIONS ──────────────────
       const maxConnectDist = Math.min(width, height) * 0.26;
-      const pointerRadius = pointerRef.current.radius;
-      const pointerX = pointerRef.current.x;
-      const pointerY = pointerRef.current.y;
 
       // Update and draw nodes
       for (let i = 0; i < nodes.length; i++) {
@@ -345,31 +283,18 @@ export default function PhilosophicalBackground({
         if (n.y < -30) n.y = height + 30;
         if (n.y > height + 30) n.y = -30;
 
-        // Interactive Pointer / Touch Gravitational Attractor
-        const dxP = pointerX - n.x;
-        const dyP = pointerY - n.y;
-        const distP = Math.hypot(dxP, dyP);
-
-        let isNearPointer = false;
-        if (distP < pointerRadius && distP > 1) {
-          isNearPointer = true;
-          const force = (1 - distP / pointerRadius) * 1.1;
-          n.vx += (dxP / distP) * force;
-          n.vy += (dyP / distP) * force;
-        }
-
-        // Breathing pulse
+        // Autonomous breathing pulse
         n.pulse += n.pulseSpeed;
         const pulseScale = 1 + Math.sin(n.pulse) * 0.3;
 
         // Draw node
         ctx.beginPath();
-        const currentRadius = isNearPointer ? n.radius * 1.4 : n.radius * pulseScale;
+        const currentRadius = n.radius * pulseScale;
         ctx.arc(n.x, n.y, currentRadius, 0, Math.PI * 2);
         
         ctx.fillStyle = n.color === '#FFC857' ? 'rgba(255, 200, 87, 0.95)' : 'rgba(147, 119, 255, 0.95)';
         ctx.shadowColor = n.color;
-        ctx.shadowBlur = isNearPointer ? 18 : 10;
+        ctx.shadowBlur = 10;
         ctx.fill();
         ctx.shadowBlur = 0; // reset
 
@@ -389,7 +314,7 @@ export default function PhilosophicalBackground({
             ctx.strokeStyle = n.color === '#FFC857' || n2.color === '#FFC857'
               ? `rgba(255, 200, 87, ${alpha * 1.3})`
               : `rgba(139, 92, 246, ${alpha})`;
-            ctx.lineWidth = isNearPointer ? 1.8 : 1.2;
+            ctx.lineWidth = 1.2;
             ctx.stroke();
 
             // Spawn synaptic energy pulses
@@ -428,22 +353,6 @@ export default function PhilosophicalBackground({
         ctx.shadowBlur = 12;
         ctx.fill();
         ctx.shadowBlur = 0;
-      }
-
-      // ─── 5. POINTER / TOUCH LUMINOUS SPOTLIGHT AURA ────────────────────────
-      if (pointerRef.current.active) {
-        const glowGrad = ctx.createRadialGradient(
-          pointerX, pointerY, 0,
-          pointerX, pointerY, pointerRadius * 1.4
-        );
-        glowGrad.addColorStop(0, 'rgba(255, 200, 87, 0.18)');
-        glowGrad.addColorStop(0.35, 'rgba(124, 92, 252, 0.14)');
-        glowGrad.addColorStop(1, 'rgba(7, 10, 17, 0)');
-
-        ctx.fillStyle = glowGrad;
-        ctx.beginPath();
-        ctx.arc(pointerX, pointerY, pointerRadius * 1.4, 0, Math.PI * 2);
-        ctx.fill();
       }
 
       if (!prefersReducedMotion) {
