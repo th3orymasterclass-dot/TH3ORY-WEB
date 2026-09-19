@@ -173,7 +173,7 @@ export default function BlogPage({ onBack, onOpenCheckout }) {
         description={
           currentArticle
             ? currentArticle.subtitle || currentArticle.excerpt
-            : "Tactical writeups, psychological deconstructions, and non-verbal influence blueprints authored by Mentalist Sravan and TH3ORY faculty."
+            : "Tactical writeups, psychological deconstructions, and non-verbal influence blueprints authored by Sravan Sudhakaran and TH3ORY faculty."
         }
         canonicalUrl={
           currentArticle
@@ -301,7 +301,7 @@ export default function BlogPage({ onBack, onOpenCheckout }) {
                 <div className="flex items-center gap-3">
                   <img
                     src={currentArticle.author?.avatar || '/instructor.png'}
-                    alt={currentArticle.author?.name || 'Mentalist Sravan'}
+                    alt={currentArticle.author?.name || 'Sravan Sudhakaran'}
                     className="w-11 h-11 rounded-full object-cover border-2 border-amber-500/40 shadow"
                     onError={e => {
                       e.target.src = '/instructor.png';
@@ -309,7 +309,7 @@ export default function BlogPage({ onBack, onOpenCheckout }) {
                   />
                   <div>
                     <div className="text-sm font-bold text-white flex items-center gap-1.5">
-                      <span>{currentArticle.author?.name || 'Mentalist Sravan'}</span>
+                      <span>{currentArticle.author?.name || 'Sravan Sudhakaran'}</span>
                       <ShieldCheck className="w-4 h-4 text-amber-400" />
                     </div>
                     <span className="text-xs text-slate-400">
@@ -409,7 +409,7 @@ export default function BlogPage({ onBack, onOpenCheckout }) {
                   Translate Cognitive Theory Into Instinctive Mastery
                 </h3>
                 <p className="text-sm text-slate-300 leading-relaxed">
-                  Join 30 days of high-intensity behavioral drills, non-verbal micro-expression analysis, vocal modulation frameworks, and personal feedback directly from Mentalist Sravan.
+                  Join 30 days of high-intensity behavioral drills, non-verbal micro-expression analysis, vocal modulation frameworks, and personal feedback directly from Sravan Sudhakaran.
                 </p>
                 <div className="pt-3">
                   <button
@@ -502,7 +502,7 @@ export default function BlogPage({ onBack, onOpenCheckout }) {
               </h1>
 
               <p className="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto leading-relaxed">
-                Deconstructing subtle body language, high-stakes negotiation psychology, vocal presence, and subconscious leverage. Written by Mentalist Sravan and the TH3ORY faculty.
+                Deconstructing subtle body language, high-stakes negotiation psychology, vocal presence, and subconscious leverage. Written by Sravan Sudhakaran and the TH3ORY faculty.
               </p>
             </div>
 
@@ -547,7 +547,7 @@ export default function BlogPage({ onBack, onOpenCheckout }) {
                         />
                         <div>
                           <span className="text-xs font-bold text-white block">
-                            {featuredArticle.author?.name || 'Mentalist Sravan'}
+                            {featuredArticle.author?.name || 'Sravan Sudhakaran'}
                           </span>
                           <span className="text-[11px] text-slate-400">
                             Founder &amp; Cognitive Strategist
@@ -710,14 +710,14 @@ export default function BlogPage({ onBack, onOpenCheckout }) {
                       <div className="flex items-center gap-2">
                         <img
                           src={blog.author?.avatar || '/instructor.png'}
-                          alt={blog.author?.name || 'Mentalist Sravan'}
+                          alt={blog.author?.name || 'Sravan Sudhakaran'}
                           className="w-6 h-6 rounded-full object-cover border border-amber-500/30"
                           onError={e => {
                             e.target.src = '/instructor.png';
                           }}
                         />
                         <span className="text-[11px] text-slate-300 font-medium">
-                          {blog.author?.name || 'Mentalist Sravan'}
+                          {blog.author?.name || 'Sravan Sudhakaran'}
                         </span>
                       </div>
 

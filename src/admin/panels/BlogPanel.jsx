@@ -100,7 +100,7 @@ export default function BlogPanel({ themeMode = 'dark' }) {
         tags: ['Cognitive Science', 'Influence'],
         tagsString: 'Cognitive Science, Influence',
         author: {
-          name: 'Mentalist Sravan',
+          name: 'Sravan Sudhakaran',
           role: 'Cognitive Strategist & Founder',
           avatar: '/instructor.png'
         },
@@ -490,7 +490,7 @@ export default function BlogPanel({ themeMode = 'dark' }) {
 
                   <div className="flex items-center gap-2 mt-2">
                     <span className="text-[11px] text-slate-500">
-                      By {blog.author?.name || 'Mentalist Sravan'}
+                      By {blog.author?.name || 'Sravan Sudhakaran'}
                     </span>
                     <span className="text-[11px] text-slate-600">/</span>
                     <span className="text-[11px] text-slate-500 font-mono">
@@ -800,7 +800,7 @@ export default function BlogPanel({ themeMode = 'dark' }) {
                   />
                   <div>
                     <span className="text-xs font-bold text-white block">
-                      {editingBlog.author?.name || 'Mentalist Sravan'}
+                      {editingBlog.author?.name || 'Sravan Sudhakaran'}
                     </span>
                     <span className="text-[11px] text-slate-400">
                       {editingBlog.author?.role || 'Founder & Cognitive Strategist'}

@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS public.blogs (
   subtitle TEXT DEFAULT '',
   category TEXT NOT NULL DEFAULT 'Cognitive Science',
   tags JSONB DEFAULT '[]'::jsonb,
-  author JSONB DEFAULT '{"name": "Mentalist Sravan", "role": "Cognitive Strategist & Founder", "avatar": "/instructor.png"}'::jsonb,
+  author JSONB DEFAULT '{"name": "Sravan Sudhakaran", "role": "Cognitive Strategist & Founder", "avatar": "/instructor.png"}'::jsonb,
   published_at TIMESTAMPTZ DEFAULT NOW(),
   read_time TEXT DEFAULT '5 min read',
   cover_image TEXT DEFAULT '',

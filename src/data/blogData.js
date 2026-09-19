@@ -1,6 +1,6 @@
 /**
  * TH3ORY MASTERCLASS - OFFICIAL BLOG & COGNITIVE FIELD NOTES
- * Curated executive writeups by Mentalist Sravan & TH3ORY Faculty
+ * Curated executive writeups by Sravan Sudhakaran & TH3ORY Faculty
  */
 
 export const BLOG_CATEGORIES = [
@@ -22,7 +22,7 @@ export const defaultBlogs = [
     category: 'Presence & Body Language',
     tags: ['Presence', 'Body Language', 'Evolutionary Psychology', 'First Impressions'],
     author: {
-      name: 'Mentalist Sravan',
+      name: 'Sravan Sudhakaran',
       role: 'Cognitive Strategist & Founder',
       avatar: '/instructor.png'
     },
@@ -85,7 +85,7 @@ Remember: *Influence is never taken by force; it is yielded to undeniable presen
     category: 'Negotiation & Strategy',
     tags: ['Negotiation', 'Anchoring', 'Pricing', 'Tactical Framing'],
     author: {
-      name: 'Mentalist Sravan',
+      name: 'Sravan Sudhakaran',
       role: 'Cognitive Strategist & Founder',
       avatar: '/instructor.png'
     },
@@ -142,7 +142,7 @@ Whenever you enter a financial or strategic negotiation:
     category: 'Cognitive Science',
     tags: ['Micro Expressions', 'Facial Coding', 'Deception Detection', 'Mentalism'],
     author: {
-      name: 'Mentalist Sravan',
+      name: 'Sravan Sudhakaran',
       role: 'Cognitive Strategist & Founder',
       avatar: '/instructor.png'
     },
@@ -193,7 +193,7 @@ Never judge a single twitch in isolation. You must establish their **Behavioral 
     category: 'Vocal Resonance',
     tags: ['Voice Modulation', 'Cadence', 'Strategic Silence', 'Executive Speech'],
     author: {
-      name: 'Mentalist Sravan',
+      name: 'Sravan Sudhakaran',
       role: 'Cognitive Strategist & Founder',
       avatar: '/instructor.png'
     },
@@ -244,7 +244,7 @@ Place your palm flat on your sternum. Hum at a low pitch until you feel physical
     category: 'Leadership',
     tags: ['Remote Leadership', 'Virtual Meetings', 'Digital Body Language', 'Video Mastery'],
     author: {
-      name: 'Mentalist Sravan',
+      name: 'Sravan Sudhakaran',
       role: 'Cognitive Strategist & Founder',
       avatar: '/instructor.png'
     },
