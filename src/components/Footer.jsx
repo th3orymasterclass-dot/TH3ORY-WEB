@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Lock, CreditCard, Heart, GraduationCap, ArrowRight, Sparkles, Brain, Clapperboard, FileText } from 'lucide-react';
+import { ShieldCheck, Lock, GraduationCap, Clapperboard } from 'lucide-react';
 import Logo from './Logo';
 import { useTh3oryLive } from '../data/adminData';
 import LegalModal from './LegalModal';
@@ -14,10 +14,10 @@ export default function Footer({ onOpenCheckout }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         
         {/* Main Footer Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
           
           {/* Brand Info */}
-          <div className="space-y-4 md:col-span-2">
+          <div className="space-y-4 lg:col-span-5">
             <a
               href="#"
               onClick={(e) => { e.preventDefault(); window.location.hash = ''; window.dispatchEvent(new Event('hashchange')); }}
@@ -55,9 +55,9 @@ export default function Footer({ onOpenCheckout }) {
           </div>
 
           {/* Navigation Links */}
-          <div className="space-y-3">
+          <div className="space-y-3 lg:col-span-7">
             <h4 className="text-xs font-extrabold text-white uppercase tracking-widest">Navigation &amp; Legal</h4>
-            <ul className="space-y-2 text-xs">
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-xs">
               <li>
                 <a 
                   href="https://rzp.io/rzp/th3orylaunch" 
@@ -128,7 +128,7 @@ export default function Footer({ onOpenCheckout }) {
               </li>
               <li><button onClick={() => setLegalModalTab('terms')} className="hover:text-amber-400 transition-colors text-left cursor-pointer">Terms of Service</button></li>
               <li><button onClick={() => setLegalModalTab('refund')} className="hover:text-amber-400 transition-colors text-left cursor-pointer">Refund Policy</button></li>
-              <li className="pt-2 border-t border-slate-900 flex flex-col gap-1.5">
+              <li className="sm:col-span-2 pt-2 border-t border-slate-900 flex flex-col gap-1.5">
                 <a
                   href="#student"
                   onClick={(e) => { e.preventDefault(); window.location.hash = 'student'; window.dispatchEvent(new Event('hashchange')); }}
@@ -138,25 +138,6 @@ export default function Footer({ onOpenCheckout }) {
                 </a>
               </li>
             </ul>
-          </div>
-
-          {/* Payment Gateways & Production Badge */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-extrabold text-white uppercase tracking-widest">Production &amp; Checkout</h4>
-            <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2.5">
-              <div className="flex items-center gap-2 text-slate-300 font-bold text-xs">
-                <CreditCard className="w-4 h-4 text-amber-400" /> Stripe, Razorpay, PayPal, UPI
-              </div>
-              <p className="text-[11px] text-slate-500 leading-normal">
-                Direct cognitive experiment enrollment powered by Mentalist Sravan Production with automated access generation.
-              </p>
-              <button
-                onClick={() => { window.location.hash = 'enroll'; window.dispatchEvent(new Event('hashchange')); }}
-                className="w-full py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-extrabold text-xs uppercase tracking-wider transition-all cursor-pointer"
-              >
-                Enroll Now ($149 / ₹11,999)
-              </button>
-            </div>
           </div>
         </div>
 
