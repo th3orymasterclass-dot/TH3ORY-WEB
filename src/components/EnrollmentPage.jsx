@@ -751,9 +751,9 @@ function Step3({ form, setForm, onNext, onBack }) {
             You retain full rights to request Data Export (SAR), Account Erasure (Right to be Forgotten), Data Rectification, or Opt-Out by visiting <a href="#privacy" target="_blank" rel="noopener noreferrer" className="text-amber-400 underline font-bold">th3ory.online/#/privacy</a> or contacting our Data Protection Officer at <code className="text-slate-200">privacy@th3ory.online</code>.
           </p>
 
-          <p className="font-semibold text-amber-400 pt-1">4. 14-Day Guarantee &amp; Content License</p>
+          <p className="font-semibold text-amber-400 pt-1">4. 5-Day Guarantee &amp; Content License (*Subject to Terms)</p>
           <p>
-            All video lessons, workbooks, PDFs, frameworks, and masterclass resources are the exclusive intellectual property of Mentalist Sravan Production. Single-user non-transferable access license is granted upon payment. 14-day 100% money-back guarantee applies under support policy guidelines.
+            All video lessons, workbooks, PDFs, frameworks, and masterclass resources are the exclusive intellectual property of Mentalist Sravan Production. Single-user non-transferable access license is granted upon payment. 5-day money-back guarantee applies under support policy guidelines (*note: subject to terms and conditions; valid within 5 calendar days of purchase and applicable if less than 20% of curriculum content has been completed).
           </p>
         </div>
 
@@ -794,10 +794,13 @@ function Step3({ form, setForm, onNext, onBack }) {
         </button>
       </div>
 
-      <div className="flex items-center justify-center gap-4 flex-wrap">
-        {['SSL Secured', 'PCI DSS Compliant', '14-Day Guarantee'].map(t => (
-          <span key={t} className="flex items-center gap-1 text-slate-600 text-xs"><Shield className="w-3 h-3"/>{t}</span>
-        ))}
+      <div className="flex flex-col items-center justify-center gap-1.5">
+        <div className="flex items-center justify-center gap-4 flex-wrap">
+          {['SSL Secured', 'PCI DSS Compliant', '5-Day Guarantee*'].map(t => (
+            <span key={t} className="flex items-center gap-1 text-slate-600 text-xs"><Shield className="w-3 h-3"/>{t}</span>
+          ))}
+        </div>
+        <span className="text-[10px] text-slate-600 italic">*Subject to terms and conditions</span>
       </div>
     </div>
   );
@@ -970,12 +973,15 @@ export default function EnrollmentPage({ initialPlan, onBack }) {
 
         {/* Trust badges */}
         {step < 4 && (
-          <div className="flex items-center justify-center gap-6 flex-wrap mt-8">
-            {['14-Day Money Back Guarantee', '256-bit SSL Encryption', 'Lifetime Access'].map(t => (
-              <span key={t} className="flex items-center gap-1.5 text-[#555A66] text-xs font-medium">
-                <Shield className="w-3.5 h-3.5 text-[#FFC857]"/> <span>{t}</span>
-              </span>
-            ))}
+          <div className="flex flex-col items-center justify-center gap-1 mt-8">
+            <div className="flex items-center justify-center gap-6 flex-wrap">
+              {['5-Day Money Back Guarantee*', '256-bit SSL Encryption', 'Lifetime Access'].map(t => (
+                <span key={t} className="flex items-center gap-1.5 text-[#555A66] text-xs font-medium">
+                  <Shield className="w-3.5 h-3.5 text-[#FFC857]"/> <span>{t}</span>
+                </span>
+              ))}
+            </div>
+            <span className="text-[10px] text-[#555A66]/70 italic">*Subject to terms and conditions</span>
           </div>
         )}
       </div>

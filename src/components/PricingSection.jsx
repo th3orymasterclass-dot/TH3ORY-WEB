@@ -264,10 +264,15 @@ export default function PricingSection({ onSelectPlan, couponCode, setCouponCode
                       </button>
                     )}
                     
-                    <p className="text-[11px] text-center text-[#555A66] mt-3 flex items-center justify-center gap-1.5">
-                      <ShieldCheck className="w-3.5 h-3.5 text-[#FFC857]" />
-                      <span>{isEnt ? 'Instant Enterprise SLA & Bulk Support' : '14-Day 100% Money-Back Guarantee'}</span>
-                    </p>
+                    <div className="mt-3 text-center space-y-0.5">
+                      <p className="text-[11px] text-[#555A66] flex items-center justify-center gap-1.5">
+                        <ShieldCheck className="w-3.5 h-3.5 text-[#FFC857]" />
+                        <span>{isEnt ? 'Instant Enterprise SLA & Bulk Support' : '5-Day Money-Back Guarantee*'}</span>
+                      </p>
+                      {!isEnt && (
+                        <p className="text-[10px] text-[#555A66]/70 italic">*Subject to terms and conditions</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </InteractiveCard>

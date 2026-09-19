@@ -636,9 +636,9 @@ export default function CheckoutModal({
                     You retain full rights to request Data Export (SAR), Account Erasure (Right to be Forgotten), Data Rectification, or Opt-Out by visiting <a href="#privacy" target="_blank" rel="noopener noreferrer" className="text-amber-400 underline font-bold">th3ory.online/#/privacy</a> or contacting our Data Protection Officer at <code className="text-slate-200">privacy@th3ory.online</code>.
                   </p>
 
-                  <p className="font-semibold text-amber-400 pt-1">4. 14-Day Guarantee &amp; Content License</p>
+                  <p className="font-semibold text-amber-400 pt-1">4. 5-Day Guarantee &amp; Content License (*Subject to Terms)</p>
                   <p>
-                    All video lessons, workbooks, PDFs, frameworks, and masterclass resources are the exclusive intellectual property of Mentalist Sravan Production. Single-user non-transferable access license is granted upon payment. 14-day 100% money-back guarantee applies under support policy guidelines.
+                    All video lessons, workbooks, PDFs, frameworks, and masterclass resources are the exclusive intellectual property of Mentalist Sravan Production. Single-user non-transferable access license is granted upon payment. 5-day money-back guarantee applies under support policy guidelines (*note: subject to terms and conditions; applicable within 5 calendar days of purchase and if less than 20% of curriculum content has been completed).
                   </p>
                 </div>
 
@@ -763,7 +763,7 @@ export default function CheckoutModal({
 
         {/* Modal Security Footer */}
         <div className="p-4 bg-slate-900/90 border-t border-slate-800 text-center text-[11px] text-slate-400 flex items-center justify-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-emerald-400" /> Guaranteed 14-Day Full Refund • SSL Encrypted
+          <ShieldCheck className="w-4 h-4 text-emerald-400" /> Guaranteed 5-Day Full Refund* • SSL Encrypted <span className="text-[10px] text-slate-500 italic">(*Subject to terms &amp; conditions)</span>
         </div>
 
       </div>

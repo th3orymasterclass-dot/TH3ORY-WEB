@@ -447,7 +447,7 @@ export const faqList = [
   {
     category: "Guarantee",
     question: "What if the program isn't right for me?",
-    answer: "We offer an unconditional 14-day 100% money-back guarantee. Complete Level 1 (Presence) & Level 2 (Power), and if you don't feel a noticeable transformation in your influence, simply email us for an immediate full refund."
+    answer: "We offer a 5-day money-back guarantee (*subject to terms and conditions). Experience the foundational modules, and if you feel the masterclass does not deliver the transformation you anticipated, simply email our support desk within 5 days of enrollment for a full refund under our policy terms."
   },
   {
     category: "Bonuses",

@@ -43,7 +43,7 @@ export default function Footer({ onOpenCheckout }) {
                 onClick={() => setLegalModalTab('refund')} 
                 className="flex items-center gap-1.5 text-green-400 text-xs font-semibold hover:underline cursor-pointer"
               >
-                <ShieldCheck className="w-4 h-4" /> 14-Day 100% Money-Back Guarantee
+                <ShieldCheck className="w-4 h-4" /> 5-Day Money-Back Guarantee*
               </button>
               <button 
                 onClick={() => setLegalModalTab('privacy')} 
@@ -52,6 +52,9 @@ export default function Footer({ onOpenCheckout }) {
                 <Lock className="w-4 h-4" /> 256-Bit SSL Checkout
               </button>
             </div>
+            <p className="text-[11px] text-slate-500 italic">
+              *Refund policy subject to terms and conditions.
+            </p>
           </div>
 
           {/* Navigation Links */}

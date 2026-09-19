@@ -62,7 +62,7 @@ export default function LegalModal({ isOpen, onClose, initialTab = 'privacy' }) 
                 : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
-            <RefreshCw className="w-4 h-4" /> 14-Day Refund Guarantee
+            <RefreshCw className="w-4 h-4" /> 5-Day Refund Guarantee*
           </button>
 
           <button
@@ -147,21 +147,32 @@ export default function LegalModal({ isOpen, onClose, initialTab = 'privacy' }) 
               <p>
                 Course fees are charged at the time of checkout. Prices displayed on our website are inclusive of applicable digital access taxes.
               </p>
+
+              <h4 className="text-sm font-bold text-amber-400 pt-2">4. 5-Day Refund Policy &amp; Eligibility Criteria</h4>
+              <p>
+                Enrollment is covered by our 5-Day Refund Policy subject to terms and conditions (*Note: Subject to verification of course progress, valid within 5 calendar days of purchase, and applicable when less than 20% of curriculum content has been completed). Detailed guidelines are stated in the Refund Guarantee tab.
+              </p>
             </div>
           )}
 
           {activeTab === 'refund' && (
             <div className="space-y-4">
-              <h3 className="text-base font-bold text-white">14-Day 100% Money-Back Guarantee</h3>
-              <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
-                <strong>Zero Risk Guarantee:</strong> Test the first 2 modules of TH3ORY Masterclass for up to 14 days. If you feel it does not deliver transformation, submit a support query for a 100% refund.
+              <div>
+                <h3 className="text-base font-bold text-white">5-Day 100% Money-Back Guarantee*</h3>
+                <p className="text-xs text-amber-400/90 font-medium italic pt-0.5">*Note: Subject to terms and conditions outlined below.</p>
               </div>
 
-              <h4 className="text-sm font-bold text-amber-400 pt-2">Refund Terms & Eligibility</h4>
-              <ul className="list-disc pl-5 space-y-1 text-slate-400">
-                <li>Refund requests must be submitted within 14 calendar days from the date of purchase.</li>
-                <li>Submit your request directly via the Student Portal support tab or email support at <code>th3orymasterclass@gmail.com</code> with your Order ID.</li>
-                <li>Refunds are processed within 3-5 business days back to your original payment method (Stripe / Razorpay / UPI).</li>
+              <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
+                <strong>Zero Risk Guarantee:</strong> Test the foundational modules of TH3ORY Masterclass for up to 5 days. If you feel it does not deliver transformation or meet your expectations, submit a refund query within 5 days for a 100% money-back refund subject to terms and conditions.
+              </div>
+
+              <h4 className="text-sm font-bold text-amber-400 pt-2">Refund Terms &amp; Eligibility Criteria (*Subject to Terms)</h4>
+              <ul className="list-disc pl-5 space-y-1.5 text-slate-400">
+                <li><strong>5-Day Window:</strong> Refund requests must be submitted within exactly 5 calendar days (120 hours) from the date and time of purchase.</li>
+                <li><strong>Fair Usage &amp; Progress Threshold:</strong> To prevent intellectual property abuse, refunds are valid only if no more than 20% of the curriculum video content has been completed or marked as done.</li>
+                <li><strong>How to Request:</strong> Submit your request via the Student Portal support tab or email our desk at <code>th3orymasterclass@gmail.com</code> / <code>privacy@th3ory.online</code> with your Order ID and registered email.</li>
+                <li><strong>Processing SLA:</strong> Once verified, refunds are processed within 3–5 business days directly back to your original payment method (Razorpay, Stripe, or UPI).</li>
+                <li><strong>Excluded Items:</strong> Custom 1-on-1 executive consulting and bespoke enterprise cohort training sessions that have commenced are non-refundable.</li>
               </ul>
             </div>
           )}
