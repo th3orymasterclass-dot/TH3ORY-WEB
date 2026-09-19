@@ -136,13 +136,6 @@ export default function Footer({ onOpenCheckout }) {
                 >
                   <GraduationCap className="w-3.5 h-3.5"/> Student Portal →
                 </a>
-                <a
-                  href="#team"
-                  onClick={(e) => { e.preventDefault(); window.location.hash = 'team'; window.dispatchEvent(new Event('hashchange')); }}
-                  className="text-indigo-400 font-bold hover:underline flex items-center gap-1 cursor-pointer"
-                >
-                  <ShieldCheck className="w-3.5 h-3.5"/> Team Access &amp; Registration →
-                </a>
               </li>
             </ul>
           </div>
@@ -191,22 +184,6 @@ export default function Footer({ onOpenCheckout }) {
               className="hover:text-amber-400 transition-colors cursor-pointer"
             >
               Student Login
-            </a>
-            <span>•</span>
-            <a
-              href="#team"
-              onClick={(e) => { e.preventDefault(); window.location.hash = 'team'; window.dispatchEvent(new Event('hashchange')); }}
-              className="hover:text-indigo-400 transition-colors cursor-pointer font-semibold text-indigo-300"
-            >
-              Team Portal
-            </a>
-            <span>•</span>
-            <a
-              href="#team-register"
-              onClick={(e) => { e.preventDefault(); window.location.hash = 'team-register'; window.dispatchEvent(new Event('hashchange')); }}
-              className="hover:text-purple-400 transition-colors cursor-pointer font-semibold text-purple-300"
-            >
-              Team Register
             </a>
           </div>
         </div>
