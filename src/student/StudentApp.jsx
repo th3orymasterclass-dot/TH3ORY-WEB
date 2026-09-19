@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import {
   LayoutDashboard, BookOpen, ShoppingBag, Star, HelpCircle, Mail,
   LogOut, ChevronRight, Menu, X, GraduationCap, Award, ExternalLink, Bookmark, ShieldAlert,
-  Sun, Moon, Zap
+  Sun, Moon, Zap, FileText
 } from 'lucide-react';
 import DashboardHome from './panels/DashboardHome';
 import CoursePanel   from './panels/CoursePanel';
+import ResourcesPanel from './panels/ResourcesPanel';
 import ShopPanel     from './panels/ShopPanel';
 import ReviewPanel   from './panels/ReviewPanel';
 import QueryPanel    from './panels/QueryPanel';
@@ -29,6 +30,7 @@ import {
 const NAV = [
   { id: 'home',           label: 'Dashboard',         icon: LayoutDashboard },
   { id: 'course',         label: 'My Course',         icon: BookOpen },
+  { id: 'resources',      label: 'Resources',         icon: FileText },
   { id: 'character_code', label: 'Character Code™',   icon: Zap },
   { id: 'queries',        label: 'Query Sessions',    icon: HelpCircle, flagKey: 'ENABLE_STUDENT_COMMUNITY' },
   { id: 'certificate',    label: 'Certificate',       icon: Award },
@@ -220,6 +222,7 @@ export default function StudentApp({ profile: initialProfile, onLogout }) {
     switch (active) {
       case 'home':        return <DashboardHome profile={activeProfile} onNavigate={navigate} themeMode={themeMode}/>;
       case 'course':      return <CoursePanel profile={activeProfile} initialLevelId={navExtra.levelId} initialLessonId={navExtra.lessonId} onNavigate={navigate} themeMode={themeMode}/>;
+      case 'resources':   return <ResourcesPanel profile={activeProfile} themeMode={themeMode} onNavigate={navigate}/>;
       case 'character_code': return <CharacterCodePortal profile={activeProfile} themeMode={themeMode} completedLevelsCount={completedLevelsCount} onNavigate={navigate} onClose={() => setActive('home')} />;
       case 'queries':     return <QueryPanel profile={activeProfile} themeMode={themeMode}/>;
       case 'certificate': return <CertificatePanel profile={activeProfile} completedCount={done} totalLessons={totalLessons} onNavigate={navigate} themeMode={themeMode}/>;
@@ -457,7 +460,7 @@ export default function StudentApp({ profile: initialProfile, onLogout }) {
 
         <button
           onClick={() => { setActive('course'); setNavExtra({}); }}
-          className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl transition-all cursor-pointer ${
+          className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl transition-all cursor-pointer ${
             active === 'course' ? 'text-[#FFC857] font-black' : 'text-[#555A66] hover:text-[#FAFAF7]'
           }`}
         >
@@ -466,8 +469,18 @@ export default function StudentApp({ profile: initialProfile, onLogout }) {
         </button>
 
         <button
+          onClick={() => { setActive('resources'); setNavExtra({}); }}
+          className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl transition-all cursor-pointer ${
+            active === 'resources' ? 'text-[#FFC857] font-black' : 'text-[#555A66] hover:text-[#FAFAF7]'
+          }`}
+        >
+          <FileText className="w-5 h-5" />
+          <span className="text-[10px]">Resources</span>
+        </button>
+
+        <button
           onClick={() => { setActive('character_code'); setNavExtra({}); }}
-          className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl transition-all cursor-pointer ${
+          className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl transition-all cursor-pointer ${
             active === 'character_code' ? 'text-[#FFC857] font-black' : 'text-[#555A66] hover:text-[#FAFAF7]'
           }`}
         >

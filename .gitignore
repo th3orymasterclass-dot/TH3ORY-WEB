@@ -25,3 +25,6 @@ scratch/
 mcp.json
 .mcp.json
 .agents/
+
+.vercel
+.env*

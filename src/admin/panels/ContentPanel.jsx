@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { saveCourseContentToSupabase, deleteCourseContentFromSupabase } from '../../services/supabaseService';
 import { parseGoogleDriveUrl } from '../../utils/gdriveHelper';
+import PdfViewerModal from '../../components/PdfViewerModal';
 
 // ─── Content type config ───────────────────────────────────────────────────────
 const CONTENT_TYPES = [
@@ -48,7 +49,7 @@ function formatBytes(bytes) {
 }
 
 // ─── Content Card ─────────────────────────────────────────────────────────────
-function ContentCard({ item, onEdit, onDelete, onTogglePublish, viewMode }) {
+function ContentCard({ item, onEdit, onDelete, onTogglePublish, onPreviewPdf, viewMode }) {
   const tc = getTypeConfig(item.type);
   const Icon = tc.icon;
   const accessConf = ACCESS_TYPES.find(a => a.id === item.access) || ACCESS_TYPES[0];
@@ -56,6 +57,7 @@ function ContentCard({ item, onEdit, onDelete, onTogglePublish, viewMode }) {
 
   const gdrive = parseGoogleDriveUrl(item.url);
   const isDrive = gdrive.isGDrive || item.storageType === 'gdrive';
+  const isPdf = item.type === 'pdf' || item.type === 'worksheet' || (item.url || '').toLowerCase().includes('.pdf');
 
   if (viewMode === 'list') {
     return (
@@ -84,6 +86,15 @@ function ContentCard({ item, onEdit, onDelete, onTogglePublish, viewMode }) {
           <span className={`text-xs ${accessConf.color} flex items-center gap-1`}>
             <AccessIcon className="w-3 h-3" />{accessConf.label}
           </span>
+          {isPdf && (
+            <button
+              onClick={() => onPreviewPdf && onPreviewPdf(item)}
+              className="p-1.5 rounded-lg text-amber-400 hover:bg-amber-950/40 transition-colors cursor-pointer"
+              title="Preview in TH3ORY PDF Viewer"
+            >
+              <FileText className="w-4 h-4" />
+            </button>
+          )}
           {isDrive && (
             <a href={gdrive.embedUrl || item.url} target="_blank" rel="noreferrer" title="Stream View from Google Drive" className="p-1.5 rounded-lg text-blue-400 hover:bg-blue-950/40 transition-colors">
               <ExternalLink className="w-4 h-4" />
@@ -110,6 +121,15 @@ function ContentCard({ item, onEdit, onDelete, onTogglePublish, viewMode }) {
         )}
         {/* Overlay actions */}
         <div className="absolute inset-0 bg-slate-950/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+          {isPdf && (
+            <button
+              onClick={() => onPreviewPdf && onPreviewPdf(item)}
+              className="p-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 transition-colors cursor-pointer"
+              title="Preview in TH3ORY PDF Viewer"
+            >
+              <FileText className="w-4 h-4" />
+            </button>
+          )}
           <button onClick={() => onEdit(item)} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors"><Edit3 className="w-4 h-4"/></button>
           {isDrive && (
             <a href={gdrive.viewUrl || item.url} target="_blank" rel="noreferrer" className="p-2 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 transition-colors" title="Open Google Drive">
@@ -660,6 +680,7 @@ export default function ContentPanel({ data, save, reset, themeMode = 'dark' }) 
   const [filterType, setFilter] = useState('all');
   const [viewMode, setViewMode] = useState('grid');
   const [modal, setModal]       = useState(null);
+  const [previewPdf, setPreviewPdf] = useState(null);
   const [filterAccess, setFilterAccess] = useState('all');
 
   const isDark = themeMode === 'dark';
@@ -826,6 +847,7 @@ export default function ContentPanel({ data, save, reset, themeMode = 'dark' }) 
               onEdit={i => setModal(i)}
               onDelete={handleDelete}
               onTogglePublish={handleTogglePublish}
+              onPreviewPdf={i => setPreviewPdf(i)}
             />
           ))}
         </div>
@@ -836,6 +858,7 @@ export default function ContentPanel({ data, save, reset, themeMode = 'dark' }) 
               onEdit={i => setModal(i)}
               onDelete={handleDelete}
               onTogglePublish={handleTogglePublish}
+              onPreviewPdf={i => setPreviewPdf(i)}
             />
           ))}
           <button
@@ -854,6 +877,21 @@ export default function ContentPanel({ data, save, reset, themeMode = 'dark' }) 
           levels={levels}
           onSave={handleSave}
           onClose={() => setModal(null)}
+        />
+      )}
+
+      {previewPdf && (
+        <PdfViewerModal
+          isOpen={Boolean(previewPdf)}
+          onClose={() => setPreviewPdf(null)}
+          pdfUrl={previewPdf.url}
+          title={previewPdf.title}
+          description={previewPdf.description}
+          levelId={previewPdf.levelId}
+          fileSize={previewPdf.fileSize}
+          duration={previewPdf.duration}
+          tags={previewPdf.tags}
+          themeMode="dark"
         />
       )}
     </div>

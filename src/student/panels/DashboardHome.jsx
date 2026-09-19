@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Award, BookOpen, CheckCircle2, Clock, Flame, Target, TrendingUp, Play, Star, Zap, Mail, Camera } from 'lucide-react';
+import { Award, BookOpen, CheckCircle2, Clock, Flame, Target, TrendingUp, Play, Star, Zap, Mail, Camera, FileText, ChevronRight } from 'lucide-react';
 import { getProgress } from '../studentData';
 import { getLevels, getCourseDetails } from '../../data/adminData';
 import { fetchStudentDataFromSupabase, subscribeToStudentProgress } from '../../services/supabaseService';
@@ -279,6 +279,42 @@ export default function DashboardHome({ profile, onNavigate, themeMode = 'dark' 
               </div>
             );
           })}
+        </div>
+      </div>
+
+      {/* Quick Launch into Executive Resources / PDF Workbooks */}
+      <div className={`p-6 sm:p-7 rounded-3xl border transition-all ${
+        isLight 
+          ? 'bg-gradient-to-r from-purple-50 via-white to-amber-50 border-purple-200/80 shadow-md' 
+          : 'glass-card-luxury border-[#E9E4FF]/12'
+      }`}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/25 flex items-center justify-center shrink-0">
+              <FileText className="w-6 h-6 text-red-500" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#7C5CFC]/15 text-[#7C5CFC]">
+                  Official Sub-Portal
+                </span>
+                <span className={`text-[11px] font-semibold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Executive Materials</span>
+              </div>
+              <h4 className={`font-black text-lg font-heading ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                Executive Resource Vault (PDFs)
+              </h4>
+              <p className={`text-xs mt-0.5 max-w-xl leading-relaxed ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                Access official mentalism frameworks, negotiation blueprints, and cheat sheets with our dedicated in-app PDF viewer.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => onNavigate('resources')}
+            className="shrink-0 px-5 py-3 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#6344E0] hover:from-[#6344E0] hover:to-[#5233c7] text-white text-xs font-black uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+          >
+            <span>Open Resources</span>
+            <ChevronRight className="w-4 h-4 text-amber-300" />
+          </button>
         </div>
       </div>
 

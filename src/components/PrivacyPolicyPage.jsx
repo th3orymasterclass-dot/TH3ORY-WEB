@@ -1,65 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  ShieldCheck, FileText, Lock, Eye, Database, Globe, UserCheck, 
-  Trash2, Download, AlertTriangle, ArrowLeft, Building2, Send, CheckCircle2, 
-  Scale, Key, Server, Mail, Clock, HelpCircle, Crown
+  ShieldCheck, ArrowLeft, Scale, Lock, Eye, Database, 
+  Server, Clock, Key, Mail, ChevronDown, ChevronUp, 
+  CheckCircle2, FileText, Sparkles
 } from 'lucide-react';
 import Logo from './Logo';
 import SEOHead from './SEOHead';
 import StructuredData from './StructuredData';
-import { saveEnterpriseQuoteToSupabase } from '../services/supabaseService';
 import DPDPUserRightsPortal from './dpdp/DPDPUserRightsPortal';
 import Footer from './Footer';
 
 export default function PrivacyPolicyPage({ onBack }) {
-  const [activeTab, setActiveTab] = useState('policy'); // 'policy' | 'rights'
+  const [showFullLegalText, setShowFullLegalText] = useState(false);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
-  
-  // Data Subject Request Form State
-  const [requestData, setRequestData] = useState({
-    name: '',
-    email: '',
-    requestType: 'Data Export (Access Right)',
-    details: ''
-  });
-  const [submitting, setSubmitting] = useState(false);
-  const [submittedId, setSubmittedId] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
-
-  const handleRequestSubmit = async (e) => {
-    e.preventDefault();
-    if (!requestData.name || !requestData.email) return;
-
-    setSubmitting(true);
-    setErrorMsg('');
-    const refId = `PRIV-${Math.floor(100000 + Math.random() * 900000)}`;
-
-    try {
-      await saveEnterpriseQuoteToSupabase({
-        orgName: `[DATA PRIVACY REQUEST] ${requestData.requestType}`,
-        contactName: requestData.name,
-        email: requestData.email,
-        notes: `[Ref: ${refId}] Request Type: ${requestData.requestType}. Details: ${requestData.details}`,
-        audienceType: 'Data Subject Rights Request',
-        pupilCount: '1',
-        deliveryFormat: 'Privacy Compliance'
-      });
-    } catch (err) {
-      console.warn('Privacy request logged locally:', err);
-    }
-
-    setSubmitting(false);
-    setSubmittedId(refId);
-  };
 
   return (
     <div className="min-h-screen bg-[#15171A] text-[#FAFAF7] relative selection:bg-[#7C5CFC] selection:text-[#FAFAF7]">
       <SEOHead 
-        title="Privacy Policy & Data Protection Declaration | TH3ORY Online"
-        description="Comprehensive Privacy Policy & Legal Compliance Declaration for TH3ORY Online. Full compliance with GDPR, CCPA, Indian DPDP Act 2023, and IT Act 2000."
+        title="Privacy & Data Rights Center | TH3ORY Online"
+        description="Manage your privacy settings, communication preferences, data portability, and erasure rights in one place. Full compliance with DPDP Act 2023, GDPR, and IT Act 2000."
         canonicalUrl="https://th3ory.online/privacy"
       />
       <StructuredData />
@@ -87,320 +49,189 @@ export default function PrivacyPolicyPage({ onBack }) {
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="hidden lg:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-extrabold tracking-wide">
+              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-extrabold tracking-wide">
                 <ShieldCheck className="w-4 h-4 text-emerald-400" /> Statutory Compliance &amp; Data Rights
               </div>
-
-              <button
-                onClick={() => setActiveTab(activeTab === 'policy' ? 'rights' : 'policy')}
-                className="px-4 sm:px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#6344E0] hover:from-[#6344E0] hover:to-[#5032C8] text-white font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-[#7C5CFC]/25 transition-all flex items-center gap-1.5 cursor-pointer"
-              >
-                {activeTab === 'policy' ? (
-                  <>
-                    <UserCheck className="w-4 h-4" />
-                    <span>Submit Data Request</span>
-                  </>
-                ) : (
-                  <>
-                    <FileText className="w-4 h-4" />
-                    <span>View Privacy Policy</span>
-                  </>
-                )}
-              </button>
             </div>
           </div>
         </div>
       </header>
 
       {/* HERO SECTION */}
-      <section className="pt-32 pb-16 relative overflow-hidden bg-gradient-to-b from-[#15171A] via-[#1c1f26] to-[#15171A]">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-[#7C5CFC]/15 rounded-full blur-[140px] pointer-events-none" />
+      <section className="pt-28 pb-10 relative overflow-hidden bg-gradient-to-b from-[#15171A] via-[#1c1f26] to-[#15171A]">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[300px] bg-[#7C5CFC]/15 rounded-full blur-[140px] pointer-events-none" />
 
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-6 text-center">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-4 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-extrabold uppercase tracking-widest border border-emerald-500/30">
-            <Scale className="w-4 h-4" /> Statutory Privacy &amp; Data Governance Declaration
+            <Scale className="w-4 h-4" /> Sovereign Data Principal Rights &bull; DPDP Act, 2023
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-extrabold font-heading text-white tracking-tight">
-            PRIVACY POLICY &amp; <span className="text-gradient-gold">DATA PROTECTION</span>
+            PRIVACY &amp; <span className="text-gradient-gold">DATA RIGHTS</span>
           </h1>
 
-          <p className="text-slate-300 text-sm sm:text-base max-w-3xl mx-auto leading-relaxed">
-            Effective Date: <span className="font-mono text-amber-400 font-bold">January 1, 2026</span> • Last Updated: <span className="font-mono text-amber-400 font-bold">August 23, 2026</span>
+          <p className="text-slate-300 text-xs sm:text-sm max-w-2xl mx-auto leading-relaxed">
+            Manage your essential privacy settings, notification preferences, and statutory data rights in a single streamlined place.
           </p>
-
-          {/* Policy / Rights Tab Controls */}
-          <div className="flex justify-center gap-3 pt-4">
-            <button
-              onClick={() => setActiveTab('policy')}
-              className={`px-6 py-3 rounded-2xl text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
-                activeTab === 'policy'
-                  ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/25 scale-[1.02]'
-                  : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
-              }`}
-            >
-              Legal Policy Document
-            </button>
-            <button
-              onClick={() => setActiveTab('rights')}
-              className={`px-6 py-3 rounded-2xl text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
-                activeTab === 'rights'
-                  ? 'bg-[#7C5CFC] text-white shadow-lg shadow-[#7C5CFC]/25 scale-[1.02]'
-                  : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
-              }`}
-            >
-              Data Rights Portal (GDPR / CCPA / DPDP)
-            </button>
-          </div>
         </div>
       </section>
 
-      {/* MAIN CONTENT CONTAINER */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 relative z-10">
+      {/* MAIN SINGLE-SCROLL CONTENT */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 relative z-10 space-y-8 text-left">
         
-        {activeTab === 'policy' ? (
-          <div className="glass-panel rounded-3xl p-6 sm:p-12 border border-[#7C5CFC]/30 shadow-2xl space-y-12 text-left bg-slate-950/90 leading-relaxed">
-            
-            {/* 1. LEGISLATIVE COMPLIANCE SCOPE */}
-            <section className="space-y-4 border-b border-slate-800 pb-8">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#7C5CFC]/20 text-[#FFC857] flex items-center justify-center font-bold">
-                  <Scale className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-white font-heading">1. Legislative Compliance &amp; Scope</h2>
-                  <p className="text-slate-400 text-xs">Global Privacy Standards &amp; Regulatory Frameworks</p>
-                </div>
+        {/* 1. INTERACTIVE PRIVACY & DATA RIGHTS PORTAL SEGMENT */}
+        <DPDPUserRightsPortal onBack={onBack} hideSubProcessors={true} />
+
+        {/* 2. FOUR PILLARS OF PRIVACY & TRUST */}
+        <div className="p-6 sm:p-7 rounded-3xl glass-card border border-white/10 bg-slate-950/60 shadow-xl space-y-4">
+          <h3 className="text-base sm:text-lg font-bold text-white font-heading flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-amber-400" />
+            Our Core Privacy Commitments
+          </h3>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+            <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
+              <div className="font-bold text-white flex items-center gap-2">
+                <Lock className="w-4 h-4 text-amber-400" /> 256-Bit Cryptographic Security
               </div>
-              <p className="text-slate-300 text-sm">
-                This Privacy Policy governs the processing of personal data by <strong className="text-white">TH3ORY Online</strong> ("TH3ORY", "We", "Us", "Our"), operated by Mentalist Sravan Production. We are committed to uncompromised user data privacy, transparency, and security across our digital educational platform, student portals, executive programs, and assessment engines.
+              <p className="text-slate-400 leading-relaxed">
+                All account data, progress, and communications are encrypted with AES-256 at rest and TLS 1.3 in transit.
               </p>
-              <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-xs text-slate-300 space-y-2">
-                <div className="font-bold text-amber-400 uppercase tracking-widest">Applicable International Standards:</div>
-                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-300">
-                  <li>• <strong>GDPR &amp; UK GDPR:</strong> EU Regulation 2016/679</li>
-                  <li>• <strong>CCPA / CPRA:</strong> California Consumer Privacy Act</li>
-                  <li>• <strong>DPDP Act 2023:</strong> Digital Personal Data Protection Act (India)</li>
-                  <li>• <strong>IT Act 2000 &amp; SPDI Rules:</strong> Information Technology Act</li>
-                  <li>• <strong>COPPA:</strong> Children's Online Privacy Protection Act</li>
-                  <li>• <strong>PCI-DSS:</strong> Payment Card Industry Security Standard</li>
-                </ul>
-              </div>
-            </section>
+            </div>
 
-            {/* 2. CATEGORIES OF DATA COLLECTED */}
-            <section className="space-y-4 border-b border-slate-800 pb-8">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold">
-                  <Database className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-white font-heading">2. Categories of Data Collected Across TH3ORY</h2>
-                  <p className="text-slate-400 text-xs">Complete Data Mapping Disclosure</p>
-                </div>
+            <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
+              <div className="font-bold text-white flex items-center gap-2">
+                <Eye className="w-4 h-4 text-emerald-400" /> Zero Data Commercialization
               </div>
-              <p className="text-slate-300 text-sm">
-                We collect personal information directly provided by users or generated dynamically during platform interactions. We strictly adhere to data minimization principles.
+              <p className="text-slate-400 leading-relaxed">
+                We never sell, broker, or rent student personal data to advertisers or third-party brokers.
               </p>
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
-                  <h3 className="text-sm font-bold text-amber-400 flex items-center gap-2">
-                    <UserCheck className="w-4 h-4 text-amber-400" /> Student Profile &amp; Auth Data
-                  </h3>
-                  <p className="text-xs text-slate-300">
-                    Email address, student name, enrollment code, login timestamps (<code className="text-amber-300">loginAt</code>), session identifiers, and authentication tokens.
-                  </p>
-                </div>
-
-                <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
-                  <h3 className="text-sm font-bold text-[#7C5CFC] flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-[#7C5CFC]" /> Daily Habit &amp; 5-Pillar Trackers
-                  </h3>
-                  <p className="text-xs text-slate-300">
-                    Self-assessment ratings across 10 core habits (Presence, Power, Warmth, Connections, Legacy) and capstone reflections stored in <code className="text-purple-300">student_habit_trackers</code>.
-                  </p>
-                </div>
-
-                <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
-                  <h3 className="text-sm font-bold text-emerald-400 flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-emerald-400" /> Course Task Checklists &amp; Progress
-                  </h3>
-                  <p className="text-xs text-slate-300">
-                    Day-by-day sub-step checklist completions, lesson completion state, and active level position stored in <code className="text-emerald-300">task_steps</code>.
-                  </p>
-                </div>
-
-                <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
-                  <h3 className="text-sm font-bold text-purple-400 flex items-center gap-2">
-                    <Crown className="w-4 h-4 text-purple-400" /> Character Code Archetype Data
-                  </h3>
-                  <p className="text-xs text-slate-300">
-                    Assessment questionnaire responses, 12-archetype score breakdowns, relic artifact unlocks, and character title classifications.
-                  </p>
-                </div>
-
-                <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
-                  <h3 className="text-sm font-bold text-yellow-400 flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-yellow-400" /> Enterprise Quote Enquiries
-                  </h3>
-                  <p className="text-xs text-slate-300">
-                    Organization name, contact person name, work email, phone number, target audience, pupil counts, delivery preferences, and custom learning notes stored in <code className="text-yellow-300">enterprise_quotes</code>.
-                  </p>
-                </div>
-
-                <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
-                  <h3 className="text-sm font-bold text-cyan-400 flex items-center gap-2">
-                    <Lock className="w-4 h-4 text-cyan-400" /> Payment &amp; Transaction Logs
-                  </h3>
-                  <p className="text-xs text-slate-300">
-                    Razorpay order IDs, payment status flags, currency amounts, and transaction reference signatures. <strong className="text-white">We NEVER store credit card numbers or banking PINs.</strong>
-                  </p>
-                </div>
+            <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
+              <div className="font-bold text-white flex items-center gap-2">
+                <Server className="w-4 h-4 text-[#7C5CFC]" /> Sovereign Indian Data Storage
               </div>
-            </section>
-
-            {/* 3. LEGAL BASIS FOR PROCESSING (GDPR ART 6) */}
-            <section className="space-y-4 border-b border-slate-800 pb-8">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
-                  <Scale className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-white font-heading">3. Legal Basis for Processing (GDPR Article 6)</h2>
-                  <p className="text-slate-400 text-xs">Lawful Grounds Under Data Protection Regulations</p>
-                </div>
-              </div>
-              <p className="text-slate-300 text-sm">
-                We process your personal information strictly under the following lawful bases:
+              <p className="text-slate-400 leading-relaxed">
+                Primary student data is hosted securely in AWS Mumbai (ap-south-1) under Indian data sovereignty laws.
               </p>
-              <ul className="space-y-3 text-xs sm:text-sm text-slate-300">
-                <li className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                  <strong className="text-amber-400">1. Contractual Necessity (Art. 6(1)(b)):</strong> Necessary to fulfill our agreement to deliver masterclass courses, track student completion, and issue veridical certificates.
-                </li>
-                <li className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                  <strong className="text-emerald-400">2. Legitimate Interests (Art. 6(1)(f)):</strong> Necessary for network security, fraud prevention, 24-hour auto-signout lifecycle management, and platform debugging.
-                </li>
-                <li className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                  <strong className="text-[#7C5CFC]">3. Explicit Consent (Art. 6(1)(a)):</strong> Required when submitting enterprise quote enquiries, opting into newsletters, or taking voluntary character assessments.
-                </li>
-              </ul>
-            </section>
+            </div>
 
-            {/* 4. THIRD-PARTY PROCESSORS */}
-            <section className="space-y-4 border-b border-slate-800 pb-8">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold">
-                  <Server className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-white font-heading">4. Data Processors &amp; Infrastructure Partners</h2>
-                  <p className="text-slate-400 text-xs">Vetted Enterprise Sub-processors</p>
-                </div>
+            <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
+              <div className="font-bold text-white flex items-center gap-2">
+                <Clock className="w-4 h-4 text-sky-400" /> 48-Hour Response Commitment
               </div>
-              <p className="text-slate-300 text-sm">
-                We share data exclusively with trusted enterprise service providers bound by strict Data Processing Addendums (DPAs):
+              <p className="text-slate-400 leading-relaxed">
+                All data subject requests, profile updates, and DPO inquiries are reviewed and resolved within 48 hours.
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-                <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
-                  <div className="font-bold text-white">Supabase Inc.</div>
-                  <div className="text-slate-400">PostgreSQL Cloud Database &amp; Auth</div>
-                  <div className="text-[11px] text-amber-400">AES-256 Encrypted Storage</div>
-                </div>
-
-                <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
-                  <div className="font-bold text-white">Razorpay Software Ltd</div>
-                  <div className="text-slate-400">Payment Gateway Services</div>
-                  <div className="text-[11px] text-emerald-400">PCI-DSS Level 1 Compliant</div>
-                </div>
-
-                <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
-                  <div className="font-bold text-white">Vercel Inc.</div>
-                  <div className="text-slate-400">Edge Network &amp; Hosting</div>
-                  <div className="text-[11px] text-[#FFC857]">Global CDN Security &amp; SSL</div>
-                </div>
-              </div>
-            </section>
-
-            {/* 5. DATA RETENTION & SESSION LIFECYCLE */}
-            <section className="space-y-4 border-b border-slate-800 pb-8">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold">
-                  <Clock className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-white font-heading">5. Data Retention &amp; 24-Hour Session Policy</h2>
-                  <p className="text-slate-400 text-xs">Automated Session Lifetime Security</p>
-                </div>
-              </div>
-              <p className="text-slate-300 text-sm">
-                To prevent unauthorized portal access on shared devices, student active sessions enforce a strict <strong className="text-amber-400">24-Hour Maximum Duration Policy</strong>. After 24 hours from initial authentication (<code className="text-amber-300">loginAt</code>), sessions automatically expire, clearing active browser credentials and requiring re-authentication.
-              </p>
-              <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-xs text-slate-300">
-                <strong className="text-white">Retention Schedules:</strong> Student profile records and certificate verification signatures are retained for the duration of the account lifetime. Student habit tracker logs and task steps are stored as long as active enrollment persists or until an explicit erasure request is submitted.
-              </div>
-            </section>
-
-            {/* 6. YOUR LEGAL RIGHTS */}
-            <section className="space-y-4 border-b border-slate-800 pb-8">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold">
-                  <Key className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-white font-heading">6. Your Legal Data Rights (GDPR / CCPA / DPDP)</h2>
-                  <p className="text-slate-400 text-xs">Empowering User Control &amp; Data Rights</p>
-                </div>
-              </div>
-              <p className="text-slate-300 text-sm">
-                Regardless of your geographic location, TH3ORY grants all users the following fundamental data rights:
-              </p>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-slate-300">
-                <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
-                  <strong className="text-amber-400">Right to Access (Subject Access Request):</strong> You have the right to request a full machine-readable copy of your personal data held in our databases.
-                </div>
-                <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
-                  <strong className="text-emerald-400">Right to Erasure ("Right to be Forgotten"):</strong> You may request the permanent deletion of your profile, habit trackers, and quote records.
-                </div>
-                <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
-                  <strong className="text-[#7C5CFC]">Right to Rectification:</strong> You may request corrections to inaccurate student details or enterprise quote information.
-                </div>
-                <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
-                  <strong className="text-cyan-400">Do Not Sell / Share My Personal Data:</strong> We explicitly declare that <strong className="text-white">TH3ORY NEVER sells, rents, or monetizes personal user data to third parties.</strong>
-                </div>
-              </div>
-            </section>
-
-            {/* 7. CONTACT & DPO */}
-            <section className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-yellow-500/20 text-yellow-400 flex items-center justify-center font-bold">
-                  <Mail className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-white font-heading">7. Data Protection Officer (DPO) &amp; Grievance Redressal</h2>
-                  <p className="text-slate-400 text-xs">Official Regulatory Contact Information</p>
-                </div>
-              </div>
-              <p className="text-slate-300 text-sm">
-                If you have questions, statutory data requests, or privacy grievances, contact our Data Protection Officer directly:
-              </p>
-              <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 text-xs text-slate-300 space-y-1.5 font-mono">
-                <div className="text-amber-400 font-bold text-sm">Mentalist Sravan Production — Privacy &amp; Data Protection Desk</div>
-                <div>Email: <span className="text-white">privacy@th3ory.online</span> | <span className="text-white">dpo@th3ory.online</span></div>
-                <div>Grievance Redressal Officer: <span className="text-white">Sravan Sudhakaran</span></div>
-                <div>Response SLA: <span className="text-emerald-400">Within 48 hours for data subject rights execution</span></div>
-              </div>
-            </section>
-
+            </div>
           </div>
-        ) : (
-          /* DATA SUBJECT RIGHTS REQUEST PORTAL */
-          <div className="rounded-3xl shadow-2xl space-y-8 text-left">
-            <DPDPUserRightsPortal onBack={() => setActiveTab('policy')} />
-          </div>
-        )}
+        </div>
+
+        {/* 3. EXPANDABLE STATUTORY LEGAL POLICY ACCORDION */}
+        <div className="rounded-3xl glass-card border border-slate-800 bg-slate-950/50 overflow-hidden shadow-lg">
+          <button
+            onClick={() => setShowFullLegalText(!showFullLegalText)}
+            className="w-full p-5 sm:p-6 flex items-center justify-between text-left hover:bg-slate-900/60 transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-slate-800 text-slate-300 flex items-center justify-center">
+                <FileText className="w-4 h-4 text-amber-400" />
+              </div>
+              <div>
+                <div className="text-sm font-bold text-white flex items-center gap-2">
+                  <span>View Full Statutory Policy Declaration</span>
+                  <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+                    Sections 1–7
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400">
+                  Detailed statutory disclosures for GDPR, DPDP Act 2023, CCPA, and IT Act 2000.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-2 rounded-xl bg-slate-800 text-slate-300">
+              {showFullLegalText ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </div>
+          </button>
+
+          {showFullLegalText && (
+            <div className="p-6 sm:p-8 border-t border-slate-800 bg-slate-950/90 space-y-8 text-xs text-slate-300 leading-relaxed animate-in fade-in duration-200">
+              
+              {/* Section 1 */}
+              <div className="space-y-2">
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Scale className="w-4 h-4 text-amber-400" /> 1. Legislative Compliance &amp; Scope
+                </h4>
+                <p>
+                  This Privacy Policy governs the processing of personal data by <strong className="text-white">TH3ORY Online</strong>, operated by Mentalist Sravan Production. We adhere to global standards including the Digital Personal Data Protection Act 2023 (India), GDPR (EU 2016/679), CCPA/CPRA, and IT Act 2000.
+                </p>
+              </div>
+
+              {/* Section 2 */}
+              <div className="space-y-2">
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Database className="w-4 h-4 text-emerald-400" /> 2. Categories of Data Processed
+                </h4>
+                <p>
+                  Data processed includes: (a) Student Authentication &amp; Profile details (name, email, enrollment timestamp); (b) Learning Progress &amp; Habit Trackers (module completions, reflection scores); (c) Transaction References via Razorpay (order IDs and signatures — we never store raw card numbers or PINs); and (d) Communication inquiries.
+                </p>
+              </div>
+
+              {/* Section 3 */}
+              <div className="space-y-2">
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Key className="w-4 h-4 text-[#7C5CFC]" /> 3. Lawful Grounds for Processing
+                </h4>
+                <p>
+                  Processing is conducted strictly under: Contractual Necessity (delivering enrolled masterclass lessons and issuing completion certificates), Legitimate Interests (fraud prevention and session lifecycle security), and Explicit Consent (optional notifications and surveys).
+                </p>
+              </div>
+
+              {/* Section 4 */}
+              <div className="space-y-2">
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Server className="w-4 h-4 text-cyan-400" /> 4. Infrastructure &amp; Processors
+                </h4>
+                <p>
+                  Infrastructure partners bound by strict Data Processing Agreements: Supabase Inc. (Encrypted Database &amp; Auth), Razorpay Software Ltd (PCI-DSS Compliant Payments), and Vercel Inc. (Edge CDN &amp; SSL).
+                </p>
+              </div>
+
+              {/* Section 5 */}
+              <div className="space-y-2">
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-yellow-400" /> 5. Session Lifetime &amp; Retention
+                </h4>
+                <p>
+                  Student portal sessions expire automatically after 24 hours to safeguard unauthorized access on shared terminals. Account data is retained for active student duration or until an erasure request is executed via this portal.
+                </p>
+              </div>
+
+              {/* Section 6 */}
+              <div className="space-y-2">
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-emerald-400" /> 6. Statutory User Rights
+                </h4>
+                <p>
+                  You possess the statutory right to access your data, request corrections, withdraw optional consent, export a machine-readable data package, and request account erasure under Section 12 of the DPDP Act 2023.
+                </p>
+              </div>
+
+              {/* Section 7 */}
+              <div className="space-y-2">
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-amber-400" /> 7. Data Protection Officer &amp; Grievance Redressal
+                </h4>
+                <p>
+                  Grievance Redressal Officer: <strong className="text-white">Sravan Sudhakaran</strong>. Email: <span className="font-mono text-amber-400">privacy@th3ory.online</span>. Statutory response SLA: within 48 hours.
+                </p>
+              </div>
+
+            </div>
+          )}
+        </div>
 
       </div>
 

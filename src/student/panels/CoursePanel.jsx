@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import {
   Play, CheckCircle2, Lock, ChevronDown, ChevronUp,
   BookOpen, Clock, FileText, Bookmark, BookmarkCheck,
-  X, ExternalLink, Download, NotebookPen, HardDrive
+  X, ExternalLink, Download, NotebookPen, HardDrive, Eye
 } from 'lucide-react';
 import { getLevels, getContent, useTh3oryLive } from '../../data/adminData';
 import { getProgress, markLesson, getNotes, saveNote, getBookmarks, toggleBookmark } from '../studentData';
 import { parseGoogleDriveUrl, getEmbeddableMediaUrl } from '../../utils/gdriveHelper';
+import PdfViewerModal from '../../components/PdfViewerModal';
 
 import {
   saveStudentProgressToSupabase,
@@ -99,8 +100,9 @@ function VideoModal({ url, title, onClose }) {
   );
 }
 
-function ResourceCard({ item, onStreamResource, isLight }) {
+function ResourceCard({ item, onStreamResource, onOpenPdf, isLight }) {
   const typeColors = { video:'text-blue-500', pdf:'text-red-500', worksheet:'text-green-500', quiz:'text-purple-500', audio:'text-pink-500', resource:'text-amber-500', image:'text-cyan-500', archive:'text-slate-500' };
+  const isPdf = item.type === 'pdf' || item.type === 'worksheet' || (item.url || '').toLowerCase().includes('.pdf');
 
   return (
     <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all group select-none ${
@@ -114,13 +116,23 @@ function ResourceCard({ item, onStreamResource, isLight }) {
         {item.duration && <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-slate-500'}`}>{item.duration}</p>}
       </div>
       <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => onStreamResource(item)}
-          className="text-xs text-amber-600 hover:text-amber-700 flex items-center gap-1 font-bold bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded-lg transition-all"
-        >
-          <Play className="w-3.5 h-3.5"/> Stream In-App
-        </button>
+        {isPdf ? (
+          <button
+            type="button"
+            onClick={() => onOpenPdf ? onOpenPdf(item) : onStreamResource(item)}
+            className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1.5 font-bold bg-red-500/10 border border-red-500/30 px-3 py-1.5 rounded-lg transition-all cursor-pointer shadow-xs"
+          >
+            <Eye className="w-3.5 h-3.5 text-amber-300"/> Read PDF
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onStreamResource(item)}
+            className="text-xs text-amber-600 hover:text-amber-700 flex items-center gap-1 font-bold bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded-lg transition-all cursor-pointer"
+          >
+            <Play className="w-3.5 h-3.5"/> Stream In-App
+          </button>
+        )}
       </div>
     </div>
   );
@@ -138,6 +150,7 @@ export default function CoursePanel({ profile, initialLevelId, initialLessonId, 
   const [activeLevelId, setActiveLevelId] = useState(initialLevelId || levels[0]?.id || 'l1');
   const [activeLesson, setActive]     = useState(null);
   const [videoModal, setVideoModal]   = useState(null);
+  const [pdfModal, setPdfModal]       = useState(null);
   const [noteText, setNoteText]       = useState('');
   const [showNote, setShowNote]       = useState(false);
 
@@ -540,6 +553,7 @@ export default function CoursePanel({ profile, initialLevelId, initialLessonId, 
                         item={item}
                         isLight={isLight}
                         onStreamResource={res => setVideoModal({ url: res.url, title: res.title })}
+                        onOpenPdf={res => setPdfModal(res)}
                       />
                     ))}
                   </div>
@@ -644,6 +658,18 @@ export default function CoursePanel({ profile, initialLevelId, initialLessonId, 
       </div>
 
       {videoModal && <VideoModal url={videoModal.url} title={videoModal.title} onClose={() => setVideoModal(null)} />}
+      {pdfModal && (
+        <PdfViewerModal
+          isOpen={Boolean(pdfModal)}
+          onClose={() => setPdfModal(null)}
+          pdfUrl={pdfModal.url}
+          title={pdfModal.title}
+          description={pdfModal.description}
+          levelId={pdfModal.levelId}
+          fileSize={pdfModal.fileSize}
+          themeMode={themeMode}
+        />
+      )}
     </div>
   );
 }

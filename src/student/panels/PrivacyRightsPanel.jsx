@@ -1,12 +1,12 @@
 import React from 'react';
 import DPDPUserRightsPortal from '../../components/dpdp/DPDPUserRightsPortal';
 
-export default function PrivacyRightsPanel({ studentData }) {
-  const email = studentData?.email || '';
+export default function PrivacyRightsPanel({ studentData, profile }) {
+  const email = studentData?.email || profile?.email || '';
 
   return (
-    <div className="space-y-6">
-      <DPDPUserRightsPortal userEmail={email} />
+    <div className="w-full pb-16 animate-in fade-in duration-200">
+      <DPDPUserRightsPortal userEmail={email} hideSubProcessors={true} />
     </div>
   );
 }
