@@ -1,6 +1,7 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase.js';
 import { isAdminAuthenticated } from '../data/adminData.js';
 import { defaultContent } from '../data/courseData.js';
+import { defaultBlogs } from '../data/blogData.js';
 
 // ─── Unique Credentials Generator ────────────────────────────────────────────────
 export function generateEnrollmentCode(name = '', dob = '') {
@@ -4489,6 +4490,241 @@ export function subscribeToCommunityFeed(onFeedChange) {
     window.removeEventListener('storage', storageListener);
     if (ch) {
       ch.removeEventListener('message', bcListener);
+    }
+    if (supabaseSub && isSupabaseConfigured && supabase) {
+      try { supabase.removeChannel(supabaseSub); } catch {}
+    }
+  };
+}
+
+// ─── Blog & Articles Engine ──────────────────────────────────────────────────
+
+function mapDbBlogToModel(db) {
+  if (!db) return null;
+  return {
+    id: db.id,
+    slug: db.slug,
+    title: db.title || '',
+    subtitle: db.subtitle || '',
+    category: db.category || 'Cognitive Science',
+    tags: Array.isArray(db.tags) ? db.tags : (typeof db.tags === 'string' ? JSON.parse(db.tags || '[]') : []),
+    author: db.author && typeof db.author === 'object' ? db.author : { name: 'Mentalist Sravan', role: 'Cognitive Strategist & Founder', avatar: '/instructor.png' },
+    publishedAt: db.published_at || db.created_at || new Date().toISOString(),
+    readTime: db.read_time || '5 min read',
+    coverImage: db.cover_image || '',
+    featured: Boolean(db.featured),
+    published: db.published !== false,
+    views: Number(db.views) || 0,
+    excerpt: db.excerpt || '',
+    content: db.content || '',
+    createdAt: db.created_at || new Date().toISOString(),
+    updatedAt: db.updated_at || new Date().toISOString()
+  };
+}
+
+function mapModelToDbBlog(model) {
+  return {
+    id: model.id || `blog_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    slug: model.slug || (model.title || 'untitled').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') || `post-${Date.now()}`,
+    title: model.title || 'Untitled Article',
+    subtitle: model.subtitle || '',
+    category: model.category || 'Cognitive Science',
+    tags: Array.isArray(model.tags) ? model.tags : [],
+    author: model.author || { name: 'Mentalist Sravan', role: 'Cognitive Strategist & Founder', avatar: '/instructor.png' },
+    published_at: model.publishedAt || new Date().toISOString(),
+    read_time: model.readTime || '5 min read',
+    cover_image: model.coverImage || '',
+    featured: Boolean(model.featured),
+    published: model.published !== false,
+    views: Number(model.views) || 0,
+    excerpt: model.excerpt || '',
+    content: model.content || '',
+    updated_at: new Date().toISOString()
+  };
+}
+
+export async function fetchBlogsFromSupabase(includeUnpublished = false) {
+  let localBlogs = [];
+  try {
+    const raw = localStorage.getItem('th3ory_blogs');
+    if (raw) {
+      localBlogs = JSON.parse(raw);
+    }
+  } catch (err) {
+    console.warn('[Blogs] Failed to read local storage:', err);
+  }
+
+  if (!isSupabaseConfigured || !supabase) {
+    const fallback = localBlogs.length > 0 ? localBlogs : defaultBlogs;
+    return includeUnpublished ? fallback : fallback.filter(b => b.published);
+  }
+
+  try {
+    let query = supabase.from('blogs').select('*').order('published_at', { ascending: false });
+    if (!includeUnpublished) {
+      query = query.eq('published', true);
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      console.warn('[Supabase] Error fetching blogs:', error.message);
+      const fallback = localBlogs.length > 0 ? localBlogs : defaultBlogs;
+      return includeUnpublished ? fallback : fallback.filter(b => b.published);
+    }
+
+    if (!data || data.length === 0) {
+      // Table is empty, seed defaults in the background
+      seedDefaultBlogsToSupabase().catch(() => {});
+      const fallback = localBlogs.length > 0 ? localBlogs : defaultBlogs;
+      return includeUnpublished ? fallback : fallback.filter(b => b.published);
+    }
+
+    const mapped = data.map(mapDbBlogToModel);
+    try {
+      localStorage.setItem('th3ory_blogs', JSON.stringify(mapped));
+    } catch {}
+    return mapped;
+  } catch (err) {
+    console.warn('[Supabase] Exception fetching blogs:', err);
+    const fallback = localBlogs.length > 0 ? localBlogs : defaultBlogs;
+    return includeUnpublished ? fallback : fallback.filter(b => b.published);
+  }
+}
+
+export async function fetchBlogBySlugFromSupabase(slug) {
+  if (!slug) return null;
+  const all = await fetchBlogsFromSupabase(true);
+  return all.find(b => b.slug === slug || b.id === slug) || null;
+}
+
+export async function saveBlogToSupabase(blogItem) {
+  const dbPayload = mapModelToDbBlog(blogItem);
+  const model = mapDbBlogToModel(dbPayload);
+
+  // Update local storage first
+  try {
+    let list = [];
+    const raw = localStorage.getItem('th3ory_blogs');
+    if (raw) list = JSON.parse(raw);
+    const idx = list.findIndex(b => b.id === model.id);
+    if (idx >= 0) {
+      list[idx] = model;
+    } else {
+      list.unshift(model);
+    }
+    localStorage.setItem('th3ory_blogs', JSON.stringify(list));
+  } catch {}
+
+  // Broadcast local event
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('th3ory_blogs_update', { detail: { blog: model } }));
+  }
+
+  if (!isSupabaseConfigured || !supabase) {
+    return { success: true, blog: model, isLocal: true };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('blogs')
+      .upsert([dbPayload], { onConflict: 'id' })
+      .select();
+
+    if (error) {
+      console.warn('[Supabase] Save blog warning:', error.message);
+      return { success: true, blog: model, isLocal: true, error: error.message };
+    }
+
+    const saved = data && data[0] ? mapDbBlogToModel(data[0]) : model;
+    return { success: true, blog: saved };
+  } catch (err) {
+    console.warn('[Supabase] Exception saving blog:', err);
+    return { success: true, blog: model, isLocal: true, error: err.message };
+  }
+}
+
+export async function deleteBlogFromSupabase(blogId) {
+  if (!blogId) return { success: false, error: 'No ID provided' };
+
+  try {
+    let list = [];
+    const raw = localStorage.getItem('th3ory_blogs');
+    if (raw) list = JSON.parse(raw);
+    list = list.filter(b => b.id !== blogId);
+    localStorage.setItem('th3ory_blogs', JSON.stringify(list));
+  } catch {}
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('th3ory_blogs_update', { detail: { deletedId: blogId } }));
+  }
+
+  if (!isSupabaseConfigured || !supabase) {
+    return { success: true, isLocal: true };
+  }
+
+  try {
+    const { error } = await supabase.from('blogs').delete().eq('id', blogId);
+    if (error) {
+      console.warn('[Supabase] Delete blog error:', error.message);
+      return { success: false, error: error.message };
+    }
+    return { success: true };
+  } catch (err) {
+    console.warn('[Supabase] Exception deleting blog:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+export async function seedDefaultBlogsToSupabase() {
+  if (!isSupabaseConfigured || !supabase) return false;
+  try {
+    const { count, error: countErr } = await supabase.from('blogs').select('*', { count: 'exact', head: true });
+    if (!countErr && count > 0) return true; // already populated
+
+    const payloads = defaultBlogs.map(mapModelToDbBlog);
+    const { error } = await supabase.from('blogs').upsert(payloads, { onConflict: 'id' });
+    if (error) {
+      console.warn('[Supabase] Failed to seed default blogs:', error.message);
+      return false;
+    }
+    console.log('[Supabase] Default masterclass blogs successfully seeded');
+    return true;
+  } catch (err) {
+    console.warn('[Supabase] Error seeding blogs:', err);
+    return false;
+  }
+}
+
+export function subscribeToBlogs(onUpdate) {
+  const handler = () => {
+    if (typeof onUpdate === 'function') onUpdate();
+  };
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('th3ory_blogs_update', handler);
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'th3ory_blogs') handler();
+    });
+  }
+
+  let supabaseSub = null;
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const channelName = `blogs_changes_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+      supabaseSub = supabase
+        .channel(channelName)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'blogs' }, (payload) => {
+          if (typeof onUpdate === 'function') onUpdate(payload);
+        })
+        .subscribe();
+    } catch (err) {
+      console.warn('[Supabase] Realtime blogs sub failed:', err);
+    }
+  }
+
+  return () => {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('th3ory_blogs_update', handler);
     }
     if (supabaseSub && isSupabaseConfigured && supabase) {
       try { supabase.removeChannel(supabaseSub); } catch {}

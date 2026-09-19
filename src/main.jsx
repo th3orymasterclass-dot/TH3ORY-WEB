@@ -23,6 +23,7 @@ import CommunityLogin from './community/CommunityLogin.jsx';
 import CommunityPortal from './community/CommunityPortal.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import NotFoundPage from './components/NotFoundPage.jsx';
+import BlogPage from './components/BlogPage.jsx';
 import { FeatureFlagProvider } from './context/FeatureFlagContext.jsx';
 import { UIStatusProvider } from './context/UIStatusContext.jsx';
 import { Analytics } from '@vercel/analytics/react';
@@ -45,6 +46,7 @@ function Root() {
     if (h.includes('masterclass') || p.includes('masterclass') || h.includes('curriculum-deepdive')) return 'masterclass';
     if (h.includes('colleges') || p.includes('colleges') || h.includes('institution')) return 'colleges';
     if (h.includes('privacy') || p.includes('privacy')) return 'privacy';
+    if (h.includes('blog') || p.includes('blog')) return 'blog';
     if (h.includes('ambassador-login') || p.includes('ambassador-login')) return 'ambassador-login';
     if (h.includes('ambassador-portal') || p.includes('ambassador-portal') || h.includes('ambassador-dashboard')) return 'ambassador-portal';
     if (h.includes('ambassador') || p.includes('ambassador')) return 'ambassador';
@@ -199,6 +201,16 @@ function Root() {
   // ── Privacy Policy Page ──────────────────────────────────────────────────
   if (view === 'privacy') {
     return <PrivacyPolicyPage onBack={() => { window.location.hash = ''; setView('public'); }} />;
+  }
+
+  // ── Official Blog & Articles Page ──────────────────────────────────────────
+  if (view === 'blog') {
+    return (
+      <BlogPage
+        onBack={() => { window.location.hash = ''; setView('public'); }}
+        onOpenCheckout={() => { window.location.hash = 'enroll'; setView('enroll'); }}
+      />
+    );
   }
 
   // ── Campus Ambassador Public Recruitment Page ──────────────────────────────

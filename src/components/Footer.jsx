@@ -122,6 +122,15 @@ export default function Footer({ onOpenCheckout }) {
               </li>
               <li>
                 <a 
+                  href="#blog" 
+                  onClick={(e) => { e.preventDefault(); window.location.hash = 'blog'; window.dispatchEvent(new Event('hashchange')); }} 
+                  className="hover:text-amber-400 transition-colors text-amber-300 font-semibold cursor-pointer"
+                >
+                  Field Notes &amp; Blog →
+                </a>
+              </li>
+              <li>
+                <a 
                   href="#privacy" 
                   onClick={(e) => { e.preventDefault(); window.location.hash = 'privacy'; window.dispatchEvent(new Event('hashchange')); }} 
                   className="hover:text-amber-400 transition-colors text-left cursor-pointer font-semibold text-emerald-400"

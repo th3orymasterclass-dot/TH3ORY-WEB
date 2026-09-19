@@ -4,7 +4,7 @@ import {
   Sliders, ShieldCheck, Sun, Moon, Type, Flame, BookOpen, FolderOpen,
   Star, User, Gift, Target, Video, ChevronRight, ChevronDown, Menu, X, ExternalLink, 
   LogOut, Shield, Users, Calendar, BarChart3, Sparkles, MessageSquare, GraduationCap,
-  Search, ChevronsUpDown, Share2
+  Search, ChevronsUpDown, Share2, FileText
 } from 'lucide-react';
 import useAdminData from './useAdminData';
 import OverviewPanel       from './panels/OverviewPanel';
@@ -43,6 +43,7 @@ import OfflineTrainingsPanel from './panels/OfflineTrainingsPanel';
 import ContactPanel from './panels/ContactPanel';
 import ReferralTrackingPanel from './panels/ReferralTrackingPanel';
 import CommunityAdminPanel from './panels/CommunityAdminPanel';
+import BlogPanel from './panels/BlogPanel';
 
 export const NAV_CATEGORIES = [
   {
@@ -77,6 +78,7 @@ export const NAV_CATEGORIES = [
       { id: 'media',              label: 'Video & Media Player',       icon: Video },
       { id: 'content',            label: 'Content Library (PDF/Video)',icon: FolderOpen },
       { id: 'reviews',            label: 'Reviews & Testimonials',     icon: Star },
+      { id: 'blogs',              label: 'Blog & Articles Studio',     icon: FileText },
     ]
   },
   {
@@ -260,6 +262,7 @@ export default function AdminApp({ onLogout }) {
       case 'media':              return <MediaPanel {...panelProps} />;
       case 'content':            return <ContentPanel {...panelProps} />;
       case 'reviews':            return <ReviewsPanel {...panelProps} />;
+      case 'blogs':              return <BlogPanel themeMode={themeMode} />;
       case 'team_roster':        return <TeamManagementPanel themeMode={themeMode} />;
       case 'community_hub':      return <CommunityAdminPanel themeMode={themeMode} />;
       case 'referral_tracking':  return <ReferralTrackingPanel themeMode={themeMode} />;

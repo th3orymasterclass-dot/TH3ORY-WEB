@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, ShoppingBag, ArrowRight, LogIn, Sun, Moon, Building2, Award, Flame, Menu, X, Users } from 'lucide-react';
+import { ShieldCheck, ShoppingBag, ArrowRight, LogIn, Sun, Moon, Building2, Award, Flame, Menu, X, Users, BookOpen } from 'lucide-react';
 import Logo from './Logo';
 import LaunchCountdownBanner from './LaunchCountdownBanner';
 
@@ -106,6 +106,16 @@ export default function Navbar({ onOpenCheckout, onOpenDashboard, isEnrolled }) 
             >
               <Users className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
               <span>Community</span>
+            </a>
+
+            {/* Official Blog & Field Notes */}
+            <a
+              href="#blog"
+              onClick={(e) => { e.preventDefault(); handleNavClick('blog'); }}
+              className="px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[11px] xl:text-xs font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-sm cursor-pointer shrink-0 hover:border-amber-400/60 hover:text-amber-200"
+            >
+              <BookOpen className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <span>Blog</span>
             </a>
 
             {/* Sign In Button */}
@@ -221,6 +231,15 @@ export default function Navbar({ onOpenCheckout, onOpenDashboard, isEnrolled }) 
               >
                 <Users className="w-4 h-4 text-cyan-400 shrink-0" />
                 <span>Private Community Wall</span>
+              </a>
+
+              <a
+                href="#blog"
+                onClick={(e) => { e.preventDefault(); handleNavClick('blog'); }}
+                className="w-full min-h-[44px] p-3 rounded-xl bg-amber-500/10 text-amber-300 border border-amber-500/30 font-bold text-xs uppercase tracking-wider flex items-center gap-2.5 transition-all hover:bg-amber-500/20"
+              >
+                <BookOpen className="w-4 h-4 text-amber-400 shrink-0" />
+                <span>Field Notes &amp; Blog</span>
               </a>
 
               <a
