@@ -14,9 +14,9 @@ export const courseDetails = {
   urgency: {
     cohortNumber: 1,
     seatsLeft: 25,
-    startDate: "November 1, 2026",
-    launchDate: "2026-11-01T00:00:00+05:30",
-    daysRemaining: 63
+    startDate: "January 1, 2027",
+    launchDate: "2027-01-01T00:00:00+05:30",
+    daysRemaining: 102
   },
   stats: [
     { label: "Modules", value: "50", detail: "Daily 15–20 Min Lessons & Exercises" },

@@ -9,16 +9,18 @@ export default function HeroSection({ onOpenVideo, onOpenCheckout }) {
   const showTrailerButton = isFeatureEnabled('ENABLE_TRAILER_VIDEO', false);
   const showUrgencyBanner = isFeatureEnabled('SHOW_LIMITED_SEATS_BANNER', true);
 
-  const [countdown, setCountdown] = useState(() => getLaunchCountdown(LAUNCH_DATE_ISO));
-  const [isEarlyBird, setIsEarlyBird] = useState(() => isEarlyBirdActive(LAUNCH_DATE_ISO));
+  const targetLaunchDate = courseDetails?.urgency?.launchDate || LAUNCH_DATE_ISO;
+
+  const [countdown, setCountdown] = useState(() => getLaunchCountdown(targetLaunchDate));
+  const [isEarlyBird, setIsEarlyBird] = useState(() => isEarlyBirdActive(targetLaunchDate));
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCountdown(getLaunchCountdown(LAUNCH_DATE_ISO));
-      setIsEarlyBird(isEarlyBirdActive(LAUNCH_DATE_ISO));
+      setCountdown(getLaunchCountdown(targetLaunchDate));
+      setIsEarlyBird(isEarlyBirdActive(targetLaunchDate));
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [targetLaunchDate]);
 
   return (
     <section className="relative pt-36 sm:pt-40 pb-20 overflow-hidden">
@@ -75,7 +77,7 @@ export default function HeroSection({ onOpenVideo, onOpenCheckout }) {
           {showUrgencyBanner && (
             <div className="inline-flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 px-6 py-3.5 rounded-2xl glass-specular border border-[#7C5CFC]/35 text-xs sm:text-sm text-[#FAFAF7] max-w-full shadow-2xl">
               <span className="flex items-center gap-2 font-bold text-[#FFC857]">
-                <Rocket className="w-4 h-4 text-[#FFC857] shrink-0" /> Launch Date: November 1, 2026
+                <Rocket className="w-4 h-4 text-[#FFC857] shrink-0" /> Launch Date: {courseDetails?.urgency?.startDate || 'January 1, 2027'}
               </span>
               <span className="hidden sm:inline-block h-4 w-px bg-[#555A66]/50" />
               <span className="text-center sm:text-left text-xs text-[#E9E4FF]">

@@ -1,21 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Rocket, Sparkles, Tag, ArrowRight, Clock, X, CheckCircle2 } from 'lucide-react';
-import { getLaunchCountdown, isEarlyBirdActive, LAUNCH_DATE_ISO } from '../data/adminData';
+import { getLaunchCountdown, isEarlyBirdActive, LAUNCH_DATE_ISO, useTh3oryLive } from '../data/adminData';
 
 export default function LaunchCountdownBanner({ onOpenCheckout }) {
-  const [countdown, setCountdown] = useState(() => getLaunchCountdown(LAUNCH_DATE_ISO));
-  const [isEarlyBird, setIsEarlyBird] = useState(() => isEarlyBirdActive(LAUNCH_DATE_ISO));
+  const { courseDetails } = useTh3oryLive();
+  const targetLaunchDate = courseDetails?.urgency?.launchDate || LAUNCH_DATE_ISO;
+  const [countdown, setCountdown] = useState(() => getLaunchCountdown(targetLaunchDate));
+  const [isEarlyBird, setIsEarlyBird] = useState(() => isEarlyBirdActive(targetLaunchDate));
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      const updated = getLaunchCountdown(LAUNCH_DATE_ISO);
+      const updated = getLaunchCountdown(targetLaunchDate);
       setCountdown(updated);
-      setIsEarlyBird(isEarlyBirdActive(LAUNCH_DATE_ISO));
+      setIsEarlyBird(isEarlyBirdActive(targetLaunchDate));
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [targetLaunchDate]);
 
   if (!isVisible || countdown.isLaunched) return null;
 
@@ -30,7 +32,7 @@ export default function LaunchCountdownBanner({ onOpenCheckout }) {
         <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5 text-center md:text-left">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#7C5CFC]/20 border border-[#7C5CFC]/40 text-[#E9E4FF] font-black uppercase tracking-wider text-[11px] shadow-sm animate-pulse">
             <Rocket className="w-3.5 h-3.5 text-[#FFC857]" />
-            <span>LAUNCHING NOV 1, 2026</span>
+            <span>LAUNCHING JAN 1, 2027</span>
           </div>
 
           <div className="flex items-center gap-2 text-[#FAFAF7] font-semibold text-xs">

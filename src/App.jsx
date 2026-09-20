@@ -101,7 +101,7 @@ export default function App() {
             </div>
             <div className="text-left">
               <div className="text-xs font-bold text-[#FAFAF7] flex items-center gap-1 font-brand">
-                TH3ORY Masterclass {showSeatsUrgency && <span className="text-[10px] text-[#FFC857] font-normal font-sans">• Launch Nov 1</span>}
+                TH3ORY Masterclass {showSeatsUrgency && <span className="text-[10px] text-[#FFC857] font-normal font-sans">• Launch Jan 1</span>}
               </div>
               <div className="text-[11px] text-emerald-400 font-medium">
                 {isEarlyBird ? 'Early Bird 20% OFF Applied' : 'Code \'TH3ORY20\' for 20% OFF'}

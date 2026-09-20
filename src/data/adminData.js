@@ -86,10 +86,10 @@ import {
   subscribeToCourseContents,
 } from '../services/supabaseService.js';
 
-export const LAUNCH_DATE_ISO = '2026-11-01T00:00:00+05:30';
+export const LAUNCH_DATE_ISO = '2027-01-01T00:00:00+05:30';
 
 /**
- * Check if the Early Bird promotional period is currently active (before November 1, 2026)
+ * Check if the Early Bird promotional period is currently active (before January 1, 2027)
  */
 export function isEarlyBirdActive(targetDate = LAUNCH_DATE_ISO) {
   try {
@@ -114,7 +114,7 @@ export function getLaunchCountdown(targetDate = LAUNCH_DATE_ISO) {
     const seconds = Math.floor((diff / 1000) % 60);
     return { days, hours, minutes, seconds, total: diff, isLaunched: false };
   } catch {
-    return { days: 63, hours: 0, minutes: 0, seconds: 0, total: 63 * 86400000, isLaunched: false };
+    return { days: 102, hours: 0, minutes: 0, seconds: 0, total: 102 * 86400000, isLaunched: false };
   }
 }
 
@@ -126,8 +126,8 @@ export const defaultCoupons = [
     discountType: 'percentage',
     discountValue: 20,
     partnerContact: 'launch@th3ory.online',
-    description: 'Direct 20% Early Bird Launch Discount automatically applied until November 1, 2026',
-    validUntil: '2026-11-01T23:59:59',
+    description: 'Direct 20% Early Bird Launch Discount automatically applied until January 1, 2027',
+    validUntil: '2027-01-01T23:59:59',
     maxUses: 5000,
     usedCount: 0,
     isActive: true,
@@ -200,9 +200,17 @@ export function sanitizeCourseDetails(details) {
   if (!details) return defaultCourseDetails;
   const merged = { ...defaultCourseDetails, ...details };
   merged.urgency = { ...defaultCourseDetails.urgency, ...(details.urgency || {}) };
-  if (!merged.urgency.startDate || merged.urgency.startDate.includes('September') || merged.urgency.startDate.includes('Sept')) {
-    merged.urgency.startDate = 'November 1, 2026';
+  if (
+    !merged.urgency.startDate ||
+    merged.urgency.startDate.includes('September') ||
+    merged.urgency.startDate.includes('Sept') ||
+    merged.urgency.startDate.includes('November') ||
+    merged.urgency.startDate.includes('Nov') ||
+    merged.urgency.launchDate?.includes('2026-11')
+  ) {
+    merged.urgency.startDate = 'January 1, 2027';
     merged.urgency.launchDate = LAUNCH_DATE_ISO;
+    merged.urgency.daysRemaining = 102;
   }
   return merged;
 }

@@ -53,7 +53,7 @@ export default function UrgencyPanel({ data, save, reset, themeMode = 'dark' }) 
           { label: 'Cohort Number', key: 'cohortNumber', type: 'number' },
           { label: 'Seats Left', key: 'seatsLeft', type: 'number' },
           { label: 'Start / Launch Date Display', key: 'startDate', type: 'text' },
-          { label: 'Launch Timestamp (e.g. 2026-11-01T00:00:00+05:30)', key: 'launchDate', type: 'text' },
+          { label: 'Launch Timestamp (e.g. 2027-01-01T00:00:00+05:30)', key: 'launchDate', type: 'text' },
           { label: 'Days Remaining (Urgency Indicator)', key: 'daysRemaining', type: 'number' },
         ].map(f => (
           <div key={f.key}>

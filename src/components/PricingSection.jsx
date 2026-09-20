@@ -17,7 +17,7 @@ export default function PricingSection({ onSelectPlan, couponCode, setCouponCode
   const [couponInput, setCouponInput] = useState(() => couponCode || (isEarlyBird ? 'EARLYBIRD20' : ''));
   const [couponMsg, setCouponMsg] = useState(() => {
     if (couponDiscount > 0) return `${couponCode} applied (${couponDiscount}% OFF)`;
-    if (isEarlyBird) return '🎉 Early Bird 20% Discount directly applied (Valid until Nov 1 Launch)';
+    if (isEarlyBird) return '🎉 Early Bird 20% Discount directly applied (Valid until Jan 1 Launch)';
     return '';
   });
 
@@ -26,7 +26,7 @@ export default function PricingSection({ onSelectPlan, couponCode, setCouponCode
       setCouponDiscount(20);
       setCouponCode('EARLYBIRD20');
       setCouponInput('EARLYBIRD20');
-      setCouponMsg('🎉 Early Bird 20% Discount directly applied (Valid until Nov 1 Launch)');
+      setCouponMsg('🎉 Early Bird 20% Discount directly applied (Valid until Jan 1 Launch)');
     }
   }, [isEarlyBird]);
 
@@ -63,7 +63,7 @@ export default function PricingSection({ onSelectPlan, couponCode, setCouponCode
         setCouponDiscount(20);
         setCouponCode('EARLYBIRD20');
         setCouponInput('EARLYBIRD20');
-        setCouponMsg('🎉 Early Bird 20% Discount directly applied (Valid until Nov 1 Launch)');
+        setCouponMsg('🎉 Early Bird 20% Discount directly applied (Valid until Jan 1 Launch)');
       } else {
         setCouponDiscount(0);
         setCouponCode('');
