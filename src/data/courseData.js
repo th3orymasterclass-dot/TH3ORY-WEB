@@ -630,5 +630,47 @@ export const defaultContent = [
     tags: ['Legacy', 'Capstone', 'Philosophy'],
     published: true,
     storageType: 'url'
+  },
+  {
+    id: 'cnt_l3_1_vid',
+    title: 'Day 13: The Warmth-Competence Paradox & Active Listening (HD Stream)',
+    type: 'video',
+    description: 'Learn subconscious emotional mirroring, psychological safety calibration, and executive empathy engineering.',
+    url: 'https://drive.google.com/file/d/1JeRMqXExi9T8DjF1t7PpPhNrhGhfTh5g/preview',
+    duration: '24 mins',
+    access: 'enrolled',
+    levelId: 'l3',
+    lessonId: 'l3-1',
+    tags: ['Warmth', 'Empathy', 'Masterclass', 'HD Stream'],
+    published: true,
+    storageType: 'url'
+  },
+  {
+    id: 'cnt_l4_1_vid',
+    title: 'Day 19: High-Value Network Geometry & Social Capital (HD Stream)',
+    type: 'video',
+    description: 'Deconstruct executive influence circles, relationship compounding, and strategic value-brokerage principles.',
+    url: 'https://drive.google.com/file/d/1JeRMqXExi9T8DjF1t7PpPhNrhGhfTh5g/preview',
+    duration: '26 mins',
+    access: 'enrolled',
+    levelId: 'l4',
+    lessonId: 'l4-1',
+    tags: ['Connection', 'Networking', 'Masterclass', 'HD Stream'],
+    published: true,
+    storageType: 'url'
+  },
+  {
+    id: 'cnt_l5_1_vid',
+    title: 'Day 25: The 5 Laws of Enduring Personal Legacy (HD Stream)',
+    type: 'video',
+    description: 'Integrate the full 5-pillar cognitive architecture into an unshakeable identity and personal reputation code.',
+    url: 'https://drive.google.com/file/d/1JeRMqXExi9T8DjF1t7PpPhNrhGhfTh5g/preview',
+    duration: '28 mins',
+    access: 'enrolled',
+    levelId: 'l5',
+    lessonId: 'l5-1',
+    tags: ['Legacy', 'Identity', 'Masterclass', 'HD Stream'],
+    published: true,
+    storageType: 'url'
   }
 ];

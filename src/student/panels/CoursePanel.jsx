@@ -35,70 +35,8 @@ const LEVEL_ACCENT = [
   { border:'border-yellow-400/40', bg:'bg-yellow-400/10', text:'text-yellow-300', ring:'ring-yellow-400/30' },
 ];
 
-function VideoModal({ url, title, onClose }) {
-  const embedUrl = getEmbeddableMediaUrl(url);
-  const gdrive = parseGoogleDriveUrl(url);
-
-  return (
-    <div className="fixed inset-0 z-50 bg-[#07090E]/95 backdrop-blur-md flex items-center justify-center p-2 sm:p-6 selection:bg-none select-none" onClick={onClose} onContextMenu={e => e.preventDefault()}>
-      <div className="w-full max-w-5xl flex flex-col gap-2.5 max-h-[96vh]" onClick={e => e.stopPropagation()}>
-        {/* Minimal Header */}
-        <div className="flex items-center justify-between px-1">
-          <div className="flex items-center gap-2 min-w-0 flex-wrap">
-            <h3 className="text-white/90 font-medium text-xs sm:text-base truncate tracking-tight">{title}</h3>
-          </div>
-          <button 
-            onClick={onClose} 
-            className="p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-all ml-2 shrink-0"
-            title="Close Stream"
-          >
-            <X className="w-5 h-5"/>
-          </button>
-        </div>
-
-        {/* Video Container */}
-        <div className="w-full relative min-h-[260px] sm:min-h-0 sm:aspect-video h-[45vh] max-h-[420px] sm:h-auto bg-black rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-purple-950/20 selection:bg-none select-none group" onContextMenu={e => e.preventDefault()}>
-          {/* Desktop Top-Right Shield Overlay: Prevents pop-out on desktop without obscuring mobile touch controls */}
-          <div
-            className="hidden sm:block absolute top-0 right-0 w-28 h-16 z-30 bg-transparent cursor-default pointer-events-auto"
-            onClick={e => { e.preventDefault(); e.stopPropagation(); }}
-            onContextMenu={e => e.preventDefault()}
-            title="External tab exit disabled for security"
-          />
-
-          {embedUrl ? (
-            <iframe
-              src={embedUrl}
-              title={title}
-              className="w-full h-full border-0 pointer-events-auto"
-              allowFullScreen
-              allow="autoplay; fullscreen; picture-in-picture"
-            />
-          ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 gap-3">
-              <Play className="w-10 h-10 opacity-20"/>
-              <p className="text-sm font-light text-slate-400">No stream URL configured for this lesson yet.</p>
-            </div>
-          )}
-        </div>
-
-        {/* Minimal Footer */}
-        <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-slate-500 px-1 pt-0.5 flex-wrap gap-1">
-          <span className="flex items-center gap-1.5 text-slate-400 font-light">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"/>
-            In-App Encrypted Stream
-          </span>
-          <span className="text-amber-400/80 font-light text-[10px]">
-            📱 Rotate phone to landscape for full controls
-          </span>
-          <span className="text-slate-500 font-light">
-            🔒 Protected View
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
+import StudentVideoModal from '../components/StudentVideoModal';
+const VideoModal = StudentVideoModal;
 
 function ResourceCard({ item, onStreamResource, onOpenPdf, isLight }) {
   const typeColors = { video:'text-blue-500', pdf:'text-red-500', worksheet:'text-green-500', quiz:'text-purple-500', audio:'text-pink-500', resource:'text-amber-500', image:'text-cyan-500', archive:'text-slate-500' };
