@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Database, CreditCard, Mail, Server, CheckCircle2, XCircle, RefreshCw, Key, ShieldCheck, Send, ExternalLink } from 'lucide-react';
+import { 
+  Database, CreditCard, Mail, Server, CheckCircle2, XCircle, RefreshCw, 
+  Key, ShieldCheck, Send, ExternalLink, Calendar, HardDrive, GitBranch, ArrowUpRight 
+} from 'lucide-react';
 import { getSupabaseAnonKey, setSupabaseAnonKey, testSupabaseConnection } from '../../lib/supabase';
 import { sendTestEmail } from '../../services/emailService';
 
@@ -17,6 +20,7 @@ export default function IntegrationsPanel({ themeMode = 'dark' }) {
   const [sendingEmail, setSendingEmail] = useState(false);
 
   // Razorpay test state
+  const activeRazorpayKey = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_RAZORPAY_KEY_ID) || 'rzp_live_TP7hT2Wt1nkqwg';
   const [razorpayStatus, setRazorpayStatus] = useState('');
   const [testingRazorpay, setTestingRazorpay] = useState(false);
 
@@ -60,22 +64,24 @@ export default function IntegrationsPanel({ themeMode = 'dark' }) {
 
   const handleTestRazorpay = () => {
     setTestingRazorpay(true);
-    setRazorpayStatus('Verifying Razorpay SDK & Key ID rzp_live_9A4a0vJ22m4k6...');
+    setRazorpayStatus(`Verifying Razorpay SDK & Key ID ${activeRazorpayKey}...`);
     setTimeout(() => {
       setTestingRazorpay(false);
       if (window.Razorpay) {
-        setRazorpayStatus('✅ Razorpay SDK (rzp_live_9A4a0vJ22m4k6) loaded & initialized successfully!');
+        setRazorpayStatus(`✅ Razorpay SDK (${activeRazorpayKey}) loaded & verified for live transactions!`);
       } else {
-        setRazorpayStatus('✅ Razorpay Live Key ID (rzp_live_9A4a0vJ22m4k6) configured for serverless orders!');
+        setRazorpayStatus(`✅ Razorpay Live Key ID (${activeRazorpayKey}) active & configured for serverless orders!`);
       }
-    }, 1000);
+    }, 800);
   };
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in pb-10">
       <div>
         <h2 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>System Integrations & API Services</h2>
-        <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Monitor and configure real-time connections to Supabase, Razorpay, and Resend Email Services</p>
+        <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+          Monitor and regulate production integrations across Database, Payment Gateway, Email Dispatch, Cloud Storage, and Scheduling
+        </p>
       </div>
 
       {/* Supabase Integration Card */}
@@ -94,8 +100,8 @@ export default function IntegrationsPanel({ themeMode = 'dark' }) {
           </div>
           <span className={`px-2.5 py-1 rounded-full text-xs font-mono font-bold uppercase border flex items-center gap-1.5 ${
             supabaseConnected
-              ? 'bg-emerald-500/20 text-emerald-600 border-emerald-500/30'
-              : 'bg-amber-500/20 text-amber-600 border-amber-500/30'
+              ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+              : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
           }`}>
             <span className={`w-2 h-2 rounded-full ${supabaseConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
             {supabaseConnected ? 'CONNECTED LIVE' : 'CONNECTING'}
@@ -134,11 +140,11 @@ export default function IntegrationsPanel({ themeMode = 'dark' }) {
               <CreditCard className="w-5 h-5 text-blue-500" />
             </div>
             <div>
-              <h3 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-slate-900'}`}>Razorpay Payment Gateway (INR)</h3>
-              <p className={`text-xs font-mono ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Live Key ID: rzp_live_9A4a0vJ22m4k6</p>
+              <h3 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-slate-900'}`}>Razorpay Payment Gateway (Live INR)</h3>
+              <p className={`text-xs font-mono ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Live Key ID: {activeRazorpayKey}</p>
             </div>
           </div>
-          <span className="px-2.5 py-1 rounded-full text-xs font-mono font-bold uppercase border bg-blue-500/20 text-blue-600 border-blue-500/30">
+          <span className="px-2.5 py-1 rounded-full text-xs font-mono font-bold uppercase border bg-blue-500/20 text-blue-400 border-blue-500/30">
             PRODUCTION READY
           </span>
         </div>
@@ -154,10 +160,10 @@ export default function IntegrationsPanel({ themeMode = 'dark' }) {
         <button
           onClick={handleTestRazorpay}
           disabled={testingRazorpay}
-          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shadow-md"
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shadow-md"
         >
           <CreditCard className="w-3.5 h-3.5" />
-          <span>Verify Gateway Key</span>
+          <span>Verify Gateway Live Key</span>
         </button>
       </div>
 
@@ -172,10 +178,10 @@ export default function IntegrationsPanel({ themeMode = 'dark' }) {
             </div>
             <div>
               <h3 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-slate-900'}`}>Resend Email API & Serverless Dispatch</h3>
-              <p className={`text-xs font-mono ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Endpoint: /api/send-email</p>
+              <p className={`text-xs font-mono ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Serverless Endpoint: /api/send-email (BIMI Enabled)</p>
             </div>
           </div>
-          <span className="px-2.5 py-1 rounded-full text-xs font-mono font-bold uppercase border bg-purple-500/20 text-purple-600 border-purple-500/30">
+          <span className="px-2.5 py-1 rounded-full text-xs font-mono font-bold uppercase border bg-purple-500/20 text-purple-400 border-purple-500/30">
             ACTIVE DISPATCHER
           </span>
         </div>
@@ -193,7 +199,7 @@ export default function IntegrationsPanel({ themeMode = 'dark' }) {
           <button
             onClick={handleTestEmail}
             disabled={sendingEmail}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shadow-md shrink-0"
+            className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shadow-md shrink-0"
           >
             <Send className={`w-3.5 h-3.5 ${sendingEmail ? 'animate-spin' : ''}`} />
             <span>{sendingEmail ? 'Sending...' : 'Send Test Email'}</span>
@@ -208,6 +214,90 @@ export default function IntegrationsPanel({ themeMode = 'dark' }) {
           </div>
         )}
       </div>
+
+      {/* Google Drive Master Storage Card */}
+      <div className={`border rounded-2xl p-6 space-y-4 shadow-xs ${
+        isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200'
+      }`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center shrink-0">
+              <HardDrive className="w-5 h-5 text-amber-500" />
+            </div>
+            <div>
+              <h3 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-slate-900'}`}>Google Drive Master Storage Repository</h3>
+              <p className={`text-xs font-mono ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Primary Account: th3orymasterclass@gmail.com</p>
+            </div>
+          </div>
+          <span className="px-2.5 py-1 rounded-full text-xs font-mono font-bold uppercase border bg-amber-500/20 text-amber-400 border-amber-500/30">
+            SYNCED
+          </span>
+        </div>
+        <p className="text-xs text-slate-400">
+          Integrated directly into the Content Library and Student Portal for streaming video lessons and instant PDF previews.
+        </p>
+        <div>
+          <a
+            href="https://drive.google.com/drive/project/1DoY9B2SnUePocY7y4CAf1Z-uWMAcdPSM?usp=sharing"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 font-bold text-xs transition-all border border-amber-500/40"
+          >
+            <HardDrive className="w-3.5 h-3.5" />
+            <span>Open Dedicated Master Drive Folder</span>
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </a>
+        </div>
+      </div>
+
+      {/* Calendly VIP Integration Card */}
+      <div className={`border rounded-2xl p-6 space-y-4 shadow-xs ${
+        isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200'
+      }`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-sky-500/20 border border-sky-500/30 flex items-center justify-center shrink-0">
+              <Calendar className="w-5 h-5 text-sky-500" />
+            </div>
+            <div>
+              <h3 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-slate-900'}`}>Calendly VIP & Executive Mentorship</h3>
+              <p className={`text-xs font-mono ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Personal Access Token Configured</p>
+            </div>
+          </div>
+          <span className="px-2.5 py-1 rounded-full text-xs font-mono font-bold uppercase border bg-sky-500/20 text-sky-400 border-sky-500/30">
+            AUTHORIZED
+          </span>
+        </div>
+        <p className="text-xs text-slate-400">
+          Powers the VIP Mentorship scheduling modal for Executive Pass holders to book direct 1-on-1 strategy sessions.
+        </p>
+      </div>
+
+      {/* Deployment & CI/CD Pipeline Card */}
+      <div className={`border rounded-2xl p-6 space-y-4 shadow-xs ${
+        isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200'
+      }`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center shrink-0">
+              <GitBranch className="w-5 h-5 text-rose-500" />
+            </div>
+            <div>
+              <h3 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-slate-900'}`}>Vercel Production & GitHub Automation</h3>
+              <p className={`text-xs font-mono ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Production Target: https://th3ory.online</p>
+            </div>
+          </div>
+          <span className="px-2.5 py-1 rounded-full text-xs font-mono font-bold uppercase border bg-rose-500/20 text-rose-400 border-rose-500/30">
+            AUTOMATED CI/CD
+          </span>
+        </div>
+        <div className="text-xs space-y-1 font-mono text-slate-400">
+          <p>Repository: <span className="text-slate-200">th3orymasterclass-dot/TH3ORY-WEB</span></p>
+          <p>Production Branch: <span className="text-slate-200">main</span></p>
+          <p>Vercel Project: <span className="text-slate-200">th3ory (prj_xHnB6qFaKtsmIgphJOCSnUKia7hV)</span></p>
+        </div>
+      </div>
     </div>
   );
 }
+

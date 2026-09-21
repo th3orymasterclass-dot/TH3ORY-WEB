@@ -44,6 +44,7 @@ import ContactPanel from './panels/ContactPanel';
 import ReferralTrackingPanel from './panels/ReferralTrackingPanel';
 import CommunityAdminPanel from './panels/CommunityAdminPanel';
 import BlogPanel from './panels/BlogPanel';
+import ContentHubPanel from './panels/ContentHubPanel';
 
 export const NAV_CATEGORIES = [
   {
@@ -59,6 +60,19 @@ export const NAV_CATEGORIES = [
     ]
   },
   {
+    id: 'content_studio',
+    title: 'Content & Publishing Hub',
+    icon: FolderOpen,
+    items: [
+      { id: 'content_hub',       label: 'Content Studio Master',       icon: Layers },
+      { id: 'content_videos',    label: 'Course Videos & Streams',     icon: Video },
+      { id: 'content_resources', label: 'Resources & Workbooks (PDF)', icon: FileText },
+      { id: 'blogs',             label: 'Blog & Articles Studio',      icon: BookOpen },
+      { id: 'community_hub',     label: 'Community Posts & Wall',      icon: MessageSquare },
+      { id: 'curriculum',        label: 'Curriculum & Roadmap',        icon: Sliders },
+    ]
+  },
+  {
     id: 'landing',
     title: 'Homepage & Landing',
     icon: Sparkles,
@@ -66,7 +80,6 @@ export const NAV_CATEGORIES = [
       { id: 'hero',               label: 'Hero & Branding',            icon: Type },
       { id: 'campaign',           label: 'Launch Campaign (₹499)',     icon: Flame },
       { id: 'pillars',            label: '5 Pillars & Differentiators',icon: Sparkles },
-      { id: 'curriculum',         label: 'Curriculum & Roadmap',       icon: BookOpen },
       { id: 'outcomes',           label: 'Outcomes & Transformation',  icon: Target },
       { id: 'bonuses',            label: 'Bonuses & Perks',            icon: Gift },
       { id: 'instructor',         label: 'Instructor Spotlight',       icon: User },
@@ -76,9 +89,7 @@ export const NAV_CATEGORIES = [
       { id: 'faqs',               label: 'FAQs Management',            icon: HelpCircle },
       { id: 'urgency',            label: 'Urgency & Seats Counter',    icon: Flame },
       { id: 'media',              label: 'Video & Media Player',       icon: Video },
-      { id: 'content',            label: 'Content Library (PDF/Video)',icon: FolderOpen },
       { id: 'reviews',            label: 'Reviews & Testimonials',     icon: Star },
-      { id: 'blogs',              label: 'Blog & Articles Studio',     icon: FileText },
     ]
   },
   {
@@ -94,13 +105,12 @@ export const NAV_CATEGORIES = [
   },
   {
     id: 'team',
-    title: 'Team & Community',
+    title: 'Team & Access',
     icon: Users,
     items: [
       { id: 'team_roster',        label: 'Team Accounts & Roster',     icon: Users },
       { id: 'team_approvals',     label: 'Team Approvals',             icon: ShieldCheck },
       { id: 'ambassador_apps',    label: 'Ambassador Applications',    icon: Users },
-      { id: 'community_hub',      label: 'Community Hub & Wall',       icon: MessageSquare },
     ]
   },
   {
@@ -250,7 +260,6 @@ export default function AdminApp({ onLogout }) {
       case 'hero':               return <HeroPanel {...panelProps} />;
       case 'campaign':           return <CampaignPanel {...panelProps} />;
       case 'pillars':            return <PillarsPanel {...panelProps} />;
-      case 'curriculum':         return <CurriculumPanel {...panelProps} />;
       case 'outcomes':           return <OutcomesPanel {...panelProps} />;
       case 'bonuses':            return <BonusesPanel {...panelProps} />;
       case 'instructor':         return <InstructorPanel {...panelProps} />;
@@ -260,11 +269,93 @@ export default function AdminApp({ onLogout }) {
       case 'faqs':               return <FAQPanel {...panelProps} />;
       case 'urgency':            return <UrgencyPanel {...panelProps} />;
       case 'media':              return <MediaPanel {...panelProps} />;
-      case 'content':            return <ContentPanel {...panelProps} />;
       case 'reviews':            return <ReviewsPanel {...panelProps} />;
-      case 'blogs':              return <BlogPanel themeMode={themeMode} />;
       case 'team_roster':        return <TeamManagementPanel themeMode={themeMode} />;
-      case 'community_hub':      return <CommunityAdminPanel themeMode={themeMode} />;
+      case 'content_hub':
+      case 'content_videos':
+        return (
+          <ContentHubPanel 
+            {...panelProps} 
+            initialSector="videos" 
+            onNavigateSector={(s) => {
+              if (s === 'videos') setActive('content_videos');
+              else if (s === 'resources') setActive('content_resources');
+              else if (s === 'blogs') setActive('blogs');
+              else if (s === 'community') setActive('community_hub');
+              else if (s === 'curriculum') setActive('curriculum');
+            }} 
+          />
+        );
+      case 'content_resources':
+        return (
+          <ContentHubPanel 
+            {...panelProps} 
+            initialSector="resources" 
+            onNavigateSector={(s) => {
+              if (s === 'videos') setActive('content_videos');
+              else if (s === 'resources') setActive('content_resources');
+              else if (s === 'blogs') setActive('blogs');
+              else if (s === 'community') setActive('community_hub');
+              else if (s === 'curriculum') setActive('curriculum');
+            }} 
+          />
+        );
+      case 'content':
+        return (
+          <ContentHubPanel 
+            {...panelProps} 
+            initialSector="videos" 
+            onNavigateSector={(s) => {
+              if (s === 'videos') setActive('content_videos');
+              else if (s === 'resources') setActive('content_resources');
+              else if (s === 'blogs') setActive('blogs');
+              else if (s === 'community') setActive('community_hub');
+              else if (s === 'curriculum') setActive('curriculum');
+            }} 
+          />
+        );
+      case 'curriculum':
+        return (
+          <ContentHubPanel 
+            {...panelProps} 
+            initialSector="curriculum" 
+            onNavigateSector={(s) => {
+              if (s === 'videos') setActive('content_videos');
+              else if (s === 'resources') setActive('content_resources');
+              else if (s === 'blogs') setActive('blogs');
+              else if (s === 'community') setActive('community_hub');
+              else if (s === 'curriculum') setActive('curriculum');
+            }} 
+          />
+        );
+      case 'blogs':
+        return (
+          <ContentHubPanel 
+            {...panelProps} 
+            initialSector="blogs" 
+            onNavigateSector={(s) => {
+              if (s === 'videos') setActive('content_videos');
+              else if (s === 'resources') setActive('content_resources');
+              else if (s === 'blogs') setActive('blogs');
+              else if (s === 'community') setActive('community_hub');
+              else if (s === 'curriculum') setActive('curriculum');
+            }} 
+          />
+        );
+      case 'community_hub':
+        return (
+          <ContentHubPanel 
+            {...panelProps} 
+            initialSector="community" 
+            onNavigateSector={(s) => {
+              if (s === 'videos') setActive('content_videos');
+              else if (s === 'resources') setActive('content_resources');
+              else if (s === 'blogs') setActive('blogs');
+              else if (s === 'community') setActive('community_hub');
+              else if (s === 'curriculum') setActive('curriculum');
+            }} 
+          />
+        );
       case 'referral_tracking':  return <ReferralTrackingPanel themeMode={themeMode} />;
       case 'email_dispatcher':   return <PortalEmailDispatcherPanel themeMode={themeMode} />;
       case 'ambassador_apps':    return <AmbassadorApplicationsPanel themeMode={themeMode} />;

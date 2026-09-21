@@ -672,18 +672,35 @@ function GoogleDriveFolderManager({ data, save }) {
 }
 
 // ─── Main Panel ────────────────────────────────────────────────────────────────
-export default function ContentPanel({ data, save, reset, themeMode = 'dark' }) {
+export default function ContentPanel({
+  data,
+  save,
+  reset,
+  themeMode = 'dark',
+  initialFilterType = 'all',
+  sectorMode = null
+}) {
   const content = data.content ?? [];
   const levels  = data.levels  ?? [];
 
   const [search, setSearch]     = useState('');
-  const [filterType, setFilter] = useState('all');
+  const [filterType, setFilter] = useState(
+    sectorMode === 'videos' ? 'video' :
+    sectorMode === 'resources' ? 'pdf' :
+    initialFilterType
+  );
   const [viewMode, setViewMode] = useState('grid');
   const [modal, setModal]       = useState(null);
   const [previewPdf, setPreviewPdf] = useState(null);
   const [filterAccess, setFilterAccess] = useState('all');
 
   const isDark = themeMode === 'dark';
+
+  useEffect(() => {
+    if (sectorMode === 'videos') setFilter('video');
+    else if (sectorMode === 'resources') setFilter('pdf');
+    else if (initialFilterType) setFilter(initialFilterType);
+  }, [sectorMode, initialFilterType]);
 
   const saveContent = (updated) => save('content', updated);
 
@@ -747,17 +764,27 @@ export default function ContentPanel({ data, save, reset, themeMode = 'dark' }) 
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className={`text-2xl font-black flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-            Course Content Library <span className={`text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border ${
+            {sectorMode === 'videos' ? 'Course Videos & Masterclasses' :
+             sectorMode === 'resources' ? 'Resources, Workbooks & Downloads' :
+             'Course Content Library'}
+            <span className={`text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border ${
               isDark ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' : 'bg-blue-50 text-blue-700 border-blue-200'
             }`}><HardDrive className="w-3 h-3 text-blue-500"/> GDrive Storage Ready</span>
           </h2>
-          <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Manage course materials, videos, PDFs, and digital workbooks backed by Google Drive</p>
+          <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+            {sectorMode === 'videos' ? 'Manage curriculum video lessons, streaming links, and Google Drive video previews' :
+             sectorMode === 'resources' ? 'Manage student workbooks, PDF cheatsheets, frameworks, and downloadable assets' :
+             'Manage course materials, videos, PDFs, and digital workbooks backed by Google Drive'}
+          </p>
         </div>
         <button
-          onClick={() => setModal({ ...BLANK_ITEM })}
+          onClick={() => setModal({
+            ...BLANK_ITEM,
+            type: sectorMode === 'videos' ? 'video' : sectorMode === 'resources' ? 'pdf' : 'video'
+          })}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition-all shrink-0 cursor-pointer shadow-md"
         >
-          <Plus className="w-4 h-4" /> Add Content
+          <Plus className="w-4 h-4" /> {sectorMode === 'videos' ? 'Add Video Lesson' : sectorMode === 'resources' ? 'Add Resource / PDF' : 'Add Content'}
         </button>
       </div>
 
