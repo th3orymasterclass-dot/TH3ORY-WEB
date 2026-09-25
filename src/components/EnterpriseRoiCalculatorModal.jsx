@@ -44,6 +44,8 @@ export function EnterpriseRoiCalculatorModal({
   // Format dual currency helpers
   const fmtDual = (val) => formatDualCurrency(val);
   const fmtLakhsDual = (val) => formatDualLakhs(val);
+  const fmtINR = (val) => formatDualCurrency(val);
+  const fmtLakhs = (val) => formatDualLakhs(val);
 
   // Copy Executive Summary text to clipboard
   const handleCopySummary = () => {

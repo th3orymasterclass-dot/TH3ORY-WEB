@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   ShieldCheck, ArrowLeft, Scale, Lock, Eye, Database, 
   Server, Clock, Key, Mail, ChevronDown, ChevronUp, 
-  CheckCircle2, FileText, Sparkles
+  CheckCircle2, FileText, Sparkles, Crown
 } from 'lucide-react';
 import Logo from './Logo';
 import SEOHead from './SEOHead';
@@ -165,7 +165,7 @@ export default function PrivacyPolicyPage({ onBack }) {
                   <Scale className="w-4 h-4 text-amber-400" /> 1. Legislative Compliance &amp; Scope
                 </h4>
                 <p>
-                  This Privacy Policy governs the processing of personal data by <strong className="text-white">TH3ORY Online</strong>, operated by Mentalist Sravan Production. We adhere to global standards including the Digital Personal Data Protection Act 2023 (India), GDPR (EU 2016/679), CCPA/CPRA, and IT Act 2000.
+                  This Privacy Policy governs the processing of personal data by <strong className="text-white">TH3ORY Online</strong>, operated by Mentalist Sravan Production. We adhere to global data protection frameworks including the Indian DPDP Act 2023, EU GDPR (Regulation 2016/679), CCPA / CPRA statutory compliance for California consumers, and the Indian IT Act 2000.
                 </p>
               </div>
 
@@ -175,7 +175,7 @@ export default function PrivacyPolicyPage({ onBack }) {
                   <Database className="w-4 h-4 text-emerald-400" /> 2. Categories of Data Processed
                 </h4>
                 <p>
-                  Data processed includes: (a) Student Authentication &amp; Profile details (name, email, enrollment timestamp); (b) Learning Progress &amp; Habit Trackers (module completions, reflection scores); (c) Transaction References via Razorpay (order IDs and signatures — we never store raw card numbers or PINs); and (d) Communication inquiries.
+                  Data processed includes: (a) Student Authentication &amp; Profile details (name, email, enrollment timestamp); (b) Learning Progress &amp; Habit Trackers recorded in dedicated schemas such as student_habit_trackers (module completions, reflection scores); (c) Enterprise client quotes &amp; corporate inquiries stored in enterprise_quotes; (d) Transaction References via Razorpay Software Ltd (order IDs and signatures — we never store raw card numbers or PINs); and (e) Communication inquiries.
                 </p>
               </div>
 
@@ -205,7 +205,7 @@ export default function PrivacyPolicyPage({ onBack }) {
                   <Clock className="w-4 h-4 text-yellow-400" /> 5. Session Lifetime &amp; Retention
                 </h4>
                 <p>
-                  Student portal sessions expire automatically after 24 hours to safeguard unauthorized access on shared terminals. Account data is retained for active student duration or until an erasure request is executed via this portal.
+                  24-Hour Maximum Duration Policy: Student portal sessions expire automatically after 24 hours to safeguard unauthorized access on shared terminals. Account data is retained for active student duration or until an erasure request is executed via this portal.
                 </p>
               </div>
 
@@ -215,7 +215,7 @@ export default function PrivacyPolicyPage({ onBack }) {
                   <ShieldCheck className="w-4 h-4 text-emerald-400" /> 6. Statutory User Rights
                 </h4>
                 <p>
-                  You possess the statutory right to access your data, request corrections, withdraw optional consent, export a machine-readable data package, and request account erasure under Section 12 of the DPDP Act 2023.
+                  You possess the statutory right to access your data, request corrections, withdraw optional consent, export a machine-readable data package, and request account erasure under Section 12 of the DPDP Act 2023. Every submitted request is logged with a permanent trackable PRIV- reference code (e.g. PRIV-2026-XXXX).
                 </p>
               </div>
 

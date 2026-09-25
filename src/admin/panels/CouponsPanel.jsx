@@ -123,6 +123,14 @@ export default function CouponsPanel({ save, enrollments = [], themeMode = 'dark
     setTimeout(() => setCopiedCode(null), 2500);
   };
 
+  const handleCopyCode = (code) => {
+    navigator.clipboard.writeText(code);
+    setCopiedCode(code);
+    setTimeout(() => setCopiedCode(null), 2500);
+  };
+
+  const handleToggleStatus = (id) => toggleCouponActive(id);
+
   const openCreateModal = () => {
     setEditingCoupon(null);
     setFormData({

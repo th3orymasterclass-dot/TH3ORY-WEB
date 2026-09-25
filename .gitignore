@@ -22,3 +22,4 @@ scratch/
 mcp.json
 .mcp.json
 .agents/
+.playwright-mcp/

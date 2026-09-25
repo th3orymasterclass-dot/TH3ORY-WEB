@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Database, CreditCard, Mail, Server, CheckCircle2, XCircle, RefreshCw, 
-  Key, ShieldCheck, Send, ExternalLink, Calendar, HardDrive, GitBranch, ArrowUpRight 
+  Key, ShieldCheck, Send, ExternalLink, Calendar, HardDrive, GitBranch, ArrowUpRight,
+  BookOpen, Sparkles
 } from 'lucide-react';
 import { getSupabaseAnonKey, setSupabaseAnonKey, testSupabaseConnection } from '../../lib/supabase';
 import { sendTestEmail } from '../../services/emailService';
@@ -246,6 +247,73 @@ export default function IntegrationsPanel({ themeMode = 'dark' }) {
             <HardDrive className="w-3.5 h-3.5" />
             <span>Open Dedicated Master Drive Folder</span>
             <ArrowUpRight className="w-3.5 h-3.5" />
+          </a>
+        </div>
+      </div>
+
+      {/* Obsidian Knowledge Vault & Antigravity MCP Card */}
+      <div className={`border rounded-2xl p-6 space-y-4 shadow-xs ${
+        isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200'
+      }`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-violet-500/20 border border-violet-500/30 flex items-center justify-center shrink-0">
+              <BookOpen className="w-5 h-5 text-violet-400" />
+            </div>
+            <div>
+              <h3 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-slate-900'}`}>Obsidian Knowledge Vault & Antigravity MCP</h3>
+              <p className={`text-xs font-mono ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Vault: E:\TH3ORY\TH3ORY (MCP Filesystem Server Active)</p>
+            </div>
+          </div>
+          <span className="px-2.5 py-1 rounded-full text-xs font-mono font-bold uppercase border bg-violet-500/20 text-violet-400 border-violet-500/30 flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
+            CONNECTED & SYNCED
+          </span>
+        </div>
+
+        <p className="text-xs text-slate-400 leading-relaxed">
+          Integrated with Antigravity AI pair programmer across local filesystem MCP tools, Copilot skills, and automated codebase backup.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+          <div className={`p-3 rounded-xl border text-xs font-mono space-y-1 ${
+            isDark ? 'bg-slate-950/60 border-slate-800 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700'
+          }`}>
+            <span className="text-violet-400 font-bold block">Active Antigravity Plugins & Skills:</span>
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {['obsidian-markdown', 'json-canvas', 'obsidian-bases', 'copilot-read-pdf', 'copilot-youtube-transcript', 'copilot-fetch-x', 'copilot-web-search'].map(skill => (
+                <span key={skill} className="px-2 py-0.5 rounded-md bg-violet-500/10 text-violet-300 border border-violet-500/20 text-[10px]">
+                  {skill}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className={`p-3 rounded-xl border text-xs font-mono space-y-1 ${
+            isDark ? 'bg-slate-950/60 border-slate-800 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700'
+          }`}>
+            <span className="text-emerald-400 font-bold block">Vault Codebase Backup Status:</span>
+            <p className="text-[11px] text-slate-400 pt-0.5">Location: <span className="text-slate-200">E:\TH3ORY\TH3ORY\Backup</span></p>
+            <p className="text-[11px] text-emerald-400">✓ Full source, API routes, SQL schemas, scripts & configs synced.</p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 pt-2">
+          <a
+            href="obsidian://open?vault=TH3ORY"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs transition-all cursor-pointer shadow-md"
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            <span>Launch Obsidian Vault</span>
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </a>
+          <a
+            href="obsidian://open?vault=TH3ORY&file=Backup%2FREADME"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-violet-500/20 hover:bg-violet-500/30 text-violet-300 font-bold text-xs transition-all border border-violet-500/30 cursor-pointer"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>View Backup Note in Obsidian</span>
+            <ExternalLink className="w-3.5 h-3.5" />
           </a>
         </div>
       </div>

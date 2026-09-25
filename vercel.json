@@ -32,7 +32,7 @@
       "destination": "/api/$1"
     },
     {
-      "source": "/((?!api/|sitemap\\.xml|robots\\.txt|.*\\.(?:xml|txt|svg|png|jpg|jpeg|webp|ico|pem|json)).*)",
+      "source": "/((?!api/|assets/|sitemap\\.xml|robots\\.txt|.*\\.(?:js|css|xml|txt|svg|png|jpg|jpeg|webp|ico|pem|json|pdf|woff|woff2|ttf|mp4|map)).*)",
       "destination": "/index.html"
     }
   ],

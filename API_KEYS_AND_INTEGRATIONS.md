@@ -20,6 +20,7 @@ All core external services, database replication layers, payment gateways, and s
 | **Google Drive** | Master Cloud Storage | Video streams, action sheets, workbooks (`th3orymasterclass@gmail.com`) | 🟢 Live Embedded Folder |
 | **Vercel** | Edge Hosting & Serverless | Next-gen edge CDN, API routes, security headers, custom domain | 🟢 Automated CI/CD |
 | **GitHub** | Version Control | Automated repository pushes triggering Vercel production builds | 🟢 Linked PAT |
+| **Obsidian Vault** | Knowledge Base & MCP | Local second brain (`E:\TH3ORY\TH3ORY`), Copilot skills, codebase backup | 🟢 Connected & Synced |
 
 ---
 
@@ -137,6 +138,17 @@ The table below lists all live credentials and environment variables required fo
   - **Blog Publications** (`blogs`)
   - **Community Posts & Wall** (`community_hub`)
   - **Curriculum Architecture** (`curriculum`)
+
+### 7. Obsidian Knowledge Vault & Antigravity MCP Integration
+- **Vault Location**: `E:\TH3ORY\TH3ORY` (`TH3ORY` vault)
+- **Active MCP Server**: `@modelcontextprotocol/server-filesystem` registered in `.mcp.json` and `.agents/mcp_config.json`
+- **Integrated Skills**:
+  - `obsidian-markdown`: Note syntax, wikilinks, callouts, frontmatter management
+  - `json-canvas`: Mindmap and workflow visual canvas creation
+  - `copilot-read-pdf`: Course textbook and curriculum PDF ingestion
+  - `copilot-youtube-transcript`: Video lesson transcript processing
+  - `copilot-web-fetch` & `copilot-web-search`: Real-time web retrieval
+- **Backup Pipeline**: 1-click automated site backup via `npm run backup:obsidian` (`scripts/sync-obsidian-vault.js`), maintaining a full replica of all source code, API routes, SQL migrations, scripts, and documentation in `E:\TH3ORY\TH3ORY\Backup`.
 
 ---
 

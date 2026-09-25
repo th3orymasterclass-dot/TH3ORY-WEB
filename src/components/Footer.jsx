@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Lock, GraduationCap, Clapperboard } from 'lucide-react';
+import { ShieldCheck, Lock, GraduationCap, Clapperboard, Users } from 'lucide-react';
 import Logo from './Logo';
 import { useTh3oryLive } from '../data/adminData';
 import LegalModal from './LegalModal';
@@ -147,6 +147,13 @@ export default function Footer({ onOpenCheckout }) {
                   className="text-amber-400 font-bold hover:underline flex items-center gap-1 cursor-pointer"
                 >
                   <GraduationCap className="w-3.5 h-3.5"/> Student Portal →
+                </a>
+                <a
+                  href="#team"
+                  onClick={(e) => { e.preventDefault(); window.location.hash = 'team'; window.dispatchEvent(new Event('hashchange')); }}
+                  className="text-indigo-400 font-bold hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <Users className="w-3.5 h-3.5"/> Team Access →
                 </a>
               </li>
             </ul>

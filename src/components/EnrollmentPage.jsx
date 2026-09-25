@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   ArrowLeft, ArrowRight, Check, User, Mail, Phone, MapPin,
-  Briefcase, Calendar, CreditCard, Shield, AlertCircle,
+  Briefcase, Calendar, CreditCard, Shield, ShieldCheck, AlertCircle,
   Sparkles, Crown, Lock, ChevronDown, Globe, Loader2,
   CheckCircle2, Receipt, Download, ExternalLink, Zap
 } from 'lucide-react';

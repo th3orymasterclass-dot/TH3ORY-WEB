@@ -3919,7 +3919,7 @@ function getCommunityBroadcastChannel() {
   if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
     try {
       if (!window.__th3oryCommunityChannel) {
-        window.__th3oryCommunityChannel = new BroadcastChannel(COMMUNITY_SYNC_CHANNEL_NAME);
+        window.__th3oryCommunityChannel = new window.BroadcastChannel(COMMUNITY_SYNC_CHANNEL_NAME);
       }
       return window.__th3oryCommunityChannel;
     } catch {}

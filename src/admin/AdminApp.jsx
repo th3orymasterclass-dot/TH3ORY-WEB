@@ -4,7 +4,7 @@ import {
   Sliders, ShieldCheck, Sun, Moon, Type, Flame, BookOpen, FolderOpen,
   Star, User, Gift, Target, Video, ChevronRight, ChevronDown, Menu, X, ExternalLink, 
   LogOut, Shield, Users, Calendar, BarChart3, Sparkles, MessageSquare, GraduationCap,
-  Search, ChevronsUpDown, Share2, FileText
+  Search, ChevronsUpDown, Share2, FileText, Layers
 } from 'lucide-react';
 import useAdminData from './useAdminData';
 import OverviewPanel       from './panels/OverviewPanel';

@@ -333,9 +333,11 @@ console.log('\n▶ [Suite 12/12]: Page Refresh Data Persistence & Database Sync 
 console.log('\n▶ [Suite 13/13]: Student Dashboard Course Completion Display Audit');
 const dashboardHomeContent = fs.readFileSync(path.join(rootDir, 'src/student/panels/DashboardHome.jsx'), 'utf8');
 console.log('\n▶ [Suite 16/16]: Mobile Video Player & Unsandboxed Iframe Audit');
-assert(!coursePanelContent.includes('sandbox='), 'CoursePanel.jsx iframe has 0 restrictive sandbox attributes to ensure Google Drive media scripts execute on mobile');
-assert(coursePanelContent.includes('hidden sm:block absolute top-0 right-0 w-28 h-16'), 'CoursePanel.jsx hides top shield on mobile so touch controls remain 100% unobstructed');
-assert(coursePanelContent.includes('min-h-[260px]'), 'CoursePanel.jsx container enforces min-h-[260px] for proportional mobile video controls');
+const studentVideoModalContent = fs.existsSync(path.join(rootDir, 'src/student/components/StudentVideoModal.jsx')) ? fs.readFileSync(path.join(rootDir, 'src/student/components/StudentVideoModal.jsx'), 'utf8') : '';
+const videoPlayerCode = coursePanelContent + studentVideoModalContent;
+assert(!videoPlayerCode.includes('sandbox='), 'CoursePanel.jsx iframe has 0 restrictive sandbox attributes to ensure Google Drive media scripts execute on mobile');
+assert(videoPlayerCode.includes('hidden sm:block absolute top-0 right-0 w-28 h-16'), 'CoursePanel.jsx hides top shield on mobile so touch controls remain 100% unobstructed');
+assert(videoPlayerCode.includes('min-h-[260px]'), 'CoursePanel.jsx container enforces min-h-[260px] for proportional mobile video controls');
 console.log('\n▶ [Suite 17/17]: Google Drive Stream Uniformity & Mobile Video Source Audit');
 const courseDataFileContent = fs.readFileSync(path.join(rootDir, 'src/data/courseData.js'), 'utf8');
 assert(!courseDataFileContent.includes('dQw4w9WgXcQ'), 'courseData.js defaultContent contains 0 YouTube fallback links');
