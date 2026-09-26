@@ -1288,6 +1288,23 @@ export async function saveNewsletterSubscriberToSupabase(email, source = 'websit
       } else {
         console.log('[Supabase] Newsletter subscriber saved:', cleanEmail);
       }
+
+      // Non-blocking relay to Google Sheet (th3orymasterclass@gmail.com)
+      try {
+        fetch('/api/sync-newsletter-sheets', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'relay',
+            record: {
+              email: cleanEmail,
+              status: 'active',
+              source: source,
+              created_at: new Date().toISOString()
+            }
+          })
+        }).catch(() => {});
+      } catch {}
     } catch (err) {
       console.error('[Supabase] Exception in saveNewsletterSubscriberToSupabase:', err);
     }

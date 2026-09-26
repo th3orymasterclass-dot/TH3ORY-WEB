@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Database, CreditCard, Mail, Server, CheckCircle2, XCircle, RefreshCw, 
   Key, ShieldCheck, Send, ExternalLink, Calendar, HardDrive, GitBranch, ArrowUpRight,
-  BookOpen, Sparkles
+  BookOpen, Sparkles, FileSpreadsheet
 } from 'lucide-react';
 import { getSupabaseAnonKey, setSupabaseAnonKey, testSupabaseConnection } from '../../lib/supabase';
 import { sendTestEmail } from '../../services/emailService';
@@ -25,9 +25,94 @@ export default function IntegrationsPanel({ themeMode = 'dark' }) {
   const [razorpayStatus, setRazorpayStatus] = useState('');
   const [testingRazorpay, setTestingRazorpay] = useState(false);
 
+  // Google Sheets Sync state (th3orymasterclass@gmail.com)
+  const [sheetConfig, setSheetConfig] = useState({
+    url: '',
+    sheet_url: '',
+    account: 'th3orymasterclass@gmail.com',
+    sync_enabled: true
+  });
+  const [sheetStatus, setSheetStatus] = useState('');
+  const [syncingSheet, setSyncingSheet] = useState(false);
+  const [sheetCounts, setSheetCounts] = useState({ cognitive_dispatch: 0, tarot_subscribers: 0, total: 0 });
+
   useEffect(() => {
     runSupabaseTest(anonKey);
+    fetchSheetConfig();
   }, []);
+
+  const fetchSheetConfig = async () => {
+    try {
+      const res = await fetch('/api/sync-newsletter-sheets');
+      const d = await res.json();
+      if (d?.config) setSheetConfig(d.config);
+      if (d?.subscribers) setSheetCounts(d.subscribers);
+    } catch {}
+  };
+
+  const handleSaveSheetSettings = async (e) => {
+    if (e) e.preventDefault();
+    setSheetStatus('Saving Google Sheets configuration to Supabase...');
+    try {
+      const res = await fetch('/api/sync-newsletter-sheets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update_settings',
+          sheet_url: sheetConfig.sheet_url,
+          webhook_url: sheetConfig.url,
+          sync_enabled: sheetConfig.sync_enabled
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSheetStatus('✅ Configuration saved! Supabase pg_net database triggers updated.');
+      } else {
+        setSheetStatus('❌ Failed to save: ' + (data.error || data.message));
+      }
+    } catch (err) {
+      setSheetStatus('❌ Network error: ' + err.message);
+    }
+    setTimeout(() => setSheetStatus(''), 4500);
+  };
+
+  const handleTestSheetWebhook = async () => {
+    setSheetStatus('Sending verification ping to Google Apps Script Webhook...');
+    try {
+      const res = await fetch('/api/sync-newsletter-sheets?action=test_webhook');
+      const data = await res.json();
+      if (data.success) {
+        setSheetStatus('✅ Google Apps Script Webhook verified! Test row inserted into Google Sheet.');
+      } else {
+        setSheetStatus('❌ Webhook test failed: ' + (data.error || data.message));
+      }
+    } catch (err) {
+      setSheetStatus('❌ Error reaching webhook: ' + err.message);
+    }
+  };
+
+  const handleTriggerFullSheetSync = async () => {
+    setSyncingSheet(true);
+    setSheetStatus('Initiating full subscriber synchronization from Supabase to Google Sheet...');
+    try {
+      const res = await fetch('/api/sync-newsletter-sheets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'sync_all' })
+      });
+      const data = await res.json();
+      setSyncingSheet(false);
+      if (data.success) {
+        setSheetStatus(`✅ Successfully synced ${data.count} subscribers to Google Sheet!`);
+        fetchSheetConfig();
+      } else {
+        setSheetStatus('❌ Sync failed: ' + (data.error || data.message));
+      }
+    } catch (err) {
+      setSyncingSheet(false);
+      setSheetStatus('❌ Network error: ' + err.message);
+    }
+  };
 
   const runSupabaseTest = async (keyToUse) => {
     setTestingSupabase(true);
@@ -249,6 +334,149 @@ export default function IntegrationsPanel({ themeMode = 'dark' }) {
             <ArrowUpRight className="w-3.5 h-3.5" />
           </a>
         </div>
+      </div>
+
+      {/* Google Sheets Newsletter Sync Engine Card (th3orymasterclass@gmail.com) */}
+      <div className={`border rounded-2xl p-6 space-y-5 shadow-xs ${
+        isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200'
+      }`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center shrink-0">
+              <FileSpreadsheet className="w-5 h-5 text-emerald-500" />
+            </div>
+            <div>
+              <h3 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-slate-900'}`}>Google Sheets Newsletter Synchronization</h3>
+              <p className={`text-xs font-mono ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Target Account: th3orymasterclass@gmail.com</p>
+            </div>
+          </div>
+          <span className="px-2.5 py-1 rounded-full text-xs font-mono font-bold uppercase border bg-emerald-500/20 text-emerald-400 border-emerald-500/30 flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            PG_NET TRIGGER ACTIVE
+          </span>
+        </div>
+
+        <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+          Asynchronously replicates subscriber signups from Supabase <code className="font-mono text-emerald-400 font-bold">newsletter_subscribers</code> and <code className="font-mono text-emerald-400 font-bold">tarot_newsletter</code> directly into your Google Sheet. Includes hourly background auto-sync and custom Google Sheets toolbar actions.
+        </p>
+
+        {/* Sync Counts Bar */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className={`p-3 rounded-xl border text-xs ${isDark ? 'bg-slate-950/60 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+            <span className="text-slate-500 block text-[11px]">Cognitive Dispatch Leads</span>
+            <span className="font-mono font-bold text-sm text-emerald-400">{sheetCounts.cognitive_dispatch || 0}</span>
+          </div>
+          <div className={`p-3 rounded-xl border text-xs ${isDark ? 'bg-slate-950/60 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+            <span className="text-slate-500 block text-[11px]">Tarot Booking Leads</span>
+            <span className="font-mono font-bold text-sm text-purple-400">{sheetCounts.tarot_subscribers || 0}</span>
+          </div>
+          <div className={`p-3 rounded-xl border text-xs ${isDark ? 'bg-slate-950/60 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+            <span className="text-slate-500 block text-[11px]">Total Subscribers Tracked</span>
+            <span className="font-mono font-bold text-sm text-white">{sheetCounts.total || 0}</span>
+          </div>
+        </div>
+
+        {/* URL Inputs */}
+        <div className="space-y-3">
+          <div>
+            <label className={`block text-xs font-bold mb-1 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+              Google Sheet URL (Spreadsheet)
+            </label>
+            <input
+              type="url"
+              value={sheetConfig.sheet_url || ''}
+              onChange={e => setSheetConfig({ ...sheetConfig, sheet_url: e.target.value })}
+              placeholder="https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit"
+              className={`w-full border rounded-xl px-3 py-2 text-xs font-mono ${
+                isDark ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+              }`}
+            />
+          </div>
+
+          <div>
+            <label className={`block text-xs font-bold mb-1 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+              Google Apps Script Webhook URL (doPost)
+            </label>
+            <input
+              type="url"
+              value={sheetConfig.url || ''}
+              onChange={e => setSheetConfig({ ...sheetConfig, url: e.target.value })}
+              placeholder="https://script.google.com/macros/s/AKfycb.../exec"
+              className={`w-full border rounded-xl px-3 py-2 text-xs font-mono ${
+                isDark ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+              }`}
+            />
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          <button
+            onClick={handleSaveSheetSettings}
+            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shadow-md"
+          >
+            <span>Save Settings</span>
+          </button>
+
+          {sheetConfig.url && (
+            <button
+              onClick={handleTestSheetWebhook}
+              className={`px-3 py-2 rounded-xl text-xs font-bold border flex items-center gap-1.5 transition-all cursor-pointer ${
+                isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+              }`}
+            >
+              <span>Test Webhook Ping</span>
+            </button>
+          )}
+
+          <button
+            onClick={handleTriggerFullSheetSync}
+            disabled={syncingSheet}
+            className={`px-3 py-2 rounded-xl text-xs font-bold border flex items-center gap-1.5 transition-all cursor-pointer ${
+              isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+            }`}
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-emerald-500 ${syncingSheet ? 'animate-spin' : ''}`} />
+            <span>{syncingSheet ? 'Syncing...' : 'Sync All Subscribers Now'}</span>
+          </button>
+
+          {sheetConfig.sheet_url && (
+            <a
+              href={sheetConfig.sheet_url}
+              target="_blank"
+              rel="noreferrer"
+              className={`px-3 py-2 rounded-xl text-xs font-bold border flex items-center gap-1.5 transition-all ${
+                isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+              }`}
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Open Google Sheet</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </a>
+          )}
+
+          <a
+            href="https://sheets.new"
+            target="_blank"
+            rel="noreferrer"
+            className={`px-3 py-2 rounded-xl text-xs font-bold border flex items-center gap-1.5 transition-all ${
+              isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+            }`}
+          >
+            <span>Create New Sheet (sheets.new)</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        </div>
+
+        {sheetStatus && (
+          <div className={`p-3 rounded-xl border text-xs font-mono ${
+            sheetStatus.startsWith('✅')
+              ? (isDark ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300' : 'bg-emerald-50 border-emerald-200 text-emerald-800')
+              : (isDark ? 'bg-slate-950 border-slate-800 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-800')
+          }`}>
+            {sheetStatus}
+          </div>
+        )}
       </div>
 
       {/* Obsidian Knowledge Vault & Antigravity MCP Card */}

@@ -18,6 +18,7 @@ All core external services, database replication layers, payment gateways, and s
 | **Resend** | Transactional Email | Student credentials, purchase receipts, BIMI-signed dispatch | 🟢 Active Serverless |
 | **Calendly** | Executive Scheduling | VIP 1-on-1 mentorship strategy calls with Mentalist Sravan | 🟢 Authorized Token |
 | **Google Drive** | Master Cloud Storage | Video streams, action sheets, workbooks (`th3orymasterclass@gmail.com`) | 🟢 Live Embedded Folder |
+| **Google Sheets** | Live CRM & Sync Engine | Newsletter subscribers real-time replication (`th3orymasterclass@gmail.com`) | 🟢 Trigger & Script Ready |
 | **Vercel** | Edge Hosting & Serverless | Next-gen edge CDN, API routes, security headers, custom domain | 🟢 Automated CI/CD |
 | **GitHub** | Version Control | Automated repository pushes triggering Vercel production builds | 🟢 Linked PAT |
 | **Obsidian Vault** | Knowledge Base & MCP | Local second brain (`E:\TH3ORY\TH3ORY`), Copilot skills, codebase backup | 🟢 Connected & Synced |
@@ -88,6 +89,16 @@ The table below lists all live credentials and environment variables required fo
 
 ---
 
+### H. Google Sheets Newsletter Synchronization
+| Resource / Config Name | Value / Identifier | Linked Identity | Consuming Files & Scripts |
+| :--- | :--- | :--- | :--- |
+| **Google Apps Script** | `google-sheets/TH3ORY_Supabase_Google_Sheet_Sync.gs` | `th3orymasterclass@gmail.com` | Google Sheets custom menu, Apps Script hourly trigger, `doPost` webhook |
+| **Supabase pg_net Trigger** | `trg_newsletter_google_sheet_sync` | PostgreSQL Extension `pg_net` | `public.newsletter_subscribers`, `public.tarot_newsletter` |
+| **Serverless Relay API** | `/api/sync-newsletter-sheets` | Vercel Edge Serverless | `src/admin/panels/NewsletterPanel.jsx`, `src/admin/panels/IntegrationsPanel.jsx` |
+| **Config Setting Key** | `google_sheet_newsletter_webhook_url` | Supabase `site_settings` | Holds live webhook URL, spreadsheet link, and sync timestamps |
+
+---
+
 ## 3. Detailed Architecture for Each Integration
 
 ### 1. Supabase Database & Realtime Sync
@@ -149,6 +160,15 @@ The table below lists all live credentials and environment variables required fo
   - `copilot-youtube-transcript`: Video lesson transcript processing
   - `copilot-web-fetch` & `copilot-web-search`: Real-time web retrieval
 - **Backup Pipeline**: 1-click automated site backup via `npm run backup:obsidian` (`scripts/sync-obsidian-vault.js`), maintaining a full replica of all source code, API routes, SQL migrations, scripts, and documentation in `E:\TH3ORY\TH3ORY\Backup`.
+
+### 8. Google Sheets Live Newsletter Sync Engine
+- **Target Account**: `th3orymasterclass@gmail.com`
+- **Tables Connected**: `public.newsletter_subscribers`, `public.tarot_newsletter`
+- **Synchronization Layers**:
+  1. **PostgreSQL Database Trigger (`pg_net`)**: When a subscriber signs up or updates their status, Supabase executes `handle_newsletter_google_sheet_sync()`, firing an asynchronous HTTP POST via `net.http_post()` directly to the Google Apps Script Web App.
+  2. **Google Apps Script (`doPost` Webhook)**: Appends or updates the subscriber record in real-time at Row 2, formatting status chips and calculating UTC and IST timestamps.
+  3. **Background Hourly Auto-Sync**: Built-in Google Apps Script time-driven trigger scheduled via `🚀 TH3ORY Masterclass` > `⏱️ Enable Automatic Hourly Sync`.
+  4. **Admin Dashboard Controls**: Admins can trigger manual bulk sync, test the webhook signal, or launch the Google Sheet in one click from the Admin Portal.
 
 ---
 
