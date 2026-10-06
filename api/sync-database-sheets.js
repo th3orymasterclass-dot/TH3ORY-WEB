@@ -41,12 +41,23 @@ export default async function handler(req, res) {
         .eq('setting_key', 'google_sheets_master_database_config')
         .maybeSingle();
 
+      // Fallback check to legacy newsletter webhook setting if master is empty
+      let legacyUrl = '';
+      if (!data?.setting_value?.webhook_url) {
+        const { data: legacyData } = await supabase
+          .from('site_settings')
+          .select('setting_value')
+          .eq('setting_key', 'google_sheet_newsletter_webhook_url')
+          .maybeSingle();
+        legacyUrl = legacyData?.setting_value?.url || '';
+      }
+
       return data?.setting_value || {
         account: 'th3orymasterclass@gmail.com',
         gdrive_folder_id: '1DoY9B2SnUePocY7y4CAf1Z-uWMAcdPSM',
         gdrive_folder_url: 'https://drive.google.com/drive/project/1DoY9B2SnUePocY7y4CAf1Z-uWMAcdPSM?usp=sharing',
         sheet_url: '',
-        webhook_url: '',
+        webhook_url: legacyUrl || '',
         sync_enabled: true,
         last_sync_all_at: null,
         table_sync_timestamps: {}
@@ -174,12 +185,41 @@ export default async function handler(req, res) {
         }
       }
 
+      const newsCount = tableCatalog.find(t => t.table === 'newsletter_subscribers')?.count || 0;
+      const tarotCount = tableCatalog.find(t => t.table === 'tarot_newsletter')?.count || 0;
+
+      // Legacy newsletter response compatibility
+      if (action === 'newsletter' || req.query?.legacy === 'newsletter') {
+        return res.status(200).json({
+          success: true,
+          account: 'th3orymasterclass@gmail.com',
+          supabase_project: 'qngzfcpnjpabaornddau',
+          config: {
+            ...config,
+            url: config.webhook_url || ''
+          },
+          subscribers: {
+            cognitive_dispatch: newsCount,
+            tarot_subscribers: tarotCount,
+            total: newsCount + tarotCount
+          }
+        });
+      }
+
       return res.status(200).json({
         success: true,
         operations_system: 'TH3ORY Supabase GDrive Sheets Sync Engine',
         account: config.account || 'th3orymasterclass@gmail.com',
         gdrive_folder_id: config.gdrive_folder_id || '1DoY9B2SnUePocY7y4CAf1Z-uWMAcdPSM',
-        config,
+        config: {
+          ...config,
+          url: config.webhook_url || ''
+        },
+        subscribers: {
+          cognitive_dispatch: newsCount,
+          tarot_subscribers: tarotCount,
+          total: newsCount + tarotCount
+        },
         stats: {
           total_tables: TABLE_METADATA.length,
           accessible_tables: tableCatalog.filter(t => t.accessible).length,
@@ -193,12 +233,65 @@ export default async function handler(req, res) {
     }
   }
 
-  // ─── POST: Sync Actions (Save Config, Sync Single Table, Sync All) ─────────
+  // ─── POST: Sync Actions (Save Config, Sync Single Table, Sync All, Relay) ──
   if (req.method === 'POST') {
     try {
       const body = req.body || {};
       const action = body.action || 'sync_table';
       const config = await getMasterConfig();
+
+      // Legacy newsletter single subscriber relay
+      if (action === 'relay' || action === 'new_subscriber') {
+        const subscriber = body.record || body.subscriber || body;
+        const targetUrl = config.webhook_url;
+
+        if (!targetUrl || config.sync_enabled === false) {
+          return res.status(200).json({
+            success: true,
+            relayed: false,
+            message: 'Webhook URL not configured or sync disabled'
+          });
+        }
+
+        try {
+          const gRes = await fetch(targetUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              event: 'INSERT',
+              table: body.table || 'newsletter_subscribers',
+              record: subscriber
+            })
+          });
+          const gJson = await gRes.json().catch(() => ({}));
+          return res.status(200).json({ success: true, relayed: true, response: gJson });
+        } catch (relayErr) {
+          return res.status(502).json({ success: false, error: relayErr.message });
+        }
+      }
+
+      // Legacy newsletter settings update
+      if (action === 'update_settings') {
+        const { sheet_url, webhook_url, sync_enabled } = body;
+        const updated = {
+          ...config,
+          sheet_url: sheet_url !== undefined ? sheet_url.trim() : config.sheet_url,
+          webhook_url: webhook_url !== undefined ? webhook_url.trim() : config.webhook_url,
+          sync_enabled: sync_enabled !== undefined ? Boolean(sync_enabled) : config.sync_enabled,
+          updated_at: new Date().toISOString()
+        };
+
+        await supabase.from('site_settings').upsert([
+          { setting_key: 'google_sheets_master_database_config', setting_value: updated, updated_at: new Date().toISOString() },
+          { setting_key: 'google_sheet_newsletter_webhook_url', setting_value: { url: updated.webhook_url, sheet_url: updated.sheet_url, sync_enabled: updated.sync_enabled }, updated_at: new Date().toISOString() }
+        ], { onConflict: 'setting_key' });
+
+        return res.status(200).json({
+          success: true,
+          message: 'Google Sheets sync configuration saved successfully',
+          config: updated
+        });
+      }
 
       // 1. Save Configuration
       if (action === 'save_config') {

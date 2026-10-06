@@ -4,7 +4,7 @@ import adminLoginHandler from '../api/admin-login.js';
 import featureFlagsHandler from '../api/feature-flags.js';
 import sendEmailHandler from '../api/send-email.js';
 import dpdpHandler from '../api/dpdp.js';
-import updateProfileHandler from '../api/update-student-profile.js';
+import { updateProfileHandler } from '../api/student-auth.js';
 
 let passed = 0;
 let failed = 0;

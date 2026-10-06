@@ -28,6 +28,14 @@
       "destination": "/api/verify-certificate?action=stream-key"
     },
     {
+      "source": "/api/update-student-profile",
+      "destination": "/api/student-auth?action=update-profile"
+    },
+    {
+      "source": "/api/sync-newsletter-sheets",
+      "destination": "/api/sync-database-sheets?legacy=newsletter"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/$1"
     },

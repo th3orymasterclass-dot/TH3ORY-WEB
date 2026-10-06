@@ -1,1 +1,16 @@
-{"projectId":"prj_xHnB6qFaKtsmIgphJOCSnUKia7hV","orgId":"team_JHMpNEuQBifHnc9Z5MVuqyhc","projectName":"th3ory"}
+{
+  "projectId": "prj_xHnB6qFaKtsmIgphJOCSnUKia7hV",
+  "orgId": "team_JHMpNEuQBifHnc9Z5MVuqyhc",
+  "projectName": "th3ory",
+  "settings": {
+    "createdAt": 1786784986304,
+    "framework": "vite",
+    "devCommand": null,
+    "installCommand": null,
+    "buildCommand": "npm run build",
+    "outputDirectory": "dist",
+    "rootDirectory": null,
+    "directoryListing": false,
+    "nodeVersion": "24.x"
+  }
+}

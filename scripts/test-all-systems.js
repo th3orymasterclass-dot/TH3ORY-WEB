@@ -178,7 +178,6 @@ const newApiFiles = [
   'api/student-auth.js',
   'api/validate-coupon.js',
   'api/verify-certificate.js',
-  'api/update-student-profile.js',
   'api/upload-blob.js'
 ];
 
@@ -187,6 +186,9 @@ for (const file of newApiFiles) {
   const exists = fs.existsSync(filePath);
   assert(exists, `Serverless API handler file exists: ${file}`);
 }
+
+const studentAuthCode = fs.readFileSync(path.join(rootDir, 'api/student-auth.js'), 'utf8');
+assert(studentAuthCode.includes('updateProfileHandler'), 'api/student-auth.js integrates student profile update handler');
 
 
 // ── Test Suite 8: Server-Side Price & Coupon Calculation Audit ──────────────
