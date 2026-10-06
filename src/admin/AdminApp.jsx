@@ -4,7 +4,7 @@ import {
   Sliders, ShieldCheck, Sun, Moon, Type, Flame, BookOpen, FolderOpen,
   Star, User, Gift, Target, Video, ChevronRight, ChevronDown, Menu, X, ExternalLink, 
   LogOut, Shield, Users, Calendar, BarChart3, Sparkles, MessageSquare, GraduationCap,
-  Search, ChevronsUpDown, Share2, FileText, Layers
+  Search, ChevronsUpDown, Share2, FileText, Layers, FileSpreadsheet
 } from 'lucide-react';
 import useAdminData from './useAdminData';
 import OverviewPanel       from './panels/OverviewPanel';
@@ -45,6 +45,7 @@ import ReferralTrackingPanel from './panels/ReferralTrackingPanel';
 import CommunityAdminPanel from './panels/CommunityAdminPanel';
 import BlogPanel from './panels/BlogPanel';
 import ContentHubPanel from './panels/ContentHubPanel';
+import DatabaseSheetsOperationsPanel from './panels/DatabaseSheetsOperationsPanel';
 
 export const NAV_CATEGORIES = [
   {
@@ -115,9 +116,10 @@ export const NAV_CATEGORIES = [
   },
   {
     id: 'communications',
-    title: 'Communications & System',
+    title: 'Communications & Operations',
     icon: Mail,
     items: [
+      { id: 'gdrive_sheets_ops',  label: 'GDrive Database Sheets Sync', icon: FileSpreadsheet },
       { id: 'email_dispatcher',   label: 'Resend Email System',        icon: Mail },
       { id: 'newsletter',         label: 'Newsletter Subscribers',     icon: Mail },
       { id: 'integrations',       label: 'Integrations & API',         icon: Database },
@@ -388,6 +390,7 @@ export default function AdminApp({ onLogout }) {
         />
       );
       case 'integrations':       return <IntegrationsPanel themeMode={themeMode} />;
+      case 'gdrive_sheets_ops':  return <DatabaseSheetsOperationsPanel themeMode={themeMode} />;
       default:                   return (
         <OverviewPanel 
           data={data} 

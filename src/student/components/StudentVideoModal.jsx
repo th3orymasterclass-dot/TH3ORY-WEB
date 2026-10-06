@@ -90,7 +90,7 @@ export default function StudentVideoModal({
 
         {/* Video Player Container */}
         <div
-          className="w-full relative min-h-[260px] sm:min-h-0 sm:aspect-video h-[45vh] max-h-[440px] sm:h-auto bg-black rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-purple-950/20 selection:bg-none select-none group"
+          className="w-full relative min-h-[260px] sm:min-h-0 sm:aspect-video h-[45vh] max-h-[420px] sm:h-auto bg-black rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-purple-950/20 selection:bg-none select-none group"
           onContextMenu={(e) => e.preventDefault()}
         >
           {/* Desktop Top-Right Shield Overlay: Prevents pop-out on desktop without obscuring mobile touch controls */}
@@ -137,7 +137,7 @@ export default function StudentVideoModal({
 
           <div className="flex items-center gap-3">
             <span className="text-amber-400/90 font-light text-[10px]">
-              📱 Rotate phone to landscape for theatre controls
+              📱 Rotate phone to landscape for full controls
             </span>
             <span className="text-slate-400 font-light flex items-center gap-1">
               <Shield className="w-3 h-3 text-slate-400" /> Protected View

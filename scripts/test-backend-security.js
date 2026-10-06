@@ -1,5 +1,5 @@
 import { signJwt, verifyJwt, requireAdminAuth, requireStudentAuth } from '../api/_lib/auth.js';
-import { safeCompare, sanitizeForCsv, escapeHtml, checkRateLimit } from '../api/_lib/security.js';
+import { safeCompare, sanitizeForCsv, escapeHtml, checkRateLimit, checkRecipientRateLimit, setStrictCorsHeaders } from '../api/_lib/security.js';
 import adminLoginHandler from '../api/admin-login.js';
 import featureFlagsHandler from '../api/feature-flags.js';
 import sendEmailHandler from '../api/send-email.js';
@@ -34,6 +34,7 @@ function createMockReqRes({ method = 'GET', headers = {}, query = {}, body = {} 
   };
 
   const res = {
+    headersSent,
     setHeader(k, v) { headersSent[k] = v; },
     status(code) {
       statusCode = code;
@@ -152,6 +153,41 @@ async function runSecuritySuite() {
   }
   const blockedCheck = checkRateLimit(rateLimitKey, 5, 60000);
   assert(blockedCheck.allowed === false, 'Rate limiter correctly blocks requests exceeding threshold');
+
+  // TEST SUITE 8: Content Security Policy & Strict Security Headers
+  console.log('\n--- TEST SUITE 8: CSP & Security Header Defenses ---');
+  const mockCorsReqRes = createMockReqRes({ method: 'GET', headers: { origin: 'https://th3ory.online' } });
+  setStrictCorsHeaders(mockCorsReqRes.req, mockCorsReqRes.res);
+  const sentHeaders = mockCorsReqRes.res.headersSent || {};
+  assert(Boolean(sentHeaders['Content-Security-Policy']), 'setStrictCorsHeaders attaches Content-Security-Policy header');
+  assert(Boolean(sentHeaders['Permissions-Policy']), 'setStrictCorsHeaders attaches Permissions-Policy header');
+  assert(sentHeaders['X-Frame-Options'] === 'SAMEORIGIN', 'setStrictCorsHeaders enforces X-Frame-Options: SAMEORIGIN');
+  assert(sentHeaders['X-Content-Type-Options'] === 'nosniff', 'setStrictCorsHeaders enforces nosniff');
+
+  // TEST SUITE 9: Recipient Email Rate Limiting (Inbox Bomb Defense)
+  console.log('\n--- TEST SUITE 9: Recipient Rate Limiting (Spam Relay Defense) ---');
+  const testRecipient = `victim_${Date.now()}@example.com`;
+  assert(checkRecipientRateLimit(testRecipient, 2, 60000).allowed === true, 'First email to recipient is permitted');
+  assert(checkRecipientRateLimit(testRecipient, 2, 60000).allowed === true, 'Second email to recipient is permitted');
+  assert(checkRecipientRateLimit(testRecipient, 2, 60000).allowed === false, 'Third email to recipient is blocked by rate limit');
+
+  // TEST SUITE 10: DPDP Consent PII Leakage Defense
+  console.log('\n--- TEST SUITE 10: DPDP Unauthenticated Consent Query Protection ---');
+  const mockConsentNoAuth = createMockReqRes({
+    method: 'GET',
+    query: { action: 'consent', email: 'alice@th3ory.online' }
+  });
+  await dpdpHandler(mockConsentNoAuth.req, mockConsentNoAuth.res);
+  assert(mockConsentNoAuth.res._getStatusCode() === 401, 'GET /api/dpdp?action=consent blocks unauthenticated requests (401)');
+
+  // TEST SUITE 11: Admin Login Bad Password Rejection
+  console.log('\n--- TEST SUITE 11: Admin Login Rejection of Invalid Passwords ---');
+  const mockLoginBad = createMockReqRes({
+    method: 'POST',
+    body: { password: 'wrong_password_attempt' }
+  });
+  await adminLoginHandler(mockLoginBad.req, mockLoginBad.res);
+  assert(mockLoginBad.res._getStatusCode() === 401, 'POST /api/admin-login rejects wrong password with 401');
 
   console.log(`\n======================================================`);
   console.log(`RESULTS: ${passed} Passed, ${failed} Failed`);

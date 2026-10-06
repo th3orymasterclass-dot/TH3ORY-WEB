@@ -89,13 +89,16 @@ The table below lists all live credentials and environment variables required fo
 
 ---
 
-### H. Google Sheets Newsletter Synchronization
+### H. Google Sheets & Google Drive Operations System (Master Database)
 | Resource / Config Name | Value / Identifier | Linked Identity | Consuming Files & Scripts |
 | :--- | :--- | :--- | :--- |
-| **Google Apps Script** | `google-sheets/TH3ORY_Supabase_Google_Sheet_Sync.gs` | `th3orymasterclass@gmail.com` | Google Sheets custom menu, Apps Script hourly trigger, `doPost` webhook |
-| **Supabase pg_net Trigger** | `trg_newsletter_google_sheet_sync` | PostgreSQL Extension `pg_net` | `public.newsletter_subscribers`, `public.tarot_newsletter` |
-| **Serverless Relay API** | `/api/sync-newsletter-sheets` | Vercel Edge Serverless | `src/admin/panels/NewsletterPanel.jsx`, `src/admin/panels/IntegrationsPanel.jsx` |
-| **Config Setting Key** | `google_sheet_newsletter_webhook_url` | Supabase `site_settings` | Holds live webhook URL, spreadsheet link, and sync timestamps |
+| **Master Google Apps Script** | `google-sheets/TH3ORY_Supabase_Master_Sheets_Sync.gs` | `th3orymasterclass@gmail.com` | Full multi-table database sync into 20 dedicated tabs, auto-styling |
+| **Newsletter Google Apps Script** | `google-sheets/TH3ORY_Supabase_Google_Sheet_Sync.gs` | `th3orymasterclass@gmail.com` | Dedicated newsletter & tarot subscriber fast sync |
+| **Master Operations Panel** | `src/admin/panels/DatabaseSheetsOperationsPanel.jsx` | Admin Portal | Executive dashboard for table syncs, row auditing & CSV exports |
+| **Master Sync API Endpoint** | `/api/sync-database-sheets` | Vercel Edge Serverless | Queries Supabase tables, serializes IST dates, dispatches to webhook |
+| **Master Sync CLI Script** | `scripts/sync-supabase-to-gdrive-sheets.js` (`npm run sync:gdrive`) | CLI / Cron | Command-line full/single table sync, local backups, dry run audit |
+| **Master GDrive Folder ID** | `1DoY9B2SnUePocY7y4CAf1Z-uWMAcdPSM` | `th3orymasterclass@gmail.com` | Target folder for the Google Spreadsheet master file |
+| **Config Setting Key** | `google_sheets_master_database_config` | Supabase `site_settings` | Holds master spreadsheet URL, webhook URL, and sync audit dates |
 
 ---
 

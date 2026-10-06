@@ -24,7 +24,8 @@ function assert(condition, description) {
 }
 
 const coursePanelPath = path.join(rootDir, 'src/student/panels/CoursePanel.jsx');
-const coursePanelContent = fs.readFileSync(coursePanelPath, 'utf8');
+const videoModalPath = path.join(rootDir, 'src/student/components/StudentVideoModal.jsx');
+const coursePanelContent = (fs.existsSync(videoModalPath) ? fs.readFileSync(videoModalPath, 'utf8') : '') + '\n' + fs.readFileSync(coursePanelPath, 'utf8');
 
 // 1. Mobile Portrait Viewport Height Simulation
 console.log('▶ [Simulation 1/4]: Mobile Portrait Viewport (360px - 412px Width)');

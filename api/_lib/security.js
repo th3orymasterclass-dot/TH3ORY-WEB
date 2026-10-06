@@ -67,12 +67,51 @@ export function setStrictCorsHeaders(req, res) {
   );
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self' https://th3ory.online https://www.th3ory.online; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://assets.calendly.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://assets.calendly.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://qngzfcpnjpabaornddau.supabase.co wss://qngzfcpnjpabaornddau.supabase.co https://api.razorpay.com https://assets.calendly.com https://*.vercel-storage.com https://script.google.com https://script.googleusercontent.com; frame-src 'self' https://api.razorpay.com https://calendly.com https://drive.google.com https://docs.google.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self';"
+  );
+  res.setHeader(
+    'Permissions-Policy',
+    "camera=(), microphone=(), geolocation=(), payment=(self 'https://api.razorpay.com')"
+  );
 
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return true;
   }
   return false;
+}
+
+// In-memory recipient email rate limit store
+const recipientRateLimitStore = new Map();
+
+/**
+ * Enforce rate limits per recipient email to prevent inbox bombing and open relay abuse
+ * @param {string} email
+ * @param {number} maxEmails default 3 per window
+ * @param {number} windowMs default 10 minutes
+ * @returns {{ allowed: boolean, remaining: number, resetTime: number }}
+ */
+export function checkRecipientRateLimit(email, maxEmails = 3, windowMs = 10 * 60 * 1000) {
+  if (!email || typeof email !== 'string') return { allowed: true, remaining: maxEmails, resetTime: Date.now() + windowMs };
+  const cleanEmail = email.trim().toLowerCase();
+  const now = Date.now();
+  const existing = recipientRateLimitStore.get(cleanEmail);
+
+  if (!existing || existing.resetTime <= now) {
+    const record = { count: 1, resetTime: now + windowMs };
+    recipientRateLimitStore.set(cleanEmail, record);
+    return { allowed: true, remaining: maxEmails - 1, resetTime: record.resetTime };
+  }
+
+  if (existing.count >= maxEmails) {
+    return { allowed: false, remaining: 0, resetTime: existing.resetTime };
+  }
+
+  existing.count += 1;
+  return { allowed: true, remaining: maxEmails - existing.count, resetTime: existing.resetTime };
 }
 
 /**

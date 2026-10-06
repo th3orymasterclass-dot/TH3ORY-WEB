@@ -18,7 +18,8 @@
     "test:dr:staging": "node scripts/test-failure-modes.js",
     "audit:resilience": "node scripts/audit-resilience.js",
     "test:all": "node scripts/test-all-systems.js && node scripts/test-rigorous-edge-cases.js",
-    "backup:obsidian": "node scripts/sync-obsidian-vault.js"
+    "backup:obsidian": "node scripts/sync-obsidian-vault.js",
+    "sync:gdrive": "node scripts/sync-supabase-to-gdrive-sheets.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",

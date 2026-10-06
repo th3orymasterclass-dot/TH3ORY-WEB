@@ -54,11 +54,14 @@ export default async function handler(req, res) {
         return res.status(200).json({ success: true, count: records.length });
       }
 
-      // GET: Get consent status
+      // GET: Get consent status (Requires Student or Admin Authentication)
       const { email } = req.query || {};
       if (!email) return res.status(400).json({ success: false, error: 'Email parameter required' });
 
       const cleanEmail = String(email).trim().toLowerCase();
+
+      const authUser = requireStudentAuth(req, res, cleanEmail);
+      if (!authUser) return; // 401/403 sent
 
       if (supabase) {
         const { data, error } = await supabase
@@ -67,7 +70,15 @@ export default async function handler(req, res) {
           .eq('email', cleanEmail)
           .order('created_at', { ascending: false });
         if (error) throw error;
-        return res.status(200).json({ success: true, records: data || [] });
+
+        // Mask raw IP and user agent unless requested by verified administrator
+        const sanitized = (data || []).map(r => ({
+          ...r,
+          ip_address: authUser.role === 'admin' ? r.ip_address : '[PROTECTED]',
+          user_agent: authUser.role === 'admin' ? r.user_agent : '[PROTECTED]'
+        }));
+
+        return res.status(200).json({ success: true, records: sanitized });
       }
       return res.status(200).json({ success: true, records: [] });
     }

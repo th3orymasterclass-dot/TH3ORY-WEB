@@ -1,6 +1,20 @@
 import crypto from 'crypto';
 
-const JWT_SECRET = process.env.JWT_SECRET || process.env.ADMIN_JWT_SECRET || process.env.RAZORPAY_KEY_SECRET || 'th3ory_jwt_production_master_secret_2026';
+function getEffectiveJwtSecret() {
+  const envSecret = process.env.JWT_SECRET || process.env.ADMIN_JWT_SECRET;
+  if (envSecret && envSecret.trim().length >= 32) {
+    return envSecret.trim();
+  }
+  if (process.env.RAZORPAY_KEY_SECRET && process.env.RAZORPAY_KEY_SECRET.trim().length >= 16) {
+    return process.env.RAZORPAY_KEY_SECRET.trim();
+  }
+  if (process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production') {
+    console.error('[CRITICAL SECURITY ALERT]: JWT_SECRET is missing or has low entropy (<32 chars) in production! Please define a strong random 256-bit JWT_SECRET.');
+  }
+  return envSecret || 'th3ory_jwt_production_master_secret_2026';
+}
+
+const JWT_SECRET = getEffectiveJwtSecret();
 
 /**
  * Sign an HMAC SHA-256 JWT

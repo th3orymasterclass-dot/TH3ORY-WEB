@@ -1,6 +1,6 @@
 import { Resend } from 'resend';
 import { requireAdminAuth } from './_lib/auth.js';
-import { setStrictCorsHeaders, escapeHtml, checkRateLimit, getClientIp } from './_lib/security.js';
+import { setStrictCorsHeaders, escapeHtml, checkRateLimit, checkRecipientRateLimit, getClientIp } from './_lib/security.js';
 
 export default async function handler(req, res) {
   if (setStrictCorsHeaders(req, res)) return;
@@ -18,6 +18,12 @@ export default async function handler(req, res) {
   const receipt = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
   if (!receipt || (!receipt.email && !receipt.to)) {
     return res.status(400).json({ success: false, error: 'Missing recipient email in request payload' });
+  }
+
+  const targetRecipient = String(receipt.email || (Array.isArray(receipt.to) ? receipt.to[0] : receipt.to) || '').trim().toLowerCase();
+  const recipientCheck = checkRecipientRateLimit(targetRecipient, 3, 10 * 60 * 1000);
+  if (!recipientCheck.allowed) {
+    return res.status(429).json({ success: false, error: 'Recipient email dispatch threshold reached. Please wait before retrying.' });
   }
 
   // Enforce Admin Auth for privileged broadcast, ambassador & community emails before checking provider keys
