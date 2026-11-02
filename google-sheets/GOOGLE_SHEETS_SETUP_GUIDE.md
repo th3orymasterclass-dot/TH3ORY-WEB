@@ -3,8 +3,7 @@
 > **Target Google Account**: `th3orymasterclass@gmail.com`  
 > **Supabase Project**: `qngzfcpnjpabaornddau` (`th3orymasterclass@gmail.com's Project`)  
 > **Primary Table**: `public.newsletter_subscribers`  
-> **Secondary Table**: `public.tarot_newsletter`  
-> **Last Updated**: September 26, 2026  
+> **Last Updated**: October 11, 2026  
 
 ---
 
@@ -15,7 +14,7 @@ This integration provides a seamless, robust bridge between your Supabase databa
 ```
 ┌─────────────────────────────────┐
 │     TH3ORY Masterclass Web      │
-│  (Landing Page / Tarot Booking) │
+│     (Landing Page / Footer)     │
 └────────────────┬────────────────┘
                  │
                  ▼
@@ -122,11 +121,10 @@ If you want new subscribers to appear on your Google Sheet the exact second they
 
 The database trigger is pre-installed on your live Supabase project:
 - **Trigger**: `trg_newsletter_google_sheet_sync` on `public.newsletter_subscribers`
-- **Trigger**: `trg_tarot_newsletter_google_sheet_sync` on `public.tarot_newsletter`
 - **Function**: `public.handle_newsletter_google_sheet_sync()`
 - **Extension**: `pg_net` (PostgreSQL Network Async Client)
 
-Whenever a new record is added or updated in either table, Supabase fires an asynchronous HTTP POST to your Apps Script Web App without adding any latency to the user signup.
+Whenever a new record is added or updated in `newsletter_subscribers`, Supabase fires an asynchronous HTTP POST to your Apps Script Web App without adding any latency to the user signup.
 
 ---
 

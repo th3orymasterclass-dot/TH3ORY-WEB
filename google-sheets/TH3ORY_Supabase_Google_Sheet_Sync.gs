@@ -21,7 +21,6 @@ const TH3ORY_CONFIG = {
   SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuZ3pmY3BuanBhYmFvcm5kZGF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1Mzc2MDQsImV4cCI6MjEwMjExMzYwNH0.Uhdbtgi0uJRD2suYX67gIApvxT0o1OvNiy5RD6t6geY',
   TIMEZONE: 'Asia/Kolkata', // Indian Standard Time (IST)
   MAIN_SHEET_NAME: 'Cognitive Dispatch Newsletter',
-  TAROT_SHEET_NAME: 'Tarot Subscribers',
   ACCOUNT: 'th3orymasterclass@gmail.com'
 };
 
@@ -51,16 +50,7 @@ function syncFromSupabase() {
     'TH3ORY Cognitive Dispatch'
   );
 
-  // 2. Sync Tarot Newsletter Table (public.tarot_newsletter)
-  const tarotCount = syncTableToSheet(
-    ss,
-    'tarot_newsletter',
-    TH3ORY_CONFIG.TAROT_SHEET_NAME,
-    'Tarot Booking Flow'
-  );
-
-  const total = mainCount + tarotCount;
-  ss.toast(`Successfully synced ${total} subscribers (${mainCount} Cognitive Dispatch, ${tarotCount} Tarot) from Supabase!`, '✅ Sync Complete', 5);
+  ss.toast(`Successfully synced ${mainCount} subscribers (Cognitive Dispatch) from Supabase!`, '✅ Sync Complete', 5);
 }
 
 /**
@@ -267,9 +257,7 @@ function doPost(e) {
     }
 
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const sheetName = (payload.table === 'tarot_newsletter') 
-      ? TH3ORY_CONFIG.TAROT_SHEET_NAME 
-      : TH3ORY_CONFIG.MAIN_SHEET_NAME;
+    const sheetName = TH3ORY_CONFIG.MAIN_SHEET_NAME;
 
     let sheet = ss.getSheetByName(sheetName);
     if (!sheet) {

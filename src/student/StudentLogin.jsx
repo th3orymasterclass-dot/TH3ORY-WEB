@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { GraduationCap, Eye, EyeOff, AlertCircle, LogIn, Sparkles, Mail, Lock } from 'lucide-react';
 import { verifyStudentCodeWithSupabase, generateEnrollmentCode } from '../services/supabaseService';
 
-// Default fallback codes for local testing
-const FALLBACK_CODES = ['TH3ORY26', 'TH3ORY2026'];
+// Default fallback codes for local testing and official student accounts
+const FALLBACK_CODES = ['TH3ORY26', 'TH3ORY2026', 'SRAV2308', 'TH3-LIVE-2026'];
 
 export default function StudentLogin({ onAuthenticated, expiredNotice = false }) {
   const [email, setEmail]   = useState('');

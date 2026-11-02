@@ -181,15 +181,35 @@ export default function CoursePanel({ profile, initialLevelId, initialLessonId, 
     return studentPlanRank >= itemRank;
   };
 
-  const getLessonContent = (lessonId) =>
-    content.filter(c => c.lessonId === lessonId && c.published !== false && canAccessItem(c));
+  const getLessonContent = (lessonId, levelId) =>
+    content.filter(c => {
+      if (c.published === false || !canAccessItem(c)) return false;
+      if (c.lessonId && (c.lessonId === lessonId || c.lessonId === activeLesson?.lesson?.id)) return true;
+      if (!c.lessonId && c.levelId && (c.levelId === levelId || c.levelId === activeLevelId)) return true;
+      return false;
+    });
 
-  const getLockedContent = (lessonId) =>
-    content.filter(c => c.lessonId === lessonId && c.published !== false && !canAccessItem(c));
+  const getLockedContent = (lessonId, levelId) =>
+    content.filter(c => {
+      if (c.published === false || canAccessItem(c)) return false;
+      if (c.lessonId && (c.lessonId === lessonId || c.lessonId === activeLesson?.lesson?.id)) return true;
+      if (!c.lessonId && c.levelId && (c.levelId === levelId || c.levelId === activeLevelId)) return true;
+      return false;
+    });
 
-  const getVideoForLesson = (lessonId) => {
+  const getLevelWideResources = (levelId) =>
+    content.filter(c => {
+      if (c.published === false || !canAccessItem(c)) return false;
+      return (!c.lessonId || c.lessonId === '') && (c.levelId === levelId || !c.levelId);
+    });
+
+  const getVideoForLesson = (lessonId, levelId) => {
     // 1) Search in published content items created in Content Library
-    const c = content.find(c => c.lessonId === lessonId && c.type === 'video' && c.published !== false);
+    const c = content.find(c => 
+      c.type === 'video' && 
+      c.published !== false && 
+      (c.lessonId === lessonId || (levelId && c.levelId === levelId && !c.lessonId))
+    );
     if (c) {
       if (!canAccessItem(c)) return '__LOCKED__';
       return c?.url || null;
@@ -367,18 +387,43 @@ export default function CoursePanel({ profile, initialLevelId, initialLessonId, 
         {/* Right: Dedicated Large Lesson Workspace */}
         <div className="flex-1 min-w-0">
           {!activeLesson ? (
-            <div className={`border rounded-3xl flex flex-col items-center justify-center p-8 sm:p-12 text-center min-h-[380px] h-full transition-all ${
-              isLight ? 'bg-white border-slate-200 shadow-md' : 'glass-card-luxury border-white/10'
-            }`}>
-              <div className="w-20 h-20 rounded-3xl bg-[#FFC857]/15 border border-[#FFC857]/30 flex items-center justify-center mb-5 text-[#FFC857] shadow-xl shadow-[#FFC857]/10">
-                <BookOpen className="w-10 h-10" />
+            <div className="space-y-6">
+              <div className={`border rounded-3xl flex flex-col items-center justify-center p-8 sm:p-12 text-center min-h-[280px] transition-all ${
+                isLight ? 'bg-white border-slate-200 shadow-md' : 'glass-card-luxury border-white/10'
+              }`}>
+                <div className="w-20 h-20 rounded-3xl bg-[#FFC857]/15 border border-[#FFC857]/30 flex items-center justify-center mb-5 text-[#FFC857] shadow-xl shadow-[#FFC857]/10">
+                  <BookOpen className="w-10 h-10" />
+                </div>
+                <h3 className={`font-black text-2xl mb-2 font-serif tracking-tight ${isLight ? 'text-slate-900' : 'text-[#FAFAF7]'}`}>
+                  Select a Day module to begin
+                </h3>
+                <p className={`text-sm max-w-md leading-relaxed ${isLight ? 'text-slate-600' : 'text-[#8F94A3]'}`}>
+                  Choose any day module from the list on the left to stream masterclass video lessons, download proprietary resources, and access your interactive VS Code lab.
+                </p>
               </div>
-              <h3 className={`font-black text-2xl mb-2 font-serif tracking-tight ${isLight ? 'text-slate-900' : 'text-[#FAFAF7]'}`}>
-                Select a Day module to begin
-              </h3>
-              <p className={`text-sm max-w-md leading-relaxed ${isLight ? 'text-slate-600' : 'text-[#8F94A3]'}`}>
-                Choose any day module from the list on the left to stream masterclass video lessons, download proprietary resources, and access your interactive VS Code lab.
-              </p>
+
+              {getLevelWideResources(currentLevelObj?.id).length > 0 && (
+                <div className={`border rounded-3xl p-6 transition-all ${
+                  isLight ? 'bg-white border-slate-200/80 shadow-md' : 'glass-card-luxury border-white/10'
+                }`}>
+                  <h4 className={`font-black text-sm uppercase tracking-wider mb-4 flex items-center gap-2.5 ${
+                    isLight ? 'text-slate-900' : 'text-[#FAFAF7]'
+                  }`}>
+                    <FileText className="w-4 h-4 text-[#FFC857]" /> {currentLevelObj?.name || 'Level'} Workbooks &amp; Assets
+                  </h4>
+                  <div className="space-y-2.5">
+                    {getLevelWideResources(currentLevelObj?.id).map(item => (
+                      <ResourceCard
+                        key={item.id}
+                        item={item}
+                        isLight={isLight}
+                        onStreamResource={res => setVideoModal({ url: res.url, title: res.title })}
+                        onOpenPdf={res => setPdfModal(res)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="space-y-6" key={activeLesson.lesson.id}>
@@ -442,7 +487,7 @@ export default function CoursePanel({ profile, initialLevelId, initialLessonId, 
 
                 {/* Video Trigger Button */}
                 {(() => {
-                  const videoUrl = getVideoForLesson(activeLesson.lesson.id);
+                  const videoUrl = getVideoForLesson(activeLesson.lesson.id, activeLesson.level.id);
                   if (videoUrl === '__LOCKED__') {
                     return (
                       <div className="w-full aspect-video max-h-56 bg-black/80 rounded-2xl flex flex-col items-center justify-center border border-purple-500/30 relative overflow-hidden select-none shadow-xl">
@@ -475,7 +520,7 @@ export default function CoursePanel({ profile, initialLevelId, initialLessonId, 
               </div>
 
               {/* Resources for this lesson */}
-              {getLessonContent(activeLesson.lesson.id).length > 0 && (
+              {getLessonContent(activeLesson.lesson.id, activeLesson.level.id).length > 0 && (
                 <div className={`border rounded-3xl p-6 transition-all ${
                   isLight ? 'bg-white border-slate-200/80 shadow-md' : 'glass-card-luxury border-white/10'
                 }`}>
@@ -485,7 +530,7 @@ export default function CoursePanel({ profile, initialLevelId, initialLessonId, 
                     <FileText className="w-4 h-4 text-[#FFC857]" /> Lesson Resources &amp; Downloads
                   </h4>
                   <div className="space-y-2.5">
-                    {getLessonContent(activeLesson.lesson.id).map(item => (
+                    {getLessonContent(activeLesson.lesson.id, activeLesson.level.id).map(item => (
                       <ResourceCard
                         key={item.id}
                         item={item}
@@ -499,7 +544,7 @@ export default function CoursePanel({ profile, initialLevelId, initialLessonId, 
               )}
 
               {/* Locked resources (upgrade prompt) */}
-              {getLockedContent(activeLesson.lesson.id).length > 0 && (
+              {getLockedContent(activeLesson.lesson.id, activeLesson.level.id).length > 0 && (
                 <div className={`border border-purple-500/30 rounded-3xl p-6 ${
                   isLight ? 'bg-purple-50/60' : 'glass-card border-purple-500/30'
                 }`}>
@@ -507,7 +552,7 @@ export default function CoursePanel({ profile, initialLevelId, initialLessonId, 
                     <Lock className="w-4 h-4" /> Locked Resources — Upgrade to Unlock
                   </h4>
                   <div className="space-y-2.5">
-                    {getLockedContent(activeLesson.lesson.id).map(item => {
+                    {getLockedContent(activeLesson.lesson.id, activeLesson.level.id).map(item => {
                       const accessKey = item.access || item.accessLevel || 'enrolled';
                       return (
                         <div
@@ -533,7 +578,19 @@ export default function CoursePanel({ profile, initialLevelId, initialLessonId, 
 
               {/* Interactive 30-Day Course Task Tracker for Active Day */}
               {(() => {
-                const dayNum = parseInt((activeLesson.lesson.id || 'd1').replace('d', ''), 10) || 1;
+                let calculatedDayNum = 1;
+                let runningCount = 0;
+                for (const lvl of levels) {
+                  for (const ls of lvl.lessons) {
+                    runningCount++;
+                    if (ls.id === activeLesson.lesson.id) {
+                      calculatedDayNum = runningCount;
+                      break;
+                    }
+                  }
+                }
+                const parsedNum = parseInt((activeLesson.lesson.id || '').replace(/[^0-9]/g, ''), 10);
+                const dayNum = calculatedDayNum || (parsedNum ? parsedNum % 100 : 1);
                 return (
                   <DayTasksTracker
                     dayNumber={dayNum}

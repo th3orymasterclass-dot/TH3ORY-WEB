@@ -36,7 +36,6 @@ const TABLES_TO_SYNC = [
   { table: 'course_contents', tabName: '🎬 Course Contents', label: 'Video Lessons & Curriculum' },
   { table: 'newsletter_subscribers', tabName: '📰 Newsletter Subs', label: 'Cognitive Dispatch Newsletter' },
   { table: 'newsletter_broadcasts', tabName: '📢 Broadcasts', label: 'Newsletter Broadcasts Archive' },
-  { table: 'tarot_newsletter', tabName: '🔮 Tarot Subscribers', label: 'Tarot Subscribers' },
   { table: 'blogs', tabName: '📝 Blog Articles', label: 'Editorial Articles & Posts' },
   { table: 'ambassador_applications', tabName: '🤝 Ambassador Apps', label: 'Ambassador Applications' },
   { table: 'ambassador_leads', tabName: '🎯 Ambassador Leads', label: 'Ambassador Submitted Leads' },

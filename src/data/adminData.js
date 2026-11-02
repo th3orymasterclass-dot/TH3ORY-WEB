@@ -33,6 +33,26 @@ export function isAdminAuthenticated() {
   }
 }
 
+export function mergeContentLists(primaryList = [], secondaryList = []) {
+  const mergedMap = new Map();
+  // 1. Seed with secondaryList (e.g. defaultContent or previous local cache)
+  (secondaryList || []).forEach(item => {
+    if (!item) return;
+    const key = item.contentKey || item.id || `${item.levelId || ''}_${item.lessonId || ''}_${item.type || ''}_${item.title || ''}`;
+    mergedMap.set(key, item);
+  });
+  // 2. Overlay primaryList (e.g. newly loaded from Supabase or updated by Admin)
+  (primaryList || []).forEach(item => {
+    if (!item) return;
+    const key = item.contentKey || item.id || `${item.levelId || ''}_${item.lessonId || ''}_${item.type || ''}_${item.title || ''}`;
+    const existing = mergedMap.get(key) || {};
+    mergedMap.set(key, { ...existing, ...item });
+  });
+  return Array.from(mergedMap.values());
+}
+
+export const syncChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('th3ory_sync_channel') : null;
+
 function lsGet(key, fallback) {
   try {
     const raw = localStorage.getItem(LS_PREFIX + key);
@@ -50,6 +70,9 @@ export function lsSet(key, value) {
   localStorage.setItem(LS_PREFIX + key, JSON.stringify(value));
   // Notify same-tab listeners
   window.dispatchEvent(new CustomEvent('th3ory_data_change', { detail: { key } }));
+  try {
+    syncChannel?.postMessage({ type: 'th3ory_data_change', key });
+  } catch {}
 }
 
 export function lsReset(key) {
@@ -59,6 +82,9 @@ export function lsReset(key) {
   }
   localStorage.removeItem(LS_PREFIX + key);
   window.dispatchEvent(new CustomEvent('th3ory_data_change', { detail: { key } }));
+  try {
+    syncChannel?.postMessage({ type: 'th3ory_data_change', key });
+  } catch {}
 }
 
 export function resetAllData() {
@@ -73,6 +99,9 @@ export function resetAllData() {
   ];
   keys.forEach(k => localStorage.removeItem(LS_PREFIX + k));
   window.dispatchEvent(new CustomEvent('th3ory_data_change', { detail: { key: 'all' } }));
+  try {
+    syncChannel?.postMessage({ type: 'th3ory_data_change', key: 'all' });
+  } catch {}
 }
 
 import { useState, useEffect } from 'react';
@@ -369,13 +398,33 @@ export function useTh3oryLive() {
 
     window.addEventListener('th3ory_data_change', handler);
 
+    const storageHandler = (e) => {
+      if (e.key && e.key.startsWith(LS_PREFIX)) {
+        handler();
+      }
+    };
+    window.addEventListener('storage', storageHandler);
+
+    const channelHandler = (e) => {
+      if (e.data && e.data.type === 'th3ory_data_change') {
+        handler();
+      }
+    };
+    syncChannel?.addEventListener('message', channelHandler);
+
     // Initial Hydration from Supabase
     fetchSiteSettingsFromSupabase().then(settings => {
       if (settings) {
         Object.keys(settings).forEach(key => {
           try {
-            const val = key === 'courseDetails' ? sanitizeCourseDetails(settings[key]) : settings[key];
-            localStorage.setItem(`th3ory_admin_${key}`, JSON.stringify(val));
+            if (key === 'content' && Array.isArray(settings[key])) {
+              const currentContent = getContent();
+              const merged = mergeContentLists(settings[key], currentContent);
+              localStorage.setItem('th3ory_admin_content', JSON.stringify(merged));
+            } else {
+              const val = key === 'courseDetails' ? sanitizeCourseDetails(settings[key]) : settings[key];
+              localStorage.setItem(`th3ory_admin_${key}`, JSON.stringify(val));
+            }
           } catch {}
         });
         handler();
@@ -391,7 +440,11 @@ export function useTh3oryLive() {
 
     fetchCourseContentsFromSupabase().then(sbContent => {
       if (sbContent && sbContent.length > 0) {
-        try { localStorage.setItem('th3ory_admin_content', JSON.stringify(sbContent)); } catch {}
+        try {
+          const currentContent = getContent();
+          const merged = mergeContentLists(sbContent, currentContent);
+          localStorage.setItem('th3ory_admin_content', JSON.stringify(merged));
+        } catch {}
         handler();
       }
     });
@@ -399,8 +452,14 @@ export function useTh3oryLive() {
     // Supabase Realtime Subscriptions for Public visitors & Admin
     const unsubSettings = subscribeToSiteSettings((key, val) => {
       try {
-        const sanitizedVal = key === 'courseDetails' ? sanitizeCourseDetails(val) : val;
-        localStorage.setItem(`th3ory_admin_${key}`, JSON.stringify(sanitizedVal));
+        if (key === 'content' && Array.isArray(val)) {
+          const currentContent = getContent();
+          const merged = mergeContentLists(val, currentContent);
+          localStorage.setItem('th3ory_admin_content', JSON.stringify(merged));
+        } else {
+          const sanitizedVal = key === 'courseDetails' ? sanitizeCourseDetails(val) : val;
+          localStorage.setItem(`th3ory_admin_${key}`, JSON.stringify(sanitizedVal));
+        }
         window.dispatchEvent(new CustomEvent('th3ory_data_change', { detail: { key } }));
       } catch {}
     });
@@ -414,13 +473,17 @@ export function useTh3oryLive() {
 
     const unsubContents = subscribeToCourseContents((contentsList) => {
       try {
-        localStorage.setItem('th3ory_admin_content', JSON.stringify(contentsList));
+        const currentContent = getContent();
+        const merged = mergeContentLists(contentsList, currentContent);
+        localStorage.setItem('th3ory_admin_content', JSON.stringify(merged));
         window.dispatchEvent(new CustomEvent('th3ory_data_change', { detail: { key: 'content' } }));
       } catch {}
     });
 
     return () => {
       window.removeEventListener('th3ory_data_change', handler);
+      window.removeEventListener('storage', storageHandler);
+      syncChannel?.removeEventListener('message', channelHandler);
       unsubSettings();
       unsubReviews();
       unsubContents();

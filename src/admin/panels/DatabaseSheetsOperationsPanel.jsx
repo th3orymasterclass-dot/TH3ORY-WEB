@@ -241,7 +241,7 @@ export default function DatabaseSheetsOperationsPanel({ themeMode = 'dark' }) {
                           t.tabName?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || 
                             t.category?.toLowerCase() === selectedCategory.toLowerCase() ||
-                            (selectedCategory === 'Marketing & CMS' && (t.category === 'Marketing' || t.category === 'CMS & Editorial' || t.category === 'Tarot Flow'));
+                            (selectedCategory === 'Marketing & CMS' && (t.category === 'Marketing' || t.category === 'CMS & Editorial'));
     return matchesSearch && matchesCategory;
   });
 

@@ -18,10 +18,6 @@ ALTER TABLE IF EXISTS public.course_contents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.site_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.newsletter_subscribers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.newsletter_broadcasts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.tarot_newsletter ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.tarot_bookings ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.tarot_admin_signals ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.tarot_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.blogs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.certificates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.coupons ENABLE ROW LEVEL SECURITY;
@@ -33,7 +29,6 @@ ALTER TABLE IF EXISTS public.ambassador_leads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.ambassador_payouts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.ambassador_tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.ambassador_weekly_reports ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.community_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.team_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.team_approval_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.team_shared_assets ENABLE ROW LEVEL SECURITY;
@@ -110,18 +105,6 @@ DROP POLICY IF EXISTS "Service role full access on newsletter_subscribers" ON pu
 DROP POLICY IF EXISTS "Allow public read/insert on newsletter_broadcasts" ON public.newsletter_broadcasts;
 DROP POLICY IF EXISTS "Service role full access on newsletter_broadcasts" ON public.newsletter_broadcasts;
 
-DROP POLICY IF EXISTS "tarot_newsletter_all" ON public.tarot_newsletter;
-DROP POLICY IF EXISTS "tarot_newsletter_open_all" ON public.tarot_newsletter;
-DROP POLICY IF EXISTS "Allow public tarot signup" ON public.tarot_newsletter;
-DROP POLICY IF EXISTS "Service role full access on tarot_newsletter" ON public.tarot_newsletter;
-
--- Tarot Suite
-DROP POLICY IF EXISTS "tarot_bookings_all" ON public.tarot_bookings;
-DROP POLICY IF EXISTS "tarot_bookings_open_all" ON public.tarot_bookings;
-DROP POLICY IF EXISTS "tarot_admin_signals_all" ON public.tarot_admin_signals;
-DROP POLICY IF EXISTS "tarot_admin_signals_open_all" ON public.tarot_admin_signals;
-DROP POLICY IF EXISTS "tarot_settings_open_all" ON public.tarot_settings;
-
 -- Blogs
 DROP POLICY IF EXISTS "Public can view published blogs" ON public.blogs;
 DROP POLICY IF EXISTS "Public/Admin can delete blogs" ON public.blogs;
@@ -153,12 +136,12 @@ DROP POLICY IF EXISTS "Service role full access on ambassador_applications" ON p
 DROP POLICY IF EXISTS "Allow public read/insert on ambassador_weekly_reports" ON public.ambassador_weekly_reports;
 DROP POLICY IF EXISTS "Allow public read/insert on ambassador_leads" ON public.ambassador_leads;
 DROP POLICY IF EXISTS "Allow public read/insert on ambassador_payouts" ON public.ambassador_payouts;
+DROP POLICY IF EXISTS "ambassador_payouts_all" ON public.ambassador_payouts;
+DROP POLICY IF EXISTS "Allow submit payout requests" ON public.ambassador_payouts;
+DROP POLICY IF EXISTS "Allow view ambassador payouts" ON public.ambassador_payouts;
 DROP POLICY IF EXISTS "Allow public read/insert on ambassador_tasks" ON public.ambassador_tasks;
 DROP POLICY IF EXISTS "Service role full access on ambassador_leads" ON public.ambassador_leads;
 DROP POLICY IF EXISTS "Service role full access on ambassador_payouts" ON public.ambassador_payouts;
-
--- Community Messages
-DROP POLICY IF EXISTS "Allow public read/insert on community_messages" ON public.community_messages;
 
 -- Team Approvals & DPDP Legacy
 DROP POLICY IF EXISTS "Allow public read/insert on team_approval_requests" ON public.team_approval_requests;
@@ -238,14 +221,6 @@ CREATE POLICY "Service role full access on newsletter_subscribers" ON public.new
   USING (true) WITH CHECK (true);
 
 CREATE POLICY "Service role full access on newsletter_broadcasts" ON public.newsletter_broadcasts
-  FOR ALL TO service_role
-  USING (true) WITH CHECK (true);
-
-CREATE POLICY "Allow public tarot signup" ON public.tarot_newsletter
-  FOR INSERT TO anon, authenticated
-  WITH CHECK (true);
-
-CREATE POLICY "Service role full access on tarot_newsletter" ON public.tarot_newsletter
   FOR ALL TO service_role
   USING (true) WITH CHECK (true);
 
@@ -329,6 +304,14 @@ CREATE POLICY "Service role full access on ambassador_leads" ON public.ambassado
   FOR ALL TO service_role
   USING (true) WITH CHECK (true);
 
+CREATE POLICY "Allow view ambassador payouts" ON public.ambassador_payouts
+  FOR SELECT TO anon, authenticated
+  USING (true);
+
+CREATE POLICY "Allow submit payout requests" ON public.ambassador_payouts
+  FOR INSERT TO anon, authenticated
+  WITH CHECK (true);
+
 CREATE POLICY "Service role full access on ambassador_payouts" ON public.ambassador_payouts
   FOR ALL TO service_role
   USING (true) WITH CHECK (true);
@@ -374,42 +357,6 @@ CREATE POLICY "Allow student save habit trackers" ON public.student_habit_tracke
   USING (true) WITH CHECK (true);
 
 CREATE POLICY "Service role full access on student_habit_trackers" ON public.student_habit_trackers
-  FOR ALL TO service_role
-  USING (true) WITH CHECK (true);
-
--- ------------------------------------------------------------------------------
--- I. TAROT SUITE (tarot_bookings, tarot_admin_signals, tarot_settings)
--- Defense: Allow public booking submissions and reading public tarot settings.
--- ------------------------------------------------------------------------------
-CREATE POLICY "Allow public insert tarot bookings" ON public.tarot_bookings
-  FOR INSERT TO anon, authenticated
-  WITH CHECK (true);
-
-CREATE POLICY "Service role full access on tarot_bookings" ON public.tarot_bookings
-  FOR ALL TO service_role
-  USING (true) WITH CHECK (true);
-
-CREATE POLICY "Allow public read tarot settings" ON public.tarot_settings
-  FOR SELECT TO anon, authenticated
-  USING (true);
-
-CREATE POLICY "Service role full access on tarot_settings" ON public.tarot_settings
-  FOR ALL TO service_role
-  USING (true) WITH CHECK (true);
-
-CREATE POLICY "Service role full access on tarot_admin_signals" ON public.tarot_admin_signals
-  FOR ALL TO service_role
-  USING (true) WITH CHECK (true);
-
--- ------------------------------------------------------------------------------
--- J. COMMUNITY & MESSAGING (community_messages)
--- Defense: Allow reading and sending community discussions.
--- ------------------------------------------------------------------------------
-CREATE POLICY "Allow public community messages" ON public.community_messages
-  FOR ALL TO anon, authenticated
-  USING (true) WITH CHECK (true);
-
-CREATE POLICY "Service role full access on community_messages" ON public.community_messages
   FOR ALL TO service_role
   USING (true) WITH CHECK (true);
 
@@ -506,8 +453,7 @@ BEGIN
       public.site_settings,
       public.student_progress,
       public.student_habit_trackers,
-      public.certificates,
-      public.community_messages;
+      public.certificates;
   END IF;
 EXCEPTION WHEN OTHERS THEN
   RAISE NOTICE 'Supabase realtime publication table addition skipped or already registered.';

@@ -21,17 +21,16 @@ const TABLES = [
   { table: 'course_contents', tabName: '07_Course_Contents', label: 'Course Contents' },
   { table: 'newsletter_subscribers', tabName: '08_Newsletter_Subs', label: 'Newsletter Subscribers' },
   { table: 'newsletter_broadcasts', tabName: '09_Broadcasts', label: 'Newsletter Broadcasts' },
-  { table: 'tarot_newsletter', tabName: '10_Tarot_Subs', label: 'Tarot Subscribers' },
-  { table: 'blogs', tabName: '11_Blog_Articles', label: 'Blog Articles' },
-  { table: 'ambassador_applications', tabName: '12_Ambassador_Apps', label: 'Ambassador Applications' },
-  { table: 'ambassador_leads', tabName: '13_Ambassador_Leads', label: 'Ambassador Leads' },
-  { table: 'ambassador_payouts', tabName: '14_Ambassador_Payouts', label: 'Ambassador Payouts' },
-  { table: 'ambassador_tasks', tabName: '15_Ambassador_Tasks', label: 'Ambassador Tasks' },
-  { table: 'ambassador_weekly_reports', tabName: '16_Ambassador_Reports', label: 'Weekly Reports' },
-  { table: 'student_progress', tabName: '17_Student_Progress', label: 'Student Progress' },
-  { table: 'certificates', tabName: '18_Certificates', label: 'Certificates' },
-  { table: 'student_habit_trackers', tabName: '19_Habit_Trackers', label: 'Habit Trackers' },
-  { table: 'site_settings', tabName: '20_Site_Settings', label: 'Site Settings' }
+  { table: 'blogs', tabName: '10_Blog_Articles', label: 'Blog Articles' },
+  { table: 'ambassador_applications', tabName: '11_Ambassador_Apps', label: 'Ambassador Applications' },
+  { table: 'ambassador_leads', tabName: '12_Ambassador_Leads', label: 'Ambassador Leads' },
+  { table: 'ambassador_payouts', tabName: '13_Ambassador_Payouts', label: 'Ambassador Payouts' },
+  { table: 'ambassador_tasks', tabName: '14_Ambassador_Tasks', label: 'Ambassador Tasks' },
+  { table: 'ambassador_weekly_reports', tabName: '15_Ambassador_Reports', label: 'Weekly Reports' },
+  { table: 'student_progress', tabName: '16_Student_Progress', label: 'Student Progress' },
+  { table: 'certificates', tabName: '17_Certificates', label: 'Certificates' },
+  { table: 'student_habit_trackers', tabName: '18_Habit_Trackers', label: 'Habit Trackers' },
+  { table: 'site_settings', tabName: '19_Site_Settings', label: 'Site Settings' }
 ];
 
 async function runCli() {

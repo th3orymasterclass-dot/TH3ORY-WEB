@@ -92,8 +92,8 @@ The table below lists all live credentials and environment variables required fo
 ### H. Google Sheets & Google Drive Operations System (Master Database)
 | Resource / Config Name | Value / Identifier | Linked Identity | Consuming Files & Scripts |
 | :--- | :--- | :--- | :--- |
-| **Master Google Apps Script** | `google-sheets/TH3ORY_Supabase_Master_Sheets_Sync.gs` | `th3orymasterclass@gmail.com` | Full multi-table database sync into 20 dedicated tabs, auto-styling |
-| **Newsletter Google Apps Script** | `google-sheets/TH3ORY_Supabase_Google_Sheet_Sync.gs` | `th3orymasterclass@gmail.com` | Dedicated newsletter & tarot subscriber fast sync |
+| **Master Google Apps Script** | `google-sheets/TH3ORY_Supabase_Master_Sheets_Sync.gs` | `th3orymasterclass@gmail.com` | Full multi-table database sync into 19 dedicated tabs, auto-styling |
+| **Newsletter Google Apps Script** | `google-sheets/TH3ORY_Supabase_Google_Sheet_Sync.gs` | `th3orymasterclass@gmail.com` | Dedicated newsletter subscriber fast sync |
 | **Master Operations Panel** | `src/admin/panels/DatabaseSheetsOperationsPanel.jsx` | Admin Portal | Executive dashboard for table syncs, row auditing & CSV exports |
 | **Master Sync API Endpoint** | `/api/sync-database-sheets` | Vercel Edge Serverless | Queries Supabase tables, serializes IST dates, dispatches to webhook |
 | **Master Sync CLI Script** | `scripts/sync-supabase-to-gdrive-sheets.js` (`npm run sync:gdrive`) | CLI / Cron | Command-line full/single table sync, local backups, dry run audit |
@@ -166,7 +166,7 @@ The table below lists all live credentials and environment variables required fo
 
 ### 8. Google Sheets Live Newsletter Sync Engine
 - **Target Account**: `th3orymasterclass@gmail.com`
-- **Tables Connected**: `public.newsletter_subscribers`, `public.tarot_newsletter`
+- **Tables Connected**: `public.newsletter_subscribers`
 - **Synchronization Layers**:
   1. **PostgreSQL Database Trigger (`pg_net`)**: When a subscriber signs up or updates their status, Supabase executes `handle_newsletter_google_sheet_sync()`, firing an asynchronous HTTP POST via `net.http_post()` directly to the Google Apps Script Web App.
   2. **Google Apps Script (`doPost` Webhook)**: Appends or updates the subscriber record in real-time at Row 2, formatting status chips and calculating UTC and IST timestamps.

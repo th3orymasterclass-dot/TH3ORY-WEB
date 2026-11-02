@@ -34,7 +34,7 @@ export default function IntegrationsPanel({ themeMode = 'dark' }) {
   });
   const [sheetStatus, setSheetStatus] = useState('');
   const [syncingSheet, setSyncingSheet] = useState(false);
-  const [sheetCounts, setSheetCounts] = useState({ cognitive_dispatch: 0, tarot_subscribers: 0, total: 0 });
+  const [sheetCounts, setSheetCounts] = useState({ cognitive_dispatch: 0, total: 0 });
 
   useEffect(() => {
     runSupabaseTest(anonKey);
@@ -357,18 +357,14 @@ export default function IntegrationsPanel({ themeMode = 'dark' }) {
         </div>
 
         <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-          Asynchronously replicates subscriber signups from Supabase <code className="font-mono text-emerald-400 font-bold">newsletter_subscribers</code> and <code className="font-mono text-emerald-400 font-bold">tarot_newsletter</code> directly into your Google Sheet. Includes hourly background auto-sync and custom Google Sheets toolbar actions.
+          Asynchronously replicates subscriber signups from Supabase <code className="font-mono text-emerald-400 font-bold">newsletter_subscribers</code> directly into your Google Sheet. Includes hourly background auto-sync and custom Google Sheets toolbar actions.
         </p>
 
         {/* Sync Counts Bar */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className={`p-3 rounded-xl border text-xs ${isDark ? 'bg-slate-950/60 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
             <span className="text-slate-500 block text-[11px]">Cognitive Dispatch Leads</span>
             <span className="font-mono font-bold text-sm text-emerald-400">{sheetCounts.cognitive_dispatch || 0}</span>
-          </div>
-          <div className={`p-3 rounded-xl border text-xs ${isDark ? 'bg-slate-950/60 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-            <span className="text-slate-500 block text-[11px]">Tarot Booking Leads</span>
-            <span className="font-mono font-bold text-sm text-purple-400">{sheetCounts.tarot_subscribers || 0}</span>
           </div>
           <div className={`p-3 rounded-xl border text-xs ${isDark ? 'bg-slate-950/60 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
             <span className="text-slate-500 block text-[11px]">Total Subscribers Tracked</span>

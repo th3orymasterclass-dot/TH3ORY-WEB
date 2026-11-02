@@ -1163,8 +1163,8 @@ export async function fetchCourseContentsFromSupabase() {
     }
 
     return (data || []).map(item => ({
-      id: item.id,
-      contentKey: item.content_key,
+      id: item.content_key || item.id,
+      contentKey: item.content_key || item.id,
       title: item.title,
       type: item.type,
       url: item.url,
@@ -1206,18 +1206,19 @@ export async function saveCourseContentToSupabase(item) {
       updated_at: new Date().toISOString(),
     };
 
-    // If it's a UUID (from Supabase), update by id
-    if (item.id && !item.id.startsWith('c_')) {
+    // Check if item.id is a standard UUID
+    const isUUID = typeof item.id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item.id);
+    if (isUUID) {
       const { error } = await supabase
         .from('course_contents')
         .update(payload)
         .eq('id', item.id);
-      if (error) console.error('[Supabase] Error updating course content:', error);
+      if (error) console.error('[Supabase] Error updating course content by UUID:', error);
       return !error;
     }
 
-    // For locally-generated ids (c_...) — use upsert on content_key
-    const contentKey = item.id || `c_${Date.now()}`;
+    // For named keys (cnt_..., c_...) — use upsert on content_key
+    const contentKey = item.contentKey || item.id || `c_${Date.now()}`;
     const { error } = await supabase
       .from('course_contents')
       .upsert([{ ...payload, content_key: contentKey }], { onConflict: 'content_key' });
@@ -1237,7 +1238,12 @@ export async function deleteCourseContentFromSupabase(id) {
     return false;
   }
   try {
-    const { error } = await supabase.from('course_contents').delete().eq('id', id);
+    const isUUID = typeof id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    if (isUUID) {
+      const { error } = await supabase.from('course_contents').delete().eq('id', id);
+      return !error;
+    }
+    const { error } = await supabase.from('course_contents').delete().eq('content_key', id);
     return !error;
   } catch {
     return false;
@@ -1478,51 +1484,33 @@ export function subscribeToNewsletterBroadcasts(onBroadcastsChange) {
   }
 }
 
-// Helper to perform dual-table operations against student_progress or user_progress
+// Unified helper to perform operations against user_progress (with student_progress view fallback)
 async function syncStudentProgressRow(cleanEmail, lessonId, payload) {
   if (!isSupabaseConfigured || !supabase) return false;
   try {
-    // 1. Try table 'student_progress' (column 'student_name')
-    const { data: spExisting } = await supabase
-      .from('student_progress')
-      .select('id')
-      .ilike('student_name', cleanEmail)
-      .eq('lesson_id', lessonId)
-      .limit(1);
-
-    if (spExisting && spExisting.length > 0) {
-      await supabase
-        .from('student_progress')
-        .update({ ...payload, completed_at: new Date().toISOString() })
-        .eq('id', spExisting[0].id);
-      return true;
-    }
-
-    const { error: spErr } = await supabase
-      .from('student_progress')
-      .insert([{ student_name: cleanEmail, lesson_id: lessonId, ...payload, completed_at: new Date().toISOString() }]);
-
-    if (!spErr) return true;
-
-    // 2. Fallback to table 'user_progress' (column 'email')
-    const { data: upExisting } = await supabase
+    const { error } = await supabase
       .from('user_progress')
-      .select('id')
-      .ilike('email', cleanEmail)
-      .eq('lesson_id', lessonId)
-      .limit(1);
+      .upsert(
+        [{ email: cleanEmail, lesson_id: lessonId, ...payload, updated_at: new Date().toISOString() }],
+        { onConflict: 'email,lesson_id' }
+      );
 
-    if (upExisting && upExisting.length > 0) {
-      await supabase
-        .from('user_progress')
-        .update({ ...payload, updated_at: new Date().toISOString() })
-        .eq('id', upExisting[0].id);
-      return true;
-    }
+    if (!error) return true;
 
-    await supabase
+    // Direct insert fallback if upsert encounters conflict
+    const { error: insErr } = await supabase
       .from('user_progress')
       .insert([{ email: cleanEmail, lesson_id: lessonId, ...payload, updated_at: new Date().toISOString() }]);
+
+    if (!insErr) return true;
+
+    // View fallback
+    await supabase
+      .from('student_progress')
+      .upsert(
+        [{ student_name: cleanEmail, lesson_id: lessonId, ...payload, completed_at: new Date().toISOString() }],
+        { onConflict: 'student_name,lesson_id' }
+      );
     return true;
   } catch (err) {
     console.warn('[Supabase] Exception syncing student progress:', err);
@@ -1699,26 +1687,16 @@ export async function fetchStudentDataFromSupabase(email) {
 
   try {
     let { data, error } = await supabase
-      .from('student_progress')
-      .select('lesson_id, completed, completed_at')
-      .ilike('student_name', cleanEmail);
+      .from('user_progress')
+      .select('lesson_id, completed, note, bookmarked, updated_at')
+      .ilike('email', cleanEmail);
 
     if (error || !data || data.length === 0) {
-      const { data: spFull } = await supabase
+      const { data: spData } = await supabase
         .from('student_progress')
         .select('*')
         .ilike('student_name', cleanEmail);
-
-      if (spFull && spFull.length > 0) {
-        data = spFull;
-      } else {
-        const { data: upData, error: upErr } = await supabase
-          .from('user_progress')
-          .select('lesson_id, completed')
-          .ilike('email', cleanEmail);
-
-        if (!upErr && upData) data = upData;
-      }
+      if (spData && spData.length > 0) data = spData;
     }
 
     if (!data) {
@@ -2510,10 +2488,21 @@ export async function saveAmbassadorApplicationToSupabase(appData) {
 export async function fetchAllAmbassadorApplicationsFromSupabase() {
   if (isSupabaseConfigured && supabase) {
     try {
-      const { data, error } = await supabase
-        .from('ambassador_applications')
+      // 1. Prefer combined view with live aggregates
+      let { data, error } = await supabase
+        .from('ambassadors_combined_view')
         .select('*')
         .order('created_at', { ascending: false });
+
+      // Fallback to base table if view isn't available
+      if (error || !data) {
+        const fallback = await supabase
+          .from('ambassador_applications')
+          .select('*')
+          .order('created_at', { ascending: false });
+        data = fallback.data;
+        error = fallback.error;
+      }
 
       if (!error && data && data.length > 0) {
         return data.map(d => ({
@@ -2530,11 +2519,21 @@ export async function fetchAllAmbassadorApplicationsFromSupabase() {
           motivation: d.motivation,
           status: d.status || 'PENDING',
           ambassadorCode: d.ambassador_code,
+          password: d.password_hash,
           points: d.points || 0,
           tier: d.tier || 'Tier 1',
-          totalLeads: d.total_leads || 0,
-          totalEnrollments: d.total_enrollments || 0,
-          totalCommission: d.total_commission || 0,
+          totalLeads: d.actual_leads_count ?? d.total_leads ?? 0,
+          totalEnrollments: d.actual_enrollments_count ?? d.total_enrollments ?? 0,
+          totalCommission: Number(d.actual_commission_sum ?? d.total_commission ?? 0),
+          totalPaidOut: Number(d.total_paid_out ?? 0),
+          totalPendingPayout: Number(d.total_pending_payout ?? 0),
+          payoutsCount: d.payouts_count ?? 0,
+          weeklyReportsCount: d.weekly_reports_count ?? 0,
+          avatarUrl: d.avatar_url || '',
+          interviewNotes: d.interview_notes || '',
+          interviewRating: d.interview_rating || '',
+          teamRecommendedBy: d.team_recommended_by || '',
+          payoutDetails: d.payout_details || {},
           weeklyReports: d.weekly_reports || [],
           createdAt: d.created_at,
           approvedAt: d.approved_at
@@ -2606,7 +2605,97 @@ export async function rejectAmbassadorInSupabase(appId) {
         .from('ambassador_applications')
         .update({ status: 'REJECTED' })
         .or(`app_id.eq.${appId},id.eq.${appId}`);
-    } catch {}
+    } catch (err) {
+      console.warn('[Supabase] Exception rejecting ambassador:', err);
+    }
+  }
+  return { success: true };
+}
+
+export async function updateAmbassadorApplicationInSupabase(appIdOrId, updates = {}) {
+  const payload = {};
+  if (updates.name !== undefined) payload.name = updates.name;
+  if (updates.email !== undefined) payload.email = updates.email;
+  if (updates.phone !== undefined) payload.phone = updates.phone;
+  if (updates.collegeName !== undefined) payload.college_name = updates.collegeName;
+  if (updates.college_name !== undefined) payload.college_name = updates.college_name;
+  if (updates.degree !== undefined) payload.degree = updates.degree;
+  if (updates.yearOfStudy !== undefined) payload.year_of_study = updates.yearOfStudy;
+  if (updates.year_of_study !== undefined) payload.year_of_study = updates.year_of_study;
+  if (updates.socialHandles !== undefined) payload.social_handles = updates.socialHandles;
+  if (updates.social_handles !== undefined) payload.social_handles = updates.social_handles;
+  if (updates.leadershipExp !== undefined) payload.leadership_exp = updates.leadershipExp;
+  if (updates.leadership_exp !== undefined) payload.leadership_exp = updates.leadership_exp;
+  if (updates.motivation !== undefined) payload.motivation = updates.motivation;
+  if (updates.status !== undefined) payload.status = updates.status;
+  if (updates.ambassadorCode !== undefined) payload.ambassador_code = updates.ambassadorCode;
+  if (updates.ambassador_code !== undefined) payload.ambassador_code = updates.ambassador_code;
+  if (updates.points !== undefined) payload.points = updates.points;
+  if (updates.tier !== undefined) payload.tier = updates.tier;
+  if (updates.interviewNotes !== undefined) payload.interview_notes = updates.interviewNotes;
+  if (updates.interview_notes !== undefined) payload.interview_notes = updates.interview_notes;
+  if (updates.interviewRating !== undefined) payload.interview_rating = updates.interviewRating;
+  if (updates.interview_rating !== undefined) payload.interview_rating = updates.interview_rating;
+  if (updates.teamRecommendedBy !== undefined) payload.team_recommended_by = updates.teamRecommendedBy;
+  if (updates.team_recommended_by !== undefined) payload.team_recommended_by = updates.team_recommended_by;
+  if (updates.avatarUrl !== undefined) payload.avatar_url = updates.avatarUrl;
+  if (updates.avatar_url !== undefined) payload.avatar_url = updates.avatar_url;
+  if (updates.payoutDetails !== undefined) payload.payout_details = updates.payoutDetails;
+  if (updates.payout_details !== undefined) payload.payout_details = updates.payout_details;
+
+  // Local storage update
+  try {
+    const local = JSON.parse(localStorage.getItem('th3ory_ambassador_apps') || '[]');
+    const idx = local.findIndex(a => a.appId === appIdOrId || a.id === appIdOrId);
+    if (idx !== -1) {
+      local[idx] = { ...local[idx], ...updates };
+      localStorage.setItem('th3ory_ambassador_apps', JSON.stringify(local));
+      window.dispatchEvent(new CustomEvent('th3ory_ambassador_apps_change'));
+    }
+  } catch {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('ambassador_applications')
+        .update(payload)
+        .or(`app_id.eq.${appIdOrId},id.eq.${appIdOrId}`)
+        .select();
+
+      if (!error) {
+        return { success: true, data };
+      }
+      console.warn('[Supabase] Error updating ambassador application:', error);
+    } catch (err) {
+      console.warn('[Supabase] Exception updating ambassador application:', err);
+    }
+  }
+
+  return { success: true, payload };
+}
+
+export async function deleteAmbassadorApplicationFromSupabase(appIdOrId) {
+  // Local storage cache update
+  try {
+    const local = JSON.parse(localStorage.getItem('th3ory_ambassador_apps') || '[]');
+    const filtered = local.filter(a => a.appId !== appIdOrId && a.id !== appIdOrId);
+    localStorage.setItem('th3ory_ambassador_apps', JSON.stringify(filtered));
+    window.dispatchEvent(new CustomEvent('th3ory_ambassador_apps_change'));
+  } catch {}
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { error } = await supabase
+        .from('ambassador_applications')
+        .delete()
+        .or(`app_id.eq.${appIdOrId},id.eq.${appIdOrId}`);
+      if (!error) {
+        return { success: true };
+      }
+      console.warn('[Supabase] Error deleting ambassador application:', error);
+    } catch (err) {
+      console.warn('[Supabase] Exception deleting ambassador application:', err);
+    }
   }
   return { success: true };
 }
@@ -2617,10 +2706,20 @@ export async function fetchAmbassadorByCodeFromSupabase(codeOrEmail) {
 
   if (isSupabaseConfigured && supabase) {
     try {
-      const { data } = await supabase
-        .from('ambassador_applications')
+      // 1. Query combined view for full aggregates
+      let { data, error } = await supabase
+        .from('ambassadors_combined_view')
         .select('*')
         .or(`ambassador_code.ilike.${cleanCode},email.ilike.${clean}`);
+
+      // Fallback to base table
+      if (error || !data || data.length === 0) {
+        const fallback = await supabase
+          .from('ambassador_applications')
+          .select('*')
+          .or(`ambassador_code.ilike.${cleanCode},email.ilike.${clean}`);
+        data = fallback.data;
+      }
 
       if (data && data.length > 0) {
         const d = data.find(item => item.status === 'APPROVED') || data[0];
@@ -2636,17 +2735,27 @@ export async function fetchAmbassadorByCodeFromSupabase(codeOrEmail) {
           status: d.status,
           ambassadorCode: d.ambassador_code || cleanCode,
           password: d.password_hash || 'TH3ORY2026',
-          points: d.points || 120,
+          points: d.points || 0,
           tier: d.tier || (d.points >= 700 ? 'Tier 3' : d.points >= 300 ? 'Tier 2' : 'Tier 1'),
-          totalLeads: d.total_leads || 8,
-          totalEnrollments: d.total_enrollments || 3,
-          totalCommission: d.total_commission || 3000,
+          totalLeads: d.actual_leads_count ?? d.total_leads ?? 0,
+          totalEnrollments: d.actual_enrollments_count ?? d.total_enrollments ?? 0,
+          totalCommission: Number(d.actual_commission_sum ?? d.total_commission ?? 0),
+          totalPaidOut: Number(d.total_paid_out ?? 0),
+          totalPendingPayout: Number(d.total_pending_payout ?? 0),
+          payoutsCount: d.payouts_count ?? 0,
+          weeklyReportsCount: d.weekly_reports_count ?? 0,
           avatar: d.avatar_url || '',
           avatarUrl: d.avatar_url || '',
+          payoutDetails: d.payout_details || {},
+          interviewNotes: d.interview_notes || '',
+          interviewRating: d.interview_rating || '',
+          teamRecommendedBy: d.team_recommended_by || '',
           weeklyReports: d.weekly_reports || []
         };
       }
-    } catch {}
+    } catch (err) {
+      console.warn('[Supabase] Exception fetching ambassador by code:', err);
+    }
   }
 
   // Local storage fallback lookup
@@ -2676,6 +2785,7 @@ export async function fetchAmbassadorByCodeFromSupabase(codeOrEmail) {
         totalCommission: found.totalCommission || 3000,
         avatar: found.avatar_url || found.avatar || found.avatarUrl || '',
         avatarUrl: found.avatar_url || found.avatar || found.avatarUrl || '',
+        payoutDetails: found.payoutDetails || {},
         weeklyReports: found.weeklyReports || []
       };
     }
@@ -2701,6 +2811,7 @@ export async function fetchAmbassadorByCodeFromSupabase(codeOrEmail) {
       totalCommission: 8000,
       avatar: '',
       avatarUrl: '',
+      payoutDetails: { method: 'UPI', upiId: 'alexvance@okaxis', accountHolderName: 'Alex Vance' },
       weeklyReports: []
     };
   }
@@ -2730,9 +2841,9 @@ export async function saveAmbassadorWeeklyReportToSupabase(ambassadorCode, repor
   const newReport = {
     id: `rep_${Date.now()}`,
     submittedAt: new Date().toISOString(),
-    postsCount: reportData.postsCount || 0,
-    storiesCount: reportData.storiesCount || 0,
-    leadsGenerated: reportData.leadsGenerated || 0,
+    postsCount: Number(reportData.postsCount || 0),
+    storiesCount: Number(reportData.storiesCount || 0),
+    leadsGenerated: Number(reportData.leadsGenerated || 0),
     eventNotes: reportData.eventNotes || '',
     challenges: reportData.challenges || '',
     nextWeekPlan: reportData.nextWeekPlan || ''
@@ -2744,7 +2855,7 @@ export async function saveAmbassadorWeeklyReportToSupabase(ambassadorCode, repor
     if (idx !== -1) {
       if (!local[idx].weeklyReports) local[idx].weeklyReports = [];
       local[idx].weeklyReports.unshift(newReport);
-      local[idx].points = (local[idx].points || 0) + 50; // Award 50 points for weekly report
+      local[idx].points = (local[idx].points || 0) + 50;
       localStorage.setItem('th3ory_ambassador_apps', JSON.stringify(local));
       window.dispatchEvent(new CustomEvent('th3ory_ambassador_apps_change'));
     }
@@ -2752,7 +2863,7 @@ export async function saveAmbassadorWeeklyReportToSupabase(ambassadorCode, repor
 
   if (isSupabaseConfigured && supabase) {
     try {
-      // 1. Also insert into dedicated ambassador_weekly_reports table
+      // 1. Insert into ambassador_weekly_reports (executes INSTEAD OF trigger and updates parent JSONB & points)
       await supabase.from('ambassador_weekly_reports').insert([{
         ambassador_code: ambassadorCode,
         posts_count: newReport.postsCount,
@@ -2764,27 +2875,30 @@ export async function saveAmbassadorWeeklyReportToSupabase(ambassadorCode, repor
         points_awarded: 50,
         submitted_at: newReport.submittedAt
       }]);
-
-      // 2. Update ambassador application summary
-      const { data } = await supabase
-        .from('ambassador_applications')
-        .select('weekly_reports, points')
-        .eq('ambassador_code', ambassadorCode)
-        .single();
-
-      const existingReports = (data && data.weekly_reports) ? data.weekly_reports : [];
-      const updatedReports = [newReport, ...existingReports];
-      const newPoints = ((data && data.points) || 0) + 50;
-
-      await supabase
-        .from('ambassador_applications')
-        .update({
-          weekly_reports: updatedReports,
-          points: newPoints
-        })
-        .eq('ambassador_code', ambassadorCode);
     } catch (err) {
-      console.warn('[Supabase] Exception saving weekly report to dedicated table:', err);
+      console.warn('[Supabase] Exception saving weekly report:', err);
+      // Fallback directly on ambassador_applications JSONB
+      try {
+        const { data } = await supabase
+          .from('ambassador_applications')
+          .select('weekly_reports, points')
+          .eq('ambassador_code', ambassadorCode)
+          .single();
+
+        const existingReports = (data && data.weekly_reports) ? data.weekly_reports : [];
+        const updatedReports = [newReport, ...existingReports];
+        const newPoints = ((data && data.points) || 0) + 50;
+
+        await supabase
+          .from('ambassador_applications')
+          .update({
+            weekly_reports: updatedReports,
+            points: newPoints
+          })
+          .eq('ambassador_code', ambassadorCode);
+      } catch (err2) {
+        console.warn('[Supabase] Fallback weekly report update error:', err2);
+      }
     }
   }
 
@@ -2797,7 +2911,21 @@ export async function fetchAmbassadorWeeklyReportsFromSupabase(ambassadorCode) {
     const { data, error } = await supabase
       .from('ambassador_weekly_reports')
       .select('*')
-      .eq('ambassador_code', ambassadorCode)
+      .ilike('ambassador_code', ambassadorCode)
+      .order('submitted_at', { ascending: false });
+    if (error || !data) return [];
+    return data;
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchAllAmbassadorWeeklyReportsFromSupabase() {
+  if (!isSupabaseConfigured || !supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from('ambassador_weekly_reports')
+      .select('*')
       .order('submitted_at', { ascending: false });
     if (error || !data) return [];
     return data;
@@ -2812,7 +2940,21 @@ export async function fetchAmbassadorLeadsFromSupabase(ambassadorCode) {
     const { data, error } = await supabase
       .from('ambassador_leads')
       .select('*')
-      .eq('ambassador_code', ambassadorCode)
+      .ilike('ambassador_code', ambassadorCode)
+      .order('created_at', { ascending: false });
+    if (error || !data) return [];
+    return data;
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchAllAmbassadorLeadsFromSupabase() {
+  if (!isSupabaseConfigured || !supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from('ambassador_leads')
+      .select('*')
       .order('created_at', { ascending: false });
     if (error || !data) return [];
     return data;
@@ -2823,13 +2965,13 @@ export async function fetchAmbassadorLeadsFromSupabase(ambassadorCode) {
 
 export async function saveAmbassadorLeadToSupabase(leadData) {
   const payload = {
-    ambassador_code: leadData.ambassadorCode,
-    student_name: leadData.studentName,
-    student_email: leadData.studentEmail,
-    student_phone: leadData.studentPhone || null,
-    college_name: leadData.collegeName || null,
+    ambassador_code: (leadData.ambassadorCode || leadData.ambassador_code || '').toUpperCase(),
+    student_name: leadData.studentName || leadData.student_name,
+    student_email: (leadData.studentEmail || leadData.student_email || '').toLowerCase(),
+    student_phone: leadData.studentPhone || leadData.student_phone || null,
+    college_name: leadData.collegeName || leadData.college_name || null,
     status: leadData.status || 'INTERESTED',
-    commission_earned: leadData.commissionEarned || 0.00
+    commission_earned: Number(leadData.commissionEarned || leadData.commission_earned || 0.00)
   };
 
   if (isSupabaseConfigured && supabase) {
@@ -2847,19 +2989,103 @@ export async function saveAmbassadorLeadToSupabase(leadData) {
   return { success: true, lead: payload };
 }
 
+export async function updateAmbassadorLeadStatusInSupabase(leadId, status = 'ENROLLED', commissionEarned = 1000.00) {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('ambassador_leads')
+        .update({
+          status,
+          commission_earned: Number(commissionEarned),
+          converted_at: status === 'ENROLLED' ? new Date().toISOString() : null
+        })
+        .eq('id', leadId)
+        .select();
+      if (!error && data) return { success: true, lead: data[0] };
+    } catch (err) {
+      console.warn('[Supabase] Exception updating ambassador lead:', err);
+    }
+  }
+  return { success: true, leadId, status };
+}
+
+export async function deleteAmbassadorLeadFromSupabase(leadId) {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { error } = await supabase
+        .from('ambassador_leads')
+        .delete()
+        .eq('id', leadId);
+      if (!error) return { success: true };
+    } catch (err) {
+      console.warn('[Supabase] Exception deleting ambassador lead:', err);
+    }
+  }
+  return { success: true, leadId };
+}
+
 export async function fetchAmbassadorPayoutsFromSupabase(ambassadorCode) {
   if (!isSupabaseConfigured || !supabase) return [];
   try {
     const { data, error } = await supabase
       .from('ambassador_payouts')
       .select('*')
-      .eq('ambassador_code', ambassadorCode)
+      .ilike('ambassador_code', ambassadorCode)
       .order('created_at', { ascending: false });
     if (error || !data) return [];
     return data;
   } catch {
     return [];
   }
+}
+
+export async function fetchAllAmbassadorPayoutsFromSupabase() {
+  if (!isSupabaseConfigured || !supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from('ambassador_payouts')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error || !data) return [];
+    return data;
+  } catch {
+    return [];
+  }
+}
+
+export async function updateAmbassadorPayoutStatusInSupabase(payoutId, status = 'PAID', notes = '', txRef = '') {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const payload = { status };
+      if (notes) payload.notes = notes;
+      if (txRef) payload.transaction_reference = txRef;
+
+      const { data, error } = await supabase
+        .from('ambassador_payouts')
+        .update(payload)
+        .eq('id', payoutId)
+        .select();
+      if (!error && data) return { success: true, payout: data[0] };
+    } catch (err) {
+      console.warn('[Supabase] Exception updating payout status:', err);
+    }
+  }
+  return { success: true, payoutId, status };
+}
+
+export async function deleteAmbassadorPayoutFromSupabase(payoutId) {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { error } = await supabase
+        .from('ambassador_payouts')
+        .delete()
+        .eq('id', payoutId);
+      if (!error) return { success: true };
+    } catch (err) {
+      console.warn('[Supabase] Exception deleting payout:', err);
+    }
+  }
+  return { success: true, payoutId };
 }
 
 export async function saveAmbassadorInterviewNotesToSupabase(appId, notesData) {
@@ -2926,7 +3152,6 @@ export async function scheduleAmbassadorInterviewInSupabase(appId, scheduleDetai
   return { success: true };
 }
 
-
 export async function submitAmbassadorTeamApprovalToSupabase(appId, recommendation) {
   try {
     const local = JSON.parse(localStorage.getItem('th3ory_ambassador_apps') || '[]');
@@ -2983,10 +3208,9 @@ export async function saveAmbassadorPayoutDetailsToSupabase(ambassadorCode, payo
 
 export async function requestAmbassadorPayoutToSupabase(ambassadorCode, amount, payoutDetails) {
   const newPayout = {
-    id: `pay_${Date.now()}`,
     ambassador_code: ambassadorCode,
-    amount: amount,
-    payment_method: payoutDetails?.method || 'UPI / Offline Bank Transfer',
+    amount: Number(amount),
+    payment_method: payoutDetails?.method || 'UPI / Bank Transfer',
     payment_details: JSON.stringify(payoutDetails || {}),
     transaction_reference: `REQ-${Math.floor(100000 + Math.random() * 900000)}`,
     status: 'PENDING',
@@ -2995,7 +3219,11 @@ export async function requestAmbassadorPayoutToSupabase(ambassadorCode, amount, 
 
   if (isSupabaseConfigured && supabase) {
     try {
-      await supabase.from('ambassador_payouts').insert([newPayout]);
+      const { data, error } = await supabase
+        .from('ambassador_payouts')
+        .insert([newPayout])
+        .select();
+      if (!error && data) return { success: true, payout: data[0] };
     } catch (err) {
       console.warn('[Supabase] Exception creating payout request:', err);
     }
@@ -3016,6 +3244,157 @@ export async function fetchAmbassadorTasksFromSupabase() {
   } catch {
     return [];
   }
+}
+
+export async function createAmbassadorTaskInSupabase(taskData) {
+  const payload = {
+    title: taskData.title,
+    description: taskData.description || '',
+    reward_points: Number(taskData.rewardPoints || taskData.reward_points || 100),
+    reward_bonus: Number(taskData.rewardBonus || taskData.reward_bonus || 0.00),
+    deadline: taskData.deadline || null,
+    status: taskData.status || 'ACTIVE'
+  };
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('ambassador_tasks')
+        .insert([payload])
+        .select();
+      if (!error && data) return { success: true, task: data[0] };
+    } catch (err) {
+      console.warn('[Supabase] Exception creating ambassador task:', err);
+    }
+  }
+  return { success: true, task: payload };
+}
+
+export async function updateAmbassadorTaskInSupabase(taskId, updates) {
+  const payload = {};
+  if (updates.title !== undefined) payload.title = updates.title;
+  if (updates.description !== undefined) payload.description = updates.description;
+  if (updates.rewardPoints !== undefined) payload.reward_points = Number(updates.rewardPoints);
+  if (updates.reward_points !== undefined) payload.reward_points = Number(updates.reward_points);
+  if (updates.rewardBonus !== undefined) payload.reward_bonus = Number(updates.rewardBonus);
+  if (updates.reward_bonus !== undefined) payload.reward_bonus = Number(updates.reward_bonus);
+  if (updates.deadline !== undefined) payload.deadline = updates.deadline;
+  if (updates.status !== undefined) payload.status = updates.status;
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('ambassador_tasks')
+        .update(payload)
+        .eq('id', taskId)
+        .select();
+      if (!error && data) return { success: true, task: data[0] };
+    } catch (err) {
+      console.warn('[Supabase] Exception updating ambassador task:', err);
+    }
+  }
+  return { success: true, taskId, updates };
+}
+
+export async function deleteAmbassadorTaskInSupabase(taskId) {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { error } = await supabase
+        .from('ambassador_tasks')
+        .delete()
+        .eq('id', taskId);
+      if (!error) return { success: true };
+    } catch (err) {
+      console.warn('[Supabase] Exception deleting ambassador task:', err);
+    }
+  }
+  return { success: true, taskId };
+}
+
+// ─── AMBASSADOR REALTIME SUBSCRIPTIONS ───────────────────────────────────────
+
+export function subscribeToAmbassadors(onUpdate) {
+  if (!isSupabaseConfigured || !supabase) return () => {};
+  try {
+    const channel = supabase
+      .channel(`ambassadors_live_${Date.now()}_${Math.random().toString(36).substring(7)}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'ambassador_applications' }, payload => {
+        if (onUpdate) onUpdate(payload);
+      })
+      .subscribe();
+    return () => { try { supabase.removeChannel(channel); } catch {} };
+  } catch {
+    return () => {};
+  }
+}
+
+export function subscribeToAmbassadorLeads(ambassadorCode = null, onUpdate) {
+  if (!isSupabaseConfigured || !supabase) return () => {};
+  try {
+    const channelName = `leads_live_${ambassadorCode || 'all'}_${Date.now()}`;
+    const opts = { event: '*', schema: 'public', table: 'ambassador_leads' };
+    if (ambassadorCode) {
+      opts.filter = `ambassador_code=eq.${ambassadorCode.toUpperCase()}`;
+    }
+    const channel = supabase
+      .channel(channelName)
+      .on('postgres_changes', opts, payload => {
+        if (onUpdate) onUpdate(payload);
+      })
+      .subscribe();
+    return () => { try { supabase.removeChannel(channel); } catch {} };
+  } catch {
+    return () => {};
+  }
+}
+
+export function subscribeToAmbassadorPayouts(ambassadorCode = null, onUpdate) {
+  if (!isSupabaseConfigured || !supabase) return () => {};
+  try {
+    const channelName = `payouts_live_${ambassadorCode || 'all'}_${Date.now()}`;
+    const opts = { event: '*', schema: 'public', table: 'ambassador_payouts' };
+    if (ambassadorCode) {
+      opts.filter = `ambassador_code=eq.${ambassadorCode.toUpperCase()}`;
+    }
+    const channel = supabase
+      .channel(channelName)
+      .on('postgres_changes', opts, payload => {
+        if (onUpdate) onUpdate(payload);
+      })
+      .subscribe();
+    return () => { try { supabase.removeChannel(channel); } catch {} };
+  } catch {
+    return () => {};
+  }
+}
+
+export function subscribeToAmbassadorTasks(onUpdate) {
+  if (!isSupabaseConfigured || !supabase) return () => {};
+  try {
+    const channel = supabase
+      .channel(`tasks_live_${Date.now()}_${Math.random().toString(36).substring(7)}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'ambassador_tasks' }, payload => {
+        if (onUpdate) onUpdate(payload);
+      })
+      .subscribe();
+    return () => { try { supabase.removeChannel(channel); } catch {} };
+  } catch {
+    return () => {};
+  }
+}
+
+export function subscribeToAllAmbassadorData(callbacks = {}) {
+  const unsub1 = subscribeToAmbassadors(callbacks.onAmbassadors || callbacks.onAll);
+  const unsub2 = subscribeToAmbassadorLeads(null, callbacks.onLeads || callbacks.onAll);
+  const unsub3 = subscribeToAmbassadorPayouts(null, callbacks.onPayouts || callbacks.onAll);
+  const unsub4 = subscribeToAmbassadorTasks(callbacks.onTasks || callbacks.onAll);
+
+  return () => {
+    unsub1();
+    unsub2();
+    unsub3();
+    unsub4();
+  };
 }
 
 // ─── Affiliate Applications Intake ───────────────────────────────────────────
@@ -3103,27 +3482,6 @@ export async function updateContactInquiryInSupabase(id, updates) {
   return { success: true, id, updates };
 }
 
-export async function deleteAmbassadorApplicationFromSupabase(id) {
-  if (isSupabaseConfigured && supabase) {
-    try {
-      await supabase.from('ambassador_applications').delete().eq('id', id);
-    } catch (err) {
-      console.warn('[Supabase] Exception deleting ambassador application:', err);
-    }
-  }
-  return { success: true, id };
-}
-
-export async function updateAmbassadorApplicationInSupabase(id, updates) {
-  if (isSupabaseConfigured && supabase) {
-    try {
-      await supabase.from('ambassador_applications').update(updates).eq('id', id);
-    } catch (err) {
-      console.warn('[Supabase] Exception updating ambassador application:', err);
-    }
-  }
-  return { success: true, id, updates };
-}
 
 export async function deleteAffiliateApplicationFromSupabase(id) {
   if (isSupabaseConfigured && supabase) {

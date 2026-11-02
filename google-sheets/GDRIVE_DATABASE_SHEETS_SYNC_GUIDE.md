@@ -49,17 +49,16 @@ The **GDrive & Sheets Operations System** provides complete, bi-directional data
 │  • 🎬 07_Course_Contents                                                     │
 │  • 📰 08_Newsletter_Subs                                                     │
 │  • 📢 09_Broadcasts                                                          │
-│  • 🔮 10_Tarot_Subs                                                          │
-│  • 📝 11_Blog_Articles                                                       │
-│  • 🤝 12_Ambassador_Apps                                                     │
-│  • 🎯 13_Ambassador_Leads                                                    │
-│  • 💰 14_Ambassador_Payouts                                                  │
-│  • 📋 15_Ambassador_Tasks                                                    │
-│  • 📈 16_Ambassador_Reports                                                  │
-│  • 📉 17_Student_Progress                                                    │
-│  • 📜 18_Certificates                                                        │
-│  • 🧘 19_Habit_Trackers                                                      │
-│  • ⚙️ 20_Site_Settings                                                       │
+│  • 📝 10_Blog_Articles                                                       │
+│  • 🤝 11_Ambassador_Apps                                                     │
+│  • 🎯 12_Ambassador_Leads                                                    │
+│  • 💰 13_Ambassador_Payouts                                                  │
+│  • 📋 14_Ambassador_Tasks                                                    │
+│  • 📈 15_Ambassador_Reports                                                  │
+│  • 📉 16_Student_Progress                                                    │
+│  • 📜 17_Certificates                                                        │
+│  • 🧘 18_Habit_Trackers                                                      │
+│  • ⚙️ 19_Site_Settings                                                       │
 │                                                                              │
 │  🎨 Executive Slate Theme (#0F172A), Frozen Panes, Zebra Stripes, IST Dates  │
 │  ⏱️ 24/7 Autonomous Background Hourly Sync (Runs when closed)                │
@@ -85,17 +84,16 @@ All 20 Supabase tables are automatically partitioned into clean, dedicated tabs 
 | `🎬 07_Course_Contents` | `course_contents` | Curriculum | Video modules, lesson metadata & duration |
 | `📰 08_Newsletter_Subs` | `newsletter_subscribers` | Marketing | Cognitive Dispatch newsletter subscriber list |
 | `📢 09_Broadcasts` | `newsletter_broadcasts` | Marketing | Sent newsletter broadcasts & recipient logs |
-| `🔮 10_Tarot_Subs` | `tarot_newsletter` | Marketing | Tarot booking flow subscribers |
-| `📝 11_Blog_Articles` | `blogs` | CMS & Editorial | Masterclass articles, reading times & view metrics |
-| `🤝 12_Ambassador_Apps` | `ambassador_applications` | Ambassadors | Campus & influencer ambassador applications |
-| `🎯 13_Ambassador_Leads` | `ambassador_leads` | Ambassadors | Student leads submitted by ambassadors |
-| `💰 14_Ambassador_Payouts` | `ambassador_payouts` | Ambassadors | Commission payout ledger & transaction references |
-| `📋 15_Ambassador_Tasks` | `ambassador_tasks` | Ambassadors | Ambassador bounties, tasks, and point rewards |
-| `📈 16_Ambassador_Reports` | `ambassador_weekly_reports` | Ambassadors | Weekly proof-of-work submissions from ambassadors |
-| `📉 17_Student_Progress` | `student_progress` | Students | Lesson completion timestamps by student |
-| `📜 18_Certificates` | `certificates` | Graduation | Issued certification credentials & verification hashes |
-| `🧘 19_Habit_Trackers` | `student_habit_trackers` | Students | Habit tracking logs and behavioral streak counts |
-| `⚙️ 20_Site_Settings` | `site_settings` | System & Config | Platform configurations, feature flags & parameters |
+| `📝 10_Blog_Articles` | `blogs` | CMS & Editorial | Masterclass articles, reading times & view metrics |
+| `🤝 11_Ambassador_Apps` | `ambassador_applications` | Ambassadors | Campus & influencer ambassador applications |
+| `🎯 12_Ambassador_Leads` | `ambassador_leads` | Ambassadors | Student leads submitted by ambassadors |
+| `💰 13_Ambassador_Payouts` | `ambassador_payouts` | Ambassadors | Commission payout ledger & transaction references |
+| `📋 14_Ambassador_Tasks` | `ambassador_tasks` | Ambassadors | Ambassador bounties, tasks, and point rewards |
+| `📈 15_Ambassador_Reports` | `ambassador_weekly_reports` | Ambassadors | Weekly proof-of-work submissions from ambassadors |
+| `📉 16_Student_Progress` | `student_progress` | Students | Lesson completion timestamps by student |
+| `📜 17_Certificates` | `certificates` | Graduation | Issued certification credentials & verification hashes |
+| `🧘 18_Habit_Trackers` | `student_habit_trackers` | Students | Habit tracking logs and behavioral streak counts |
+| `⚙️ 19_Site_Settings` | `site_settings` | System & Config | Platform configurations, feature flags & parameters |
 
 ---
 

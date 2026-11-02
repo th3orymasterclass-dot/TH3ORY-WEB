@@ -149,6 +149,13 @@ export default function Footer({ onOpenCheckout }) {
                   <GraduationCap className="w-3.5 h-3.5"/> Student Portal →
                 </a>
                 <a
+                  href="#ambassador-login"
+                  onClick={(e) => { e.preventDefault(); window.location.hash = 'ambassador-login'; window.dispatchEvent(new Event('hashchange')); }}
+                  className="text-purple-400 font-bold hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <Users className="w-3.5 h-3.5"/> Campus Ambassador Portal Login →
+                </a>
+                <a
                   href="#team"
                   onClick={(e) => { e.preventDefault(); window.location.hash = 'team'; window.dispatchEvent(new Event('hashchange')); }}
                   className="text-indigo-400 font-bold hover:underline flex items-center gap-1 cursor-pointer"

@@ -3,7 +3,8 @@ import {
   lsSet, lsReset, resetAllData, defaults, isAdminAuthenticated,
   getCourseDetails, getVideo, getLevels,
   getPlans, getAddons, getReviews, getFaqs, getContent, getCoupons,
-  getOfflineTrainings, getCampaign, getContact, getSectionVisibility
+  getOfflineTrainings, getCampaign, getContact, getSectionVisibility,
+  mergeContentLists, syncChannel
 } from '../data/adminData.js';
 import {
   fetchCourseContentsFromSupabase,
@@ -80,12 +81,32 @@ export default function useAdminData() {
     };
     window.addEventListener('th3ory_data_change', handler);
 
+    const storageHandler = (e) => {
+      if (e.key && e.key.startsWith('th3ory_admin_')) {
+        handler();
+      }
+    };
+    window.addEventListener('storage', storageHandler);
+
+    const channelHandler = (e) => {
+      if (e.data && e.data.type === 'th3ory_data_change') {
+        handler();
+      }
+    };
+    syncChannel?.addEventListener('message', channelHandler);
+
     // 1. Initial hydration from Supabase database
     fetchSiteSettingsFromSupabase().then(settings => {
       if (settings) {
         Object.keys(settings).forEach(key => {
           try {
-            localStorage.setItem(`th3ory_admin_${key}`, JSON.stringify(settings[key]));
+            if (key === 'content' && Array.isArray(settings[key])) {
+              const currentContent = getContent();
+              const merged = mergeContentLists(settings[key], currentContent);
+              localStorage.setItem('th3ory_admin_content', JSON.stringify(merged));
+            } else {
+              localStorage.setItem(`th3ory_admin_${key}`, JSON.stringify(settings[key]));
+            }
           } catch {}
         });
         window.dispatchEvent(new CustomEvent('th3ory_data_change', { detail: { key: 'all' } }));
@@ -95,7 +116,9 @@ export default function useAdminData() {
     fetchCourseContentsFromSupabase().then(sbContent => {
       if (sbContent && sbContent.length > 0) {
         try {
-          localStorage.setItem('th3ory_admin_content', JSON.stringify(sbContent));
+          const currentContent = getContent();
+          const merged = mergeContentLists(sbContent, currentContent);
+          localStorage.setItem('th3ory_admin_content', JSON.stringify(merged));
           window.dispatchEvent(new CustomEvent('th3ory_data_change', { detail: { key: 'content' } }));
         } catch {}
       }
@@ -156,7 +179,9 @@ export default function useAdminData() {
 
     const unsubContents = subscribeToCourseContents((contentsList) => {
       try {
-        localStorage.setItem('th3ory_admin_content', JSON.stringify(contentsList));
+        const currentContent = getContent();
+        const merged = mergeContentLists(contentsList, currentContent);
+        localStorage.setItem('th3ory_admin_content', JSON.stringify(merged));
         window.dispatchEvent(new CustomEvent('th3ory_data_change', { detail: { key: 'content' } }));
       } catch {}
     });
@@ -187,6 +212,8 @@ export default function useAdminData() {
 
     return () => {
       window.removeEventListener('th3ory_data_change', handler);
+      window.removeEventListener('storage', storageHandler);
+      syncChannel?.removeEventListener('message', channelHandler);
       unsubSettings();
       unsubReviews();
       unsubContents();

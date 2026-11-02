@@ -11,17 +11,16 @@ export const TABLE_METADATA = [
   { table: 'course_contents', tabName: '07_Course_Contents', label: 'Curriculum & Video Lessons', category: 'Curriculum', icon: 'Video' },
   { table: 'newsletter_subscribers', tabName: '08_Newsletter_Subs', label: 'Newsletter Subscribers', category: 'Marketing', icon: 'Send' },
   { table: 'newsletter_broadcasts', tabName: '09_Broadcasts', label: 'Broadcast History', category: 'Marketing', icon: 'Radio' },
-  { table: 'tarot_newsletter', tabName: '10_Tarot_Subs', label: 'Tarot Subscribers', category: 'Tarot Flow', icon: 'Sparkles' },
-  { table: 'blogs', tabName: '11_Blog_Articles', label: 'Blog & Editorial Articles', category: 'CMS & Editorial', icon: 'FileText' },
-  { table: 'ambassador_applications', tabName: '12_Ambassador_Apps', label: 'Ambassador Applications', category: 'Ambassadors', icon: 'Users' },
-  { table: 'ambassador_leads', tabName: '13_Ambassador_Leads', label: 'Ambassador Leads', category: 'Ambassadors', icon: 'Target' },
-  { table: 'ambassador_payouts', tabName: '14_Ambassador_Payouts', label: 'Ambassador Payouts', category: 'Ambassadors', icon: 'CreditCard' },
-  { table: 'ambassador_tasks', tabName: '15_Ambassador_Tasks', label: 'Ambassador Tasks', category: 'Ambassadors', icon: 'CheckSquare' },
-  { table: 'ambassador_weekly_reports', tabName: '16_Ambassador_Reports', label: 'Weekly Reports', category: 'Ambassadors', icon: 'Calendar' },
-  { table: 'student_progress', tabName: '17_Student_Progress', label: 'Lesson Progress Tracking', category: 'Students & Access', icon: 'TrendingUp' },
-  { table: 'certificates', tabName: '18_Certificates', label: 'Issued Certificates', category: 'Graduation', icon: 'Award' },
-  { table: 'student_habit_trackers', tabName: '19_Habit_Trackers', label: 'Habit & Mindset Trackers', category: 'Students & Access', icon: 'Activity' },
-  { table: 'site_settings', tabName: '20_Site_Settings', label: 'System Configuration', category: 'System & Config', icon: 'Settings' }
+  { table: 'blogs', tabName: '10_Blog_Articles', label: 'Blog & Editorial Articles', category: 'CMS & Editorial', icon: 'FileText' },
+  { table: 'ambassador_applications', tabName: '11_Ambassador_Apps', label: 'Ambassador Applications', category: 'Ambassadors', icon: 'Users' },
+  { table: 'ambassador_leads', tabName: '12_Ambassador_Leads', label: 'Ambassador Leads', category: 'Ambassadors', icon: 'Target' },
+  { table: 'ambassador_payouts', tabName: '13_Ambassador_Payouts', label: 'Ambassador Payouts', category: 'Ambassadors', icon: 'CreditCard' },
+  { table: 'ambassador_tasks', tabName: '14_Ambassador_Tasks', label: 'Ambassador Tasks', category: 'Ambassadors', icon: 'CheckSquare' },
+  { table: 'ambassador_weekly_reports', tabName: '15_Ambassador_Reports', label: 'Weekly Reports', category: 'Ambassadors', icon: 'Calendar' },
+  { table: 'student_progress', tabName: '16_Student_Progress', label: 'Lesson Progress Tracking', category: 'Students & Access', icon: 'TrendingUp' },
+  { table: 'certificates', tabName: '17_Certificates', label: 'Issued Certificates', category: 'Graduation', icon: 'Award' },
+  { table: 'student_habit_trackers', tabName: '18_Habit_Trackers', label: 'Habit & Mindset Trackers', category: 'Students & Access', icon: 'Activity' },
+  { table: 'site_settings', tabName: '19_Site_Settings', label: 'System Configuration', category: 'System & Config', icon: 'Settings' }
 ];
 
 export default async function handler(req, res) {
@@ -186,7 +185,6 @@ export default async function handler(req, res) {
       }
 
       const newsCount = tableCatalog.find(t => t.table === 'newsletter_subscribers')?.count || 0;
-      const tarotCount = tableCatalog.find(t => t.table === 'tarot_newsletter')?.count || 0;
 
       // Legacy newsletter response compatibility
       if (action === 'newsletter' || req.query?.legacy === 'newsletter') {
@@ -200,8 +198,7 @@ export default async function handler(req, res) {
           },
           subscribers: {
             cognitive_dispatch: newsCount,
-            tarot_subscribers: tarotCount,
-            total: newsCount + tarotCount
+            total: newsCount
           }
         });
       }
@@ -217,8 +214,7 @@ export default async function handler(req, res) {
         },
         subscribers: {
           cognitive_dispatch: newsCount,
-          tarot_subscribers: tarotCount,
-          total: newsCount + tarotCount
+          total: newsCount
         },
         stats: {
           total_tables: TABLE_METADATA.length,

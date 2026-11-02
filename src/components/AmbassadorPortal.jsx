@@ -16,10 +16,17 @@ import { buildShareableReferralLinks } from '../utils/affiliateTrackingEngine';
 import { 
   fetchAmbassadorByCodeFromSupabase, 
   saveAmbassadorWeeklyReportToSupabase,
+  fetchAmbassadorWeeklyReportsFromSupabase,
   fetchAmbassadorLeadsFromSupabase,
   fetchAmbassadorPayoutsFromSupabase,
   saveAmbassadorPayoutDetailsToSupabase,
   requestAmbassadorPayoutToSupabase,
+  fetchAmbassadorTasksFromSupabase,
+  saveAmbassadorProfilePictureToSupabase,
+  subscribeToAmbassadors,
+  subscribeToAmbassadorLeads,
+  subscribeToAmbassadorPayouts,
+  subscribeToAmbassadorTasks,
   fetchReferralClicksFromSupabase,
   fetchReferralConversionsFromSupabase
 } from '../services/supabaseService';
@@ -27,6 +34,7 @@ import {
 const AMB_NAV = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'referrals', label: 'Referrals & Leads', icon: Users },
+  { id: 'tasks', label: 'Campaign Tasks', icon: Award },
   { id: 'toolkit', label: 'Marketing Toolkit', icon: ShoppingBag },
   { id: 'reports', label: 'Weekly Reports', icon: Send },
   { id: 'payouts', label: 'Payouts & Ledger', icon: DollarSign }
@@ -52,10 +60,12 @@ export default function AmbassadorPortal() {
     return 'dark';
   });
 
-  // Dynamic Data Lists
+  // Dynamic Data Lists (Live Realtime Connected to Supabase)
   const [leadsList, setLeadsList] = useState([]);
   const [payoutsList, setPayoutsList] = useState([]);
   const [clicksList, setClicksList] = useState([]);
+  const [tasksList, setTasksList] = useState([]);
+  const [reportsList, setReportsList] = useState([]);
   const [loadingLists, setLoadingLists] = useState(false);
   const [leadSearch, setLeadSearch] = useState('');
   const [selectedLinkType, setSelectedLinkType] = useState('enrollPage');
@@ -197,14 +207,17 @@ export default function AmbassadorPortal() {
   }, []);
 
   // Fetch leads, clicks, and payouts when ambassador logs in or updates
+  // Fetch leads, clicks, payouts, tasks, and reports when ambassador logs in or updates
   useEffect(() => {
     if (ambassador?.ambassadorCode) {
       setLoadingLists(true);
       Promise.all([
         fetchAmbassadorLeadsFromSupabase(ambassador.ambassadorCode),
         fetchAmbassadorPayoutsFromSupabase(ambassador.ambassadorCode),
-        fetchReferralClicksFromSupabase(ambassador.ambassadorCode)
-      ]).then(([leadsData, payoutsData, clicksData]) => {
+        fetchReferralClicksFromSupabase(ambassador.ambassadorCode),
+        fetchAmbassadorTasksFromSupabase(),
+        fetchAmbassadorWeeklyReportsFromSupabase(ambassador.ambassadorCode)
+      ]).then(([leadsData, payoutsData, clicksData, tasksData, reportsData]) => {
         setLeadsList(leadsData && leadsData.length > 0 ? leadsData : [
           { id: '1', student_name: 'Alexander Vance', student_email: 'alex.vance@vanderbilt.edu', college_name: 'Vanderbilt University', status: 'ENROLLED', commission_earned: 1000.00, created_at: new Date(Date.now() - 86400000 * 2).toISOString() },
           { id: '2', student_name: 'Maya Patel', student_email: 'maya.patel@ucla.edu', college_name: 'UCLA', status: 'INTERESTED', commission_earned: 0.00, created_at: new Date(Date.now() - 86400000 * 5).toISOString() },
@@ -217,8 +230,53 @@ export default function AmbassadorPortal() {
         ]);
 
         setClicksList(clicksData || []);
+        setTasksList(tasksData || []);
+        setReportsList(reportsData || []);
         setLoadingLists(false);
       });
+
+      // ─── Realtime Subscriptions for Live Database Updates ─────────────────
+      const unsubAmbassadors = subscribeToAmbassadors((payload) => {
+        if (payload?.new && (
+          payload.new.ambassador_code === ambassador.ambassadorCode || 
+          payload.new.email === ambassador.email
+        )) {
+          fetchAmbassadorByCodeFromSupabase(ambassador.ambassadorCode).then(res => {
+            if (res) setAmbassador(res);
+          });
+        }
+      });
+
+      const unsubLeads = subscribeToAmbassadorLeads(ambassador.ambassadorCode, () => {
+        fetchAmbassadorLeadsFromSupabase(ambassador.ambassadorCode).then(data => {
+          if (data && data.length > 0) setLeadsList(data);
+        });
+        fetchAmbassadorByCodeFromSupabase(ambassador.ambassadorCode).then(res => {
+          if (res) setAmbassador(res);
+        });
+      });
+
+      const unsubPayouts = subscribeToAmbassadorPayouts(ambassador.ambassadorCode, () => {
+        fetchAmbassadorPayoutsFromSupabase(ambassador.ambassadorCode).then(data => {
+          if (data && data.length > 0) setPayoutsList(data);
+        });
+        fetchAmbassadorByCodeFromSupabase(ambassador.ambassadorCode).then(res => {
+          if (res) setAmbassador(res);
+        });
+      });
+
+      const unsubTasks = subscribeToAmbassadorTasks(() => {
+        fetchAmbassadorTasksFromSupabase().then(data => {
+          if (data && data.length > 0) setTasksList(data);
+        });
+      });
+
+      return () => {
+        unsubAmbassadors();
+        unsubLeads();
+        unsubPayouts();
+        unsubTasks();
+      };
     }
   }, [ambassador?.ambassadorCode]);
 
@@ -313,6 +371,9 @@ export default function AmbassadorPortal() {
         setShowReportModal(false);
         fetchAmbassadorByCodeFromSupabase(ambassador.ambassadorCode).then(res => {
           if (res) setAmbassador(res);
+        });
+        fetchAmbassadorWeeklyReportsFromSupabase(ambassador.ambassadorCode).then(res => {
+          if (res && res.length > 0) setReportsList(res);
         });
       }, 1500);
     } catch (err) {
@@ -884,7 +945,116 @@ export default function AmbassadorPortal() {
                 </div>
               )}
 
-              {/* 3. MARKETING TOOLKIT TAB */}
+              {/* 3. CAMPAIGN TASKS & QUESTS TAB */}
+              {activeTab === 'tasks' && (
+                <div className="space-y-6 animate-fade-in">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                      <h3 className={`text-lg sm:text-xl font-black font-heading tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                        Ambassador Quests &amp; Campus Campaigns
+                      </h3>
+                      <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                        Complete promotional missions to earn leaderboard reward points and bonus cash incentives
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="px-3.5 py-1.5 rounded-xl border text-xs font-mono font-bold bg-[#FFC857]/10 text-[#FFC857] border-[#FFC857]/30">
+                        ⭐ {currentPoints} Ambassador Points
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Tasks Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {(tasksList.length > 0 ? tasksList : [
+                      {
+                        id: 'task_def_1',
+                        title: 'Campus WhatsApp Study Group Launch',
+                        description: 'Create or share the TH3ORY Masterclass executive summary in your batch/college study WhatsApp communities.',
+                        reward_points: 100,
+                        reward_bonus: 500,
+                        deadline: 'Ongoing',
+                        status: 'ACTIVE'
+                      },
+                      {
+                        id: 'task_def_2',
+                        title: 'Instagram & LinkedIn Story Blast',
+                        description: 'Publish the official TH3ORY Ambassador banner on your Instagram Stories & LinkedIn feed tagging @th3orymasterclass.',
+                        reward_points: 150,
+                        reward_bonus: 750,
+                        deadline: 'Every Friday',
+                        status: 'ACTIVE'
+                      },
+                      {
+                        id: 'task_def_3',
+                        title: 'Peer Group Executive Walkthrough',
+                        description: 'Conduct a 5-minute live screen walkthrough of TH3ORY portal with at least 3 interested students from your university.',
+                        reward_points: 250,
+                        reward_bonus: 1000,
+                        deadline: 'Weekly Quest',
+                        status: 'ACTIVE'
+                      },
+                      {
+                        id: 'task_def_4',
+                        title: 'Campus Society / Club Partnership',
+                        description: 'Connect TH3ORY team with your college debate, entrepreneurship, or placement society leadership for official partner status.',
+                        reward_points: 500,
+                        reward_bonus: 2500,
+                        deadline: 'Campaign Quest',
+                        status: 'ACTIVE'
+                      }
+                    ]).map((task, idx) => (
+                      <div
+                        key={task.id || idx}
+                        className={`p-6 rounded-3xl border flex flex-col justify-between space-y-4 transition-all ${
+                          isLight 
+                            ? 'bg-white border-slate-200 shadow-sm hover:shadow-md' 
+                            : 'glass-card-luxury border-white/10 hover:border-[#FFC857]/40 shadow-2xl'
+                        }`}
+                      >
+                        <div className="space-y-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                              {task.status || 'ACTIVE'}
+                            </span>
+                            <span className="text-[11px] font-mono text-slate-400">
+                              {task.deadline ? `Due: ${task.deadline}` : 'Open Mission'}
+                            </span>
+                          </div>
+
+                          <h4 className={`text-base font-bold font-heading ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                            {task.title}
+                          </h4>
+
+                          <p className={`text-xs leading-relaxed ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
+                            {task.description}
+                          </p>
+                        </div>
+
+                        <div className="pt-3 border-t border-slate-200 dark:border-white/10 space-y-3">
+                          <div className="flex items-center justify-between text-xs font-mono">
+                            <span className="text-[#FFC857] font-bold">+{task.reward_points || 100} Points</span>
+                            {Number(task.reward_bonus) > 0 && (
+                              <span className="text-emerald-400 font-bold">+₹{Number(task.reward_bonus).toLocaleString('en-IN')} Cash</span>
+                            )}
+                          </div>
+
+                          <button
+                            onClick={() => setShowReportModal(true)}
+                            className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#FFC857] via-[#FFAE19] to-[#FFC857] hover:brightness-110 text-[#070A11] font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-[#FFC857]/20 flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <Send className="w-3.5 h-3.5" />
+                            <span>Submit Quest Proof</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 4. MARKETING TOOLKIT TAB */}
               {activeTab === 'toolkit' && (
                 <div className="space-y-6 animate-fade-in">
                   <div>
@@ -1005,32 +1175,55 @@ export default function AmbassadorPortal() {
                       Report History
                     </h4>
 
-                    {(ambassador.weeklyReports && ambassador.weeklyReports.length > 0) ? (
-                      <div className="space-y-3">
-                        {ambassador.weeklyReports.map((rep, i) => (
-                          <div key={rep.id || i} className={`p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${
-                            isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#070A11]/80 border-white/10'
-                          }`}>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-black text-xs text-[#FFC857]">Report #{ambassador.weeklyReports.length - i}</span>
-                                <span className="text-xs text-slate-400">• {new Date(rep.submittedAt || Date.now()).toLocaleDateString()}</span>
+                    {(() => {
+                      const allReports = [
+                        ...reportsList.map(r => ({
+                          id: r.id,
+                          submittedAt: r.submitted_at || r.submittedAt,
+                          postsCount: r.posts_count ?? r.postsCount ?? 0,
+                          storiesCount: r.stories_count ?? r.storiesCount ?? 0,
+                          leadsGenerated: r.leads_generated ?? r.leadsGenerated ?? 0,
+                          eventNotes: r.event_notes || r.eventNotes || '',
+                          challenges: r.challenges || '',
+                          nextWeekPlan: r.next_week_plan || r.nextWeekPlan || '',
+                          pointsAwarded: r.points_awarded || 50
+                        })),
+                        ...(ambassador.weeklyReports || []).filter(r => !reportsList.some(rl => (rl.id && rl.id === r.id) || rl.submitted_at === r.submittedAt))
+                      ];
+
+                      return allReports.length > 0 ? (
+                        <div className="space-y-3">
+                          {allReports.map((rep, i) => (
+                            <div key={rep.id || i} className={`p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${
+                              isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#070A11]/80 border-white/10'
+                            }`}>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-black text-xs text-[#FFC857]">Report #{allReports.length - i}</span>
+                                  <span className="text-xs text-slate-400">• {new Date(rep.submittedAt || Date.now()).toLocaleDateString()}</span>
+                                </div>
+                                <p className={`text-xs mt-1 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
+                                  📊 Posts: {rep.postsCount} | Stories: {rep.storiesCount} | Leads: {rep.leadsGenerated}
+                                </p>
+                                {(rep.eventNotes || rep.challenges || rep.nextWeekPlan) && (
+                                  <p className="text-[11px] text-slate-400 mt-1 italic">
+                                    {rep.eventNotes && `Notes: "${rep.eventNotes}" `}
+                                    {rep.nextWeekPlan && `• Next: "${rep.nextWeekPlan}"`}
+                                  </p>
+                                )}
                               </div>
-                              <p className={`text-xs mt-1 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
-                                📊 Posts: {rep.postsCount} | Stories: {rep.storiesCount} | Leads: {rep.leadsGenerated}
-                              </p>
+                              <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[11px] font-mono font-bold shrink-0">
+                                +{rep.pointsAwarded || 50} Points Awarded
+                              </span>
                             </div>
-                            <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[11px] font-mono font-bold">
-                              +50 Points Awarded
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="py-8 text-center text-slate-400 text-xs">
-                        No previous weekly reports submitted yet. Click "Submit New Weekly Report" above to earn +50 pts!
-                      </div>
-                    )}
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="py-8 text-center text-slate-400 text-xs">
+                          No previous weekly reports submitted yet. Click "Submit New Weekly Report" above to earn +50 pts!
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               )}
