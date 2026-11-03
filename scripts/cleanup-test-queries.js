@@ -9,7 +9,7 @@ async function cleanupTestQueries() {
       const { data, error } = await supabase
         .from('queries')
         .delete()
-        .or('student_email.ilike.%test%,subject.ilike.%test%,message.ilike.%test%,student_name.ilike.%test%')
+        .or('student_email.ilike.%test%,subject.ilike.%test%,message.ilike.%test%,student_name.ilike.%test%,student_email.eq.alex.mercer@tech.io')
         .select();
 
       if (error) {
