@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { ShoppingCart, Check, Tag, Sparkles, X, Star, Crown, ShieldCheck, Lock, QrCode, ArrowRight, Loader2 } from 'lucide-react';
 import { useTh3oryLive } from '../../data/adminData';
+import { saveEnrollmentToSupabase } from '../../services/supabaseService';
+import { sendEnrollmentEmail } from '../../services/emailService';
 
 function AddonCard({ addon, onBuy, isLight }) {
   const [hover, setHover] = useState(false);
@@ -112,6 +114,7 @@ function RazorpayCheckoutModal({ item, profile, onClose }) {
 
     // 1. Attempt backend order creation via serverless endpoint if available
     let orderId = null;
+    let verifiedAmountSubunits = priceINR * 100;
     try {
       const res = await fetch('/api/create-razorpay-order', {
         method: 'POST',
@@ -119,13 +122,23 @@ function RazorpayCheckoutModal({ item, profile, onClose }) {
         body: JSON.stringify({
           amount: priceINR,
           currency: 'INR',
+          planId: item.id,
+          addonId: item.itemType === 'Add-on' ? item.id : undefined,
+          itemType: item.itemType || 'Add-on',
           receipt: 'ADDON-' + Math.floor(100000 + Math.random() * 900000),
-          notes: { studentName, studentEmail, item: item.name }
+          notes: {
+            studentName,
+            studentEmail,
+            item: item.name,
+            addonId: item.id || '',
+            itemType: item.itemType || 'Add-on'
+          }
         })
       });
       const data = await res.json();
       if (data && data.order && data.order.id) {
         orderId = data.order.id;
+        if (data.order.amount) verifiedAmountSubunits = data.order.amount;
       }
     } catch (apiErr) {
       console.warn('Backend order endpoint warning, initializing direct gateway checkout:', apiErr);
@@ -136,7 +149,7 @@ function RazorpayCheckoutModal({ item, profile, onClose }) {
       try {
         const options = {
           key: razorpayKey,
-          amount: priceINR * 100, // Amount in paise
+          amount: verifiedAmountSubunits, // Amount in paise
           currency: 'INR',
           name: 'TH3ORY Masterclass',
           description: `${item.name} (${item.itemType || 'Add-on'})`,
@@ -147,9 +160,55 @@ function RazorpayCheckoutModal({ item, profile, onClose }) {
             email: studentEmail,
           },
           theme: { color: '#f59e0b' },
-          handler: function (response) {
+          handler: async function (response) {
+            const finalOrderId = response.razorpay_order_id || orderId || transactionId;
+            const finalPaymentId = response.razorpay_payment_id || transactionId;
+
+            try {
+              await fetch('/api/verify-razorpay-signature', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature
+                })
+              });
+            } catch (vErr) {
+              console.warn('[Shop Add-on Signature Verification]:', vErr);
+            }
+
+            // Record Add-on / Plan Upgrade purchase in Supabase & dispatch receipt email
+            saveEnrollmentToSupabase({
+              orderId: finalOrderId,
+              paymentId: finalPaymentId,
+              name: studentName,
+              email: studentEmail,
+              phone: profile?.phone || '',
+              country: profile?.country || 'India',
+              planId: item.id || 'addon',
+              planName: `${item.itemType || 'Add-on'}: ${item.name}`,
+              price: priceINR,
+              currency: 'INR',
+              gateway: 'Razorpay',
+              isMonthly: false,
+              code: profile?.enrollmentCode || undefined,
+              studentId: profile?.studentId || undefined
+            }).catch(err => console.warn('[Shop Add-on Supabase Sync]:', err));
+
+            sendEnrollmentEmail({
+              name: studentName,
+              email: studentEmail,
+              planName: `${item.itemType || 'Add-on'}: ${item.name}`,
+              orderId: finalOrderId,
+              amountPaid: priceINR,
+              currency: 'INR',
+              code: profile?.enrollmentCode || 'ACTIVE-PORTAL-PASS',
+              studentId: profile?.studentId || 'EXISTING-STUDENT'
+            }).catch(err => console.warn('[Shop Add-on Email Dispatch]:', err));
+
             setPaymentReceipt({
-              paymentId: response.razorpay_payment_id || transactionId,
+              paymentId: finalPaymentId,
               item: item.name,
               priceUSD,
               priceINR,

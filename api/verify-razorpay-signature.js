@@ -41,6 +41,7 @@ export default async function handler(req, res) {
     if (isValid) {
       return res.status(200).json({
         success: true,
+        verified: true,
         message: 'Razorpay payment signature verified successfully',
         paymentId: razorpay_payment_id,
         orderId: razorpay_order_id,
@@ -48,6 +49,7 @@ export default async function handler(req, res) {
     } else {
       return res.status(400).json({
         success: false,
+        verified: false,
         error: 'Invalid Razorpay payment signature',
       });
     }

@@ -40,17 +40,21 @@ export default async function handler(req, res) {
       const supabase = createClient(supabaseUrl, supabaseKey);
       const { data: cert } = await supabase
         .from('certificates')
-        .select('cert_id, student_name, course_name, issue_date, created_at')
-        .eq('cert_id', certId)
+        .select('certificate_id, student_name, student_email, course_name, completion_date, issue_date, created_at')
+        .eq('certificate_id', certId)
         .maybeSingle();
 
       if (cert) {
         return res.status(200).json({
           success: true,
+          verified: true,
           certificate: {
-            certId: cert.cert_id,
+            certId: cert.certificate_id,
+            certificateId: cert.certificate_id,
             studentName: cert.student_name,
+            studentEmail: cert.student_email,
             courseName: cert.course_name || 'TH3ORY Masterclass of Influencing',
+            completionDate: cert.completion_date,
             issueDate: cert.issue_date || cert.created_at,
             verified: true
           }

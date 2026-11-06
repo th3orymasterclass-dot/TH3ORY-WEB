@@ -2,9 +2,13 @@ import { createClient } from '@supabase/supabase-js';
 import { setStrictCorsHeaders, checkRateLimit, getClientIp } from './_lib/security.js';
 
 const STATIC_FALLBACK_COUPONS = {
-  'TH3ORY20': { discountPercentage: 20, active: true },
-  'TH3ORY2026': { discountPercentage: 20, active: true },
-  'VIP50': { discountPercentage: 50, active: true }
+  'EARLYBIRD20': { discountPercentage: 20, discountAmount: 0, active: true },
+  'TH3ORY20': { discountPercentage: 20, discountAmount: 0, active: true },
+  'TH3ORY2026': { discountPercentage: 20, discountAmount: 0, active: true },
+  'TH3ORY0': { discountPercentage: 99.9, discountAmount: 0, active: true },
+  'HARVARD30': { discountPercentage: 30, discountAmount: 0, active: true },
+  'TECHLEAD5000': { discountPercentage: 0, discountAmount: 5000, active: true },
+  'VIP50': { discountPercentage: 50, discountAmount: 0, active: true }
 };
 
 export default async function handler(req, res) {
@@ -54,14 +58,45 @@ export default async function handler(req, res) {
         .maybeSingle();
 
       if (dbCoupon) {
-        return res.status(200).json({
-          success: true,
-          coupon: {
-            code: dbCoupon.code,
-            discountPercentage: Number(dbCoupon.discount_percentage || 0),
-            discountAmount: Number(dbCoupon.discount_amount || 0)
+        const isExpired = dbCoupon.expiry_date && new Date(dbCoupon.expiry_date) < new Date();
+        const isExhausted = dbCoupon.max_uses && dbCoupon.current_uses >= dbCoupon.max_uses;
+        if (!isExpired && !isExhausted) {
+          return res.status(200).json({
+            success: true,
+            coupon: {
+              code: dbCoupon.code,
+              discountPercentage: Number(dbCoupon.discount_percentage || 0),
+              discountAmount: Number(dbCoupon.discount_amount || 0)
+            }
+          });
+        }
+      }
+
+      // Check site_settings coupons array
+      const { data: settingsCoupons } = await supabase
+        .from('site_settings')
+        .select('setting_value')
+        .eq('setting_key', 'coupons')
+        .maybeSingle();
+
+      if (settingsCoupons && Array.isArray(settingsCoupons.setting_value)) {
+        const matchedSettingCoupon = settingsCoupons.setting_value.find(
+          c => c && String(c.code || '').toUpperCase() === code && c.isActive !== false
+        );
+        if (matchedSettingCoupon) {
+          const isExpired = matchedSettingCoupon.validUntil && new Date(matchedSettingCoupon.validUntil) < new Date();
+          const isExhausted = matchedSettingCoupon.maxUses && Number(matchedSettingCoupon.usedCount || 0) >= Number(matchedSettingCoupon.maxUses);
+          if (!isExpired && !isExhausted) {
+            return res.status(200).json({
+              success: true,
+              coupon: {
+                code: matchedSettingCoupon.code,
+                discountPercentage: matchedSettingCoupon.discountType === 'percentage' ? Number(matchedSettingCoupon.discountValue || 0) : 0,
+                discountAmount: matchedSettingCoupon.discountType === 'fixed' ? Number(matchedSettingCoupon.discountValue || 0) : 0
+              }
+            });
           }
-        });
+        }
       }
     }
 
@@ -72,8 +107,8 @@ export default async function handler(req, res) {
         success: true,
         coupon: {
           code: code,
-          discountPercentage: matched.discountPercentage,
-          discountAmount: 0
+          discountPercentage: Number(matched.discountPercentage || 0),
+          discountAmount: Number(matched.discountAmount || 0)
         }
       });
     }

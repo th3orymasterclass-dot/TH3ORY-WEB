@@ -83,8 +83,8 @@ export default async function handler(req, res) {
                 currency: paymentEntity?.currency || 'INR',
                 gateway: 'razorpay',
                 enrollment_code: secureCode,
+                plan_id: notes.planId || 'masterclass',
                 plan_name: notes.planName || 'TH3ORY Masterclass',
-                coupon_code: notes.couponCode || 'NONE',
               },
             ]);
 
@@ -120,7 +120,7 @@ export default async function handler(req, res) {
         break;
     }
 
-    return res.status(200).json({ success: true, eventReceived: event });
+    return res.status(200).json({ success: true, received: true, eventReceived: event });
   } catch (error) {
     console.error('[Razorpay Webhook Exception]:', error.message);
     return res.status(500).json({ error: 'Webhook processing error' });

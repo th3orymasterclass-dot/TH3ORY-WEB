@@ -168,12 +168,12 @@ export default async function handler(req, res) {
 
       if (supabase) {
         const [accRes, enrRes, progRes, qRes, conRes, certRes] = await Promise.all([
-          supabase.from('student_accounts').select('id, email, name, phone, profession, bio, country, dob, plan_name, created_at, last_login').eq('email', email),
+          supabase.from('student_accounts').select('id, email, name, enrollment_code, plan_name, created_at, last_login').eq('email', email),
           supabase.from('enrollments').select('id, order_id, name, email, phone, city, country, plan_name, amount_paid, currency, gateway, created_at').eq('email', email),
           supabase.from('user_progress').select('lesson_id, completed, note, bookmarked, updated_at').eq('email', email),
           supabase.from('queries').select('id, subject, type, message, status, reply, created_at').eq('student_email', email),
           supabase.from('dpdp_consent_records').select('consent_type, status, version, purpose, source, granted_at, withdrawn_at').eq('email', email),
-          supabase.from('certificates').select('cert_id, student_name, course_name, issue_date').eq('email', email)
+          supabase.from('certificates').select('certificate_id, student_name, course_name, issue_date').eq('student_email', email)
         ]);
 
         accountData = accRes.data || [];

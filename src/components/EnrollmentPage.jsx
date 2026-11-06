@@ -401,11 +401,17 @@ function Step3({ form, setForm, onNext, onBack }) {
           body: JSON.stringify({
             amount: totalINR, // Exact INR amount
             currency: 'INR',
+            planId: plan?.id || 'masterclass',
+            isMonthly: Boolean(form.isMonthly),
+            couponCode: currentCoupon || '',
             receipt: `TH3-${Date.now().toString(36).toUpperCase()}`,
             notes: {
               studentName: form.name,
               studentEmail: form.email,
+              planId: plan?.id || 'masterclass',
               planName: plan?.name || 'TH3ORY Masterclass',
+              isMonthly: String(Boolean(form.isMonthly)),
+              couponCode: currentCoupon || 'NONE',
               couponUsed: currentCoupon || 'NONE',
               affiliationName: couponResult.isValid ? couponResult.affiliation : 'Direct',
               discountPercentage: discountPct,
