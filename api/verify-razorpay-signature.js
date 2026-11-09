@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { safeCompare, setStrictCorsHeaders, checkRateLimit, getClientIp } from './_lib/security.js';
+import { safeCompare, setStrictCorsHeaders, checkRateLimit, getClientIp, getServerConfig } from './_lib/security.js';
 
 export default async function handler(req, res) {
   if (setStrictCorsHeaders(req, res)) return;
@@ -14,7 +14,8 @@ export default async function handler(req, res) {
     return res.status(429).json({ success: false, error: 'Too many verification attempts' });
   }
 
-  const razorpaySecret = process.env.RAZORPAY_KEY_SECRET;
+  const runtimeCfg = getServerConfig();
+  const razorpaySecret = process.env.RAZORPAY_KEY_SECRET || runtimeCfg.razorpaySecret;
 
   if (!razorpaySecret) {
     console.error('[Razorpay Signature Error]: RAZORPAY_KEY_SECRET environment variable is missing.');

@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { requireAdminAuth } from './_lib/auth.js';
-import { setStrictCorsHeaders, getClientIp } from './_lib/security.js';
+import { setStrictCorsHeaders, getClientIp, getServerConfig } from './_lib/security.js';
 
 // Default system feature flags with default states and descriptions
 const DEFAULT_FEATURE_FLAGS = {
@@ -57,8 +57,9 @@ const DEFAULT_FEATURE_FLAGS = {
 export default async function handler(req, res) {
   if (setStrictCorsHeaders(req, res)) return;
 
-  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+  const runtimeCfg = getServerConfig();
+  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || runtimeCfg.supabaseUrl;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || runtimeCfg.supabaseKey;
 
   let supabase = null;
   if (supabaseUrl && supabaseKey) {

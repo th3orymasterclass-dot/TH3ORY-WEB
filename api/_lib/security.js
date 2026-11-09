@@ -181,3 +181,25 @@ export function getClientIp(req) {
   }
   return req.socket?.remoteAddress || '127.0.0.1';
 }
+
+/**
+ * Resolve server configuration from environment variables with public Supabase project defaults
+ */
+export function getServerConfig() {
+  return {
+    supabaseUrl:
+      process.env.VITE_SUPABASE_URL ||
+      process.env.SUPABASE_URL ||
+      'https://qngzfcpnjpabaornddau.supabase.co',
+    supabaseKey:
+      process.env.SUPABASE_SERVICE_ROLE_KEY ||
+      process.env.VITE_SUPABASE_ANON_KEY ||
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuZ3pmY3BuanBhYmFvcm5kZGF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1Mzc2MDQsImV4cCI6MjEwMjExMzYwNH0.Uhdbtgi0uJRD2suYX67gIApvxT0o1OvNiy5RD6t6geY',
+    razorpayKeyId:
+      process.env.VITE_RAZORPAY_KEY_ID ||
+      process.env.RAZORPAY_KEY_ID ||
+      'rzp_live_TP7hT2Wt1nkqwg',
+    razorpaySecret: process.env.RAZORPAY_KEY_SECRET || '',
+    resendApiKey: process.env.RESEND_API_KEY || process.env.VITE_RESEND_API_KEY || ''
+  };
+}

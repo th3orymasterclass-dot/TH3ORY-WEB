@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { signJwt, requireStudentAuth } from './_lib/auth.js';
-import { safeCompare, setStrictCorsHeaders, checkRateLimit, getClientIp } from './_lib/security.js';
+import { safeCompare, setStrictCorsHeaders, checkRateLimit, getClientIp, getServerConfig } from './_lib/security.js';
 
 export async function updateProfileHandler(req, res) {
   if (setStrictCorsHeaders(req, res)) return;
@@ -37,8 +37,9 @@ export async function updateProfileHandler(req, res) {
     const sanitizedAvatar = String(profile.avatar || profile.avatar_url || '').slice(0, 500).trim();
     const sanitizedDob = profile.dob ? String(profile.dob).slice(0, 20).trim() : null;
 
-    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+    const runtimeCfg = getServerConfig();
+    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || runtimeCfg.supabaseUrl;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || runtimeCfg.supabaseKey;
 
     let dbUpdated = false;
 
@@ -168,8 +169,9 @@ export default async function handler(req, res) {
       return (namePart + dobPart).toUpperCase().slice(0, 8);
     }
 
-    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+    const runtimeCfg = getServerConfig();
+    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || runtimeCfg.supabaseUrl;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || runtimeCfg.supabaseKey;
 
     let matchedStudent = null;
 

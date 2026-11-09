@@ -1,6 +1,6 @@
 import { Resend } from 'resend';
 import { requireAdminAuth } from './_lib/auth.js';
-import { setStrictCorsHeaders, escapeHtml, checkRateLimit, checkRecipientRateLimit, getClientIp } from './_lib/security.js';
+import { setStrictCorsHeaders, escapeHtml, checkRateLimit, checkRecipientRateLimit, getClientIp, getServerConfig } from './_lib/security.js';
 
 export default async function handler(req, res) {
   if (setStrictCorsHeaders(req, res)) return;
@@ -32,7 +32,8 @@ export default async function handler(req, res) {
     if (!adminUser) return; // 401/403 sent
   }
 
-  const apiKey = process.env.RESEND_API_KEY || process.env.VITE_RESEND_API_KEY;
+  const runtimeCfg = getServerConfig();
+  const apiKey = process.env.RESEND_API_KEY || process.env.VITE_RESEND_API_KEY || runtimeCfg.resendApiKey;
   if (!apiKey) {
     console.warn('[Vercel API] RESEND_API_KEY environment variable is not configured.');
     return res.status(400).json({ success: false, error: 'Email service key missing on server' });

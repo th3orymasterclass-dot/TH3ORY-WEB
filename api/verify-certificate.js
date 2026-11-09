@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { safeCompare, setStrictCorsHeaders, getClientIp, checkRateLimit } from './_lib/security.js';
+import { safeCompare, setStrictCorsHeaders, getClientIp, checkRateLimit, getServerConfig } from './_lib/security.js';
 
 export default async function handler(req, res) {
   if (setStrictCorsHeaders(req, res)) return;
@@ -33,8 +33,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+    const runtimeCfg = getServerConfig();
+    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || runtimeCfg.supabaseUrl;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || runtimeCfg.supabaseKey;
 
     if (supabaseUrl && supabaseKey) {
       const supabase = createClient(supabaseUrl, supabaseKey);

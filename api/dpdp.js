@@ -1,12 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 import { requireStudentAuth, requireAdminAuth, extractToken, verifyJwt } from './_lib/auth.js';
-import { setStrictCorsHeaders, sanitizeForCsv, escapeHtml, getClientIp, checkRateLimit } from './_lib/security.js';
+import { setStrictCorsHeaders, sanitizeForCsv, escapeHtml, getClientIp, checkRateLimit, getServerConfig } from './_lib/security.js';
 
 export default async function handler(req, res) {
   if (setStrictCorsHeaders(req, res)) return;
 
-  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://qngzfcpnjpabaornddau.supabase.co';
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+  const runtimeCfg = getServerConfig();
+  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || runtimeCfg.supabaseUrl;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || runtimeCfg.supabaseKey;
 
   let supabase = null;
   if (supabaseUrl && supabaseKey) {

@@ -1,6 +1,6 @@
 import Razorpay from 'razorpay';
 import { createClient } from '@supabase/supabase-js';
-import { setStrictCorsHeaders, checkRateLimit, getClientIp } from './_lib/security.js';
+import { setStrictCorsHeaders, checkRateLimit, getClientIp, getServerConfig } from './_lib/security.js';
 
 export default async function handler(req, res) {
   if (setStrictCorsHeaders(req, res)) return;
@@ -27,8 +27,9 @@ export default async function handler(req, res) {
     });
   }
 
-  const razorpayKeyId = process.env.VITE_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID;
-  const razorpaySecret = process.env.RAZORPAY_KEY_SECRET;
+  const runtimeCfg = getServerConfig();
+  const razorpayKeyId = process.env.VITE_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID || runtimeCfg.razorpayKeyId;
+  const razorpaySecret = process.env.RAZORPAY_KEY_SECRET || runtimeCfg.razorpaySecret;
 
   if (!razorpayKeyId || !razorpaySecret) {
     console.error('[Razorpay API Error]: Missing RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET environment variables');
@@ -94,8 +95,8 @@ export default async function handler(req, res) {
     const targetCurrency = String(currency || 'INR').toUpperCase();
     const validCurrency = (targetCurrency === 'USD') ? 'USD' : 'INR';
 
-    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://qngzfcpnjpabaornddau.supabase.co';
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || runtimeCfg.supabaseUrl;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || runtimeCfg.supabaseKey;
     const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null;
 
     // Load dynamic add-ons from site_settings if present
